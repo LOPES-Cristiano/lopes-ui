@@ -639,14 +639,9 @@ export default function Sidebar({
   }, [shell, isCollapsed, onCollapsedChange]);
 
   // ── Pins state (localStorage-backed) ──────────────────────────────────────
-  const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => {
-    if (!pinnable || typeof window === "undefined") return new Set();
-    try {
-      const stored = localStorage.getItem(pinsStorageKey);
-      if (stored) return new Set(JSON.parse(stored) as string[]);
-    } catch {}
-    return new Set();
-  });
+  // Always start empty to match the SSR-rendered HTML, then hydrate from
+  // localStorage in a useEffect to avoid hydration mismatches.
+  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set());
 
   const togglePin = useCallback((id: string) => {
     setPinnedIds((prev) => {
@@ -654,6 +649,19 @@ export default function Sidebar({
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+  }, []);
+
+  // Load persisted pins from localStorage after first mount
+  useEffect(() => {
+    if (!pinnable) return;
+    try {
+      const stored = localStorage.getItem(pinsStorageKey);
+      if (stored) {
+        const ids = JSON.parse(stored) as string[];
+        if (ids.length > 0) setPinnedIds(new Set(ids));
+      }
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

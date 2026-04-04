@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "@/components/Toast";
 import SiteHeader from "@/components/SiteHeader";
@@ -8,7 +9,7 @@ import { cookies } from "next/headers";
 import AppSidebar from "@/components/AppSidebar";
 
 export const metadata: Metadata = {
-  title: "PlayGround",
+  title: "Lopes UI",
   description: "Espaço para testar e experimentar componentes",
 };
 
@@ -22,15 +23,15 @@ export default async function RootLayout({
 
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <head>
-        {/* Prevent flash of wrong theme on load */}
-        <script
+      <head />
+      <body className="min-h-full w-full flex flex-col bg-[--background]">
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('theme')||((window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){}})();`,
           }}
         />
-      </head>
-      <body className="min-h-full w-full flex flex-col bg-[--background]">
         <ThemeProvider>
           <Toaster position="top-right" />
           <ShellProvider defaultCollapsed={sidebarCollapsed} defaultHasSidebar>

@@ -13,7 +13,7 @@ export default function AppSidebar() {
   return (
     <Sidebar
       title="LopesWare UI"
-      subtitle="Playground"
+      subtitle="Lopes UI"
       logo={<span className="text-lg font-black text-zinc-800">🅻</span>}
       collapsible
       pinnable

@@ -4,7 +4,7 @@
 import React, { useRef } from "react";
 import Button from "@/components/Button";
 
-import { MousePointer2, Download, ArrowUp, FileSearch, Lock, AlertTriangle, Package, Zap, Palette, Shield,
+import { MousePointer2, Download, ArrowUp, FileSearch, Lock, AlertTriangle, Package, Zap, Shield,
   LayoutDashboard, BookOpen, Settings, Bell, HelpCircle, LogOut, Users, BarChart2, FileText, Star,
   Search, Mail, User, Phone, Code2, Rocket,
   ArrowRight, MoreHorizontal, Layers, TrendingUp, Globe, ShoppingCart, Cpu,

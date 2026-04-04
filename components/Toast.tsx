@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { X, AlertTriangle, Info, Loader2 } from "lucide-react";
@@ -284,16 +284,6 @@ const EASE   = "cubic-bezier(0.4, 0, 0.2, 1)";
 function ToastCard({ item, position }: { item: ToastItem; position: ToastPosition }) {
   const cfg = CFG[item.type];
 
-  // Track type changes so we can animate the icon swap
-  const prevTypeRef = useRef<ToastType>(item.type);
-  const [iconKey, setIconKey] = useState(0);
-  useEffect(() => {
-    if (prevTypeRef.current !== item.type) {
-      prevTypeRef.current = item.type;
-      setIconKey((k) => k + 1);
-    }
-  }, [item.type]);
-
   // Custom icon supports both ReactNode and emoji strings
   const iconNode = item.icon != null
     ? (typeof item.icon === "string"
@@ -338,20 +328,17 @@ function ToastCard({ item, position }: { item: ToastItem; position: ToastPositio
       )}>
         {/* Left accent bar — crossfades colour on type change */}
         <div
-          key={`bar-${iconKey}`}
+          key={`bar-${item.type}`}
           className={twMerge("absolute inset-y-0 left-0 w-[3px] rounded-l-2xl transition-colors duration-300", cfg.bar)}
-          style={iconKey > 0 ? { animation: "_t-bar-fade-in 0.3s ease forwards" } : undefined}
+          style={{ animation: "_t-bar-fade-in 0.3s ease forwards" }}
         />
 
         {/* Icon — remounts with pop animation on type change */}
         {iconNode != null && (
           <span
-            key={`icon-${iconKey}`}
+            key={`icon-${item.type}`}
             className={twMerge("mt-px shrink-0", cfg.iconCls)}
-            style={iconKey > 0
-              ? { animation: "_t-icon-pop 0.35s cubic-bezier(0.34,1.4,0.64,1) forwards" }
-              : undefined
-            }
+            style={{ animation: "_t-icon-pop 0.35s cubic-bezier(0.34,1.4,0.64,1) forwards" }}
           >
             {iconNode}
           </span>
