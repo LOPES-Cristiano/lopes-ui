@@ -368,7 +368,7 @@ function NavItem({ item, depth = 0, onNavigate }: { item: SidebarNavItem; depth?
   ) : null;
 
   const labelEl = (
-    <span className={["flex flex-1 items-center justify-between gap-1.5 overflow-hidden transition-[opacity,max-width] duration-300 ease-in-out", collapsed ? "opacity-0 max-w-0 pointer-events-none" : "opacity-100 max-w-full"].join(" ")}>
+    <span className={["flex flex-1 items-center justify-between gap-1.5 overflow-hidden transition-opacity duration-200 ease-out", collapsed ? "opacity-0 max-w-0 pointer-events-none" : "opacity-100 max-w-full"].join(" ")}>
       <span className="flex flex-col min-w-0">
         <span className="truncate text-sm leading-snug">{item.label}</span>
         {item.description && !collapsed && (
@@ -478,7 +478,7 @@ function NavGroup({ group, onNavigate }: { group: SidebarNavGroup; onNavigate?: 
     <div>
       {group.label && (
         <div
-          className={["flex items-center justify-between px-2.5 mb-1 overflow-hidden transition-[opacity,max-height] duration-300 ease-in-out", collapsed ? "opacity-0 max-h-0 pointer-events-none" : "opacity-100 max-h-10", group.collapsible ? "cursor-pointer select-none group/grp" : ""].join(" ")}
+          className={["flex items-center justify-between px-2.5 mb-1 overflow-hidden transition-opacity duration-200 ease-out", collapsed ? "opacity-0 max-h-0 pointer-events-none" : "opacity-100 max-h-10", group.collapsible ? "cursor-pointer select-none group/grp" : ""].join(" ")}
           onClick={group.collapsible ? () => setOpen((s) => !s) : undefined}
         >
           <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 group-hover/grp:text-zinc-600 dark:group-hover/grp:text-zinc-400 transition-colors">
@@ -570,7 +570,7 @@ function FooterItem({ item }: { item: SidebarFooterItem }) {
       <span className={`shrink-0 transition-colors ${item.danger ? "text-red-400 group-hover/fi:text-red-500" : "text-zinc-400 dark:text-zinc-400 group-hover/fi:text-zinc-600 dark:group-hover/fi:text-zinc-200"}`}>
         <Icon size={16} strokeWidth={1.75} />
       </span>
-      <span className={["truncate text-sm leading-none transition-[opacity,max-width] duration-300 ease-in-out", collapsed ? "opacity-0 max-w-0 pointer-events-none" : "opacity-100 max-w-full"].join(" ")}>
+      <span className={["truncate text-sm leading-none transition-opacity duration-200 ease-out", collapsed ? "opacity-0 max-w-0 pointer-events-none" : "opacity-100 max-w-full"].join(" ")}>
         {item.label}
       </span>
     </button>
@@ -684,8 +684,8 @@ export default function Sidebar({
       {/* Sidebar panel */}
       <aside
         className={[
-          "flex flex-col h-full bg-white dark:bg-zinc-950 border-r border-zinc-100 dark:border-zinc-800",
-          "duration-300 ease-in-out",
+          "flex flex-col h-full overflow-x-hidden bg-white dark:bg-zinc-950 border-r border-zinc-100 dark:border-zinc-800",
+          "duration-300 ease-out [will-change:width]",
           isCollapsed ? "w-[4.5rem]" : "w-64",
           "fixed inset-y-0 left-0 z-[70] shadow-xl",
           "md:relative md:z-auto md:inset-auto md:shadow-none",
@@ -696,7 +696,7 @@ export default function Sidebar({
       >
         {/* ── Header (hidden when Shell is managing it) ──────────────── */}
         {!shell && (
-        <div className={["flex shrink-0 items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 py-4 transition-[padding] duration-300 ease-in-out", isCollapsed ? "justify-center px-2" : "px-4"].join(" ")}>
+        <div className={["flex shrink-0 items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 py-4", isCollapsed ? "justify-center px-2" : "px-4"].join(" ")}>
           {logo && (
             <div className="shrink-0">
               {isCollapsed && title
@@ -704,11 +704,11 @@ export default function Sidebar({
                 : logo}
             </div>
           )}
-          <div className={["flex-1 min-w-0 overflow-hidden transition-[opacity,max-width] duration-300 ease-in-out", isCollapsed ? "opacity-0 max-w-0" : "opacity-100 max-w-full"].join(" ")}>
+          <div className={["flex-1 min-w-0 overflow-hidden transition-opacity duration-200 ease-out", isCollapsed ? "opacity-0" : "opacity-100"].join(" ")}>
             {title && <p className="truncate text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug">{title}</p>}
             {subtitle && <p className="truncate text-[11px] text-zinc-400 dark:text-zinc-500">{subtitle}</p>}
           </div>
-          {headerExtra && <div className={["shrink-0 overflow-hidden transition-[opacity,max-width] duration-300 ease-in-out", isCollapsed ? "opacity-0 max-w-0 pointer-events-none" : "opacity-100 max-w-full"].join(" ")}>{headerExtra}</div>}
+          {headerExtra && <div className={["shrink-0 overflow-hidden transition-opacity duration-200 ease-out", isCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"].join(" ")}>{headerExtra}</div>}
           <div className="flex items-center gap-1 shrink-0">
             <button type="button" aria-label="Fechar menu" onClick={closeMobile} className="md:hidden rounded-lg p-1.5 text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
               <X size={15} />
@@ -716,8 +716,8 @@ export default function Sidebar({
             {collapsible && (
               <button type="button" onClick={toggle} aria-label={isCollapsed ? "Expandir menu" : "Recolher menu"} className="hidden md:flex rounded-lg p-1.5 text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors" title={isCollapsed ? "Expandir" : "Recolher"}>
                 <span className="relative flex items-center justify-center w-[15px] h-[15px]">
-                  <PanelLeftOpen size={15} className={["absolute transition-[opacity,transform] duration-300", isCollapsed ? "opacity-100 scale-100" : "opacity-0 scale-75"].join(" ")} />
-                  <PanelLeftClose size={15} className={["absolute transition-[opacity,transform] duration-300", isCollapsed ? "opacity-0 scale-75" : "opacity-100 scale-100"].join(" ")} />
+                  <PanelLeftOpen size={15} className={["absolute transition-[opacity,transform] duration-300 ease-out", isCollapsed ? "opacity-100 scale-100" : "opacity-0 scale-75"].join(" ")} />
+                  <PanelLeftClose size={15} className={["absolute transition-[opacity,transform] duration-300 ease-out", isCollapsed ? "opacity-0 scale-75" : "opacity-100 scale-100"].join(" ")} />
                 </span>
               </button>
             )}
@@ -729,7 +729,7 @@ export default function Sidebar({
         <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-2 py-3 space-y-4">
           {/* Announcements — ocultos no modo collapsed */}
           {announcements.length > 0 && (
-            <div className={["space-y-2 overflow-hidden transition-[opacity,max-height] duration-300 ease-in-out", isCollapsed ? "opacity-0 max-h-0 pointer-events-none" : "opacity-100 max-h-[800px]"].join(" ")}>
+            <div className={["space-y-2 transition-opacity duration-200 ease-out", isCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"].join(" ")}>
               {announcements.map((a) => (
                 <AnnouncementCard key={a.id} item={a} />
               ))}
@@ -762,16 +762,16 @@ export default function Sidebar({
               ].join(" ")}
             >
               <span className="relative flex shrink-0 items-center justify-center w-4 h-4">
-                <PanelLeftOpen size={16} strokeWidth={1.75} className={["absolute transition-[opacity,transform] duration-300", isCollapsed ? "opacity-100 scale-100" : "opacity-0 scale-75"].join(" ")} />
-                <PanelLeftClose size={16} strokeWidth={1.75} className={["absolute transition-[opacity,transform] duration-300", isCollapsed ? "opacity-0 scale-75" : "opacity-100 scale-100"].join(" ")} />
+                <PanelLeftOpen size={16} strokeWidth={1.75} className={["absolute transition-[opacity,transform] duration-300 ease-out", isCollapsed ? "opacity-100 scale-100" : "opacity-0 scale-75"].join(" ")} />
+                <PanelLeftClose size={16} strokeWidth={1.75} className={["absolute transition-[opacity,transform] duration-300 ease-out", isCollapsed ? "opacity-0 scale-75" : "opacity-100 scale-100"].join(" ")} />
               </span>
-              <span className={["text-sm overflow-hidden whitespace-nowrap transition-[opacity,max-width] duration-300 ease-in-out", isCollapsed ? "opacity-0 max-w-0 pointer-events-none" : "opacity-100 max-w-[8rem]"].join(" ")}>Recolher</span>
+              <span className={["text-sm overflow-hidden whitespace-nowrap transition-opacity duration-200 ease-out", isCollapsed ? "opacity-0 max-w-0 pointer-events-none" : "opacity-100 max-w-[8rem]"].join(" ")}>Recolher</span>
             </button>
           )}
           {footerItems.map((fi, i) => (
             <FooterItem key={`fi-${i}`} item={fi} />
           ))}
-          {footerExtra && <div className={["pt-2 overflow-hidden transition-[opacity,max-height] duration-300 ease-in-out", isCollapsed ? "opacity-0 max-h-0 pointer-events-none" : "opacity-100 max-h-96"].join(" ")}>{footerExtra}</div>}
+          {footerExtra && <div className={["pt-2 overflow-hidden transition-opacity duration-200 ease-out", isCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"].join(" ")}>{footerExtra}</div>}
           {user && (
             <div className="pt-2">
               <UserBlock user={user} />
