@@ -12,9 +12,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: default) {
   :root {
-    --background: #0a0a0a;
+    --background: #252525;
     --foreground: #ededed;
   }
 }
@@ -23,4 +23,23 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Toast custom animations (used by toast.custom example) */
+@keyframes toast-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes toast-leave {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-8px) scale(0.98); }
+}
+
+.animate-custom-enter {
+  animation: toast-enter 300ms cubic-bezier(.2,.8,.2,1);
+}
+
+.animate-custom-leave {
+  animation: toast-leave 200ms linear;
 }
