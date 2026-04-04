@@ -209,8 +209,8 @@ export default function CommandMenu({
         onClick={() => setOpen(true)}
         {...(componentId ? { "data-component-id": componentId } : {})}
         className={twMerge(
-          "flex items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-sm text-zinc-400",
-          "hover:border-zinc-300 hover:bg-white transition-colors",
+          "flex items-center gap-2 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3 py-1.5 text-sm text-zinc-400 dark:text-zinc-400",
+          "hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-white dark:hover:bg-zinc-700 transition-colors",
           className
         )}
         aria-label="Abrir menu de comandos"
@@ -218,7 +218,7 @@ export default function CommandMenu({
         <Search size={14} className="shrink-0" />
         <span className="hidden sm:inline w-28 text-left">{triggerLabel}</span>
         {mounted && (
-          <kbd className="hidden sm:inline-flex items-center rounded border border-zinc-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 leading-none">
+          <kbd className="hidden sm:inline-flex items-center rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 leading-none">
             {modKey}K
           </kbd>
         )}
@@ -242,9 +242,9 @@ export default function CommandMenu({
             />
 
             {/* Panel */}
-            <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-2xl">
+            <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-2xl">
               {/* ── Input row ──────────────────────────────────────────────── */}
-              <div className="flex items-center gap-3 border-b border-zinc-100 px-4">
+              <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 px-4">
                 <Search size={16} className="shrink-0 text-zinc-400" />
                 <input
                   ref={inputRef}
@@ -252,14 +252,14 @@ export default function CommandMenu({
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={onKeyDown}
                   placeholder={placeholder}
-                  className="flex-1 bg-transparent py-4 text-sm text-zinc-900 placeholder-zinc-400 outline-none"
+                  className="flex-1 bg-transparent py-4 text-sm text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 outline-none"
                 />
                 <kbd
                   role="button"
                   tabIndex={0}
                   onClick={close}
                   onKeyDown={(e) => e.key === "Enter" && close()}
-                  className="flex cursor-pointer items-center rounded border border-zinc-200 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 hover:bg-zinc-50 select-none"
+                  className="flex cursor-pointer items-center rounded border border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-700 select-none"
                 >
                   Esc
                 </kbd>
@@ -302,8 +302,8 @@ export default function CommandMenu({
                             className={twMerge(
                               "mx-2 flex w-[calc(100%-1rem)] items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
                               active
-                                ? "bg-indigo-50 text-indigo-700"
-                                : "text-zinc-700 hover:bg-zinc-50"
+                                ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                                : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
                             )}
                           >
                             {Icon && (
@@ -311,8 +311,8 @@ export default function CommandMenu({
                                 className={twMerge(
                                   "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border",
                                   active
-                                    ? "border-indigo-200 bg-indigo-100 text-indigo-600"
-                                    : "border-zinc-200 bg-zinc-50 text-zinc-500"
+                                    ? "border-indigo-200 dark:border-indigo-700 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300"
+                                    : "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
                                 )}
                               >
                                 <Icon size={14} />
@@ -335,8 +335,8 @@ export default function CommandMenu({
                                 className={twMerge(
                                   "ml-auto flex-shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium leading-none",
                                   active
-                                    ? "border-indigo-200 bg-white text-indigo-500"
-                                    : "border-zinc-200 bg-white text-zinc-400"
+                                    ? "border-indigo-200 dark:border-indigo-700 bg-white dark:bg-zinc-900 text-indigo-500 dark:text-indigo-300"
+                                    : "border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-400 dark:text-zinc-500"
                                 )}
                               >
                                 {item.shortcut}
@@ -351,21 +351,21 @@ export default function CommandMenu({
               </div>
 
               {/* ── Footer hints ───────────────────────────────────────────── */}
-              <div className="flex items-center gap-4 border-t border-zinc-100 px-4 py-2 text-[11px] text-zinc-400">
+              <div className="flex items-center gap-4 border-t border-zinc-100 dark:border-zinc-800 px-4 py-2 text-[11px] text-zinc-400">
                 <span className="flex items-center gap-1">
-                  <kbd className="rounded border border-zinc-200 bg-zinc-50 px-1 py-0.5 leading-none">
+                  <kbd className="rounded border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-1 py-0.5 leading-none">
                     ↑↓
                   </kbd>{" "}
                   navegar
                 </span>
                 <span className="flex items-center gap-1">
-                  <kbd className="rounded border border-zinc-200 bg-zinc-50 px-1 py-0.5 leading-none">
+                  <kbd className="rounded border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-1 py-0.5 leading-none">
                     ↵
                   </kbd>{" "}
                   selecionar
                 </span>
                 <span className="flex items-center gap-1">
-                  <kbd className="rounded border border-zinc-200 bg-zinc-50 px-1 py-0.5 leading-none">
+                  <kbd className="rounded border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-1 py-0.5 leading-none">
                     Esc
                   </kbd>{" "}
                   fechar

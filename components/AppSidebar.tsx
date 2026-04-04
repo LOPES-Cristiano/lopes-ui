@@ -267,10 +267,12 @@ export default function AppSidebar() {
               href: "/#text-rotate",
               icon: RefreshCw,
               children: [
-                { label: "Inline (frase)",  href: "/#text-rotate-inline" },
-                { label: "Standalone",      href: "/#text-rotate-standalone" },
-                { label: "Discreta",        href: "/#text-rotate-discrete" },
-                { label: "Emojis",          href: "/#text-rotate-emojis" },
+                { label: "Inline (frase)",    href: "/#text-rotate-inline" },
+                { label: "Stagger do centro", href: "/#text-rotate-standalone" },
+                { label: "Preset rise",       href: "/#text-rotate-rise" },
+                { label: "Preset discrete",   href: "/#text-rotate-discrete" },
+                { label: "Stagger por palavra", href: "/#text-rotate-emojis" },
+                { label: "Controle manual",   href: "/#text-rotate-manual" },
               ],
             },
             {

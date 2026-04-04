@@ -14,11 +14,11 @@ export default function Brand({
     <div className="flex items-center gap-4" {...(componentId ? { ['data-component-id']: componentId } : {})}>
       <Link href="/" className="flex items-center gap-3">
         {logo ?? (
-          <div >
-                <Image src="/logo.svg" alt={title} fill className=" object-cover" />
+          <div className="relative h-7 w-7 shrink-0">
+            <Image src="/logo.svg" alt={title} fill className="object-contain" />
           </div>
         )}
-        <span className="hidden font-semibold text-zinc-900 sm:block">{title}</span>
+        <span className="hidden font-semibold text-zinc-900 dark:text-zinc-100 sm:block">{title}</span>
       </Link>
     </div>
   );

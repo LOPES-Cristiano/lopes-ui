@@ -130,7 +130,7 @@ export default function ChatWindow({
     <div
       {...(componentId ? { "data-component-id": componentId } : {})}
       className={twMerge(
-        "flex flex-col bg-white rounded-2xl border border-zinc-200 overflow-hidden",
+        "flex flex-col bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden",
         "shadow-2xl shadow-zinc-900/10",
         "w-80 transition-all duration-200",
         minimized
@@ -142,12 +142,12 @@ export default function ChatWindow({
       )}
     >
       {/* ── Header ── */}
-      <div className="flex items-center gap-2 px-3.5 py-3 border-b border-zinc-100 bg-white shrink-0">
+      <div className="flex items-center gap-2 px-3.5 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shrink-0">
         {/* Back button (chat mode) */}
         {windowState === "chat" && !minimized && (
           <button
             onClick={() => { setActiveId(null); setWindowState("list"); setReplyTo(null); }}
-            className="p-1 rounded-lg hover:bg-zinc-100 text-zinc-400 transition-colors"
+            className="p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-colors"
             aria-label="Voltar"
           >
             <ChevronLeft size={18} />
@@ -164,30 +164,30 @@ export default function ChatWindow({
               status={activeConv.online ? "online" : undefined}
             />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-zinc-800 truncate">{activeConv.name}</p>
+              <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 truncate">{activeConv.name}</p>
               <p className={twMerge("text-[11px]", activeConv.online ? "text-emerald-500" : "text-zinc-400")}>
                 {activeConv.online ? "Online" : "Offline"}
               </p>
             </div>
             {/* Chat actions */}
             <div className="flex items-center gap-0.5 ml-0">
-              <button className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-400 transition-colors" aria-label="Ligar">
+              <button className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-colors" aria-label="Ligar">
                 <Phone size={15} />
               </button>
-              <button className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-400 transition-colors" aria-label="Videochamada">
+              <button className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-colors" aria-label="Videochamada">
                 <Video size={15} />
               </button>
-              <button className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-400 transition-colors" aria-label="Mais opções">
+              <button className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-colors" aria-label="Mais opções">
                 <MoreHorizontal size={15} />
               </button>
             </div>
           </>
         ) : (
           <>
-            <div className="flex items-center justify-center w-7 h-7 rounded-xl bg-indigo-100 shrink-0">
-              <MessageCircle size={15} className="text-indigo-600" />
+            <div className="flex items-center justify-center w-7 h-7 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 shrink-0">
+              <MessageCircle size={15} className="text-indigo-600 dark:text-indigo-400" />
             </div>
-            <span className="flex-1 text-sm font-semibold text-zinc-800">{title}</span>
+            <span className="flex-1 text-sm font-semibold text-zinc-800 dark:text-zinc-200">{title}</span>
             {totalUnread > 0 && (
               <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center">
                 {totalUnread}
@@ -200,14 +200,14 @@ export default function ChatWindow({
         <div className="flex items-center gap-0.5 ml-auto pl-1 shrink-0">
           <button
             onClick={() => setMinimized((v) => !v)}
-            className="p-1 rounded-lg hover:bg-zinc-100 text-zinc-400 transition-colors"
+            className="p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-colors"
             aria-label="Minimizar"
           >
             <Minus size={15} />
           </button>
           <button
             onClick={() => { setWindowState("bubble"); setMinimized(false); }}
-            className="p-1 rounded-lg hover:bg-zinc-100 text-zinc-400 transition-colors"
+            className="p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-colors"
             aria-label="Fechar"
           >
             <X size={15} />
@@ -222,14 +222,14 @@ export default function ChatWindow({
           {windowState === "list" && (
             <div className="flex flex-col flex-1 overflow-hidden">
               <div className="px-3 py-2 shrink-0">
-                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-zinc-100">
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800">
                   <Search size={13} className="text-zinc-400 shrink-0" />
                   <input
                     type="text"
                     placeholder="Buscar conversa…"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1 bg-transparent text-sm text-zinc-800 placeholder:text-zinc-400 outline-none"
+                    className="flex-1 bg-transparent text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 outline-none"
                   />
                 </div>
               </div>
@@ -257,7 +257,7 @@ export default function ChatWindow({
           {/* Message thread */}
           {windowState === "chat" && activeConv && (
             <div className="flex flex-col flex-1 overflow-hidden">
-              <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2 bg-zinc-50">
+              <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2 bg-zinc-50 dark:bg-zinc-950">
                 {activeConv.messages.map((msg, i) => (
                   <ChatMessage
                     key={i}

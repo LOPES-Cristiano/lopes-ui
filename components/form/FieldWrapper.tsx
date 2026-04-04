@@ -42,7 +42,7 @@ export default function FieldWrapper({
       htmlFor={id}
       className={twMerge(
         "select-none text-sm font-medium leading-none",
-        error ? "text-red-600" : "text-zinc-700",
+        error ? "text-red-600 dark:text-red-400" : "text-zinc-700 dark:text-zinc-200",
         labelInline && twMerge("shrink-0 pt-[9px]", labelWidth),
       )}
     >
@@ -80,7 +80,7 @@ export default function FieldWrapper({
   const subline = error ? (
     <p
       id={id ? `${id}-error` : undefined}
-      className="flex items-center gap-1 text-xs text-red-500"
+      className="flex items-center gap-1 text-xs text-red-500 dark:text-red-400"
     >
       <AlertCircle size={11} className="shrink-0" />
       {error}
@@ -88,7 +88,7 @@ export default function FieldWrapper({
   ) : helpText ? (
     <p
       id={id ? `${id}-help` : undefined}
-      className="text-xs leading-snug text-zinc-400"
+      className="text-xs leading-snug text-zinc-400 dark:text-zinc-500"
     >
       {helpText}
     </p>

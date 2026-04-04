@@ -43,15 +43,15 @@ const SIZE = {
 } as const;
 
 const VARIANT_WRAP: Record<AccordionVariant, string> = {
-  default:   "divide-y divide-zinc-100 rounded-xl border border-zinc-200 overflow-hidden",
-  bordered:  "divide-y divide-zinc-200",
+  default:   "divide-y divide-zinc-100 dark:divide-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden",
+  bordered:  "divide-y divide-zinc-200 dark:divide-zinc-700",
   separated: "flex flex-col gap-2",
 };
 
 const VARIANT_ITEM: Record<AccordionVariant, string> = {
-  default:   "bg-white",
-  bordered:  "bg-white",
-  separated: "rounded-xl border border-zinc-200 overflow-hidden bg-white",
+  default:   "bg-white dark:bg-zinc-900",
+  bordered:  "bg-white dark:bg-zinc-900",
+  separated: "rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900",
 };
 
 // ── Panel ─────────────────────────────────────────────────────────────────────
@@ -89,18 +89,18 @@ function Panel({
         className={twMerge(
           "flex w-full items-center text-left transition-colors duration-150 select-none",
           s.trigger,
-          open ? "text-zinc-900" : "text-zinc-700",
-          item.disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer hover:bg-zinc-50",
+          open ? "text-zinc-900 dark:text-zinc-50" : "text-zinc-700 dark:text-zinc-200",
+          item.disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800",
         )}
       >
         {Icon && (
-          <span className="shrink-0 text-zinc-400">
+          <span className="shrink-0 text-zinc-400 dark:text-zinc-500">
             <Icon size={s.icon} strokeWidth={1.75} />
           </span>
         )}
         <span className="flex-1 font-medium leading-snug">{item.title}</span>
         {item.badge !== undefined && (
-          <span className="ml-auto shrink-0 rounded-full bg-zinc-100 px-1.5 py-px text-[10px] font-semibold text-zinc-600 leading-none">
+          <span className="ml-auto shrink-0 rounded-full bg-zinc-100 dark:bg-zinc-800 px-1.5 py-px text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 leading-none">
             {item.badge}
           </span>
         )}
@@ -127,7 +127,7 @@ function Panel({
         style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
-          <div className={twMerge("text-zinc-600 leading-relaxed", s.content)}>
+          <div className={twMerge("text-zinc-600 dark:text-zinc-400 leading-relaxed", s.content)}>
             {item.content}
           </div>
         </div>

@@ -62,14 +62,14 @@ const STATUS_DOT: Record<AvatarStatus, string> = {
 
 // Consistent color from name/initials string
 const PALETTE = [
-  "bg-indigo-100 text-indigo-700",
-  "bg-sky-100 text-sky-700",
-  "bg-emerald-100 text-emerald-700",
-  "bg-violet-100 text-violet-700",
-  "bg-rose-100 text-rose-700",
-  "bg-amber-100 text-amber-700",
-  "bg-teal-100 text-teal-700",
-  "bg-orange-100 text-orange-700",
+  "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300",
+  "bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300",
+  "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300",
+  "bg-violet-100 text-violet-700 dark:bg-violet-900/60 dark:text-violet-300",
+  "bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300",
+  "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300",
+  "bg-teal-100 text-teal-700 dark:bg-teal-900/60 dark:text-teal-300",
+  "bg-orange-100 text-orange-700 dark:bg-orange-900/60 dark:text-orange-300",
 ];
 
 function colorFromString(str: string): string {
@@ -144,7 +144,7 @@ export default function Avatar({
             "absolute rounded-full",
             s.statusDot, s.statusPos,
             STATUS_DOT[status],
-            "ring-2 ring-white",
+            "ring-2 ring-white dark:ring-zinc-950",
           )}
           aria-label={status}
         />
@@ -165,7 +165,7 @@ export function AvatarGroup({ avatars, size = "md", max = 4, className }: Avatar
       {visible.map((av, i) => (
         <div
           key={i}
-          className={twMerge("-ml-2 first:ml-0", s.ring, "ring-white rounded-full")}
+          className={twMerge("-ml-2 first:ml-0", s.ring, "ring-white dark:ring-zinc-950 rounded-full")}
           style={{ zIndex: visible.length - i }}
         >
           <Avatar {...av} size={size} />
@@ -174,8 +174,8 @@ export function AvatarGroup({ avatars, size = "md", max = 4, className }: Avatar
       {overflow > 0 && (
         <div
           className={twMerge(
-            "-ml-2 flex items-center justify-center rounded-full font-semibold bg-zinc-100 text-zinc-600",
-            s.root, s.ring, "ring-white", s.text,
+            "-ml-2 flex items-center justify-center rounded-full font-semibold bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
+            s.root, s.ring, "ring-white dark:ring-zinc-950", s.text,
           )}
           style={{ zIndex: 0 }}
         >

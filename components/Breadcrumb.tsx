@@ -35,12 +35,12 @@ export type BreadcrumbProps = {
 
 function Sep({ type }: { type: BreadcrumbSeparator }) {
   if (type === "slash") {
-    return <Slash className="w-3 h-3 text-zinc-300" strokeWidth={2} />;
+    return <Slash className="w-3 h-3 text-zinc-300 dark:text-zinc-600" strokeWidth={2} />;
   }
   if (type === "dot") {
-    return <span className="w-1 h-1 rounded-full bg-zinc-300 flex-shrink-0" />;
+    return <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600 flex-shrink-0" />;
   }
-  return <ChevronRight className="w-3.5 h-3.5 text-zinc-400" strokeWidth={2} />;
+  return <ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" strokeWidth={2} />;
 }
 
 // ── Item link / span ──────────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ function BreadcrumbLink({
     return (
       <span
         aria-current="page"
-        className="flex items-center gap-1.5 text-zinc-900 font-medium cursor-default select-none"
+        className="flex items-center gap-1.5 text-zinc-900 dark:text-zinc-50 font-medium cursor-default select-none"
       >
         {content}
       </span>
@@ -78,7 +78,7 @@ function BreadcrumbLink({
     return (
       <a
         href={item.href}
-        className="flex items-center gap-1.5 text-zinc-500 hover:text-indigo-600 transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
+        className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
         aria-label={homeOnly ? item.label : undefined}
       >
         {content}
@@ -87,7 +87,7 @@ function BreadcrumbLink({
   }
 
   return (
-    <span className="flex items-center gap-1.5 text-zinc-500 cursor-default">
+    <span className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 cursor-default">
       {content}
     </span>
   );
@@ -110,7 +110,7 @@ function EllipsisButton({
       title={title}
       aria-label={`Mostrar ${hiddenItems.length} itens ocultos: ${title}`}
       onClick={onExpand}
-      className="flex items-center justify-center w-6 h-6 rounded hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+      className="flex items-center justify-center w-6 h-6 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
     >
       <MoreHorizontal className="w-3.5 h-3.5" />
     </button>

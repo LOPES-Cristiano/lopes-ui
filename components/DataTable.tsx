@@ -249,14 +249,14 @@ function ActionMenu<T>({
       <div
         ref={menuRef}
         style={{ position: "absolute", top: pos.top, left: pos.left, zIndex: 9999 }}
-        className="min-w-48 rounded-xl border border-zinc-200 bg-white shadow-lg py-1.5 outline-none"
+        className="min-w-48 rounded-xl border border-zinc-200 bg-white shadow-lg py-1.5 outline-none dark:border-zinc-700 dark:bg-zinc-900"
       >
         {actions.map((action, i) => {
           const Icon = action.icon;
           const isDisabled = action.disabled?.(row) ?? false;
           return (
             <React.Fragment key={i}>
-              {action.divider && i > 0 && <div className="my-1 border-t border-zinc-100" />}
+              {action.divider && i > 0 && <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" />}
               <button
                 disabled={isDisabled}
                 onClick={() => { action.onClick(row); onClose(); }}
@@ -264,8 +264,8 @@ function ActionMenu<T>({
                   "flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors",
                   "disabled:opacity-40 disabled:cursor-not-allowed",
                   action.danger
-                    ? "text-red-600 hover:bg-red-50"
-                    : "text-zinc-700 hover:bg-zinc-50",
+                    ? "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+                    : "text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800",
                 )}
               >
                 {Icon && <Icon size={14} className="shrink-0" />}
@@ -316,16 +316,16 @@ function FilterDialog({
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 p-4"
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-zinc-200 overflow-hidden">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-zinc-200 overflow-hidden dark:bg-zinc-900 dark:border-zinc-700">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800">
           <div>
-            <p className="text-sm font-semibold text-zinc-900">Filtros</p>
+            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Filtros</p>
             {activeCount > 0 && (
               <p className="text-xs text-zinc-400 mt-0.5">{activeCount} filtro{activeCount > 1 ? "s" : ""} ativo{activeCount > 1 ? "s" : ""}</p>
             )}
           </div>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700 transition-colors p-1 rounded-lg hover:bg-zinc-100">
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700 transition-colors p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
             <X size={16} />
           </button>
         </div>
@@ -415,10 +415,10 @@ function FilterDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 px-5 py-4 border-t border-zinc-100 bg-zinc-50">
+        <div className="flex items-center justify-between gap-3 px-5 py-4 border-t border-zinc-100 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-800/50">
           <button
             onClick={onReset}
-            className="text-sm text-zinc-500 hover:text-zinc-800 transition-colors"
+            className="text-sm text-zinc-500 hover:text-zinc-800 transition-colors dark:text-zinc-400 dark:hover:text-zinc-200"
           >
             Limpar todos
           </button>
@@ -484,7 +484,7 @@ function ColumnPanel<T>({
     <div
       ref={panelRef}
       style={{ position: "absolute", top: pos.top, left: pos.left, zIndex: 9999 }}
-      className="w-56 rounded-xl border border-zinc-200 bg-white shadow-xl py-2 outline-none"
+      className="w-56 rounded-xl border border-zinc-200 bg-white shadow-xl py-2 outline-none dark:border-zinc-700 dark:bg-zinc-900"
     >
       <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase text-zinc-400 tracking-wider">Colunas</p>
       {columns.filter((c) => !c.required).map((col) => {
@@ -493,7 +493,7 @@ function ColumnPanel<T>({
           <button
             key={col.key}
             onClick={() => onToggle(col.key)}
-            className="flex w-full items-center gap-2.5 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+            className="flex w-full items-center gap-2.5 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors dark:text-zinc-300 dark:hover:bg-zinc-800"
           >
             {isHidden
               ? <EyeOff size={13} className="text-zinc-400" />
@@ -566,9 +566,9 @@ function DataRow<T>({
   const [menuOpen, setMenuOpen] = useState(false);
 
   const rowCls = twMerge(
-    variant === "striped" && idx % 2 === 1 ? "bg-zinc-50/70" : "bg-white",
-    dividers && "border-b border-zinc-100 last:border-0",
-    hoverable && "transition-colors hover:bg-zinc-50 group",
+    variant === "striped" && idx % 2 === 1 ? "bg-zinc-50/70 dark:bg-zinc-800/40" : "bg-white dark:bg-zinc-950",
+    dividers && "border-b border-zinc-100 last:border-0 dark:border-zinc-800",
+    hoverable && "transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60 group",
     onRowClick && "cursor-pointer",
   );
 
@@ -598,7 +598,7 @@ function DataRow<T>({
           className={twMerge(
             SIZE_TD[size],
             "text-right",
-            bordered && "border-l border-zinc-100",
+            bordered && "border-l border-zinc-100 dark:border-zinc-800",
           )}
           onClick={(e) => e.stopPropagation()}
         >
@@ -619,8 +619,8 @@ function DataRow<T>({
                       "inline-flex items-center justify-center w-7 h-7 rounded-md transition-colors",
                       "disabled:opacity-30 disabled:cursor-not-allowed",
                       action.danger
-                        ? "text-red-400 hover:bg-red-50 hover:text-red-600"
-                        : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700",
+                        ? "text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40"
+                        : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300",
                     )}
                   >
                     {Icon ? <Icon size={14} /> : <span className="text-[11px] font-medium">{action.label.slice(0, 3)}</span>}
@@ -634,7 +634,7 @@ function DataRow<T>({
                 <button
                   ref={btnRef}
                   onClick={() => setMenuOpen((v) => !v)}
-                  className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                  className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 dark:hover:text-zinc-300 dark:hover:bg-zinc-800"
                   aria-label="Mais ações"
                 >
                   <MoreHorizontal size={15} />
@@ -755,7 +755,7 @@ export default function DataTable<T = Record<string, unknown>>({
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
   const bordered = variant === "bordered";
-  const headerBg = variant === "minimal" ? "bg-transparent" : "bg-zinc-50";
+  const headerBg = variant === "minimal" ? "bg-transparent" : "bg-zinc-50 dark:bg-zinc-800/50";
 
   return (
     <div
@@ -766,8 +766,8 @@ export default function DataTable<T = Record<string, unknown>>({
       {(title || description || globalSearch || filterFields || columnToggle || toolbarSlot) && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div>
-            {title && <p className="text-sm font-semibold text-zinc-900">{title}</p>}
-            {description && <p className="text-xs text-zinc-500">{description}</p>}
+            {title && <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{title}</p>}
+            {description && <p className="text-xs text-zinc-500 dark:text-zinc-400">{description}</p>}
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {globalSearch && (
@@ -778,10 +778,10 @@ export default function DataTable<T = Record<string, unknown>>({
                   value={searchQ}
                   onChange={(e) => setSearchQ(e.target.value)}
                   placeholder="Buscar..."
-                  className="pl-8 pr-3 py-1.5 rounded-lg border border-zinc-200 bg-white text-sm text-zinc-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-44"
+                  className="pl-8 pr-3 py-1.5 rounded-lg border border-zinc-200 bg-white text-sm text-zinc-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-44 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500"
                 />
                 {searchQ && (
-                  <button onClick={() => setSearchQ("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
+                  <button onClick={() => setSearchQ("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
                     <X size={12} />
                   </button>
                 )}
@@ -795,8 +795,8 @@ export default function DataTable<T = Record<string, unknown>>({
                 className={twMerge(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors",
                   activeFilterCount > 0
-                    ? "border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
-                    : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
+                    ? "border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
+                    : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700",
                 )}
               >
                 <Filter size={13} />
@@ -813,7 +813,7 @@ export default function DataTable<T = Record<string, unknown>>({
               <button
                 ref={colBtnRef}
                 onClick={() => setColPanelOpen((v) => !v)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
               >
                 <SlidersHorizontal size={13} />
                 Colunas
@@ -853,11 +853,11 @@ export default function DataTable<T = Record<string, unknown>>({
       )}
 
       {/* ── Table ── */}
-      <div className="w-full rounded-xl overflow-hidden border border-zinc-200">
+      <div className="w-full rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700">
 
         {/* Tab bar */}
         {tabs && tabs.length > 0 && (
-          <div className="flex overflow-x-auto border-b border-zinc-200 bg-zinc-50/50">
+          <div className="flex overflow-x-auto border-b border-zinc-200 bg-zinc-50/50 dark:border-zinc-700 dark:bg-zinc-800/50">
             {tabs.map((tab, i) => {
               const fn = getTabFilter(tab);
               const count = tab.showCount ? (fn ? rows.filter(fn).length : rows.length) : null;
@@ -868,15 +868,15 @@ export default function DataTable<T = Record<string, unknown>>({
                   className={twMerge(
                     "px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2",
                     activeTab === i
-                      ? "border-indigo-500 text-indigo-600 bg-white"
-                      : "border-transparent text-zinc-500 hover:text-zinc-700 hover:bg-white/60",
+                      ? "border-indigo-500 text-indigo-600 bg-white dark:bg-zinc-900 dark:text-indigo-400"
+                      : "border-transparent text-zinc-500 hover:text-zinc-700 hover:bg-white/60 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-800/60",
                   )}
                 >
                   {tab.label}
                   {count !== null && (
                     <span className={twMerge(
                       "ml-1.5 inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none",
-                      activeTab === i ? "bg-indigo-100 text-indigo-700" : "bg-zinc-200 text-zinc-500",
+                      activeTab === i ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300" : "bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400",
                     )}>
                       {count}
                     </span>
@@ -891,7 +891,7 @@ export default function DataTable<T = Record<string, unknown>>({
         <table className="w-full border-collapse">
           {/* Head */}
           <thead>
-            <tr className={twMerge(headerBg, "border-b border-zinc-200")}>
+            <tr className={twMerge(headerBg, "border-b border-zinc-200 dark:border-zinc-700")}>
               {visibleCols.map((col) => {
                 const isSorted = sortKey === col.key;
                 return (
@@ -899,11 +899,11 @@ export default function DataTable<T = Record<string, unknown>>({
                     key={col.key}
                     className={twMerge(
                       SIZE_TH[size],
-                      "font-semibold text-zinc-600 tracking-wide uppercase whitespace-nowrap select-none",
-                      stickyHeader && "sticky top-0 z-10 bg-zinc-50 shadow-[0_1px_0_0_#e4e4e7]",
-                      bordered && "border-x border-zinc-200 first:border-l-0 last:border-r-0",
+                      "font-semibold text-zinc-600 tracking-wide uppercase whitespace-nowrap select-none dark:text-zinc-400",
+                      stickyHeader && "sticky top-0 z-10 bg-zinc-50 shadow-[0_1px_0_0_#e4e4e7] dark:bg-zinc-800 dark:shadow-[0_1px_0_0_#27272a]",
+                      bordered && "border-x border-zinc-200 first:border-l-0 last:border-r-0 dark:border-zinc-700",
                       ALIGN[col.align ?? "left"],
-                      col.sortable && "cursor-pointer hover:bg-zinc-100 transition-colors",
+                      col.sortable && "cursor-pointer hover:bg-zinc-100 transition-colors dark:hover:bg-zinc-800",
                       col.headerClassName,
                     )}
                     style={col.width ? { width: col.width, minWidth: col.width } : undefined}
@@ -916,7 +916,7 @@ export default function DataTable<T = Record<string, unknown>>({
                           ? sortDir === "asc"
                             ? <ChevronUp size={12} className="text-indigo-500" />
                             : <ChevronDown size={12} className="text-indigo-500" />
-                          : <ChevronsUpDown size={12} className="text-zinc-300" />
+                          : <ChevronsUpDown size={12} className="text-zinc-300 dark:text-zinc-600" />
                       )}
                     </span>
                   </th>
@@ -983,7 +983,7 @@ export default function DataTable<T = Record<string, unknown>>({
           {/* Summary row */}
           {showSummary && pageRows.length > 0 && visibleCols.some((c) => c.summary) && (
             <tfoot>
-              <tr className="bg-zinc-50 border-t-2 border-zinc-200">
+              <tr className="bg-zinc-50 border-t-2 border-zinc-200 dark:bg-zinc-800/50 dark:border-zinc-700">
                 {visibleCols.map((col) => {
                   const val = computeSummary(col, filtered);
                   const label =
@@ -995,9 +995,9 @@ export default function DataTable<T = Record<string, unknown>>({
                       key={col.key}
                       className={twMerge(
                         SIZE_TD[size],
-                        "font-semibold text-zinc-700",
+                        "font-semibold text-zinc-700 dark:text-zinc-300",
                         ALIGN[col.align ?? "left"],
-                        bordered && "border-x border-zinc-200 first:border-l-0 last:border-r-0",
+                        bordered && "border-x border-zinc-200 first:border-l-0 last:border-r-0 dark:border-zinc-700",
                       )}
                     >
                       {val != null ? (
@@ -1020,18 +1020,18 @@ export default function DataTable<T = Record<string, unknown>>({
       {/* ── Pagination ── */}
       {pagination && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-3">
-          <div className="flex items-center gap-2 text-sm text-zinc-500">
+          <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
             <span>
               {filtered.length === 0
                 ? "0 registros"
                 : `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, filtered.length)} de ${filtered.length}`}
             </span>
-            <span className="text-zinc-300">|</span>
+            <span className="text-zinc-300 dark:text-zinc-600">|</span>
             <span>por página</span>
             <select
               value={pageSize}
               onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
-              className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
             >
               {pageSizeOptions.map((n) => (
                 <option key={n} value={n}>{n}</option>
@@ -1054,7 +1054,7 @@ export default function DataTable<T = Record<string, unknown>>({
                     "w-8 h-8 rounded-lg text-sm font-medium transition-colors",
                     p === page
                       ? "bg-indigo-600 text-white"
-                      : "text-zinc-600 hover:bg-zinc-100",
+                      : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800",
                   )}
                 >
                   {p}
@@ -1087,7 +1087,7 @@ function PageBtn({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-8 h-8 rounded-lg text-zinc-500 hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+      className="w-8 h-8 rounded-lg text-zinc-500 hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center dark:text-zinc-400 dark:hover:bg-zinc-800"
     >
       {children}
     </button>

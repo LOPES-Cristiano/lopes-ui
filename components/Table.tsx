@@ -97,13 +97,13 @@ export default function Table<T = Record<string, unknown>>({
   const headerBg =
     variant === "minimal"
       ? "bg-transparent"
-      : "bg-zinc-50";
+      : "bg-zinc-50 dark:bg-zinc-900";
 
   const rowClass = (idx: number) =>
     twMerge(
-      variant === "striped" && idx % 2 === 1 ? "bg-zinc-50/70" : "bg-white",
-      dividers && "border-b border-zinc-100 last:border-0",
-      hoverable && "transition-colors hover:bg-zinc-50",
+      variant === "striped" && idx % 2 === 1 ? "bg-zinc-50/70 dark:bg-zinc-800/40" : "bg-white dark:bg-zinc-950",
+      dividers && "border-b border-zinc-100 dark:border-zinc-800 last:border-0",
+      hoverable && "transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/60",
       onRowClick && "cursor-pointer",
     );
 
@@ -116,21 +116,21 @@ export default function Table<T = Record<string, unknown>>({
     >
       <div className={twMerge(
         "w-full rounded-xl overflow-hidden border",
-        bordered ? "border-zinc-200" : "border-zinc-200",
+        bordered ? "border-zinc-200 dark:border-zinc-700" : "border-zinc-200 dark:border-zinc-800",
         scrollable && "overflow-x-auto",
       )}>
         <table className={twMerge("w-full border-collapse", tableClassName)}>
           {/* Head */}
           <thead>
-            <tr className={twMerge(headerBg, bordered && "border-b border-zinc-200")}>
+            <tr className={twMerge(headerBg, bordered && "border-b border-zinc-200 dark:border-zinc-700")}>
               {columns.map((col) => (
                 <th
                   key={col.key}
                   className={twMerge(
                     SIZE_TH[size],
-                    "font-semibold text-zinc-600 tracking-wide uppercase whitespace-nowrap",
-                    stickyHeader && "sticky top-0 z-10 bg-zinc-50 shadow-[0_1px_0_0_#e4e4e7]",
-                    bordered && "border-x border-zinc-200 first:border-l-0 last:border-r-0",
+                    "font-semibold text-zinc-600 dark:text-zinc-400 tracking-wide uppercase whitespace-nowrap",
+                    stickyHeader && "sticky top-0 z-10 bg-zinc-50 dark:bg-zinc-900 shadow-[0_1px_0_0_#e4e4e7] dark:shadow-[0_1px_0_0_#27272a]",
+                    bordered && "border-x border-zinc-200 dark:border-zinc-700 first:border-l-0 last:border-r-0",
                     ALIGN[col.align ?? "left"],
                     col.headerClassName,
                   )}
@@ -168,8 +168,8 @@ export default function Table<T = Record<string, unknown>>({
                         key={col.key}
                         className={twMerge(
                           SIZE_TD[size],
-                          "text-zinc-700",
-                          bordered && "border-x border-zinc-100 first:border-l-0 last:border-r-0",
+                          "text-zinc-700 dark:text-zinc-300",
+                          bordered && "border-x border-zinc-100 dark:border-zinc-800 first:border-l-0 last:border-r-0",
                           ALIGN[col.align ?? "left"],
                           col.cellClassName,
                         )}

@@ -72,9 +72,9 @@ function Arrow({
       className={twMerge(
         "absolute top-1/2 -translate-y-1/2 z-10",
         "flex h-9 w-9 items-center justify-center rounded-full",
-        "bg-white/90 shadow-md border border-zinc-200",
-        "text-zinc-600 transition-all duration-150",
-        "hover:bg-white hover:text-zinc-900 hover:shadow-lg",
+        "bg-white/90 dark:bg-zinc-800/90 shadow-md border border-zinc-200 dark:border-zinc-700",
+        "text-zinc-600 dark:text-zinc-300 transition-all duration-150",
+        "hover:bg-white dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 hover:shadow-lg",
         "disabled:opacity-30 disabled:cursor-not-allowed",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
         dir === "prev" ? "left-2" : "right-2",

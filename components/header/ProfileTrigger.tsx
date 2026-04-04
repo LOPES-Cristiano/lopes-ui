@@ -66,7 +66,7 @@ export default function ProfileTrigger({
   const defaultTrigger = (
     <span className={`inline-flex items-center ${cfg.gap}`}>
       {/* Avatar */}
-      <span className={`${cfg.avatar} ${shapeClass} overflow-hidden flex items-center justify-center bg-zinc-200 text-zinc-600 font-semibold shrink-0 ring-2 ring-white`}>
+      <span className={`${cfg.avatar} ${shapeClass} overflow-hidden flex items-center justify-center bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 font-semibold shrink-0 ring-2 ring-white dark:ring-zinc-900`}>
         {avatar ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={avatar} alt={name ?? "avatar"} className="h-full w-full object-cover" />
@@ -78,7 +78,7 @@ export default function ProfileTrigger({
       </span>
       {/* Nome */}
       {name && (
-        <span className={`${cfg.text} font-medium text-zinc-700 hidden sm:block`}>{name}</span>
+        <span className={`${cfg.text} font-medium text-zinc-700 dark:text-zinc-200 hidden sm:block`}>{name}</span>
       )}
       {/* Chevron */}
       {showChevron && (
@@ -102,7 +102,7 @@ export default function ProfileTrigger({
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((s) => !s)}
-        className={`inline-flex items-center ${cfg.gap} rounded-full px-1.5 py-1 hover:bg-zinc-100 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300`}
+        className={`inline-flex items-center ${cfg.gap} rounded-full px-1.5 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300`}
       >
         {trigger ?? defaultTrigger}
       </button>
@@ -111,7 +111,7 @@ export default function ProfileTrigger({
       <div
         role="menu"
         className={[
-          "absolute mt-2 rounded-xl bg-white shadow-xl ring-1 ring-black/[0.06] overflow-hidden z-50",
+          "absolute mt-2 rounded-xl bg-white dark:bg-zinc-900 shadow-xl ring-1 ring-black/[0.06] dark:ring-white/[0.08] overflow-hidden z-50",
           menuWidth,
           align === "right" ? "right-0" : "left-0",
           "transition-all duration-150 ease-out origin-top-right",

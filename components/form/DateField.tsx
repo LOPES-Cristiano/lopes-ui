@@ -53,14 +53,14 @@ export default function DateField({
   const wrapCls = twMerge(
     "relative flex w-full items-center overflow-hidden rounded-lg border transition-all duration-150",
     variant === "filled"
-      ? "bg-zinc-100 border-transparent hover:bg-zinc-200/70 focus-within:bg-white focus-within:border-zinc-300 focus-within:ring-2 focus-within:ring-zinc-500/10"
-      : "bg-white border-zinc-300 hover:border-zinc-400 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/10",
+      ? "bg-zinc-100 border-transparent hover:bg-zinc-200/70 focus-within:bg-white focus-within:border-zinc-300 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 dark:focus-within:bg-zinc-900 dark:focus-within:border-zinc-600"
+      : "bg-white border-zinc-300 hover:border-zinc-400 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:border-zinc-600 dark:focus-within:border-zinc-500",
     error && "border-red-400 hover:border-red-400 focus-within:border-red-500 focus-within:ring-red-500/10",
-    (disabled || readOnly) && "opacity-60 pointer-events-none bg-zinc-50",
+    (disabled || readOnly) && "opacity-60 pointer-events-none bg-zinc-50 dark:bg-zinc-800/50",
   );
 
   const inputCls = twMerge(
-    "flex-1 min-w-0 w-full bg-transparent outline-none border-0 ring-0 [color-scheme:light]",
+    "flex-1 min-w-0 w-full bg-transparent outline-none border-0 ring-0 text-zinc-900 dark:text-zinc-100 [color-scheme:light] dark:[color-scheme:dark]",
     s.h, s.text, s.pl, "pr-3",
     (disabled || readOnly) && "cursor-not-allowed",
     inputClassName,

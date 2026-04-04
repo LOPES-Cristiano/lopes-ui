@@ -129,7 +129,7 @@ export default function Switch({
         className={twMerge(
           "flex items-center rounded-full transition-colors duration-200 ease-in-out",
           s.track,
-          isChecked ? TRACK_ON[color] : "bg-zinc-200",
+          isChecked ? TRACK_ON[color] : "bg-zinc-200 dark:bg-zinc-700",
           "peer-focus-visible:ring-2 peer-focus-visible:ring-offset-1",
           FOCUS_RING[color],
           error && "ring-2 ring-red-400",
@@ -157,9 +157,9 @@ export default function Switch({
         disabled && "cursor-not-allowed opacity-50",
       )}
     >
-      <span className={twMerge("font-medium text-zinc-800", s.text)}>{inlineLabel}</span>
+      <span className={twMerge("font-medium text-zinc-800 dark:text-zinc-100", s.text)}>{inlineLabel}</span>
       {description && (
-        <span className="text-xs text-zinc-400 mt-0.5">{description}</span>
+        <span className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">{description}</span>
       )}
     </label>
   ) : null;
@@ -171,7 +171,7 @@ export default function Switch({
         htmlFor={id}
         className={twMerge(
           "block text-sm font-medium leading-none select-none",
-          error ? "text-red-600" : "text-zinc-700",
+          error ? "text-red-600 dark:text-red-400" : "text-zinc-700 dark:text-zinc-200",
           disabled && "opacity-50",
         )}
       >

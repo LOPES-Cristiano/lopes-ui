@@ -28,12 +28,12 @@ export default function ActionDialog({
   cancelLabel = "Cancel",
   onConfirm,
   onCancel,
-  dialogClassName = "relative z-10 w-[90%] max-w-md rounded-lg bg-white p-6 shadow-lg",
+  dialogClassName = "relative z-10 w-[90%] max-w-md rounded-lg bg-white dark:bg-zinc-900 p-6 shadow-lg",
   overlayClassName = "absolute inset-0 bg-black/40",
-  titleClassName = "text-lg font-semibold",
-  descriptionClassName = "mt-2 text-sm text-zinc-600",
+  titleClassName = "text-lg font-semibold dark:text-zinc-50",
+  descriptionClassName = "mt-2 text-sm text-zinc-600 dark:text-zinc-400",
   confirmButtonClassName = "rounded-md bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-500",
-  cancelButtonClassName = "rounded-md px-3 py-1 text-sm hover:bg-zinc-100",
+  cancelButtonClassName = "rounded-md px-3 py-1 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:text-zinc-200",
 }: ActionDialogProps) {
   useBodyScrollLock(open);
 

@@ -92,25 +92,25 @@ function MenuItem({
     item.disabled
       ? "cursor-not-allowed opacity-40 pointer-events-none"
       : item.danger
-        ? "cursor-pointer text-red-600 hover:bg-red-50 focus:bg-red-50"
-        : "cursor-pointer text-zinc-700 hover:bg-zinc-100 focus:bg-zinc-100",
+        ? "cursor-pointer text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 focus:bg-red-50 dark:focus:bg-red-950/40"
+        : "cursor-pointer text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:bg-zinc-100 dark:focus:bg-zinc-800",
   );
 
   const inner = (
     <>
       {Icon && (
-        <span className={twMerge("shrink-0", item.danger ? "text-red-400" : "text-zinc-400 group-hover/mi:text-zinc-600")}>
+        <span className={twMerge("shrink-0", item.danger ? "text-red-400 dark:text-red-500" : "text-zinc-400 dark:text-zinc-500 group-hover/mi:text-zinc-600 dark:group-hover/mi:text-zinc-300")}>
           <Icon size={14} strokeWidth={1.75} />
         </span>
       )}
       <span className="flex flex-1 flex-col min-w-0">
         <span className="truncate leading-snug font-medium">{item.label}</span>
         {item.description && (
-          <span className="truncate text-[11px] text-zinc-400 leading-snug mt-0.5">{item.description}</span>
+          <span className="truncate text-[11px] text-zinc-400 dark:text-zinc-500 leading-snug mt-0.5">{item.description}</span>
         )}
       </span>
       {item.shortcut && !hasChildren && (
-        <span className="ml-auto shrink-0 text-[11px] text-zinc-400 font-mono">{item.shortcut}</span>
+        <span className="ml-auto shrink-0 text-[11px] text-zinc-400 dark:text-zinc-500 font-mono">{item.shortcut}</span>
       )}
       {hasChildren && (
         <ChevronRight size={12} className="ml-auto shrink-0 text-zinc-400" />
@@ -138,12 +138,12 @@ function MenuItem({
         </button>
         {subVisible && (
           <div
-            className="absolute left-full top-0 -mt-1 ml-0.5 z-[120] min-w-[180px] rounded-xl bg-white p-1 shadow-xl ring-1 ring-black/[0.06]"
+            className="absolute left-full top-0 -mt-1 ml-0.5 z-[120] min-w-[180px] rounded-xl bg-white dark:bg-zinc-900 p-1 shadow-xl ring-1 ring-black/[0.06] dark:ring-white/[0.08]"
             role="menu"
           >
             {item.children!.map((child, ci) => (
               <React.Fragment key={child.id ?? `${child.label}-${ci}`}>
-                {child.divider && <div className="my-1 border-t border-zinc-100" role="separator" />}
+                {child.divider && <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" role="separator" />}
                 <MenuItem item={child} onSelect={onSelect} />
               </React.Fragment>
             ))}
@@ -209,12 +209,12 @@ function MenuPanel({
       role="menu"
       aria-label="Context menu"
       style={{ top: pos.y, left: pos.x, minWidth: MENU_W }}
-      className="fixed z-[110] rounded-xl bg-white p-1 shadow-xl ring-1 ring-black/[0.06] focus:outline-none"
+      className="fixed z-[110] rounded-xl bg-white dark:bg-zinc-900 p-1 shadow-xl ring-1 ring-black/[0.06] dark:ring-white/[0.08] focus:outline-none"
       onContextMenu={(e) => e.preventDefault()}
     >
       {items.map((item, i) => (
         <React.Fragment key={item.id ?? `${item.label}-${i}`}>
-          {item.divider && <div className="my-1 border-t border-zinc-100" role="separator" />}
+          {item.divider && <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" role="separator" />}
           <MenuItem item={item} onSelect={onSelect} />
         </React.Fragment>
       ))}

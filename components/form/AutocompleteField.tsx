@@ -141,16 +141,16 @@ export default function AutocompleteField({
   const wrapCls = twMerge(
     "relative flex w-full items-center overflow-hidden rounded-lg border transition-all duration-150",
     variant === "filled"
-      ? "bg-zinc-100 border-transparent hover:bg-zinc-200/70 focus-within:bg-white focus-within:border-zinc-300 focus-within:ring-2 focus-within:ring-zinc-500/10"
-      : "bg-white border-zinc-300 hover:border-zinc-400 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/10",
+      ? "bg-zinc-100 border-transparent hover:bg-zinc-200/70 focus-within:bg-white focus-within:border-zinc-300 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 dark:focus-within:bg-zinc-900 dark:focus-within:border-zinc-600"
+      : "bg-white border-zinc-300 hover:border-zinc-400 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:border-zinc-600 dark:focus-within:border-zinc-500",
     error && "border-red-400 hover:border-red-400 focus-within:border-red-500 focus-within:ring-red-500/10",
-    disabled && "opacity-60 pointer-events-none bg-zinc-50",
+    disabled && "opacity-60 pointer-events-none bg-zinc-50 dark:bg-zinc-800/50",
   );
 
   const hasClear = clearable && !!displayValue;
 
   const inputCls = twMerge(
-    "flex-1 min-w-0 bg-transparent outline-none border-0 ring-0 placeholder:text-zinc-400",
+    "flex-1 min-w-0 bg-transparent outline-none border-0 ring-0 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500",
     s.h, s.text, s.px,
     hasClear ? "pr-14" : "pr-9",
   );
@@ -190,7 +190,7 @@ export default function AutocompleteField({
                 type="button"
                 aria-label="Limpar"
                 onClick={handleClear}
-                className="pointer-events-auto flex h-5 w-5 items-center justify-center rounded text-zinc-400 hover:text-zinc-600 transition-colors"
+                className="pointer-events-auto flex h-5 w-5 items-center justify-center rounded text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors"
               >
                 <X size={12} />
               </button>
@@ -200,7 +200,7 @@ export default function AutocompleteField({
               tabIndex={-1}
               aria-label={open ? "Fechar" : "Abrir"}
               onClick={() => { setOpen((o) => !o); inputRef.current?.focus(); }}
-              className="pointer-events-auto flex h-5 w-5 items-center justify-center rounded text-zinc-400 hover:text-zinc-600 transition-colors"
+              className="pointer-events-auto flex h-5 w-5 items-center justify-center rounded text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors"
             >
               <ChevronDown
                 size={14}
@@ -219,12 +219,12 @@ export default function AutocompleteField({
             className={twMerge(
               "absolute left-0 right-0 top-full z-[80] mt-1",
               "max-h-52 overflow-y-auto overscroll-contain",
-              "rounded-xl border border-zinc-200 bg-white shadow-xl shadow-black/5",
+              "rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 shadow-xl shadow-black/5",
               s.text,
             )}
           >
             {filtered.length === 0 ? (
-              <li className="px-3 py-2.5 text-zinc-400">{emptyMessage}</li>
+              <li className="px-3 py-2.5 text-zinc-400 dark:text-zinc-500">{emptyMessage}</li>
             ) : (
               filtered.map((opt, i) => (
                 <li
@@ -237,8 +237,8 @@ export default function AutocompleteField({
                   className={twMerge(
                     "flex cursor-pointer items-center px-3 py-2.5 transition-colors",
                     i === highlighted
-                      ? "bg-indigo-50 text-indigo-900"
-                      : "text-zinc-700 hover:bg-zinc-50",
+                      ? "bg-indigo-50 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200"
+                      : "text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800",
                     displayValue === opt.label && "font-medium",
                   )}
                 >

@@ -78,14 +78,14 @@ function Indicator({ checked, shape, size, multiple }: {
           ? twMerge(
               "rounded-full",
               checked
-                ? "border-indigo-600 bg-indigo-50"
-                : "border-zinc-300 bg-white group-hover/cb:border-indigo-400",
+                ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-950/50"
+                : "border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-900 group-hover/cb:border-indigo-400",
             )
           : twMerge(
               sz.radius,
               checked
                 ? "border-indigo-600 bg-indigo-600"
-                : "border-zinc-300 bg-white group-hover/cb:border-indigo-400",
+                : "border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-900 group-hover/cb:border-indigo-400",
             ),
       )}
     >
@@ -170,8 +170,8 @@ export default function CheckboxGroup({
                   "group/cb relative flex flex-col gap-3 rounded-xl border-2 p-4 cursor-pointer select-none",
                   "transition-all duration-150",
                   checked
-                    ? "border-indigo-600 bg-indigo-50/50 shadow-sm"
-                    : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50",
+                    ? "border-indigo-600 bg-indigo-50/50 shadow-sm dark:bg-indigo-950/40"
+                    : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600 dark:hover:bg-zinc-800",
                   opt.disabled && "cursor-not-allowed opacity-50 pointer-events-none",
                 )}
               >
@@ -191,7 +191,7 @@ export default function CheckboxGroup({
                     <div className={twMerge(
                       "flex items-center justify-center rounded-lg shrink-0",
                       "h-10 w-10 transition-colors duration-150",
-                      checked ? "bg-indigo-100 text-indigo-600" : "bg-zinc-100 text-zinc-500 group-hover/cb:bg-zinc-200",
+                      checked ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400" : "bg-zinc-100 text-zinc-500 group-hover/cb:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover/cb:bg-zinc-700",
                     )}>
                       {opt.icon}
                     </div>
@@ -202,11 +202,11 @@ export default function CheckboxGroup({
                 </div>
                 {/* Text */}
                 <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className={twMerge(sz.text, "font-semibold leading-snug", checked ? "text-indigo-900" : "text-zinc-800")}>
+                  <span className={twMerge(sz.text, "font-semibold leading-snug", checked ? "text-indigo-900 dark:text-indigo-300" : "text-zinc-800 dark:text-zinc-100")}>
                     {opt.label}
                   </span>
                   {opt.description && (
-                    <span className={twMerge(sz.desc, "leading-snug", checked ? "text-indigo-600/70" : "text-zinc-400")}>
+                    <span className={twMerge(sz.desc, "leading-snug", checked ? "text-indigo-600/70 dark:text-indigo-400/70" : "text-zinc-400 dark:text-zinc-500")}>
                       {opt.description}
                     </span>
                   )}
@@ -244,7 +244,7 @@ export default function CheckboxGroup({
                   BTN_SIZE[size],
                   checked
                     ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
-                    : "bg-white border-zinc-200 text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50",
+                    : "bg-white border-zinc-200 text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-800",
                   opt.disabled && "cursor-not-allowed opacity-50 pointer-events-none",
                 )}
               >
@@ -320,11 +320,11 @@ export default function CheckboxGroup({
                 <Indicator checked={checked} shape={shape} size={size} multiple={multiple} />
               </span>
               <span className="flex flex-col gap-0.5">
-                <span className={twMerge(sz.text, "font-medium text-zinc-800 leading-snug")}>
+                <span className={twMerge(sz.text, "font-medium text-zinc-800 dark:text-zinc-100 leading-snug")}>
                   {opt.label}
                 </span>
                 {opt.description && (
-                  <span className={twMerge(sz.desc, "text-zinc-400 leading-snug")}>
+                  <span className={twMerge(sz.desc, "text-zinc-400 dark:text-zinc-500 leading-snug")}>
                     {opt.description}
                   </span>
                 )}

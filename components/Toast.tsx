@@ -333,7 +333,7 @@ function ToastCard({ item, position }: { item: ToastItem; position: ToastPositio
       {/* Card */}
       <div className={twMerge(
         "relative flex items-start gap-3 overflow-hidden",
-        "rounded-2xl bg-white border border-zinc-100 px-4 py-3.5",
+        "rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 px-4 py-3.5",
         "shadow-2xl shadow-zinc-900/[0.12]",
       )}>
         {/* Left accent bar — crossfades colour on type change */}
@@ -360,7 +360,7 @@ function ToastCard({ item, position }: { item: ToastItem; position: ToastPositio
         {/* Message — fades/slides when content changes */}
         <span
           key={`msg-${item.message}`}
-          className="flex-1 min-w-0 text-sm text-zinc-800 leading-snug break-words"
+          className="flex-1 min-w-0 text-sm text-zinc-800 dark:text-zinc-200 leading-snug break-words"
           style={{ animation: "_t-in-up 0.25s cubic-bezier(0.4,0,0.2,1) forwards" }}
         >
           {item.message}
@@ -371,7 +371,7 @@ function ToastCard({ item, position }: { item: ToastItem; position: ToastPositio
           <button
             type="button"
             onClick={() => { item.action!.onClick(); _dismiss(item.id); }}
-            className="shrink-0 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors mt-px ml-1 whitespace-nowrap"
+            className="shrink-0 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors mt-px ml-1 whitespace-nowrap"
           >
             {item.action.label}
           </button>
@@ -382,7 +382,7 @@ function ToastCard({ item, position }: { item: ToastItem; position: ToastPositio
           type="button"
           aria-label="Fechar notificação"
           onClick={() => _dismiss(item.id)}
-          className="shrink-0 mt-px text-zinc-300 hover:text-zinc-500 transition-colors"
+          className="shrink-0 mt-px text-zinc-300 dark:text-zinc-600 hover:text-zinc-500 dark:hover:text-zinc-400 transition-colors"
         >
           <X size={14} strokeWidth={2.5} />
         </button>
@@ -432,24 +432,24 @@ export function ToastPreview({ type = "default", message, icon, action, showBar 
     <div className="w-80 sm:w-96">
       <div className={twMerge(
         "relative flex items-start gap-3 overflow-hidden",
-        "rounded-2xl bg-white border border-zinc-100 px-4 py-3.5",
+        "rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 px-4 py-3.5",
         "shadow-2xl shadow-zinc-900/[0.12]",
       )}>
         <div className={twMerge("absolute inset-y-0 left-0 w-[3px] rounded-l-2xl", cfg.bar)} />
         {iconNode != null && (
           <span className={twMerge("mt-px shrink-0", cfg.iconCls)}>{iconNode}</span>
         )}
-        <span className="flex-1 min-w-0 text-sm text-zinc-800 leading-snug break-words">{message}</span>
+        <span className="flex-1 min-w-0 text-sm text-zinc-800 dark:text-zinc-200 leading-snug break-words">{message}</span>
         {action && (
           <button
             type="button"
             onClick={action.onClick}
-            className="shrink-0 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors mt-px ml-1 whitespace-nowrap"
+            className="shrink-0 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors mt-px ml-1 whitespace-nowrap"
           >
             {action.label}
           </button>
         )}
-        <span className="shrink-0 mt-px text-zinc-300">
+        <span className="shrink-0 mt-px text-zinc-300 dark:text-zinc-600">
           <X size={14} strokeWidth={2.5} />
         </span>
 

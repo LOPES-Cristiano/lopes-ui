@@ -48,33 +48,33 @@ export type TimelineProps = {
 const COLOR_MAP: Record<TimelineColor, { dot: string; ring: string; badge: string }> = {
   default: {
     dot:   "bg-zinc-400 border-zinc-400",
-    ring:  "ring-zinc-100",
-    badge: "bg-zinc-100 text-zinc-600",
+    ring:  "ring-zinc-100 dark:ring-zinc-800",
+    badge: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
   },
   primary: {
     dot:   "bg-indigo-500 border-indigo-500",
-    ring:  "ring-indigo-100",
-    badge: "bg-indigo-50 text-indigo-700",
+    ring:  "ring-indigo-100 dark:ring-indigo-900/50",
+    badge: "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
   },
   success: {
     dot:   "bg-emerald-500 border-emerald-500",
-    ring:  "ring-emerald-100",
-    badge: "bg-emerald-50 text-emerald-700",
+    ring:  "ring-emerald-100 dark:ring-emerald-900/50",
+    badge: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
   },
   warning: {
     dot:   "bg-amber-400 border-amber-400",
-    ring:  "ring-amber-100",
-    badge: "bg-amber-50 text-amber-700",
+    ring:  "ring-amber-100 dark:ring-amber-900/50",
+    badge: "bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
   },
   danger: {
     dot:   "bg-red-500 border-red-500",
-    ring:  "ring-red-100",
-    badge: "bg-red-50 text-red-700",
+    ring:  "ring-red-100 dark:ring-red-900/50",
+    badge: "bg-red-50 text-red-700 dark:bg-red-900/40 dark:text-red-300",
   },
   info: {
     dot:   "bg-sky-500 border-sky-500",
-    ring:  "ring-sky-100",
-    badge: "bg-sky-50 text-sky-600",
+    ring:  "ring-sky-100 dark:ring-sky-900/50",
+    badge: "bg-sky-50 text-sky-600 dark:bg-sky-900/40 dark:text-sky-300",
   },
 };
 
@@ -151,9 +151,9 @@ function EventCard({
         align === "right" ? "items-end text-right" : "items-start text-left",
       )}
     >
-      <div className="flex flex-col gap-0.5 bg-white border border-zinc-100 rounded-xl shadow-sm px-4 py-3 max-w-sm w-full">
+      <div className="flex flex-col gap-0.5 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-sm px-4 py-3 max-w-sm w-full">
         <div className={twMerge("flex items-center gap-2", align === "right" ? "flex-row-reverse" : "")}>
-          <p className={twMerge("font-semibold text-zinc-800", s.title)}>
+          <p className={twMerge("font-semibold text-zinc-800 dark:text-zinc-200", s.title)}>
             {item.title}
           </p>
           {item.badge && (
@@ -163,7 +163,7 @@ function EventCard({
           )}
         </div>
         {item.description && (
-          <p className={twMerge("text-zinc-500 mt-0.5", s.body)}>
+          <p className={twMerge("text-zinc-500 dark:text-zinc-400 mt-0.5", s.body)}>
             {item.description}
           </p>
         )}
@@ -187,7 +187,7 @@ function SimpleCard({ item, size }: { item: TimelineItem; size: TimelineSize }) 
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center gap-2">
-        <p className={twMerge("font-semibold text-zinc-800", s.title)}>
+        <p className={twMerge("font-semibold text-zinc-800 dark:text-zinc-200", s.title)}>
           {item.title}
         </p>
         {item.badge && (
@@ -197,7 +197,7 @@ function SimpleCard({ item, size }: { item: TimelineItem; size: TimelineSize }) 
         )}
       </div>
       {item.description && (
-        <p className={twMerge("text-zinc-500", s.body)}>{item.description}</p>
+        <p className={twMerge("text-zinc-500 dark:text-zinc-400", s.body)}>{item.description}</p>
       )}
       {item.date && (
         <p className={twMerge("text-zinc-400 mt-0.5", s.date)}>{item.date}</p>
@@ -230,7 +230,7 @@ export default function Timeline({
         {/* center line */}
         <div
           className={twMerge(
-            "absolute inset-y-0 left-1/2 -translate-x-1/2 w-0 border-l-2 border-zinc-200",
+            "absolute inset-y-0 left-1/2 -translate-x-1/2 w-0 border-l-2 border-zinc-200 dark:border-zinc-700",
             connCls,
           )}
           aria-hidden="true"
@@ -293,7 +293,7 @@ export default function Timeline({
                 {!isLast && (
                   <div
                     className={twMerge(
-                      "flex-1 w-0 border-l-2 border-zinc-200 my-1 min-h-[20px]",
+                      "flex-1 w-0 border-l-2 border-zinc-200 dark:border-zinc-700 my-1 min-h-[20px]",
                       connCls,
                     )}
                     aria-hidden="true"

@@ -126,7 +126,7 @@ export default function FileField({
         <div
           className={twMerge(
             "flex w-full items-center overflow-hidden rounded-lg border transition-all duration-150",
-            error ? "border-red-400 hover:border-red-500" : "border-zinc-300 hover:border-zinc-400",
+            error ? "border-red-400 hover:border-red-500" : "border-zinc-300 hover:border-zinc-400 dark:border-zinc-700 dark:hover:border-zinc-600",
             disabled && "opacity-60 pointer-events-none",
           )}
         >
@@ -135,7 +135,7 @@ export default function FileField({
             onClick={() => inputRef.current?.click()}
             disabled={disabled}
             className={twMerge(
-              "flex shrink-0 items-center gap-1.5 border-r border-zinc-200 bg-zinc-50 px-3 font-medium text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 transition-colors",
+              "flex shrink-0 items-center gap-1.5 border-r border-zinc-200 bg-zinc-50 px-3 font-medium text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:active:bg-zinc-600 transition-colors",
               BTN_H[size],
             )}
           >
@@ -147,7 +147,7 @@ export default function FileField({
             className={twMerge(
               "flex-1 min-w-0 truncate px-3",
               size === "sm" ? "text-xs" : size === "lg" ? "text-base" : "text-sm",
-              hasFiles ? "text-zinc-700" : "text-zinc-400",
+              hasFiles ? "text-zinc-700 dark:text-zinc-300" : "text-zinc-400 dark:text-zinc-500",
             )}
           >
             {displayName}
@@ -158,7 +158,7 @@ export default function FileField({
               type="button"
               aria-label="Remover arquivo"
               onClick={clear}
-              className="flex shrink-0 items-center justify-center px-2 text-zinc-400 hover:text-zinc-600 transition-colors"
+              className="flex shrink-0 items-center justify-center px-2 text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors"
             >
               <X size={14} />
             </button>
@@ -177,10 +177,10 @@ export default function FileField({
           className={twMerge(
             "flex w-full cursor-pointer select-none flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition-all duration-150",
             dragOver
-              ? "border-indigo-400 bg-indigo-50"
+              ? "border-indigo-400 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-950/40"
               : error
-                ? "border-red-300 bg-red-50/30 hover:border-red-400"
-                : "border-zinc-300 bg-zinc-50 hover:border-indigo-400 hover:bg-indigo-50/30",
+                ? "border-red-300 bg-red-50/30 hover:border-red-400 dark:border-red-800 dark:bg-red-950/30 dark:hover:border-red-700"
+                : "border-zinc-300 bg-zinc-50 hover:border-indigo-400 hover:bg-indigo-50/30 dark:border-zinc-700 dark:bg-zinc-800/40 dark:hover:border-indigo-500 dark:hover:bg-indigo-950/30",
             disabled && "opacity-60 pointer-events-none",
           )}
         >
@@ -189,29 +189,29 @@ export default function FileField({
               <FileIcon size={30} className="text-indigo-500" />
               <div className="space-y-0.5">
                 {files.map((f) => (
-                  <p key={f.name} className="max-w-xs truncate text-sm font-medium text-zinc-700">
+                  <p key={f.name} className="max-w-xs truncate text-sm font-medium text-zinc-700 dark:text-zinc-300">
                     {f.name}
-                    <span className="ml-1.5 text-xs text-zinc-400">({fmtSize(f.size)})</span>
+                    <span className="ml-1.5 text-xs text-zinc-400 dark:text-zinc-500">({fmtSize(f.size)})</span>
                   </p>
                 ))}
               </div>
               <button
                 type="button"
                 onClick={clear}
-                className="text-xs text-zinc-400 hover:text-red-500 transition-colors"
+                className="text-xs text-zinc-400 hover:text-red-500 dark:text-zinc-500 transition-colors"
               >
                 Remover
               </button>
             </>
           ) : (
             <>
-              <Upload size={30} className={dragOver ? "text-indigo-500" : "text-zinc-400"} />
+              <Upload size={30} className={dragOver ? "text-indigo-500" : "text-zinc-400 dark:text-zinc-500"} />
               <div>
-                <p className="text-sm font-medium text-zinc-700">
+                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                   {dragOver ? "Solte aqui" : "Arraste ou clique para enviar"}
                 </p>
                 {(accept || maxSize) && (
-                  <p className="mt-0.5 text-xs text-zinc-400">
+                  <p className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">
                     {accept && `Aceita ${accept}`}
                     {accept && maxSize && " · "}
                     {maxSize && `máx. ${fmtSize(maxSize)}`}

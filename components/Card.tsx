@@ -79,9 +79,9 @@ export type CardFooterProps = {
 // ── Style maps ────────────────────────────────────────────────────────────────
 
 const VARIANT_CLASSES: Record<CardVariant, string> = {
-  default:  "bg-white border border-zinc-200",
-  outlined: "bg-transparent border border-zinc-300",
-  elevated: "bg-white border-transparent",
+  default:  "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800",
+  outlined: "bg-transparent border border-zinc-300 dark:border-zinc-700",
+  elevated: "bg-white dark:bg-zinc-900 border-transparent",
   filled:   "border-transparent",
   ghost:    "bg-transparent border-transparent",
 };
@@ -112,58 +112,58 @@ type ColorStyle = {
 
 const COLOR_STYLES: Record<CardColor, ColorStyle> = {
   default: {
-    filled:   "bg-zinc-50",
+    filled:   "bg-zinc-50 dark:bg-zinc-800/50",
     accent:   "bg-zinc-400",
-    iconBg:   "bg-zinc-100",
-    iconText: "text-zinc-600",
+    iconBg:   "bg-zinc-100 dark:bg-zinc-800",
+    iconText: "text-zinc-600 dark:text-zinc-400",
   },
   primary: {
-    filled:   "bg-indigo-50",
+    filled:   "bg-indigo-50 dark:bg-indigo-950/40",
     accent:   "bg-indigo-500",
-    iconBg:   "bg-indigo-100",
-    iconText: "text-indigo-600",
+    iconBg:   "bg-indigo-100 dark:bg-indigo-900/50",
+    iconText: "text-indigo-600 dark:text-indigo-300",
   },
   success: {
-    filled:   "bg-emerald-50",
+    filled:   "bg-emerald-50 dark:bg-emerald-950/40",
     accent:   "bg-emerald-500",
-    iconBg:   "bg-emerald-100",
-    iconText: "text-emerald-600",
+    iconBg:   "bg-emerald-100 dark:bg-emerald-900/50",
+    iconText: "text-emerald-600 dark:text-emerald-300",
   },
   warning: {
-    filled:   "bg-amber-50",
+    filled:   "bg-amber-50 dark:bg-amber-950/40",
     accent:   "bg-amber-400",
-    iconBg:   "bg-amber-100",
-    iconText: "text-amber-600",
+    iconBg:   "bg-amber-100 dark:bg-amber-900/50",
+    iconText: "text-amber-600 dark:text-amber-300",
   },
   danger: {
-    filled:   "bg-red-50",
+    filled:   "bg-red-50 dark:bg-red-950/40",
     accent:   "bg-red-500",
-    iconBg:   "bg-red-100",
-    iconText: "text-red-600",
+    iconBg:   "bg-red-100 dark:bg-red-900/50",
+    iconText: "text-red-600 dark:text-red-300",
   },
   info: {
-    filled:   "bg-sky-50",
+    filled:   "bg-sky-50 dark:bg-sky-950/40",
     accent:   "bg-sky-500",
-    iconBg:   "bg-sky-100",
-    iconText: "text-sky-600",
+    iconBg:   "bg-sky-100 dark:bg-sky-900/50",
+    iconText: "text-sky-600 dark:text-sky-300",
   },
   violet: {
-    filled:   "bg-violet-50",
+    filled:   "bg-violet-50 dark:bg-violet-950/40",
     accent:   "bg-violet-500",
-    iconBg:   "bg-violet-100",
-    iconText: "text-violet-600",
+    iconBg:   "bg-violet-100 dark:bg-violet-900/50",
+    iconText: "text-violet-600 dark:text-violet-300",
   },
   pink: {
-    filled:   "bg-pink-50",
+    filled:   "bg-pink-50 dark:bg-pink-950/40",
     accent:   "bg-pink-500",
-    iconBg:   "bg-pink-100",
-    iconText: "text-pink-600",
+    iconBg:   "bg-pink-100 dark:bg-pink-900/50",
+    iconText: "text-pink-600 dark:text-pink-300",
   },
   teal: {
-    filled:   "bg-teal-50",
+    filled:   "bg-teal-50 dark:bg-teal-950/40",
     accent:   "bg-teal-500",
-    iconBg:   "bg-teal-100",
-    iconText: "text-teal-600",
+    iconBg:   "bg-teal-100 dark:bg-teal-900/50",
+    iconText: "text-teal-600 dark:text-teal-300",
   },
 };
 
@@ -191,10 +191,10 @@ export function CardHeader({
         )}
         <div className="min-w-0">
           {title && (
-            <p className="text-sm font-semibold text-zinc-900 leading-snug truncate">{title}</p>
+            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 leading-snug truncate">{title}</p>
           )}
           {description && (
-            <p className="mt-0.5 text-xs text-zinc-500 leading-relaxed">{description}</p>
+            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">{description}</p>
           )}
         </div>
       </div>
@@ -234,7 +234,7 @@ export function CardFooter({
     <div className={twMerge(
       "flex items-center flex-wrap gap-2 px-5 pb-5",
       alignClass,
-      divider && "border-t border-zinc-100 pt-4",
+      divider && "border-t border-zinc-100 dark:border-zinc-800 pt-4",
       className,
     )}>
       {children}

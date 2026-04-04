@@ -52,8 +52,8 @@ export default function ChatConversationItem({
       className={twMerge(
         "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors",
         active
-          ? "bg-indigo-50 hover:bg-indigo-100"
-          : "hover:bg-zinc-50",
+          ? "bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50"
+          : "hover:bg-zinc-50 dark:hover:bg-zinc-800",
         className
       )}
     >
@@ -70,7 +70,7 @@ export default function ChatConversationItem({
         <div className="flex items-center justify-between gap-1">
           <span className={twMerge(
             "text-sm font-semibold truncate",
-            active ? "text-indigo-700" : "text-zinc-800"
+            active ? "text-indigo-700 dark:text-indigo-300" : "text-zinc-800 dark:text-zinc-200"
           )}>
             {name}
           </span>
@@ -92,7 +92,7 @@ export default function ChatConversationItem({
         <div className="flex items-center justify-between gap-1 mt-0.5">
           <p className={twMerge(
             "text-xs truncate leading-relaxed",
-            hasUnread ? "text-zinc-700 font-medium" : "text-zinc-400"
+            hasUnread ? "text-zinc-700 dark:text-zinc-200 font-medium" : "text-zinc-400 dark:text-zinc-500"
           )}>
             {lastMessage ?? ""}
           </p>

@@ -95,7 +95,7 @@ export default function ChatMessage({
           ? <Avatar name={senderName} src={avatarSrc} size="sm" className="shrink-0" />
           : <div className="w-8 shrink-0" />
         }
-        <div className="rounded-2xl rounded-bl-sm bg-white border border-zinc-200 px-4 py-3.5">
+        <div className="rounded-2xl rounded-bl-sm bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-4 py-3.5">
           <div className="flex gap-1 items-center">
             {[0, 1, 2].map((i) => (
               <span
@@ -116,13 +116,13 @@ export default function ChatMessage({
   // ── Bubble styles ─────────────────────────────────────────────────────────
   const bubbleCls = isMine
     ? "bg-indigo-600 text-white rounded-2xl rounded-br-sm"
-    : "bg-white border border-zinc-200 text-zinc-800 rounded-2xl rounded-bl-sm";
+    : "bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-2xl rounded-bl-sm";
 
   const timestampCls = isMine ? "text-indigo-200" : "text-zinc-400";
 
   const replyBgCls = isMine
     ? "bg-indigo-700 border-indigo-400 text-indigo-100"
-    : "bg-zinc-50 border-indigo-400 text-zinc-500";
+    : "bg-zinc-50 dark:bg-zinc-700 border-indigo-400 text-zinc-500 dark:text-zinc-300";
 
   return (
     <div
@@ -178,7 +178,7 @@ export default function ChatMessage({
             <div className="flex items-center gap-3 px-3.5 py-2.5 min-w-[210px]">
               <div className={twMerge(
                 "flex items-center justify-center w-9 h-9 rounded-xl shrink-0",
-                isMine ? "bg-indigo-500" : "bg-zinc-100"
+                isMine ? "bg-indigo-500" : "bg-zinc-100 dark:bg-zinc-700"
               )}>
                 <File size={16} className={isMine ? "text-white" : "text-zinc-500"} />
               </div>
@@ -199,7 +199,7 @@ export default function ChatMessage({
             <div className="flex items-center gap-2.5 px-3 py-2.5 min-w-[200px]">
               <button className={twMerge(
                 "flex items-center justify-center w-8 h-8 rounded-full shrink-0 transition-colors",
-                isMine ? "bg-indigo-500 hover:bg-indigo-400" : "bg-zinc-100 hover:bg-zinc-200"
+                isMine ? "bg-indigo-500 hover:bg-indigo-400" : "bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600"
               )}>
                 <Play size={14} fill="currentColor" className={isMine ? "text-white" : "text-zinc-600"} />
               </button>
@@ -251,8 +251,8 @@ export default function ChatMessage({
                 className={twMerge(
                   "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-colors",
                   r.reacted
-                    ? "bg-indigo-50 border-indigo-300 text-indigo-700"
-                    : "bg-white border-zinc-200 text-zinc-600 hover:border-indigo-300"
+                      ? "bg-indigo-50 dark:bg-indigo-900/40 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300"
+                      : "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-indigo-300"
                 )}
               >
                 <span>{r.emoji}</span>

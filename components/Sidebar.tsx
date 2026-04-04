@@ -145,11 +145,11 @@ export type SidebarProps = {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const badgeClasses: Record<NonNullable<SidebarNavItem["badgeVariant"]>, string> = {
-  default: "bg-zinc-100 text-zinc-600",
-  success: "bg-emerald-100 text-emerald-700",
-  warning: "bg-amber-100 text-amber-700",
-  danger:  "bg-red-100 text-red-600",
-  info:    "bg-blue-100 text-blue-700",
+  default: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
+  success: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400",
+  warning: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400",
+  danger:  "bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400",
+  info:    "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400",
 };
 
 function SidebarBadge({ value, variant = "default" }: { value: string | number; variant?: SidebarNavItem["badgeVariant"] }) {
@@ -285,7 +285,11 @@ function PinnedSection({ groups, onNavigate }: { groups: SidebarNavGroup[]; onNa
           const Icon = item.icon;
           const row = (
             <div
-              className="group/pin flex items-center gap-2.5 rounded-lg px-2.5 py-2 cursor-pointer transition-colors text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+              className={[
+            "group/pin flex items-center gap-2.5 rounded-lg px-2.5 py-2 cursor-pointer transition-colors",
+            "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900",
+            "dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
+          ].join(" ")}
               onClick={() => { if (onNavigate && item.href) onNavigate(item.href); else if (item.href) window.location.hash = item.href.replace(/.*#/, ""); }}
             >
               {Icon ? (
@@ -315,7 +319,7 @@ function PinnedSection({ groups, onNavigate }: { groups: SidebarNavGroup[]; onNa
           );
         })}
       </div>
-      <div className="mt-2 border-t border-zinc-100" />
+      <div className="mt-2 border-t border-zinc-100 dark:border-zinc-800" />
     </div>
   );
 }
@@ -340,8 +344,8 @@ function NavItem({ item, depth = 0, onNavigate }: { item: SidebarNavItem; depth?
     depth > 0 ? "pl-[1.875rem] pr-2.5 py-1.5 gap-2" : "px-2.5 py-2 gap-2.5",
     item.disabled ? "cursor-not-allowed opacity-40 pointer-events-none" : "cursor-pointer",
     item.active
-      ? "bg-zinc-900 text-white shadow-sm"
-      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
+      ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
+      : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
   ].filter(Boolean).join(" ");
 
   const itemPinId = getItemPinId(item);
@@ -351,15 +355,15 @@ function NavItem({ item, depth = 0, onNavigate }: { item: SidebarNavItem; depth?
   // When pinnable, the icon (depth=0) fades on hover to reveal the pin overlay.
   // For depth>0 the pin lives in the indentation area so no fade needed on the dot.
   const iconFade = pinnable && !collapsed && depth === 0 && Icon
-    ? isPinned ? "opacity-20" : "group-hover/nav:opacity-0"
+    ? isPinned ? "opacity-0" : "group-hover/nav:opacity-0"
     : "";
 
   const iconEl = Icon ? (
-    <span className={`shrink-0 transition-all duration-150 ${item.active ? "text-white" : "text-zinc-400 group-hover/nav:text-zinc-600"} ${iconFade}`}>
+    <span className={`shrink-0 transition-all duration-150 ${item.active ? "text-white dark:text-zinc-900" : "text-zinc-400 dark:text-zinc-400 group-hover/nav:text-zinc-600 dark:group-hover/nav:text-zinc-200"} ${iconFade}`}>
       <Icon size={16} strokeWidth={1.75} />
     </span>
   ) : depth > 0 ? (
-    <span className={`shrink-0 h-1.5 w-1.5 rounded-full transition-all ${item.active ? "bg-white" : "bg-zinc-300 group-hover/nav:bg-zinc-500"}`} />
+    <span className={`shrink-0 h-1.5 w-1.5 rounded-full transition-all ${item.active ? "bg-white dark:bg-zinc-900" : "bg-zinc-300 dark:bg-zinc-500 group-hover/nav:bg-zinc-600 dark:group-hover/nav:bg-zinc-300"}`} />
   ) : null;
 
   const labelEl = (
@@ -367,7 +371,7 @@ function NavItem({ item, depth = 0, onNavigate }: { item: SidebarNavItem; depth?
       <span className="flex flex-col min-w-0">
         <span className="truncate text-sm leading-snug">{item.label}</span>
         {item.description && !collapsed && (
-          <span className={`truncate text-[10px] leading-snug mt-0.5 ${item.active ? "text-white/60" : "text-zinc-400"}`}>{item.description}</span>
+          <span className={`truncate text-[10px] leading-snug mt-0.5 ${item.active ? "text-white/60 dark:text-zinc-900/60" : "text-zinc-400 dark:text-zinc-500"}`}>{item.description}</span>
         )}
       </span>
       <span className="flex shrink-0 items-center gap-1">
@@ -476,11 +480,11 @@ function NavGroup({ group, onNavigate }: { group: SidebarNavGroup; onNavigate?: 
           className={["flex items-center justify-between px-2.5 mb-1", group.collapsible ? "cursor-pointer select-none group/grp" : ""].join(" ")}
           onClick={group.collapsible ? () => setOpen((s) => !s) : undefined}
         >
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 group-hover/grp:text-zinc-500 transition-colors">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 group-hover/grp:text-zinc-600 dark:group-hover/grp:text-zinc-400 transition-colors">
             {group.label}
           </span>
           {group.collapsible && (
-            <ChevronDown size={12} className={`text-zinc-300 group-hover/grp:text-zinc-400 transition-all duration-200 ${open ? "" : "-rotate-90"}`} />
+            <ChevronDown size={12} className={`text-zinc-300 dark:text-zinc-500 group-hover/grp:text-zinc-400 transition-all duration-200 ${open ? "" : "-rotate-90"}`} />
           )}
         </div>
       )}
@@ -507,14 +511,14 @@ function UserBlock({ user }: { user: SidebarUser }) {
 
   const avatarEl = (
     <div className="relative shrink-0">
-      <div className="h-8 w-8 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-zinc-200 to-zinc-300 text-zinc-700 text-xs font-semibold ring-2 ring-white">
+      <div className="h-8 w-8 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-600 text-zinc-700 dark:text-zinc-300 text-xs font-semibold ring-2 ring-white dark:ring-zinc-950">
         {user.avatar
           // eslint-disable-next-line @next/next/no-img-element
           ? <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
           : <span>{user.initials ?? user.name.slice(0, 2).toUpperCase()}</span>}
       </div>
       {user.status && (
-        <span className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ${statusDot[user.status]} ring-2 ring-white`} />
+        <span className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ${statusDot[user.status]} ring-2 ring-white dark:ring-zinc-950`} />
       )}
     </div>
   );
@@ -528,11 +532,11 @@ function UserBlock({ user }: { user: SidebarUser }) {
   }
 
   return (
-    <div className="flex items-center gap-2.5 rounded-xl bg-zinc-50 px-3 py-2.5 ring-1 ring-zinc-100">
+    <div className="flex items-center gap-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 px-3 py-2.5 ring-1 ring-zinc-100 dark:ring-zinc-800">
       {avatarEl}
       <div className="flex-1 min-w-0">
-        <p className="truncate text-sm font-semibold text-zinc-900 leading-snug">{user.name}</p>
-        <p className="truncate text-[11px] text-zinc-400 leading-snug">{user.role ?? user.email ?? ""}</p>
+        <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-snug">{user.name}</p>
+        <p className="truncate text-[11px] text-zinc-400 dark:text-zinc-500 leading-snug">{user.role ?? user.email ?? ""}</p>
       </div>
       {user.status && (
         <div className="shrink-0 flex items-center gap-1">
@@ -557,12 +561,12 @@ function FooterItem({ item }: { item: SidebarFooterItem }) {
       className={[
         "group/fi flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 transition-all duration-150",
         item.danger
-          ? "text-red-500 hover:bg-red-50 hover:text-red-600"
-          : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800",
+          ? "text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600"
+          : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-50",
       ].join(" ")}
       {...(item.componentId ? { "data-component-id": item.componentId } : {})}
     >
-      <span className={`shrink-0 transition-colors ${item.danger ? "text-red-400 group-hover/fi:text-red-500" : "text-zinc-400 group-hover/fi:text-zinc-600"}`}>
+      <span className={`shrink-0 transition-colors ${item.danger ? "text-red-400 group-hover/fi:text-red-500" : "text-zinc-400 dark:text-zinc-400 group-hover/fi:text-zinc-600 dark:group-hover/fi:text-zinc-200"}`}>
         <Icon size={16} strokeWidth={1.75} />
       </span>
       <span className={["truncate text-sm leading-none transition-[opacity,max-width] duration-200", collapsed ? "opacity-0 max-w-0 pointer-events-none" : "opacity-100 max-w-full"].join(" ")}>
@@ -671,8 +675,8 @@ export default function Sidebar({
       {/* Sidebar panel */}
       <aside
         className={[
-          "flex flex-col h-full bg-white border-r border-zinc-100",
-          "transition-[width] duration-300 ease-in-out",
+          "flex flex-col h-full bg-white dark:bg-zinc-950 border-r border-zinc-100 dark:border-zinc-800",
+          "duration-300 ease-in-out",
           isCollapsed ? "w-[4.5rem]" : "w-64",
           "fixed inset-y-0 left-0 z-[70] shadow-xl",
           "md:relative md:z-auto md:inset-auto md:shadow-none",
@@ -683,7 +687,7 @@ export default function Sidebar({
       >
         {/* ── Header (hidden when Shell is managing it) ──────────────── */}
         {!shell && (
-        <div className={["flex shrink-0 items-center gap-2 border-b border-zinc-100 py-4", isCollapsed ? "justify-center px-2" : "px-4"].join(" ")}>
+        <div className={["flex shrink-0 items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 py-4", isCollapsed ? "justify-center px-2" : "px-4"].join(" ")}>
           {logo && (
             <div className="shrink-0">
               {isCollapsed && title
@@ -693,17 +697,17 @@ export default function Sidebar({
           )}
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              {title && <p className="truncate text-sm font-bold text-zinc-900 leading-snug">{title}</p>}
-              {subtitle && <p className="truncate text-[11px] text-zinc-400">{subtitle}</p>}
+              {title && <p className="truncate text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug">{title}</p>}
+              {subtitle && <p className="truncate text-[11px] text-zinc-400 dark:text-zinc-500">{subtitle}</p>}
             </div>
           )}
           {headerExtra && !isCollapsed && <div className="shrink-0">{headerExtra}</div>}
           <div className="flex items-center gap-1 shrink-0">
-            <button type="button" onClick={closeMobile} className="md:hidden rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 transition-colors">
+            <button type="button" onClick={closeMobile} className="md:hidden rounded-lg p-1.5 text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
               <X size={15} />
             </button>
             {collapsible && (
-              <button type="button" onClick={toggle} className="hidden md:flex rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 transition-colors" title={isCollapsed ? "Expandir" : "Recolher"}>
+              <button type="button" onClick={toggle} className="hidden md:flex rounded-lg p-1.5 text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors" title={isCollapsed ? "Expandir" : "Recolher"}>
                 {isCollapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
               </button>
             )}
@@ -735,7 +739,23 @@ export default function Sidebar({
         </div>
 
         {/* ── Footer ───────────────────────────────────────────────────── */}
-        <div className="shrink-0 border-t border-zinc-100 px-2 py-3 space-y-0.5">
+        <div className="shrink-0 border-t border-zinc-100 dark:border-zinc-800 px-2 py-3 space-y-0.5">
+          {shell && collapsible && (
+            <button
+              type="button"
+              onClick={toggle}
+              title={isCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
+              className={[
+                "flex w-full items-center gap-2 rounded-lg px-2.5 py-2",
+                "text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300",
+                "transition-colors",
+                isCollapsed ? "justify-center" : "",
+              ].join(" ")}
+            >
+              {isCollapsed ? <PanelLeftOpen size={16} strokeWidth={1.75} /> : <PanelLeftClose size={16} strokeWidth={1.75} />}
+              {!isCollapsed && <span className="text-sm">Recolher</span>}
+            </button>
+          )}
           {footerItems.map((fi, i) => (
             <FooterItem key={`fi-${i}`} item={fi} />
           ))}

@@ -47,20 +47,20 @@ type ButtonProps = {
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 const variantClasses: Record<string, string> = {
-  solid:            "bg-zinc-800 text-zinc-200 hover:bg-zinc-700",
-  default:          "bg-zinc-800 text-zinc-200 hover:bg-zinc-700",
+  solid:            "bg-zinc-800 text-zinc-200 hover:bg-zinc-700 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-100",
+  default:          "bg-zinc-800 text-zinc-200 hover:bg-zinc-700 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-100",
   primary:          "bg-blue-600 text-white hover:bg-blue-500",
-  secondary:        "bg-zinc-200 text-zinc-800 hover:bg-zinc-300",
-  outline:          "bg-transparent border border-zinc-200 text-zinc-800 hover:bg-zinc-50",
-  ghost:            "bg-transparent hover:bg-zinc-100 text-zinc-800",
+  secondary:        "bg-zinc-200 text-zinc-800 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600",
+  outline:          "bg-transparent border border-zinc-200 text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800",
+  ghost:            "bg-transparent hover:bg-zinc-100 text-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-800",
   destructive:      "bg-red-600 text-white hover:bg-red-500",
   success:          "bg-emerald-600 text-white hover:bg-emerald-500",
-  "success-outline":"bg-transparent border border-emerald-500 text-emerald-700 hover:bg-emerald-50",
+  "success-outline":"bg-transparent border border-emerald-500 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-600 dark:text-emerald-400 dark:hover:bg-emerald-950/40",
   warning:          "bg-amber-500 text-white hover:bg-amber-400",
-  "warning-outline":"bg-transparent border border-amber-400 text-amber-700 hover:bg-amber-50",
+  "warning-outline":"bg-transparent border border-amber-400 text-amber-700 hover:bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-950/40",
   info:             "bg-sky-500 text-white hover:bg-sky-400",
-  "info-outline":   "bg-transparent border border-sky-400 text-sky-700 hover:bg-sky-50",
-  link:             "bg-transparent text-blue-600 hover:underline",
+  "info-outline":   "bg-transparent border border-sky-400 text-sky-700 hover:bg-sky-50 dark:border-sky-600 dark:text-sky-400 dark:hover:bg-sky-950/40",
+  link:             "bg-transparent text-blue-600 hover:underline dark:text-blue-400",
 };
 
 const sizeClasses = {

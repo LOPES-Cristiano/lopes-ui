@@ -144,13 +144,13 @@ export default function MultiSelectField({
     "flex w-full flex-wrap items-center gap-1.5 rounded-lg border px-2 cursor-text transition-all duration-150",
     s.py,
     variant === "filled"
-      ? "bg-zinc-100 border-transparent hover:bg-zinc-200/70"
-      : "bg-white border-zinc-300 hover:border-zinc-400",
-    open && variant === "filled" && "bg-white border-zinc-300 ring-2 ring-zinc-500/10",
-    open && variant !== "filled" && "border-zinc-500 ring-2 ring-zinc-500/10",
+      ? "bg-zinc-100 border-transparent hover:bg-zinc-200/70 dark:bg-zinc-800 dark:hover:bg-zinc-700/80"
+      : "bg-white border-zinc-300 hover:border-zinc-400 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:border-zinc-600",
+    open && variant === "filled" && "bg-white border-zinc-300 ring-2 ring-zinc-500/10 dark:bg-zinc-900 dark:border-zinc-600",
+    open && variant !== "filled" && "border-zinc-500 ring-2 ring-zinc-500/10 dark:border-zinc-500",
     error && "border-red-400 hover:border-red-400",
     open && error && "border-red-500 ring-red-500/10",
-    disabled && "opacity-60 pointer-events-none bg-zinc-50",
+    disabled && "opacity-60 pointer-events-none bg-zinc-50 dark:bg-zinc-800/50",
   );
 
   return (
@@ -174,7 +174,7 @@ export default function MultiSelectField({
               <span
                 key={val}
                 className={twMerge(
-                  "inline-flex items-center rounded-md border bg-indigo-50 text-indigo-700 font-medium border-indigo-200",
+                  "inline-flex items-center rounded-md border bg-indigo-50 text-indigo-700 font-medium border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800",
                   cs,
                 )}
               >
@@ -183,7 +183,7 @@ export default function MultiSelectField({
                   type="button"
                   aria-label={`Remover ${opt.label}`}
                   onMouseDown={(e) => removeChip(val, e)}
-                  className="ml-0.5 rounded text-indigo-400 hover:text-indigo-700 transition-colors"
+                  className="ml-0.5 rounded text-indigo-400 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-300 transition-colors"
                 >
                   <X size={10} />
                 </button>
@@ -207,7 +207,7 @@ export default function MultiSelectField({
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
             className={twMerge(
-              "flex-1 min-w-[80px] bg-transparent outline-none border-0 ring-0 placeholder:text-zinc-400",
+              "flex-1 min-w-[80px] bg-transparent outline-none border-0 ring-0 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500",
               s.text,
               selected.length > 0 && "min-w-[40px]",
             )}
@@ -220,12 +220,12 @@ export default function MultiSelectField({
                 type="button"
                 aria-label="Limpar seleção"
                 onMouseDown={clearAll}
-                className="flex h-5 w-5 items-center justify-center rounded text-zinc-400 hover:text-zinc-600 transition-colors"
+                className="flex h-5 w-5 items-center justify-center rounded text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors"
               >
                 <X size={12} />
               </button>
             )}
-            <span className="flex h-5 w-5 items-center justify-center text-zinc-400">
+            <span className="flex h-5 w-5 items-center justify-center text-zinc-400 dark:text-zinc-500">
               <ChevronDown
                 size={14}
                 className={twMerge("transition-transform duration-150", open && "rotate-180")}
@@ -242,17 +242,17 @@ export default function MultiSelectField({
             className={twMerge(
               "absolute left-0 right-0 top-full z-[80] mt-1",
               "max-h-52 overflow-y-auto overscroll-contain",
-              "rounded-xl border border-zinc-200 bg-white shadow-xl shadow-black/5",
+              "rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 shadow-xl shadow-black/5",
               s.text,
             )}
           >
             {atMax && (
-              <li className="border-b border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+              <li className="border-b border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/50 dark:text-amber-400">
                 Máximo de {maxSelections} selecionados
               </li>
             )}
             {filtered.length === 0 ? (
-              <li className="px-3 py-2.5 text-zinc-400">Nenhum resultado</li>
+              <li className="px-3 py-2.5 text-zinc-400 dark:text-zinc-500">Nenhum resultado</li>
             ) : (
               filtered.map((opt, i) => {
                 const isSel = selected.includes(opt.value);
@@ -266,13 +266,13 @@ export default function MultiSelectField({
                     onMouseEnter={() => setHighlighted(i)}
                     className={twMerge(
                       "flex cursor-pointer items-center justify-between px-3 py-2.5 transition-colors",
-                      i === highlighted ? "bg-indigo-50 text-indigo-900" : "text-zinc-700 hover:bg-zinc-50",
+                      i === highlighted ? "bg-indigo-50 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200" : "text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800",
                       isSel && "font-medium",
                       isLocked && "cursor-not-allowed opacity-40",
                     )}
                   >
                     <span>{opt.label}</span>
-                    {isSel && <Check size={13} className="shrink-0 text-indigo-600" />}
+                    {isSel && <Check size={13} className="shrink-0 text-indigo-600 dark:text-indigo-400" />}
                   </li>
                 );
               })

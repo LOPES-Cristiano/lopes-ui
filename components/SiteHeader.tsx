@@ -6,6 +6,7 @@ import Brand from "@/components/header/Brand";
 import CommandMenu, { type CommandItem } from "@/components/CommandMenu";
 import ProfileActions from "@/components/header/ProfileActions";
 import ProfileTrigger from "@/components/header/ProfileTrigger";
+import ThemeToggle from "@/components/ThemeToggle";
 import { type NavItem } from "@/components/header/Nav";
 import {
   Home,
@@ -77,6 +78,7 @@ export default function SiteHeader() {
         />
       }
       search={<CommandMenu items={SITE_COMMANDS} triggerLabel="Buscar..." />}
+      extra={<ThemeToggle />}
       profile={
         <ProfileTrigger initials="CL" name="Cristiano" showChevron menuWidth="w-60">
           <ProfileActions />

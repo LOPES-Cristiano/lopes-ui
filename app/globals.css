@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: dark: utilities activate when an ancestor has class="dark" */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+}
+
+.dark {
+  --background: #0c0c0e;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -12,18 +20,88 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: default) {
-  :root {
-    --background: #252525;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   overflow-x: hidden;
+}
+
+/* ── Text selection ──────────────────────────────────────────────────────────── */
+::selection {
+  background: rgb(99 102 241 / 0.2);
+  color: inherit;
+}
+.dark ::selection {
+  background: rgb(99 102 241 / 0.35);
+}
+
+/* ── Focus rings ─────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid rgb(99 102 241 / 0.7);
+  outline-offset: 2px;
+}
+
+/* ── Scrollbars ──────────────────────────────────────────────────────────── */
+:root {
+  --scrollbar-size: 6px;
+  --scrollbar-thumb: rgba(0, 0, 0, 0.18);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.32);
+  --scrollbar-track: transparent;
+}
+.dark {
+  --scrollbar-thumb: rgba(255, 255, 255, 0.14);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.26);
+}
+
+/* Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Sidebar — narrower, more subtle, no track */
+aside ::-webkit-scrollbar {
+  width: 4px;
+}
+aside ::-webkit-scrollbar-track {
+  background: transparent;
+}
+aside ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 999px;
+}
+aside ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.22);
+}
+.dark aside ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+}
+.dark aside ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+aside {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
 }
 
 /* Prevent sidebar flash when crossing the md breakpoint.
@@ -32,6 +110,8 @@ body {
   aside {
     transform: none !important;
     transition-property: width !important;
+    transition-duration: 300ms !important;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
 }
 

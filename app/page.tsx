@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from "react";
+import React, { useRef } from "react";
 import Button from "@/components/Button";
 
 import { MousePointer2, Download, ArrowUp, FileSearch, Lock, AlertTriangle, Package, Zap, Palette, Shield,
@@ -33,7 +33,7 @@ import DataTable from "@/components/DataTable";
 import Carousel from "@/components/Carousel";
 import Stepper from "@/components/Stepper";
 import Timeline from "@/components/Timeline";
-import TextRotate, { type TextRotateItem } from "@/components/TextRotate";
+import TextRotate, { type TextRotateItem, type TextRotateHandle } from "@/components/TextRotate";
 import ChatMessage, { type ChatMessageProps } from "@/components/ChatMessage";
 import ChatComposer from "@/components/ChatComposer";
 import ChatConversationItem from "@/components/ChatConversationItem";
@@ -85,7 +85,7 @@ const STATUS_COLOR: Record<string, "success" | "default" | "warning"> = {
 const EMPLOYEE_COLS: DataTableColumn<Employee>[] = [
   { key: "id",      label: "#",          width: "56px",  align: "center", sortable: true, required: true },
   { key: "name",    label: "Nome",        sortable: true, required: true,
-    render: (v) => <span className="font-medium text-zinc-800">{v as string}</span> },
+    render: (v) => <span className="font-medium text-zinc-800 dark:text-zinc-200">{v as string}</span> },
   { key: "role",    label: "Cargo",       sortable: true },
   { key: "dept",    label: "Depto",       sortable: true },
   { key: "salary",  label: "Salário",     sortable: true, align: "right",
@@ -141,7 +141,7 @@ function DataTableFullDemo() {
 
       {/* Full-featured */}
       <div id="datatable-full">
-        <h3 className="text-base font-semibold text-zinc-800 mb-1">Completo</h3>
+        <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-1">Completo</h3>
         <p className="text-xs text-zinc-500 mb-4">Ordenação + busca global + filtros + toggle de colunas + sumário + paginação + ações.</p>
         <DataTable<Employee>
           columns={EMPLOYEE_COLS}
@@ -160,7 +160,7 @@ function DataTableFullDemo() {
           toolbarSlot={
             <button
               onClick={() => toast("Exportado!")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
             >
               <ExternalLink size={13} />
               Exportar
@@ -171,7 +171,7 @@ function DataTableFullDemo() {
 
       {/* Simple — no toolbar */}
       <div id="datatable-simple">
-        <h3 className="text-base font-semibold text-zinc-800 mb-1">Simples (sem toolbar)</h3>
+        <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-1">Simples (sem toolbar)</h3>
         <p className="text-xs text-zinc-500 mb-4">Apenas ordenação ativa, sem busca ou filtros.</p>
         <DataTable<Employee>
           columns={EMPLOYEE_COLS.slice(0, 5)}
@@ -184,7 +184,7 @@ function DataTableFullDemo() {
 
       {/* Striped + actions + no pagination */}
       <div id="datatable-striped">
-        <h3 className="text-base font-semibold text-zinc-800 mb-1">Striped com ações</h3>
+        <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-1">Striped com ações</h3>
         <DataTable<Employee>
           columns={EMPLOYEE_COLS.slice(0, 6)}
           rows={EMPLOYEES.slice(0, 8)}
@@ -198,7 +198,7 @@ function DataTableFullDemo() {
 
       {/* Tabs by status */}
       <div id="datatable-tabs">
-        <h3 className="text-base font-semibold text-zinc-800 mb-1">Abas por situação</h3>
+        <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-1">Abas por situação</h3>
         <p className="text-xs text-zinc-500 mb-4">Tab bar que pré-filtra os dados por categoria — usando <code className="font-mono bg-zinc-100 px-1 rounded">field + value</code> ou uma função <code className="font-mono bg-zinc-100 px-1 rounded">filter</code> personalizada.</p>
         <DataTable<Employee>
           columns={EMPLOYEE_COLS.slice(0, 6)}
@@ -220,7 +220,7 @@ function DataTableFullDemo() {
 
       {/* Inline actions */}
       <div id="datatable-inline-actions">
-        <h3 className="text-base font-semibold text-zinc-800 mb-6">Modos de ações</h3>
+        <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-6">Modos de ações</h3>
         <div className="space-y-10">
 
           {/* 1. Tudo no menu */}
@@ -270,7 +270,7 @@ function DataTableFullDemo() {
 
       {/* Props table */}
       <div id="datatable-props">
-        <h3 className="text-base font-semibold text-zinc-800 mb-4">Props — DataTable</h3>
+        <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Props — DataTable</h3>
         <PropsTable rows={[
           ["columns",         "DataTableColumn<T>[]",                    "—",             "Definição das colunas (key, label, render, sortable, hidden, summary…)"],
           ["rows",            "T[]",                                     "—",             "Array de dados"],
@@ -416,83 +416,34 @@ export default function Home() {
   const notifyStyled = () => toast('Olá! 👋', { icon: '🌙', duration: 5000 });
 
   return (
-    <main className="flex-1 min-w-0 bg-zinc-50">
+    <main className="flex-1 min-w-0 bg-zinc-50 dark:bg-zinc-950">
 
         {/* Hero */}
-        <section id="overview" className="relative overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 text-white">
-          {/* Glow orbs */}
-          <div className="pointer-events-none absolute -top-32 -left-32 h-[480px] w-[480px] rounded-full bg-indigo-600/20 blur-[120px]" />
-          <div className="pointer-events-none absolute -bottom-32 -right-20 h-[400px] w-[400px] rounded-full bg-pink-600/15 blur-[120px]" />
-          {/* Subtle grid */}
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:48px_48px]" />
-
-          <div className="relative flex flex-col justify-between min-h-[calc(100vh-64px)] px-4 sm:px-10 py-10 sm:py-16">
-
-            {/* Top content */}
-            <div className="flex-1 flex flex-col justify-center max-w-2xl">
-              <div className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3 py-1 text-xs font-medium text-zinc-300 mb-8">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                v0.1.0 — em desenvolvimento
-              </div>
-
-              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-4 sm:mb-6">
-                LopesWare{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
-                  UI
-                </span>
-              </h1>
-
-              <p className="text-base sm:text-xl text-zinc-400 leading-relaxed mb-6 sm:mb-10 max-w-lg">
-                Biblioteca de componentes React + Next.js com Tailwind CSS.
-                Pronta para produção, acessível e altamente customizável.
-              </p>
-
-              <div className="flex flex-wrap gap-3">
-                <a
-                  href="#install"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white text-zinc-900 px-5 py-2.5 text-sm font-semibold hover:bg-zinc-100 transition-colors shadow-lg shadow-white/10"
-                >
-                  Começar agora →
-                </a>
-                <a
-                  href="#button"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white/10 border border-white/15 text-white px-5 py-2.5 text-sm font-semibold hover:bg-white/20 transition-colors"
-                >
-                  Ver componentes
-                </a>
-              </div>
+        <section id="overview" className="border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-10 py-16 sm:py-24">
+          <div className="max-w-2xl">
+            <p className="text-xs font-medium tracking-widest uppercase text-zinc-400 dark:text-zinc-500 mb-4">
+              LopesWare UI
+            </p>
+            <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 leading-tight mb-4">
+              Componentes prontos para produção
+            </h1>
+            <p className="text-base text-zinc-500 dark:text-zinc-400 leading-relaxed mb-8 max-w-lg">
+              Biblioteca React + Next.js com Tailwind CSS. Acessível, tipada e customizável.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href="#install"
+                className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 text-sm font-medium hover:bg-zinc-700 dark:hover:bg-white transition-colors"
+              >
+                Começar agora
+              </a>
+              <a
+                href="#button"
+                className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              >
+                Ver componentes
+              </a>
             </div>
-
-            {/* Bottom: feature pills + stats */}
-            <div className="mt-8 sm:mt-16 flex flex-col gap-6">
-              <div className="h-px bg-white/10" />
-              <div className="flex flex-wrap items-center justify-between gap-6">
-                <div className="flex flex-wrap gap-3">
-                  {[
-                    { icon: <Package size={13}/>, label: "Next.js App Router" },
-                    { icon: <Zap size={13}/>, label: "Tailwind CSS" },
-                    { icon: <Palette size={13}/>, label: "Lucide Icons" },
-                    { icon: <Shield size={13}/>, label: "TypeScript" },
-                  ].map(({ icon, label }) => (
-                    <div key={label} className="flex items-center gap-1.5 rounded-full bg-white/8 border border-white/10 px-3 py-1.5 text-xs text-zinc-400">
-                      {icon} {label}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-4 sm:gap-8 text-right">
-                  {[
-                    { value: "5+", label: "componentes" },
-                    { value: "100%", label: "TypeScript" }
-                  ].map(({ value, label }) => (
-                    <div key={label}>
-                      <p className="text-2xl font-black text-white">{value}</p>
-                      <p className="text-xs text-zinc-500">{label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
           </div>
         </section>
 
@@ -507,17 +458,17 @@ export default function Home() {
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="accordion" className="space-y-10 pb-10 sm:pb-14">
             <div>
-              <h2 className="text-2xl font-bold text-zinc-900">Accordion</h2>
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Accordion</h2>
               <p className="mt-1 text-zinc-500">Lista colapsável com animação suave, variantes e suporte a múltiplos abertos.</p>
             </div>
 
             {/* Default */}
             <div id="accordion-default" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Default</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Default</h3>
               <Accordion
                 items={[
                   { title: "O que é o LopesWare UI?", content: "É uma biblioteca de componentes React construída com Next.js e Tailwind CSS." },
@@ -530,7 +481,7 @@ export default function Home() {
 
             {/* Variants */}
             <div id="accordion-variants" className="space-y-6">
-              <h3 className="text-lg font-semibold text-zinc-800">Variantes</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Variantes</h3>
               <div className="grid md:grid-cols-3 gap-6">
                 <div>
                   <p className="text-xs font-medium text-zinc-400 uppercase mb-2">bordered</p>
@@ -606,17 +557,17 @@ export default function Home() {
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="alerts" className="space-y-10 pb-10 sm:pb-14">
             <div>
-              <h2 className="text-2xl font-bold text-zinc-900">Alert</h2>
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Alert</h2>
               <p className="mt-1 text-zinc-500">Notificações inline ou modais com variantes semânticas, ações e dismiss.</p>
             </div>
 
             {/* Variants */}
             <div id="alert-variants" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Variantes inline</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Variantes inline</h3>
               <div className="space-y-3">
                 <Alert variant="info" title="Informação" description="Esta é uma mensagem informativa para o usuário." dismissible />
                 <Alert variant="success" title="Sucesso!" description="Operação concluída com êxito." dismissible />
@@ -628,7 +579,7 @@ export default function Home() {
 
             {/* With actions */}
             <div id="alert-actions" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Com ações</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Com ações</h3>
               <div className="space-y-3">
                 <Alert
                   variant="warning"
@@ -653,8 +604,8 @@ export default function Home() {
 
             {/* Dialog mode */}
             <div id="alert-dialog" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Modo Dialog</h3>
-              <div className="flex flex-wrap gap-3 p-6 bg-white rounded-xl border border-zinc-100">
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Modo Dialog</h3>
+              <div className="flex flex-wrap gap-3 p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
                 <button
                   onClick={() => setAlertDialogOpen(true)}
                   className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition-colors"
@@ -743,23 +694,23 @@ const [open, setOpen] = useState(false);
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="avatars" className="space-y-10 pb-10 sm:pb-14">
             <div>
-              <h2 className="text-2xl font-bold text-zinc-900">Avatar</h2>
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Avatar</h2>
               <p className="mt-1 text-zinc-500">Exibe imagem, iniciais ou ícone de fallback, com indicador de status e grupo empilhado.</p>
             </div>
 
             {/* Sizes + Status */}
             <div id="avatar-sizes" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Tamanhos &amp; Status</h3>
-              <div className="flex flex-wrap items-end gap-6 p-6 bg-white rounded-xl border border-zinc-100">
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Tamanhos &amp; Status</h3>
+              <div className="flex flex-wrap items-end gap-6 p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
                 {(["xs","sm","md","lg","xl","2xl"] as const).map((s) => (
                   <Avatar key={s} name="Cristiano Lopes" size={s} status="online" />
                 ))}
               </div>
-              <div className="flex flex-wrap items-end gap-6 p-6 bg-white rounded-xl border border-zinc-100">
+              <div className="flex flex-wrap items-end gap-6 p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
                 <Avatar name="Online" size="lg" status="online" />
                 <Avatar name="Away" size="lg" status="away" />
                 <Avatar name="Busy" size="lg" status="busy" />
@@ -769,8 +720,8 @@ const [open, setOpen] = useState(false);
 
             {/* Shape */}
             <div id="avatar-shapes" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Formas</h3>
-              <div className="flex flex-wrap items-center gap-6 p-6 bg-white rounded-xl border border-zinc-100">
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Formas</h3>
+              <div className="flex flex-wrap items-center gap-6 p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
                 <Avatar name="Circle" size="xl" shape="circle" />
                 <Avatar name="Square" size="xl" shape="square" />
                 <Avatar src="https://i.pravatar.cc/150?img=3" alt="Foto" size="xl" shape="circle" status="online" />
@@ -780,8 +731,8 @@ const [open, setOpen] = useState(false);
 
             {/* AvatarGroup */}
             <div id="avatar-group" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">AvatarGroup</h3>
-              <div className="flex flex-wrap items-center gap-8 p-6 bg-white rounded-xl border border-zinc-100">
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">AvatarGroup</h3>
+              <div className="flex flex-wrap items-center gap-8 p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
                 <AvatarGroup
                   avatars={[
                     { name: "Ana Silva" },
@@ -808,8 +759,8 @@ const [open, setOpen] = useState(false);
 
             {/* Fallback */}
             <div id="avatar-fallback" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Fallback: iniciais &amp; ícone</h3>
-              <div className="flex flex-wrap items-center gap-6 p-6 bg-white rounded-xl border border-zinc-100">
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Fallback: iniciais &amp; ícone</h3>
+              <div className="flex flex-wrap items-center gap-6 p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
                 <Avatar initials="CL" size="lg" />
                 <Avatar name="Rodrigo Almeida" size="lg" />
                 <Avatar name="Beatriz" size="lg" />
@@ -857,18 +808,18 @@ const [open, setOpen] = useState(false);
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="badges" className="space-y-10 pb-10 sm:pb-14">
             <div>
-              <h2 className="text-2xl font-bold text-zinc-900">Badge</h2>
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Badge</h2>
               <p className="mt-1 text-zinc-500">Etiquetas compactas para status, categorias e contadores.</p>
             </div>
 
             {/* Variants soft */}
             <div id="badge-variants" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Variantes (soft)</h3>
-              <div className="flex flex-wrap gap-2 p-6 bg-white rounded-xl border border-zinc-100">
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Variantes (soft)</h3>
+              <div className="flex flex-wrap gap-2 p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
                 {(["default","primary","success","warning","danger","info","violet","pink","orange","teal"] as const).map((v) => (
                   <Badge key={v} label={v.charAt(0).toUpperCase() + v.slice(1)} variant={v} />
                 ))}
@@ -877,8 +828,8 @@ const [open, setOpen] = useState(false);
 
             {/* Solid */}
             <div id="badge-solid" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Solid</h3>
-              <div className="flex flex-wrap gap-2 p-6 bg-white rounded-xl border border-zinc-100">
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Solid</h3>
+              <div className="flex flex-wrap gap-2 p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
                 {(["default","primary","success","warning","danger","info","violet","pink","orange","teal"] as const).map((v) => (
                   <Badge key={v} label={v.charAt(0).toUpperCase() + v.slice(1)} variant={v} solid />
                 ))}
@@ -887,7 +838,7 @@ const [open, setOpen] = useState(false);
 
             {/* Features: dot, icon, remove, sizes, square */}
             <div id="badge-features" className="space-y-6">
-              <h3 className="text-lg font-semibold text-zinc-800">Funcionalidades</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Funcionalidades</h3>
               <div className="space-y-4">
                 <div>
                   <p className="text-xs font-medium text-zinc-400 uppercase mb-2">Tamanhos</p>
@@ -959,7 +910,7 @@ import { Star } from "lucide-react";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="breadcrumb" className="space-y-10 pb-10 sm:pb-14">
             <SectionHeader
@@ -1095,7 +1046,7 @@ import { Star } from "lucide-react";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="button">
             <SectionHeader
@@ -1220,7 +1171,7 @@ import { Star } from "lucide-react";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="action-button">
             <SectionHeader
@@ -1268,18 +1219,18 @@ import { Star } from "lucide-react";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="cards" className="space-y-10 pb-10 sm:pb-14">
 
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 mb-1">Card</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-1">Card</h2>
               <p className="text-zinc-500 text-sm">Contêiner versátil com suporte a variantes, sombras, backgrounds, destaque colorido e slots compostos.</p>
             </div>
 
             {/* Variants */}
             <div id="card-variants">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Variantes</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Variantes</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
                 <Card variant="default" radius="xl">
@@ -1323,7 +1274,7 @@ import { Star } from "lucide-react";
 
             {/* Shadows */}
             <div id="card-shadows">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Sombras</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Sombras</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                 {(["none", "sm", "md", "lg", "xl"] as const).map((s) => (
                   <Card key={s} variant="default" shadow={s} radius="xl">
@@ -1337,7 +1288,7 @@ import { Star } from "lucide-react";
 
             {/* Colors */}
             <div id="card-backgrounds">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Cores de Fundo</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Cores de Fundo</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {(["default", "primary", "success", "warning", "danger", "info", "violet", "pink", "teal"] as const).map((c) => (
                   <Card key={c} variant="filled" color={c} radius="xl">
@@ -1351,7 +1302,7 @@ import { Star } from "lucide-react";
 
             {/* Accent */}
             <div id="card-accent">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Barra de Destaque (accent)</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Barra de Destaque (accent)</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {(["primary", "success", "warning", "danger"] as const).map((c) => (
                   <Card key={c} variant="default" color={c} accent radius="xl" shadow="sm">
@@ -1364,7 +1315,7 @@ import { Star } from "lucide-react";
 
             {/* With icon headers */}
             <div id="card-header">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Cards com Ícone e Ação</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Cards com Ícone e Ação</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
                 <Card variant="default" shadow="sm" radius="xl">
@@ -1376,7 +1327,7 @@ import { Star } from "lucide-react";
                     action={<Badge variant="success" size="sm" label="+12%" />}
                   />
                   <CardBody>
-                    <p className="text-3xl font-bold text-zinc-900">R$ 48.230</p>
+                    <p className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">R$ 48.230</p>
                     <p className="mt-1 text-sm text-zinc-500">Meta: R$ 50.000</p>
                   </CardBody>
                   <CardFooter divider align="between">
@@ -1398,7 +1349,7 @@ import { Star } from "lucide-react";
                     }
                   />
                   <CardBody>
-                    <p className="text-3xl font-bold text-zinc-900">2.847</p>
+                    <p className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">2.847</p>
                     <p className="mt-1 text-sm text-zinc-500">Pico: 3.100 às 14h</p>
                   </CardBody>
                   <CardFooter divider>
@@ -1416,7 +1367,7 @@ import { Star } from "lucide-react";
                     action={<Badge variant="warning" size="sm" label="14" />}
                   />
                   <CardBody>
-                    <p className="text-3xl font-bold text-zinc-900">R$ 7.410</p>
+                    <p className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">R$ 7.410</p>
                     <p className="mt-1 text-sm text-zinc-500">9 pedidos em atraso</p>
                   </CardBody>
                   <CardFooter divider align="between">
@@ -1430,7 +1381,7 @@ import { Star } from "lucide-react";
 
             {/* Hoverable / clickable */}
             <div id="card-interactive">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Interativos (hoverable)</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Interativos (hoverable)</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
                 <Card variant="default" shadow="sm" radius="xl" hoverable>
@@ -1453,7 +1404,7 @@ import { Star } from "lucide-react";
 
             {/* Radius showcase */}
             <div id="card-radius">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Border Radius</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Border Radius</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 {(["none", "sm", "md", "lg", "xl", "2xl"] as const).map((r) => (
                   <Card key={r} variant="default" shadow="sm" radius={r}>
@@ -1467,7 +1418,7 @@ import { Star } from "lucide-react";
 
             {/* Props table */}
             <div id="card-props">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Props</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Props</h3>
               <PropsTable rows={[
                 ["variant",     "'default'|'outlined'|'elevated'|'filled'|'ghost'",                                      "'default'", "Estilo visual do card"],
                 ["color",       "'default'|'primary'|'success'|'warning'|'danger'|'info'|'violet'|'pink'|'teal'",        "'default'", "Esquema de cor (afeta filled, accent e ícones)"],
@@ -1515,17 +1466,17 @@ import { Star } from "lucide-react";
 
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="carousel" className="space-y-10 pb-10 sm:pb-14">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 mb-1">Carousel</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-1">Carousel</h2>
               <p className="text-zinc-500 text-sm">Passador de slides com suporte a múltiplos itens visíveis, arrastar, teclado, auto-play e indicadores.</p>
             </div>
 
             {/* Basic */}
             <div id="carousel-basic">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Básico</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Básico</h3>
               <Carousel ariaLabel="Carousel básico">
                 {[
                   { bg: "bg-indigo-100", label: "Slide 1", sub: "Primeiro slide" },
@@ -1544,7 +1495,7 @@ import { Star } from "lucide-react";
 
             {/* Multi-slide */}
             <div id="carousel-multi">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Multi-slide</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Multi-slide</h3>
               <Carousel slidesPerView={3} gap={12} ariaLabel="Carousel multi-slide">
                 {["Vermelho", "Azul", "Verde", "Roxo", "Laranja", "Rosa"].map((label, i) => (
                   <div key={i} className="bg-zinc-100 rounded-xl h-36 flex items-center justify-center text-zinc-600 font-semibold text-sm">
@@ -1556,7 +1507,7 @@ import { Star } from "lucide-react";
 
             {/* AutoPlay */}
             <div id="carousel-autoplay">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">AutoPlay + Loop</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">AutoPlay + Loop</h3>
               <Carousel autoPlay={2500} loop counter ariaLabel="Carousel auto-play">
                 {[
                   "from-indigo-400 to-indigo-600",
@@ -1572,7 +1523,7 @@ import { Star } from "lucide-react";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="chat" className="space-y-10 pb-10 sm:pb-14">
             <SectionHeader
@@ -1794,7 +1745,7 @@ import { Star } from "lucide-react";
             {/* Props */}
             <div id="chat-props" className="space-y-6">
               <div>
-                <h3 className="text-base font-semibold text-zinc-800 mb-3">ChatMessage</h3>
+                <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-3">ChatMessage</h3>
                 <PropsTable rows={[
                   ["content",       "string",                                              "—",           "Texto da mensagem"],
                   ["senderName",    "string",                                              "—",           "Nome do remetente"],
@@ -1813,7 +1764,7 @@ import { Star } from "lucide-react";
                 ]} />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-zinc-800 mb-3">ChatComposer</h3>
+                <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-3">ChatComposer</h3>
                 <PropsTable rows={[
                   ["onSend",      "(value: string) => void", "—",          "Callback ao enviar mensagem"],
                   ["onAttach",    "() => void",               "—",          "Callback ao clicar em anexar"],
@@ -1826,7 +1777,7 @@ import { Star } from "lucide-react";
                 ]} />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-zinc-800 mb-3">ChatConversationItem</h3>
+                <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-3">ChatConversationItem</h3>
                 <PropsTable rows={[
                   ["name",        "string",      "—",     "Nome do contato ou grupo"],
                   ["lastMessage", "string",      "—",     "Prévia da última mensagem"],
@@ -1840,7 +1791,7 @@ import { Star } from "lucide-react";
                 ]} />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-zinc-800 mb-3">ChatWindow</h3>
+                <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-3">ChatWindow</h3>
                 <PropsTable rows={[
                   ["conversations", "ChatConversation[]", "—",     "Lista de conversas com mensagens"],
                   ["title",         "string",              "'Mensagens'", "Título no header da janela"],
@@ -1851,18 +1802,18 @@ import { Star } from "lucide-react";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           {/* ── CodeBlock ──────────────────────────────────────────────────── */}
           <section id="codeblock" className="space-y-10 pb-10 sm:pb-14">
             <div>
-              <h2 className="text-2xl font-bold text-zinc-900">CodeBlock</h2>
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">CodeBlock</h2>
               <p className="mt-1 text-zinc-500">Bloco de código com syntax highlighting (Shiki / Dracula), nome de arquivo, números de linha, recolher e abas.</p>
             </div>
 
             {/* Single file */}
             <div id="codeblock-basic" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Básico</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Básico</h3>
               <CodeBlock
                 filename="Button.tsx"
                 language="tsx"
@@ -1872,7 +1823,7 @@ import { Star } from "lucide-react";
 
             {/* Terminal */}
             <div id="codeblock-terminal" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Terminal</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Terminal</h3>
               <CodeBlock
                 filename="terminal"
                 language="bash"
@@ -1882,7 +1833,7 @@ import { Star } from "lucide-react";
 
             {/* Line numbers */}
             <div id="codeblock-linenumbers" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Números de linha</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Números de linha</h3>
               <CodeBlock
                 filename="useAsyncButton.ts"
                 language="ts"
@@ -1893,7 +1844,7 @@ import { Star } from "lucide-react";
 
             {/* Show more */}
             <div id="codeblock-showmore" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Recolher (maxLines)</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Recolher (maxLines)</h3>
               <CodeBlock
                 filename="globals.css"
                 language="css"
@@ -1904,7 +1855,7 @@ import { Star } from "lucide-react";
 
             {/* Tabs */}
             <div id="codeblock-tabs" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Abas (múltiplos arquivos)</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Abas (múltiplos arquivos)</h3>
               <CodeBlock
                 tabs={[
                   {
@@ -1941,19 +1892,19 @@ import { Star } from "lucide-react";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="command-menu" className="space-y-10 pb-10 sm:pb-14">
             <div>
-              <h2 className="text-2xl font-bold text-zinc-900">Command Menu</h2>
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Command Menu</h2>
               <p className="mt-1 text-zinc-500">Paleta de comandos com pesquisa, grupos e atalhos de teclado. Substitui o campo de busca no Header.</p>
             </div>
 
             {/* Trigger */}
             <div id="command-basic" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Demo interativo</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Demo interativo</h3>
               <p className="text-sm text-zinc-500">Clique no botão ou pressione <kbd className="rounded border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 text-xs font-medium">Ctrl+K</kbd> para abrir.</p>
-              <div className="flex items-center gap-4 p-6 bg-white rounded-xl border border-zinc-100">
+              <div className="flex items-center gap-4 p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
                 <CommandMenu
                   triggerLabel="Buscar..."
                   items={[
@@ -1981,7 +1932,7 @@ import { Star } from "lucide-react";
 
             {/* Groups */}
             <div id="command-groups" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Estrutura dos itens</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Estrutura dos itens</h3>
               <PropsTable rows={[
                 ["id",          "string",      "—",     "Identificador único do item"],
                 ["label",       "string",      "—",     "Texto principal exibido"],
@@ -2016,12 +1967,12 @@ const COMMANDS: CommandItem[] = [
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="datatable" className="space-y-10 pb-10 sm:pb-14">
 
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 mb-1">DataTable</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-1">DataTable</h2>
               <p className="text-zinc-500 text-sm">Tabela completa com ordenação, busca global, filtros em dialog, visibilidade de colunas, sumário, paginação e menu de ações por linha.</p>
             </div>
 
@@ -2029,7 +1980,7 @@ const COMMANDS: CommandItem[] = [
 
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="forms">
             <SectionHeader
@@ -2203,7 +2154,7 @@ import NumberField from "@/components/form/NumberField";
 
             <div id="checkboxgroup" className="mt-8 border-t border-zinc-100 pt-8">
               <span className="text-xs font-semibold uppercase tracking-widest text-indigo-500">Forms</span>
-              <h3 className="mt-1 text-xl font-black text-zinc-900">Checkbox &amp; Radio</h3>
+              <h3 className="mt-1 text-xl font-black text-zinc-900 dark:text-zinc-50">Checkbox &amp; Radio</h3>
               <p className="mt-1 text-sm text-zinc-500">Grupos de seleção com variantes padrão, card e button. Suporta múltipla seleção, ícones por opção e grid de colunas configurável.</p>
             </div>
 
@@ -2519,7 +2470,7 @@ import FileField   from "@/components/form/FileField";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="header">
             <SectionHeader
@@ -2555,7 +2506,7 @@ import FileField   from "@/components/form/FileField";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="interactions">
             <SectionHeader
@@ -2681,7 +2632,7 @@ import FileField   from "@/components/form/FileField";
                   <p className="text-sm text-zinc-500 mb-3">Lista de arquivos — clique direito em um item</p>
                   <div className="space-y-1">
                     {["Relatório Q1.pdf", "Apresentação.pptx", "Dados.xlsx"].map((name) => (
-                      <div key={name} className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-zinc-700 bg-white border border-zinc-100 cursor-context-menu hover:bg-zinc-50 transition-colors">
+                      <div key={name} className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 cursor-context-menu hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
                         <span className="h-2 w-2 rounded-full bg-zinc-300 shrink-0" />
                         {name}
                       </div>
@@ -2744,7 +2695,7 @@ import ContextMenu from "@/components/ContextMenu";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="sidebar">
             <SectionHeader
@@ -2843,7 +2794,7 @@ import ContextMenu from "@/components/ContextMenu";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="status-pages">
             <SectionHeader
@@ -2892,17 +2843,17 @@ import ContextMenu from "@/components/ContextMenu";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="stepper" className="space-y-10 pb-10 sm:pb-14">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 mb-1">Stepper</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-1">Stepper</h2>
               <p className="text-zinc-500 text-sm">Indicador de progresso em etapas, com suporte a orientação, variantes e estados por passo.</p>
             </div>
 
             {/* Horizontal */}
             <div id="stepper-horizontal">
-              <h3 className="text-base font-semibold text-zinc-800 mb-6">Horizontal</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-6">Horizontal</h3>
               <div className="space-y-8">
                 {([0, 1, 2, 3] as const).map((active) => (
                   <div key={active}>
@@ -2923,7 +2874,7 @@ import ContextMenu from "@/components/ContextMenu";
 
             {/* Vertical */}
             <div id="stepper-vertical">
-              <h3 className="text-base font-semibold text-zinc-800 mb-6">Vertical</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-6">Vertical</h3>
               <div className="max-w-xs">
                 <Stepper
                   orientation="vertical"
@@ -2940,7 +2891,7 @@ import ContextMenu from "@/components/ContextMenu";
 
             {/* Variants */}
             <div id="stepper-variants">
-              <h3 className="text-base font-semibold text-zinc-800 mb-6">Variantes</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-6">Variantes</h3>
               <div className="space-y-8">
                 {(["default", "outlined", "minimal"] as const).map((variant) => (
                   <div key={variant}>
@@ -2960,18 +2911,18 @@ import ContextMenu from "@/components/ContextMenu";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="tables" className="space-y-10 pb-10 sm:pb-14">
 
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 mb-1">Table</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-1">Table</h2>
               <p className="text-zinc-500 text-sm">Tabela simples e altamente configurável, sem estado interno — ideal para listas estáticas ou controladas externamente.</p>
             </div>
 
             {/* Variants */}
             <div id="table-variants">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Variantes</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Variantes</h3>
               <div className="space-y-6">
                 {([
                   { variant: "default",  label: "Default" },
@@ -2985,7 +2936,7 @@ import ContextMenu from "@/components/ContextMenu";
                       variant={variant}
                       size="sm"
                       columns={[
-                        { key: "name",   label: "Nome",   render: (v) => <span className="font-medium text-zinc-800">{v as string}</span> },
+                        { key: "name",   label: "Nome",   render: (v) => <span className="font-medium text-zinc-800 dark:text-zinc-200">{v as string}</span> },
                         { key: "role",   label: "Cargo" },
                         { key: "dept",   label: "Depto" },
                         { key: "salary", label: "Salário", align: "right" },
@@ -3008,7 +2959,7 @@ import ContextMenu from "@/components/ContextMenu";
 
             {/* Sizes */}
             <div id="table-sizes">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Tamanhos</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Tamanhos</h3>
               <div className="space-y-6">
                 {(["xs", "sm", "md", "lg"] as const).map((size) => (
                   <div key={size}>
@@ -3034,7 +2985,7 @@ import ContextMenu from "@/components/ContextMenu";
 
             {/* Empty state */}
             <div id="table-empty">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Estado vazio</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Estado vazio</h3>
               <Table
                 columns={[
                   { key: "name",  label: "Nome" },
@@ -3053,21 +3004,22 @@ import ContextMenu from "@/components/ContextMenu";
 
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="text-rotate" className="space-y-10 pb-10 sm:pb-14">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 mb-1">TextRotate</h2>
-              <p className="text-zinc-500 text-sm">Exibe uma lista de textos um de cada vez, em loop infinito. Pausa ao passar o mouse. Pode ser usado inline numa frase ou como destaque standalone.</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-1">TextRotate</h2>
+              <p className="text-zinc-500 text-sm">Anima uma lista de textos com stagger por caractere, palavra ou linha. Suporta presets de animação, stagger configurável e controle imperativo via ref.</p>
             </div>
 
-            {/* Inline in a sentence */}
+            {/* Inline in a sentence — per-character stagger */}
             <div id="text-rotate-inline">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Inline numa frase</h3>
-              <p className="text-2xl font-semibold text-zinc-800">
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Inline numa frase</h3>
+              <p className="text-2xl font-semibold text-zinc-800 dark:text-zinc-200">
                 Criamos soluções para{" "}
                 <TextRotate
                   inline
+                  staggerDuration={0.04}
                   items={[
                     { content: "Designers",    className: "bg-teal-100 text-teal-700 px-2 rounded" },
                     { content: "Devs",         className: "bg-indigo-100 text-indigo-700 px-2 rounded" },
@@ -3078,38 +3030,59 @@ import ContextMenu from "@/components/ContextMenu";
               </p>
             </div>
 
-            {/* Large standalone */}
+            {/* Large standalone — center-out stagger */}
             <div id="text-rotate-standalone">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Standalone (destaque)</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Standalone — stagger do centro</h3>
               <TextRotate
-                className="text-5xl font-black text-zinc-900 tracking-tight"
+                className="text-5xl font-black text-zinc-900 dark:text-zinc-50 tracking-tight"
                 align="center"
-                duration={2000}
+                duration={2200}
+                staggerFrom="center"
+                staggerDuration={0.06}
                 items={["DESIGN", "DEVELOP", "DEPLOY", "SCALE", "REPEAT"]}
+              />
+            </div>
+
+            {/* Rise preset — blur */}
+            <div id="text-rotate-rise">
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Preset <code className="text-xs bg-zinc-100 px-1.5 py-0.5 rounded font-mono">rise</code> — com blur</h3>
+              <TextRotate
+                className="text-4xl font-extrabold text-indigo-600 tracking-tight"
+                align="center"
+                animation="rise"
+                duration={2000}
+                staggerFrom="last"
+                staggerDuration={0.045}
+                items={["Velocidade", "Confiança", "Qualidade", "Inovação"]}
               />
             </div>
 
             {/* Discrete (instant jump) */}
             <div id="text-rotate-discrete">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Animação discreta (sem transição)</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Preset <code className="text-xs bg-zinc-100 px-1.5 py-0.5 rounded font-mono">discrete</code> — pop rápido</h3>
               <p className="text-zinc-500 text-sm">
                 Nosso stack:{" "}
                 <TextRotate
                   inline
                   animation="discrete"
                   duration={1500}
+                  splitBy="words"
+                  staggerDuration={0}
                   className="font-mono font-bold text-indigo-600"
                   items={["Next.js", "Tailwind CSS", "TypeScript", "React 19"]}
                 />
               </p>
             </div>
 
-            {/* Custom duration + emojis */}
+            {/* Word stagger with emojis */}
             <div id="text-rotate-emojis">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Com emojis e duração personalizada</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Stagger por palavra com emojis</h3>
               <TextRotate
-                className="text-4xl"
+                className="text-4xl font-black"
                 align="center"
+                animation="fade"
+                splitBy="words"
+                staggerDuration={0.08}
                 duration={1800}
                 items={[
                   "📀 DESIGN",
@@ -3121,19 +3094,66 @@ import ContextMenu from "@/components/ContextMenu";
                 ]}
               />
             </div>
+
+            {/* Manual control via ref */}
+            <div id="text-rotate-manual">
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Controle manual via ref</h3>
+              {(() => {
+                // eslint-disable-next-line react-hooks/rules-of-hooks
+                const rotateRef = useRef<TextRotateHandle>(null);
+                return (
+                  <div className="space-y-6">
+                    <div className="flex justify-center">
+                      <TextRotate
+                        ref={rotateRef}
+                        auto={false}
+                        className="text-3xl font-bold text-zinc-800 dark:text-zinc-200"
+                        align="center"
+                        staggerFrom="center"
+                        staggerDuration={0.05}
+                        items={["Primeiro", "Segundo", "Terceiro", "Quarto", "Quinto"]}
+                      />
+                    </div>
+                    <div className="flex justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => rotateRef.current?.previous()}
+                        className="px-3 py-1.5 text-sm rounded-lg border border-zinc-200 hover:bg-zinc-50 transition-colors"
+                      >
+                        ← Anterior
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => rotateRef.current?.reset()}
+                        className="px-3 py-1.5 text-sm rounded-lg border border-zinc-200 hover:bg-zinc-50 transition-colors"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => rotateRef.current?.next()}
+                        className="px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                      >
+                        Próximo →
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="timeline" className="space-y-10 pb-10 sm:pb-14">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 mb-1">Timeline</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-1">Timeline</h2>
               <p className="text-zinc-500 text-sm">Lista cronológica de eventos com suporte a ícones, cores, badges e alinhamentos.</p>
             </div>
 
             {/* Left */}
             <div id="timeline-left">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Layout esquerdo (padrão)</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Layout esquerdo (padrão)</h3>
               <Timeline
                 items={[
                   { title: "Empresa fundada",      description: "Início da jornada com apenas 3 pessoas.",               date: "Jan 2020", color: "primary",  badge: "Marco" },
@@ -3147,7 +3167,7 @@ import ContextMenu from "@/components/ContextMenu";
 
             {/* Alternate */}
             <div id="timeline-alternate">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Layout alternado</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Layout alternado</h3>
               <Timeline
                 layout="alternate"
                 items={[
@@ -3162,7 +3182,7 @@ import ContextMenu from "@/components/ContextMenu";
 
             {/* Colors */}
             <div id="timeline-colors">
-              <h3 className="text-base font-semibold text-zinc-800 mb-4">Cores</h3>
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Cores</h3>
               <Timeline
                 items={[
                   { title: "Default",  description: "Evento padrão.",  date: "Hoje",     color: "default"  },
@@ -3176,7 +3196,7 @@ import ContextMenu from "@/components/ContextMenu";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <section id="toasts">
             <SectionHeader
@@ -3216,19 +3236,19 @@ import ContextMenu from "@/components/ContextMenu";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           {/* ── TreeView ──────────────────────────────────────────────────── */}
           <section id="treeview" className="space-y-10 pb-10 sm:pb-14">
             <div>
-              <h2 className="text-2xl font-bold text-zinc-900">Tree View</h2>
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Tree View</h2>
               <p className="mt-1 text-zinc-500">Visualização hierárquica de dados com suporte a expand/collapse, seleção, linhas conectoras e drag-and-drop.</p>
             </div>
 
             {/* Simple sm */}
             <div id="treeview-simple-sm" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Simple — sm</h3>
-              <div className="rounded-xl border border-zinc-100 bg-white p-4 max-w-xs">
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Simple — sm</h3>
+              <div className="rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 max-w-xs">
                 <TreeView
                   size="sm"
                   items={[
@@ -3257,8 +3277,8 @@ import ContextMenu from "@/components/ContextMenu";
 
             {/* Simple md */}
             <div id="treeview-simple-md" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Simple — md</h3>
-              <div className="rounded-xl border border-zinc-100 bg-white p-4 max-w-xs">
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Simple — md</h3>
+              <div className="rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 max-w-xs">
                 <TreeView
                   size="md"
                   showLines
@@ -3282,9 +3302,9 @@ import ContextMenu from "@/components/ContextMenu";
 
             {/* Multi-select */}
             <div id="treeview-multiselect" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Seleção múltipla</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Seleção múltipla</h3>
               <p className="text-sm text-zinc-500">Clique em itens para selecionar. Suporta seleção múltipla independente.</p>
-              <div className="rounded-xl border border-zinc-100 bg-white p-4 max-w-xs">
+              <div className="rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 max-w-xs">
                 <TreeView
                   size="sm"
                   selectionMode="multiple"
@@ -3310,9 +3330,9 @@ import ContextMenu from "@/components/ContextMenu";
 
             {/* DnD */}
             <div id="treeview-dnd" className="space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-800">Drag & Drop</h3>
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Drag & Drop</h3>
               <p className="text-sm text-zinc-500">Arraste itens para reordenar. Não é possível arrastar um item para dentro de seu próprio descendente.</p>
-              <div className="rounded-xl border border-zinc-100 bg-white p-4 max-w-xs">
+              <div className="rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 max-w-xs">
                 <TreeView
                   size="sm"
                   draggable
@@ -3352,7 +3372,7 @@ import ContextMenu from "@/components/ContextMenu";
             </div>
           </section>
 
-          <hr className="border-zinc-200 my-8 sm:my-12" />
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           {/* Footer */}
           <footer className="pt-8 border-t border-zinc-200 text-center text-sm text-zinc-400">
@@ -3384,17 +3404,17 @@ function SectionHeader({ label, title, description }: { label: string; title: st
   return (
     <div className="mb-8">
       <span className="inline-block text-xs font-semibold uppercase tracking-widest text-indigo-500 mb-2">{label}</span>
-      <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 mb-3">{title}</h2>
-      <p className="text-zinc-500 leading-relaxed max-w-2xl">{description}</p>
+      <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-zinc-50 dark:text-zinc-50 mb-3">{title}</h2>
+      <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-2xl">{description}</p>
     </div>
   );
 }
 
 function DemoCard({ id, title, children }: { id?: string; title: string; children: React.ReactNode }) {
   return (
-    <div id={id} className="rounded-xl border border-zinc-200 bg-white overflow-hidden mb-4">
-      <div className="border-b border-zinc-100 px-4 py-2.5">
-        <span className="text-xs font-medium text-zinc-400">{title}</span>
+    <div id={id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden mb-4">
+      <div className="border-b border-zinc-100 dark:border-zinc-800 px-4 py-2.5">
+        <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500">{title}</span>
       </div>
       <div className="p-4 sm:p-6">{children}</div>
     </div>
@@ -3404,22 +3424,22 @@ function DemoCard({ id, title, children }: { id?: string; title: string; childre
 function PropsTable({ rows, headers }: { rows: string[][]; headers?: string[] }) {
   const hdrs = headers ?? (rows[0]?.length === 3 ? ["Componente", "Principais props", "Descrição"] : ["Prop", "Tipo", "Default", "Descrição"]);
   return (
-    <div className="rounded-xl border border-zinc-200 overflow-x-auto">
+    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="bg-zinc-50 border-b border-zinc-200">
+        <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
           <tr>
             {hdrs.map((h) => (
-              <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide">{h}</th>
+              <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">{h}</th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-100 bg-white">
+        <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800 bg-white dark:bg-zinc-950">
           {rows.map((row, i) => (
-            <tr key={i} className="hover:bg-zinc-50 transition-colors">
-              <td className="px-4 py-3"><code className="font-mono text-indigo-600 text-xs break-all">{row[0]}</code></td>
-              <td className="px-4 py-3"><code className="font-mono text-zinc-500 text-xs break-all">{row[1]}</code></td>
-              {row.length > 3 && <td className="px-4 py-3"><code className="font-mono text-zinc-400 text-xs break-all">{row[2]}</code></td>}
-              <td className="px-4 py-3 text-zinc-600 text-xs">{row[row.length - 1]}</td>
+            <tr key={i} className="hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+              <td className="px-4 py-3"><code className="font-mono text-indigo-600 dark:text-indigo-400 text-xs break-all">{row[0]}</code></td>
+              <td className="px-4 py-3"><code className="font-mono text-zinc-500 dark:text-zinc-400 text-xs break-all">{row[1]}</code></td>
+              {row.length > 3 && <td className="px-4 py-3"><code className="font-mono text-zinc-400 dark:text-zinc-500 text-xs break-all">{row[2]}</code></td>}
+              <td className="px-4 py-3 text-zinc-600 dark:text-zinc-300 text-xs">{row[row.length - 1]}</td>
             </tr>
           ))}
         </tbody>

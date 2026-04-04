@@ -10,59 +10,53 @@ type PageVariant = "404" | "403" | "500" | "info" | "custom";
 const variantStyles: Record<
   PageVariant,
   {
-    bg: string;
-    codeText: string;
+    codeGradient: string;
     iconGradient: string;
     pillBg: string;
     pillText: string;
     pillBorder: string;
-    divider: string;
+    hr: string;
   }
 > = {
   "404": {
-    bg: "from-indigo-50/60 via-white to-blue-50/40",
-    codeText: "text-indigo-100",
+    codeGradient: "from-indigo-400 to-blue-500 dark:from-indigo-300 dark:to-blue-400",
     iconGradient: "from-indigo-500 to-blue-600",
-    pillBg: "bg-indigo-50",
-    pillText: "text-indigo-600",
-    pillBorder: "border-indigo-200",
-    divider: "bg-indigo-100",
+    pillBg: "bg-indigo-50 dark:bg-indigo-950/60",
+    pillText: "text-indigo-600 dark:text-indigo-400",
+    pillBorder: "border-indigo-200 dark:border-indigo-800",
+    hr: "bg-indigo-200 dark:bg-indigo-800",
   },
   "403": {
-    bg: "from-amber-50/60 via-white to-orange-50/40",
-    codeText: "text-amber-100",
+    codeGradient: "from-amber-400 to-orange-500 dark:from-amber-300 dark:to-orange-400",
     iconGradient: "from-amber-500 to-orange-500",
-    pillBg: "bg-amber-50",
-    pillText: "text-amber-600",
-    pillBorder: "border-amber-200",
-    divider: "bg-amber-100",
+    pillBg: "bg-amber-50 dark:bg-amber-950/60",
+    pillText: "text-amber-600 dark:text-amber-400",
+    pillBorder: "border-amber-200 dark:border-amber-800",
+    hr: "bg-amber-200 dark:bg-amber-800",
   },
   "500": {
-    bg: "from-rose-50/60 via-white to-red-50/40",
-    codeText: "text-rose-100",
+    codeGradient: "from-rose-400 to-red-600 dark:from-rose-300 dark:to-red-400",
     iconGradient: "from-rose-500 to-red-600",
-    pillBg: "bg-rose-50",
-    pillText: "text-rose-600",
-    pillBorder: "border-rose-200",
-    divider: "bg-rose-100",
+    pillBg: "bg-rose-50 dark:bg-rose-950/60",
+    pillText: "text-rose-600 dark:text-rose-400",
+    pillBorder: "border-rose-200 dark:border-rose-800",
+    hr: "bg-rose-200 dark:bg-rose-800",
   },
   info: {
-    bg: "from-sky-50/60 via-white to-cyan-50/40",
-    codeText: "text-sky-100",
+    codeGradient: "from-sky-400 to-cyan-500 dark:from-sky-300 dark:to-cyan-400",
     iconGradient: "from-sky-500 to-cyan-500",
-    pillBg: "bg-sky-50",
-    pillText: "text-sky-600",
-    pillBorder: "border-sky-200",
-    divider: "bg-sky-100",
+    pillBg: "bg-sky-50 dark:bg-sky-950/60",
+    pillText: "text-sky-600 dark:text-sky-400",
+    pillBorder: "border-sky-200 dark:border-sky-800",
+    hr: "bg-sky-200 dark:bg-sky-800",
   },
   custom: {
-    bg: "from-zinc-50/60 via-white to-slate-50/40",
-    codeText: "text-zinc-100",
+    codeGradient: "from-zinc-400 to-slate-600 dark:from-zinc-300 dark:to-slate-400",
     iconGradient: "from-zinc-500 to-slate-600",
-    pillBg: "bg-zinc-50",
-    pillText: "text-zinc-600",
-    pillBorder: "border-zinc-200",
-    divider: "bg-zinc-100",
+    pillBg: "bg-zinc-50 dark:bg-zinc-800/60",
+    pillText: "text-zinc-600 dark:text-zinc-400",
+    pillBorder: "border-zinc-200 dark:border-zinc-700",
+    hr: "bg-zinc-200 dark:bg-zinc-800",
   },
 };
 
@@ -102,103 +96,94 @@ export default function StatusPage({
   return (
     <div
       className={twMerge(
-        inline
-          ? twMerge("relative isolate overflow-hidden flex items-center justify-center bg-gradient-to-br px-4 py-6", s.bg)
-          : twMerge("relative isolate min-h-screen overflow-hidden flex items-center justify-center bg-gradient-to-br px-6", s.bg),
+        "relative isolate overflow-hidden flex items-center justify-center bg-white dark:bg-zinc-950 px-6",
+        inline ? "py-16" : "min-h-screen",
         className
       )}
-      {...(componentId ? { ['data-component-id']: componentId } : {})}
+      {...(componentId ? { "data-component-id": componentId } : {})}
     >
-      {/* Subtle dot pattern */}
+      {/* Subtle dot texture */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            "radial-gradient(circle, #00000008 1px, transparent 1px)",
+            "radial-gradient(circle, rgb(0 0 0 / 0.045) 1px, transparent 1px)",
           backgroundSize: "28px 28px",
         }}
       />
 
-      {/* Giant faded status code in background */}
-      {code && (
-        <span
-          aria-hidden
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center text-center w-full max-w-xl py-20">
+
+        {/* Hero: code number or icon */}
+        {code ? (
+          <span
+            className={twMerge(
+              "block select-none font-black leading-none tracking-tighter",
+              "text-[clamp(96px,20vw,200px)]",
+              "bg-gradient-to-br bg-clip-text text-transparent",
+              s.codeGradient
+            )}
+          >
+            {code}
+          </span>
+        ) : icon ? (
+          <div
+            className={twMerge(
+              "flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg",
+              s.iconGradient
+            )}
+          >
+            {React.cloneElement(icon, { className: "w-8 h-8 text-white" })}
+          </div>
+        ) : null}
+
+        {/* Pill */}
+        {pill && (
+          <span
+            className={twMerge(
+              "mt-5 inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-medium tracking-wide",
+              s.pillBg,
+              s.pillText,
+              s.pillBorder
+            )}
+          >
+            {pill}
+          </span>
+        )}
+
+        {/* Title */}
+        <h1
           className={twMerge(
-            "pointer-events-none absolute select-none font-black leading-none",
-            "text-[clamp(160px,30vw,320px)]",
-            s.codeText,
-            "-bottom-6 right-6 opacity-80"
+            "font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50",
+            code ? "mt-5 text-4xl sm:text-5xl" : "mt-4 text-4xl"
           )}
         >
-          {code}
-        </span>
-      )}
+          {title}
+        </h1>
 
-      {/* Card */}
-      <div className="relative z-10 w-full max-w-lg">
-        <div className="rounded-3xl bg-white/80 backdrop-blur-md shadow-2xl shadow-black/5 border border-white/60 px-10 py-12 text-center">
-          
-          {/* Icon */}
-          {icon && (
-            <div
-              className={twMerge(
-                "mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg",
-                s.iconGradient
-              )}
-            >
-              {React.cloneElement(icon, { className: "w-9 h-9 text-white" })}
-            </div>
-          )}
+        {/* Accent rule */}
+        <div className={twMerge("mt-5 h-px w-12 rounded-full", s.hr)} />
 
-          {/* Pill */}
-          {pill && (
-            <span
-              className={twMerge(
-                "inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-medium tracking-wide mb-4",
-                s.pillBg,
-                s.pillText,
-                s.pillBorder
-              )}
-            >
-              {pill}
-            </span>
-          )}
-
-          {/* Title */}
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
-            {title}
-          </h1>
-
-          {/* Divider */}
-          <div className={twMerge("mx-auto mt-5 mb-4 h-px w-12 rounded-full", s.divider)} />
-
-          {/* Description */}
-          {description && (
-            <p className="text-sm leading-relaxed text-zinc-500">
-              {description}
-            </p>
-          )}
-
-          {/* Actions */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            {actions ?? (
-              <a
-                href={homeHref}
-                className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-700 active:scale-95"
-              >
-                ← Voltar para Início
-              </a>
-            )}
-          </div>
-        </div>
-
-        {/* Footer hint */}
-        {code && (
-          <p className="mt-6 text-center text-xs text-zinc-400">
-            Código de status: <span className="font-semibold">{code}</span>
+        {/* Description */}
+        {description && (
+          <p className="mt-5 max-w-md text-base leading-relaxed text-zinc-500 dark:text-zinc-400">
+            {description}
           </p>
         )}
+
+        {/* Actions */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          {actions ?? (
+            <a
+              href={homeHref}
+              className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-700 dark:hover:bg-white active:scale-95"
+            >
+              ← Voltar para Início
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );
