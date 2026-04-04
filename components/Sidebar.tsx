@@ -685,7 +685,7 @@ export default function Sidebar({
       <aside
         className={[
           "flex flex-col h-full overflow-x-hidden bg-white dark:bg-zinc-950 border-r border-zinc-100 dark:border-zinc-800",
-          "duration-300 ease-out [will-change:width]",
+          "duration-300 ease-out md:[will-change:width]",
           isCollapsed ? "w-[4.5rem]" : "w-64",
           "fixed inset-y-0 left-0 z-[70] shadow-xl",
           "md:relative md:z-auto md:inset-auto md:shadow-none",

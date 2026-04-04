@@ -416,7 +416,8 @@ export default function Home() {
   const notifyStyled = () => toast('Olá! 👋', { icon: '🌙', duration: 5000 });
 
   return (
-    <main className="flex-1 min-w-0 bg-zinc-50 dark:bg-zinc-950">
+    <>
+    <main className="flex-1 min-w-0 overflow-x-hidden bg-zinc-50 dark:bg-zinc-950">
 
         {/* Hero */}
         <section id="overview" className="border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-10 py-16 sm:py-24">
@@ -3380,6 +3381,8 @@ import ContextMenu from "@/components/ContextMenu";
           </footer>
         </div>
 
+    </main>
+
       {/* Floating back-to-top */}
       <div className={["fixed bottom-6 right-4 sm:right-6 z-50 transition-[opacity,transform] duration-300", showBackToTop ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-4 pointer-events-none"].join(" ")}>
         <Button
@@ -3393,8 +3396,7 @@ import ContextMenu from "@/components/ContextMenu";
           className="shadow-lg"
         />
       </div>
-
-    </main>
+    </>
   );
 }
 
