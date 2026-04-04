@@ -40,7 +40,7 @@ export default function ActionDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" {...(componentId ? { ['data-component-id']: componentId } as any : {})}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" {...(componentId ? { ['data-component-id']: componentId } : {})}>
       <div className={overlayClassName} onClick={onCancel} />
       <div className={dialogClassName}>
         <h3 className={titleClassName}>{title}</h3>

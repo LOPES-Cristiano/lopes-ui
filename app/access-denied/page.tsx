@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import StatusPage from "@/components/StatusPage";
 import { Lock } from "lucide-react";
 
@@ -14,12 +15,12 @@ export default function AccessDenied() {
       icon={<Lock />}
       actions={
         <div className="flex flex-wrap gap-3 justify-center">
-          <a
+          <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-700 active:scale-95"
           >
             ← Início
-          </a>
+          </Link>
           <a
             href="mailto:admin@empresa.com"
             className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:scale-95"

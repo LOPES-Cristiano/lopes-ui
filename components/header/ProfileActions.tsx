@@ -25,6 +25,7 @@ export function ProfileMenuHeader({ avatar, initials, name, email }: ProfileMenu
       {(avatar || initials) && (
         <span className="h-9 w-9 rounded-full overflow-hidden flex items-center justify-center bg-zinc-200 text-zinc-600 text-sm font-semibold shrink-0">
           {avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img src={avatar} alt={name ?? "avatar"} className="h-full w-full object-cover" />
           ) : (
             <span>{initials}</span>

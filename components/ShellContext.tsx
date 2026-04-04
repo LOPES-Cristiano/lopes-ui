@@ -67,6 +67,7 @@ export function ShellProvider({
         hideTimerRef.current = null;
       }
       everHadSidebarRef.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasSidebar(true);
     } else if (everHadSidebarRef.current) {
       // All sidebars unmounted — wait briefly before hiding so fast

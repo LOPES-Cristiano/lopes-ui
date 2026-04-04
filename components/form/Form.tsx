@@ -97,7 +97,7 @@ export default function Form({
     <form
       onSubmit={onSubmit}
       className={twMerge(sp, !card && className)}
-      {...(componentId ? { "data-component-id": componentId } as any : {})}
+      {...(componentId ? { "data-component-id": componentId } : {})}
     >
       {(title || description) && (
         <div>

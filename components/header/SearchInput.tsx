@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 
 export default function SearchInput({ className = "", componentId }: { className?: string; componentId?: string }) {
   return (
-    <div className={"hidden md:flex items-center gap-2 " + className} {...(componentId ? { ['data-component-id']: componentId } as any : {})}>
+    <div className={"hidden md:flex items-center gap-2 " + className} {...(componentId ? { ['data-component-id']: componentId } : {})}>
       <div className="relative">
         <input
           aria-label="Buscar"

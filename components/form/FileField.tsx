@@ -119,7 +119,7 @@ export default function FileField({
         className="sr-only"
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : autoHelp ? `${id}-help` : undefined}
-        {...(componentId ? { "data-component-id": componentId } as any : {})}
+        {...(componentId ? { "data-component-id": componentId } : {})}
       />
 
       {variant === "compact" ? (

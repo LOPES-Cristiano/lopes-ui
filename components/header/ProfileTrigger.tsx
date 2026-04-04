@@ -68,6 +68,7 @@ export default function ProfileTrigger({
       {/* Avatar */}
       <span className={`${cfg.avatar} ${shapeClass} overflow-hidden flex items-center justify-center bg-zinc-200 text-zinc-600 font-semibold shrink-0 ring-2 ring-white`}>
         {avatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img src={avatar} alt={name ?? "avatar"} className="h-full w-full object-cover" />
         ) : initials ? (
           <span>{initials}</span>
@@ -93,7 +94,7 @@ export default function ProfileTrigger({
     <div
       className="relative"
       ref={ref}
-      {...(componentId ? { ["data-component-id"]: componentId } as any : {})}
+      {...(componentId ? { ["data-component-id"]: componentId } : {})}
     >
       <button
         type="button"

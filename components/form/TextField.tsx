@@ -108,7 +108,7 @@ export default function TextField({
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
           className={inputCls}
-          {...(componentId ? { "data-component-id": componentId } as any : {})}
+          {...(componentId ? { "data-component-id": componentId } : {})}
         />
         {suffix && (
           <span className={twMerge("shrink-0 select-none self-stretch flex items-center border-l border-zinc-200 bg-zinc-50 text-zinc-500", s.aff)}>

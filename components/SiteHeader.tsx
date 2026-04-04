@@ -69,7 +69,10 @@ export default function SiteHeader() {
       navDropdown
       brand={
         <Brand
-          logo={<img src="/logo.svg" alt="LopesWare" width={80} height={64} />}
+          logo={
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src="/logo.svg" alt="LopesWare" width={80} height={64} />
+          }
           title="LopesWare"
         />
       }

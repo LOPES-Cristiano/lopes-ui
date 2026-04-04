@@ -82,6 +82,7 @@ export default function CommandMenu({
   useBodyScrollLock(open);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     setMac(detectMac());
   }, []);
@@ -101,6 +102,7 @@ export default function CommandMenu({
   // ─── Focus input when dialog opens ────────────────────────────────────────
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery("");
       setActiveIndex(0);
       requestAnimationFrame(() => inputRef.current?.focus());
@@ -139,6 +141,7 @@ export default function CommandMenu({
 
   // ─── Reset active index on query change ───────────────────────────────────
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveIndex(0);
   }, [query]);
 

@@ -182,7 +182,7 @@ export default function AutocompleteField({
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
             className={inputCls}
-            {...(componentId ? { "data-component-id": componentId } as any : {})}
+            {...(componentId ? { "data-component-id": componentId } : {})}
           />
           <span className="absolute right-0 top-0 flex h-full items-center gap-0.5 pr-2 pointer-events-none">
             {hasClear && (

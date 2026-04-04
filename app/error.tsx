@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import StatusPage from "@/components/StatusPage";
 import { AlertTriangle } from "lucide-react";
 
@@ -24,12 +25,12 @@ export default function GlobalError({ error, reset }: { error: Error; reset: () 
           >
             ↻ Tentar novamente
           </button>
-          <a
+          <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:scale-95"
           >
             ← Início
-          </a>
+          </Link>
         </div>
       }
     />

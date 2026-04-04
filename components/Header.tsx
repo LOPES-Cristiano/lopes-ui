@@ -2,10 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Menu, X, PanelLeftOpen, PanelLeftClose } from "lucide-react";
-import Brand from "@/components/header/Brand";
 import Nav, { type NavItem } from "@/components/header/Nav";
-import SearchInput from "@/components/header/SearchInput";
-import ProfileMenu from "@/components/header/ProfileMenu";
 import { useShell } from "@/components/ShellContext";
 
 type HeaderProps = {
@@ -53,7 +50,7 @@ export default function Header({ nav, brand, search, profile, componentId, navDr
   return (
     <header
       className={headerClass}
-      {...(componentId ? { ['data-component-id']: componentId } as any : {})}
+      {...(componentId ? { ['data-component-id']: componentId } : {})}
     >
       {hasSidebar ? (
         /* ── Fused layout ────────────────────────────────────────────────── */

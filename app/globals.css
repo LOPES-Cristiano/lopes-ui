@@ -23,6 +23,16 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Prevent sidebar flash when crossing the md breakpoint.
+   On desktop the sidebar is relative-positioned, so transform isn't needed. */
+@media (min-width: 768px) {
+  aside {
+    transform: none !important;
+    transition-property: width !important;
+  }
 }
 
 /* Toast custom animations (used by toast.custom example) */
@@ -42,4 +52,29 @@ body {
 
 .animate-custom-leave {
   animation: toast-leave 200ms linear;
+}
+
+/* ── Shiki syntax highlight ──────────────────────────────────────────────── */
+.shiki-wrap pre, .shiki-wrap code {
+  background: transparent !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  white-space: pre;
+}
+
+/* Line numbers */
+.shiki-wrap.line-numbers .line {
+  display: inline-flex;
+  width: 100%;
+}
+.shiki-wrap.line-numbers .line::before {
+  content: attr(data-line);
+  display: inline-block;
+  width: 2.5rem;
+  min-width: 2.5rem;
+  margin-right: 1rem;
+  text-align: right;
+  color: rgba(248, 248, 242, 0.2);
+  user-select: none;
 }

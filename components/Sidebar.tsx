@@ -1,20 +1,49 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useLayoutEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, useLayoutEffect, useEffect } from "react";
 import {
   ChevronDown,
   PanelLeftClose,
   PanelLeftOpen,
   X,
+  Pin,
+  PinOff,
   type LucideIcon,
 } from "lucide-react";
 import { useShell } from "@/components/ShellContext";
 
 // ── Context ───────────────────────────────────────────────────────────────────
 
-type SidebarCtx = { collapsed: boolean };
-const SidebarContext = createContext<SidebarCtx>({ collapsed: false });
+type SidebarCtx = {
+  collapsed: boolean;
+  pinnable: boolean;
+  pinnedIds: Set<string>;
+  togglePin: (id: string) => void;
+};
+const SidebarContext = createContext<SidebarCtx>({
+  collapsed: false,
+  pinnable: false,
+  pinnedIds: new Set(),
+  togglePin: () => {},
+});
 const useSidebar = () => useContext(SidebarContext);
+
+// ── Pin helpers ───────────────────────────────────────────────────────────────
+
+const getItemPinId = (item: SidebarNavItem): string =>
+  (item.id ?? item.href ?? item.label) as string;
+
+function flattenNavItems(groups: SidebarNavGroup[]): SidebarNavItem[] {
+  const result: SidebarNavItem[] = [];
+  const walk = (items: SidebarNavItem[]) => {
+    for (const item of items) {
+      if (!item.divider) result.push(item);
+      if (item.children) walk(item.children);
+    }
+  };
+  for (const g of groups) walk(g.items);
+  return result;
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -77,6 +106,11 @@ export type SidebarFooterItem = {
 };
 
 export type SidebarProps = {
+  // ── Pins
+  /** Allow users to pin nav items to the top Fixados section */
+  pinnable?: boolean;
+  /** localStorage key for persisted pins (default: "sidebar-pins") */
+  pinsStorageKey?: string;
   // ── Header
   logo?: React.ReactNode;
   title?: string;
@@ -228,8 +262,68 @@ function AnnouncementCard({ item, onDismiss }: { item: SidebarAnnouncement; onDi
 
 // ── Nav Item ──────────────────────────────────────────────────────────────────
 
+// ── Pinned section ───────────────────────────────────────────────────────────
+
+function PinnedSection({ groups, onNavigate }: { groups: SidebarNavGroup[]; onNavigate?: (href: string) => void }) {
+  const { collapsed, pinnedIds, togglePin } = useSidebar();
+  if (pinnedIds.size === 0) return null;
+
+  const pinned = flattenNavItems(groups).filter((item) => pinnedIds.has(getItemPinId(item)));
+  if (pinned.length === 0) return null;
+
+  return (
+    <div className="pb-1">
+      {!collapsed && (
+        <div className="flex items-center gap-1.5 px-2.5 mb-1">
+          <Pin size={9} className="text-zinc-400" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Fixados</span>
+        </div>
+      )}
+      <div className="space-y-0.5">
+        {pinned.map((item) => {
+          const id = getItemPinId(item);
+          const Icon = item.icon;
+          const row = (
+            <div
+              className="group/pin flex items-center gap-2.5 rounded-lg px-2.5 py-2 cursor-pointer transition-colors text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+              onClick={() => { if (onNavigate && item.href) onNavigate(item.href); else if (item.href) window.location.hash = item.href.replace(/.*#/, ""); }}
+            >
+              {Icon ? (
+                <span className="shrink-0 text-zinc-400"><Icon size={16} strokeWidth={1.75} /></span>
+              ) : (
+                <span className="shrink-0 flex items-center justify-center"><Pin size={12} className="text-zinc-300" /></span>
+              )}
+              {!collapsed && (
+                <>
+                  <span className="flex-1 truncate text-sm">{item.label}</span>
+                  <button
+                    type="button"
+                    title="Desafixar"
+                    onClick={(e) => { e.stopPropagation(); togglePin(id); }}
+                    className="shrink-0 rounded p-0.5 opacity-0 group-hover/pin:opacity-100 text-zinc-300 hover:text-zinc-500 transition-opacity"
+                  >
+                    <X size={11} />
+                  </button>
+                </>
+              )}
+            </div>
+          );
+          return collapsed ? (
+            <Tooltip key={id} label={item.label}>{row}</Tooltip>
+          ) : (
+            <div key={id}>{row}</div>
+          );
+        })}
+      </div>
+      <div className="mt-2 border-t border-zinc-100" />
+    </div>
+  );
+}
+
+// ── Nav Item ──────────────────────────────────────────────────────────────────
+
 function NavItem({ item, depth = 0, onNavigate }: { item: SidebarNavItem; depth?: number; onNavigate?: (href: string) => void }) {
-  const { collapsed } = useSidebar();
+  const { collapsed, pinnable, pinnedIds, togglePin } = useSidebar();
   const [subOpen, setSubOpen] = useState(false);
   const hasChildren = !!item.children?.length;
   const Icon = item.icon;
@@ -242,7 +336,7 @@ function NavItem({ item, depth = 0, onNavigate }: { item: SidebarNavItem; depth?
   };
 
   const rowBase = [
-    "group/item relative flex w-full items-center rounded-lg transition-all duration-150 select-none",
+    "relative flex w-full items-center rounded-lg transition-all duration-150 select-none",
     depth > 0 ? "pl-[1.875rem] pr-2.5 py-1.5 gap-2" : "px-2.5 py-2 gap-2.5",
     item.disabled ? "cursor-not-allowed opacity-40 pointer-events-none" : "cursor-pointer",
     item.active
@@ -250,12 +344,22 @@ function NavItem({ item, depth = 0, onNavigate }: { item: SidebarNavItem; depth?
       : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
   ].filter(Boolean).join(" ");
 
+  const itemPinId = getItemPinId(item);
+  const isPinned = pinnedIds.has(itemPinId);
+  const cid = item.componentId ? { "data-component-id": item.componentId } : {};
+
+  // When pinnable, the icon (depth=0) fades on hover to reveal the pin overlay.
+  // For depth>0 the pin lives in the indentation area so no fade needed on the dot.
+  const iconFade = pinnable && !collapsed && depth === 0 && Icon
+    ? isPinned ? "opacity-20" : "group-hover/nav:opacity-0"
+    : "";
+
   const iconEl = Icon ? (
-    <span className={`shrink-0 transition-colors duration-150 ${item.active ? "text-white" : "text-zinc-400 group-hover/item:text-zinc-600"}`}>
+    <span className={`shrink-0 transition-all duration-150 ${item.active ? "text-white" : "text-zinc-400 group-hover/nav:text-zinc-600"} ${iconFade}`}>
       <Icon size={16} strokeWidth={1.75} />
     </span>
   ) : depth > 0 ? (
-    <span className={`shrink-0 h-1.5 w-1.5 rounded-full transition-colors ${item.active ? "bg-white" : "bg-zinc-300 group-hover/item:bg-zinc-500"}`} />
+    <span className={`shrink-0 h-1.5 w-1.5 rounded-full transition-all ${item.active ? "bg-white" : "bg-zinc-300 group-hover/nav:bg-zinc-500"}`} />
   ) : null;
 
   const labelEl = (
@@ -277,8 +381,6 @@ function NavItem({ item, depth = 0, onNavigate }: { item: SidebarNavItem; depth?
 
   const rowContent = <>{iconEl}{labelEl}</>;
 
-  const cid = item.componentId ? { "data-component-id": item.componentId } : {};
-
   const row = item.href && !hasChildren ? (
     <a
       href={item.disabled ? undefined : item.href}
@@ -294,12 +396,54 @@ function NavItem({ item, depth = 0, onNavigate }: { item: SidebarNavItem; depth?
     </button>
   );
 
+  // Pin button rendered as sibling (avoids button-inside-button).
+  // depth=0: overlays the left icon (icon fades on hover, pin appears in its place).
+  // depth>0: sits in the indentation gap (left-2), never touching the text.
+  const pinBtn = pinnable && !collapsed && (Icon || depth > 0) ? (
+    depth === 0 ? (
+      <button
+        type="button"
+        title={isPinned ? "Desafixar" : "Fixar"}
+        onClick={(e) => { e.stopPropagation(); togglePin(itemPinId); }}
+        className={[
+          "absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded transition-all z-10",
+          isPinned
+            ? "opacity-100 text-amber-500 hover:text-amber-700"
+            : "opacity-0 group-hover/nav:opacity-100 text-zinc-400 hover:text-zinc-600",
+        ].join(" ")}
+      >
+        {isPinned ? <PinOff size={12} /> : <Pin size={12} />}
+      </button>
+    ) : (
+      <button
+        type="button"
+        title={isPinned ? "Desafixar" : "Fixar"}
+        onClick={(e) => { e.stopPropagation(); togglePin(itemPinId); }}
+        className={[
+          "absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-4 h-4 rounded transition-all z-10",
+          isPinned
+            ? "opacity-100 text-amber-500 hover:text-amber-700"
+            : "opacity-0 group-hover/nav:opacity-100 text-zinc-400 hover:text-zinc-600",
+        ].join(" ")}
+      >
+        {isPinned ? <PinOff size={10} /> : <Pin size={10} />}
+      </button>
+    )
+  ) : null;
+
+  const wrappedRow = (
+    <div className="relative group/nav">
+      {row}
+      {pinBtn}
+    </div>
+  );
+
   return (
     <>
       {item.divider && <div className="my-1.5 border-t border-zinc-100" />}
       {collapsed && depth === 0 ? (
-        <Tooltip label={item.label} badge={item.badge}>{row}</Tooltip>
-      ) : row}
+        <Tooltip label={item.label} badge={item.badge}>{wrappedRow}</Tooltip>
+      ) : wrappedRow}
       {/* Sub-items accordion */}
       {hasChildren && (
         <div
@@ -365,6 +509,7 @@ function UserBlock({ user }: { user: SidebarUser }) {
     <div className="relative shrink-0">
       <div className="h-8 w-8 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-zinc-200 to-zinc-300 text-zinc-700 text-xs font-semibold ring-2 ring-white">
         {user.avatar
+          // eslint-disable-next-line @next/next/no-img-element
           ? <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
           : <span>{user.initials ?? user.name.slice(0, 2).toUpperCase()}</span>}
       </div>
@@ -432,6 +577,8 @@ function FooterItem({ item }: { item: SidebarFooterItem }) {
 // ── Sidebar (main export) ─────────────────────────────────────────────────────
 
 export default function Sidebar({
+  pinnable = false,
+  pinsStorageKey = "sidebar-pins",
   logo,
   title,
   subtitle,
@@ -487,8 +634,34 @@ export default function Sidebar({
     }
   }, [shell, isCollapsed, onCollapsedChange]);
 
+  // ── Pins state (localStorage-backed) ──────────────────────────────────────
+  const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => {
+    if (!pinnable || typeof window === "undefined") return new Set();
+    try {
+      const stored = localStorage.getItem(pinsStorageKey);
+      if (stored) return new Set(JSON.parse(stored) as string[]);
+    } catch {}
+    return new Set();
+  });
+
+  const togglePin = useCallback((id: string) => {
+    setPinnedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!pinnable) return;
+    try {
+      if (pinnedIds.size > 0) localStorage.setItem(pinsStorageKey, JSON.stringify([...pinnedIds]));
+      else localStorage.removeItem(pinsStorageKey);
+    } catch {}
+  }, [pinnedIds, pinsStorageKey, pinnable]);
+
   return (
-    <SidebarContext.Provider value={{ collapsed: isCollapsed }}>
+    <SidebarContext.Provider value={{ collapsed: isCollapsed, pinnable, pinnedIds, togglePin }}>
       {/* Mobile backdrop */}
       <div
         className={["fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm md:hidden transition-opacity duration-300", isMobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"].join(" ")}
@@ -552,6 +725,8 @@ export default function Sidebar({
           {/* Grupos de navegação */}
           {groups.length > 0 && (
             <nav aria-label="Sidebar navigation" className="space-y-4">
+              {/* Pinned items section */}
+              {pinnable && <PinnedSection groups={groups} onNavigate={onNavigate} />}
               {groups.map((g, gi) => (
                 <NavGroup key={g.id ?? `g-${gi}`} group={g} onNavigate={onNavigate} />
               ))}

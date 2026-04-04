@@ -2,10 +2,11 @@
 
 import Sidebar from "@/components/Sidebar";
 import {
-  Home, Zap, MousePointer2, ArrowUp,
+  Home, Zap, MousePointer2,
   LayoutDashboard, PanelLeft, Shield, Bell, HelpCircle,
-  FormInput, ToggleLeft, MousePointerClick, Command,
+  FormInput, ToggleLeft,
   UserCircle2, ChevronDown, BellRing, Tag, SquareStack, TableProperties, Database,
+  GalleryHorizontal, ListChecks, GitCommitVertical, RefreshCw, MessageCircle, Navigation, FileCode, Network, CheckSquare,
 } from "lucide-react";
 
 export default function AppSidebar() {
@@ -15,6 +16,7 @@ export default function AppSidebar() {
       subtitle="Playground"
       logo={<span className="text-lg font-black text-zinc-800">🅻</span>}
       collapsible
+      pinnable
       groups={[
         {
           id: "start",
@@ -28,103 +30,6 @@ export default function AppSidebar() {
           id: "components",
           label: "Componentes",
           items: [
-            {
-              label: "Button",
-              href: "/#button",
-              icon: MousePointer2,
-              children: [
-                { label: "Variantes",        href: "/#button-variants" },
-                { label: "Tamanhos",         href: "/#button-sizes" },
-                { label: "Ícones & Loading", href: "/#button-icons" },
-                { label: "Props",            href: "/#button-props" },
-              ],
-            },
-            {
-              label: "ActionButton",
-              href: "/#action-button",
-              icon: ArrowUp,
-              children: [
-                { label: "Exemplos", href: "/#action-examples" },
-                { label: "Props",    href: "/#action-props" },
-              ],
-            },
-            {
-              label: "Header & Nav",
-              href: "/#header",
-              icon: LayoutDashboard,
-              children: [
-                { label: "Slots", href: "/#header-slots" },
-                { label: "Props", href: "/#header-props" },
-              ],
-            },
-            {
-              label: "Sidebar",
-              href: "/#sidebar",
-              icon: PanelLeft,
-              children: [
-                { label: "Demo interativo", href: "/#sidebar-demo" },
-              ],
-            },
-            {
-              label: "StatusPage",
-              href: "/#status-pages",
-              icon: Shield,
-              children: [
-                { label: "Inline",      href: "/#status-inline" },
-                { label: "Full-screen", href: "/#status-fullscreen" },
-                { label: "Props",       href: "/#status-props" },
-              ],
-            },
-            {
-              label: "Toasts",
-              href: "/#toasts",
-              icon: Bell,
-              children: [
-                { label: "Exemplos", href: "/#toasts-examples" },
-              ],
-            },
-            {
-              label: "Forms",
-              href: "/#forms",
-              icon: FormInput,
-              children: [
-                { label: "TextField",       href: "/#fields-text" },
-                { label: "Ícones & afixos", href: "/#fields-addons" },
-                { label: "Estados",         href: "/#fields-states" },
-                { label: "Label inline",    href: "/#fields-inline" },
-                { label: "NumberField",     href: "/#fields-number" },
-                { label: "Form completo",      href: "/#form-complete" },
-                { label: "Props",              href: "/#field-props" },
-                { label: "DateField & TimeField", href: "/#datetime-fields" },
-                { label: "CheckboxGroup",      href: "/#checkbox-shapes" },
-                { label: "AutocompleteField",  href: "/#autocomplete-examples" },
-                { label: "MultiSelectField",   href: "/#multiselect-examples" },
-                { label: "FileField",          href: "/#file-examples" },
-              ],
-            },
-            {
-              label: "Interação",
-              icon: ToggleLeft,
-              children: [
-                { label: "Switch — tamanhos",    href: "/#switch-sizes" },
-                { label: "Switch — label",       href: "/#switch-label" },
-                { label: "Context Menu",         href: "/#context-menu-basic" },
-                { label: "Command Menu",         href: "/#command-menu" },
-                { label: "Props",                href: "/#interaction-props" },
-              ],
-            },
-            {
-              label: "Avatar",
-              href: "/#avatars",
-              icon: UserCircle2,
-              children: [
-                { label: "Tamanhos & status", href: "/#avatar-sizes" },
-                { label: "Formas",            href: "/#avatar-shapes" },
-                { label: "AvatarGroup",       href: "/#avatar-group" },
-                { label: "Fallback",          href: "/#avatar-fallback" },
-                { label: "Props",             href: "/#avatar-props" },
-              ],
-            },
             {
               label: "Accordion",
               href: "/#accordion",
@@ -147,6 +52,18 @@ export default function AppSidebar() {
               ],
             },
             {
+              label: "Avatar",
+              href: "/#avatars",
+              icon: UserCircle2,
+              children: [
+                { label: "Tamanhos & status", href: "/#avatar-sizes" },
+                { label: "Formas",            href: "/#avatar-shapes" },
+                { label: "AvatarGroup",       href: "/#avatar-group" },
+                { label: "Fallback",          href: "/#avatar-fallback" },
+                { label: "Props",             href: "/#avatar-props" },
+              ],
+            },
+            {
               label: "Badge",
               href: "/#badges",
               icon: Tag,
@@ -155,6 +72,30 @@ export default function AppSidebar() {
                 { label: "Solid",      href: "/#badge-solid" },
                 { label: "Funções",    href: "/#badge-features" },
                 { label: "Props",      href: "/#badge-props" },
+              ],
+            },
+            {
+              label: "Breadcrumb",
+              href: "/#breadcrumb",
+              icon: Navigation,
+              children: [
+                { label: "Separadores",  href: "/#breadcrumb-separators" },
+                { label: "Home icon",    href: "/#breadcrumb-home" },
+                { label: "Com ícones",   href: "/#breadcrumb-icons" },
+                { label: "Colapso",      href: "/#breadcrumb-collapse" },
+                { label: "Props",        href: "/#breadcrumb-props" },
+              ],
+            },
+            {
+              label: "Button",
+              href: "/#button",
+              icon: MousePointer2,
+              children: [
+                { label: "Variantes",          href: "/#button-variants" },
+                { label: "Tamanhos",           href: "/#button-sizes" },
+                { label: "Ícones & Loading",   href: "/#button-icons" },
+                { label: "Tooltip & Confirm",  href: "/#action-button" },
+                { label: "Props",              href: "/#button-props" },
               ],
             },
             {
@@ -173,6 +114,145 @@ export default function AppSidebar() {
               ],
             },
             {
+              label: "Checkbox & Radio",
+              href: "/#checkboxgroup",
+              icon: CheckSquare,
+              children: [
+                { label: "Quadrado & círculo",    href: "/#checkbox-shapes" },
+                { label: "Horizontal & tamanhos", href: "/#checkbox-horizontal" },
+                { label: "Variant card",          href: "/#checkbox-card" },
+                { label: "Variant button",        href: "/#checkbox-button" },
+                { label: "Props",                 href: "/#advanced-field-props" },
+              ],
+            },
+            {
+              label: "Carousel",
+              href: "/#carousel",
+              icon: GalleryHorizontal,
+              children: [
+                { label: "Básico",       href: "/#carousel-basic" },
+                { label: "Multi-slide",  href: "/#carousel-multi" },
+                { label: "AutoPlay",     href: "/#carousel-autoplay" },
+              ],
+            },
+            {
+              label: "Chat / Mensagens",
+              href: "/#chat",
+              icon: MessageCircle,
+              children: [
+                { label: "Bolhas de texto",    href: "/#chat-bubbles" },
+                { label: "Status de entrega",  href: "/#chat-status" },
+                { label: "Tipos de mensagem",  href: "/#chat-types" },
+                { label: "Reply & reações",    href: "/#chat-reply-reactions" },
+                { label: "Typing indicator",   href: "/#chat-typing" },
+                { label: "Composer",           href: "/#chat-composer" },
+                { label: "Lista de conversas", href: "/#chat-conversation-list" },
+                { label: "Chat Window",        href: "/#chat-window" },
+                { label: "Props",              href: "/#chat-props" },
+              ],
+            },
+            {
+              label: "CodeBlock",
+              href: "/#codeblock",
+              icon: FileCode,
+              children: [
+                { label: "Básico",         href: "/#codeblock-basic" },
+                { label: "Terminal",       href: "/#codeblock-terminal" },
+                { label: "Números de linha", href: "/#codeblock-linenumbers" },
+                { label: "Recolher",       href: "/#codeblock-showmore" },
+                { label: "Abas",           href: "/#codeblock-tabs" },
+                { label: "Props",          href: "/#codeblock-props" },
+              ],
+            },
+            {
+              label: "DataTable",
+              href: "/#datatable",
+              icon: Database,
+              children: [
+                { label: "Completo",         href: "/#datatable-full" },
+                { label: "Abas por situação",href: "/#datatable-tabs" },
+                { label: "Ações inline",     href: "/#datatable-inline-actions" },
+                { label: "→ Menu dropdown",  href: "/#datatable-actions-menu" },
+                { label: "→ Todos inline",   href: "/#datatable-actions-inline" },
+                { label: "→ Misto",          href: "/#datatable-actions-mixed" },
+                { label: "Simples",          href: "/#datatable-simple" },
+                { label: "Striped",          href: "/#datatable-striped" },
+                { label: "Props",            href: "/#datatable-props" },
+              ],
+            },
+            {
+              label: "Forms",
+              href: "/#forms",
+              icon: FormInput,
+              children: [
+                { label: "TextField",            href: "/#fields-text" },
+                { label: "Ícones & afixos",      href: "/#fields-addons" },
+                { label: "Estados",              href: "/#fields-states" },
+                { label: "Label inline",         href: "/#fields-inline" },
+                { label: "NumberField",          href: "/#fields-number" },
+                { label: "Form completo",        href: "/#form-complete" },
+                { label: "Props",                href: "/#field-props" },
+                { label: "DateField & TimeField", href: "/#datetime-fields" },
+                { label: "CheckboxGroup",         href: "/#checkboxgroup", children: [
+                  { label: "Quadrado & círculo",    href: "/#checkbox-shapes" },
+                  { label: "Horizontal & tamanhos", href: "/#checkbox-horizontal" },
+                  { label: "Variant card",          href: "/#checkbox-card" },
+                  { label: "Variant button",        href: "/#checkbox-button" },
+                ]},
+                { label: "AutocompleteField",    href: "/#autocomplete-examples" },
+                { label: "MultiSelectField",     href: "/#multiselect-examples" },
+                { label: "FileField",            href: "/#file-examples" },
+              ],
+            },
+            {
+              label: "Header & Nav",
+              href: "/#header",
+              icon: LayoutDashboard,
+              children: [
+                { label: "Slots", href: "/#header-slots" },
+                { label: "Props", href: "/#header-props" },
+              ],
+            },
+            {
+              label: "Interação",
+              icon: ToggleLeft,
+              children: [
+                { label: "Switch — tamanhos",    href: "/#switch-sizes" },
+                { label: "Switch — label",       href: "/#switch-label" },
+                { label: "Context Menu",         href: "/#context-menu-basic" },
+                { label: "Command Menu",         href: "/#command-menu" },
+                { label: "Props",                href: "/#interaction-props" },
+              ],
+            },
+            {
+              label: "Sidebar",
+              href: "/#sidebar",
+              icon: PanelLeft,
+              children: [
+                { label: "Demo interativo", href: "/#sidebar-demo" },
+              ],
+            },
+            {
+              label: "StatusPage",
+              href: "/#status-pages",
+              icon: Shield,
+              children: [
+                { label: "Inline",      href: "/#status-inline" },
+                { label: "Full-screen", href: "/#status-fullscreen" },
+                { label: "Props",       href: "/#status-props" },
+              ],
+            },
+            {
+              label: "Stepper",
+              href: "/#stepper",
+              icon: ListChecks,
+              children: [
+                { label: "Horizontal",   href: "/#stepper-horizontal" },
+                { label: "Vertical",     href: "/#stepper-vertical" },
+                { label: "Variantes",    href: "/#stepper-variants" },
+              ],
+            },
+            {
               label: "Table",
               href: "/#tables",
               icon: TableProperties,
@@ -183,14 +263,45 @@ export default function AppSidebar() {
               ],
             },
             {
-              label: "DataTable",
-              href: "/#datatable",
-              icon: Database,
+              label: "TextRotate",
+              href: "/#text-rotate",
+              icon: RefreshCw,
               children: [
-                { label: "Completo",    href: "/#datatable-full" },
-                { label: "Simples",     href: "/#datatable-simple" },
-                { label: "Striped",     href: "/#datatable-striped" },
-                { label: "Props",       href: "/#datatable-props" },
+                { label: "Inline (frase)",  href: "/#text-rotate-inline" },
+                { label: "Standalone",      href: "/#text-rotate-standalone" },
+                { label: "Discreta",        href: "/#text-rotate-discrete" },
+                { label: "Emojis",          href: "/#text-rotate-emojis" },
+              ],
+            },
+            {
+              label: "Timeline",
+              href: "/#timeline",
+              icon: GitCommitVertical,
+              children: [
+                { label: "Esquerda",    href: "/#timeline-left" },
+                { label: "Alternada",   href: "/#timeline-alternate" },
+                { label: "Cores",       href: "/#timeline-colors" },
+              ],
+            },
+            {
+              label: "Toast Notifications",
+              href: "/#toasts",
+              icon: Bell,
+              children: [
+                { label: "Todos os tipos",       href: "/#toasts-preview" },
+                { label: "Exemplos interativos", href: "/#toasts-examples" },
+              ],
+            },
+            {
+              label: "Tree View",
+              href: "/#treeview",
+              icon: Network,
+              children: [
+                { label: "Simple sm",       href: "/#treeview-simple-sm" },
+                { label: "Simple md",       href: "/#treeview-simple-md" },
+                { label: "Seleção múltipla", href: "/#treeview-multiselect" },
+                { label: "Drag & Drop",     href: "/#treeview-dnd" },
+                { label: "Props",           href: "/#treeview-props" },
               ],
             },
           ],

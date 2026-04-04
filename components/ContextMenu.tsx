@@ -160,7 +160,7 @@ function MenuItem({
       tabIndex={item.disabled ? -1 : 0}
       className={itemCls}
       onClick={handleClick}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleClick(e as any); }}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleClick(e as unknown as React.MouseEvent); }}
       {...(item.componentId ? { "data-component-id": item.componentId } : {})}
     >
       {inner}

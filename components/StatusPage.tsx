@@ -107,7 +107,7 @@ export default function StatusPage({
           : twMerge("relative isolate min-h-screen overflow-hidden flex items-center justify-center bg-gradient-to-br px-6", s.bg),
         className
       )}
-      {...(componentId ? { ['data-component-id']: componentId } as any : {})}
+      {...(componentId ? { ['data-component-id']: componentId } : {})}
     >
       {/* Subtle dot pattern */}
       <div

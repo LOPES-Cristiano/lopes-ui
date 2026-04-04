@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "@/components/Toast";
 import SiteHeader from "@/components/SiteHeader";
 import { ShellProvider } from "@/components/ShellContext";
 import { cookies } from "next/headers";

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import toast from "react-hot-toast";
+import toast from "@/components/Toast";
 
 type ToastMethod = "success" | "error" | "loading";
 
@@ -14,7 +14,7 @@ interface UseAsyncButtonOptions {
 }
 
 export function useAsyncButton(
-  asyncAction: () => Promise<any>,
+  asyncAction: () => Promise<unknown>,
   {
     timeout = 4000,
     timeoutMessage = "Tempo esgotado! Nenhuma resposta recebida.",
@@ -41,7 +41,7 @@ export function useAsyncButton(
       await asyncAction();
       finished.current = true;
       clearTimeout(timer);
-    } catch (e) {
+    } catch {
       finished.current = true;
       clearTimeout(timer);
       callToast(onErrorType, onErrorMessage);

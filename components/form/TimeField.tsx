@@ -45,7 +45,7 @@ export default function TimeField({
   const s = SIZE[size];
   const inputRef = useRef<HTMLInputElement>(null);
 
-  function handleWrapperClick(e: React.MouseEvent<HTMLDivElement>) {
+  function handleWrapperClick() {
     if (disabled || readOnly) return;
     try { inputRef.current?.showPicker(); } catch { inputRef.current?.focus(); }
   }
@@ -89,7 +89,7 @@ export default function TimeField({
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
           className={twMerge(inputCls, !disabled && !readOnly && "cursor-pointer")}
-          {...(componentId ? { "data-component-id": componentId } as any : {})}
+          {...(componentId ? { "data-component-id": componentId } : {})}
         />
       </div>
     </FieldWrapper>

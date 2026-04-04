@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { User } from "lucide-react";
 
 export default function ProfileMenu({
-  compact = false,
   componentId,
 }: {
   compact?: boolean;
@@ -24,7 +23,7 @@ export default function ProfileMenu({
   }, []);
 
   return (
-    <div className="relative" ref={ref} {...(componentId ? { ['data-component-id']: componentId } as any : {})}>
+    <div className="relative" ref={ref} {...(componentId ? { ['data-component-id']: componentId } : {})}>
       <button
         aria-label="Perfil"
         aria-expanded={open}

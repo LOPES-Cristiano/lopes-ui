@@ -11,7 +11,7 @@ export default function Brand({
   componentId?: string;
 }) {
   return (
-    <div className="flex items-center gap-4" {...(componentId ? { ['data-component-id']: componentId } as any : {})}>
+    <div className="flex items-center gap-4" {...(componentId ? { ['data-component-id']: componentId } : {})}>
       <Link href="/" className="flex items-center gap-3">
         {logo ?? (
           <div >

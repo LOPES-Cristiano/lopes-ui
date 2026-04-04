@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useState, useMemo, useRef, useEffect, useCallback, createContext, useContext,
+  useState, useMemo, useRef, useEffect, useCallback, createContext,
 } from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
@@ -51,6 +51,8 @@ export type DataTableAction<T = Record<string, unknown>> = {
   disabled?: (row: T) => boolean;
   danger?: boolean;
   divider?: boolean;
+  /** Show this action as an always-visible icon button directly in the row instead of inside the ⋯ menu */
+  inline?: boolean;
 };
 
 export type FilterField = {
@@ -59,6 +61,18 @@ export type FilterField = {
   type: "text" | "number" | "select" | "date" | "boolean";
   options?: { label: string; value: string }[];
   placeholder?: string;
+};
+
+export type DataTableTab<T = Record<string, unknown>> = {
+  /** Label shown on the tab button */
+  label: string;
+  /** Arbitrary filter function — omit to show all rows */
+  filter?: (row: T) => boolean;
+  /** Shorthand: filter rows where row[field] === value */
+  field?: string;
+  value?: unknown;
+  /** Show the count of matching rows as a badge */
+  showCount?: boolean;
 };
 
 export type DataTableProps<T = Record<string, unknown>> = {
@@ -77,12 +91,16 @@ export type DataTableProps<T = Record<string, unknown>> = {
   // Features
   /** Row-level actions. When the actions column is too narrow to show all, overflow → context menu */
   actions?: DataTableAction<T>[];
+  /** "menu" = hidden ⋯ button per row (default). "inline" = always-visible icon buttons in each row */
+  actionsDisplay?: "menu" | "inline";
   /** Column visibility toggle via settings panel */
   columnToggle?: boolean;
   /** Global search across all string/number values */
   globalSearch?: boolean;
   /** Filter dialog fields */
   filterFields?: FilterField[];
+  /** Tab bar to filter rows by predefined categories */
+  tabs?: DataTableTab<T>[];
   /** Summary row at the bottom */
   showSummary?: boolean;
   /** Pagination */
@@ -159,6 +177,14 @@ function matchesFilters<T>(row: T, filters: Record<string, string>): boolean {
   return true;
 }
 
+function getTabFilter<T>(tab: DataTableTab<T>): ((row: T) => boolean) | undefined {
+  if (tab.filter) return tab.filter;
+  if (tab.field !== undefined) {
+    return (row: T) => (row as Record<string, unknown>)[tab.field!] === tab.value;
+  }
+  return undefined;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Row Action Menu (portal)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -182,6 +208,7 @@ function ActionMenu<T>({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     if (anchorRef.current) {
       const rect = anchorRef.current.getBoundingClientRect();
@@ -272,6 +299,7 @@ function FilterDialog({
 }) {
   const [mounted, setMounted] = useState(false);
   useBodyScrollLock(true);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
@@ -429,6 +457,7 @@ function ColumnPanel<T>({
   const [pos, setPos] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     if (anchorRef.current) {
       const rect = anchorRef.current.getBoundingClientRect();
@@ -513,6 +542,7 @@ function DataRow<T>({
   idx,
   visibleCols,
   actions,
+  actionsDisplay,
   size,
   variant,
   dividers,
@@ -524,6 +554,7 @@ function DataRow<T>({
   idx: number;
   visibleCols: DataTableColumn<T>[];
   actions?: DataTableAction<T>[];
+  actionsDisplay?: "menu" | "inline";
   size: TableSize;
   variant: TableVariant;
   dividers: boolean;
@@ -571,22 +602,54 @@ function DataRow<T>({
           )}
           onClick={(e) => e.stopPropagation()}
         >
-          <button
-            ref={btnRef}
-            onClick={() => setMenuOpen((v) => !v)}
-            className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-            aria-label="Ações"
-          >
-            <MoreHorizontal size={15} />
-          </button>
-          {menuOpen && (
-            <ActionMenu
-              row={row}
-              actions={actions}
-              anchorRef={btnRef}
-              onClose={() => setMenuOpen(false)}
-            />
-          )}
+          <div className="flex items-center justify-end gap-0.5">
+            {/* Inline actions — always visible */}
+            {actions
+              .filter((a) => a.inline || actionsDisplay === "inline")
+              .map((action, i) => {
+                const Icon = action.icon;
+                const isDisabled = action.disabled?.(row) ?? false;
+                return (
+                  <button
+                    key={i}
+                    disabled={isDisabled}
+                    title={action.label}
+                    onClick={() => action.onClick(row)}
+                    className={twMerge(
+                      "inline-flex items-center justify-center w-7 h-7 rounded-md transition-colors",
+                      "disabled:opacity-30 disabled:cursor-not-allowed",
+                      action.danger
+                        ? "text-red-400 hover:bg-red-50 hover:text-red-600"
+                        : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700",
+                    )}
+                  >
+                    {Icon ? <Icon size={14} /> : <span className="text-[11px] font-medium">{action.label.slice(0, 3)}</span>}
+                  </button>
+                );
+              })}
+
+            {/* Menu actions — collapsed into ⋯ */}
+            {actions.some((a) => !a.inline && actionsDisplay !== "inline") && (
+              <>
+                <button
+                  ref={btnRef}
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                  aria-label="Mais ações"
+                >
+                  <MoreHorizontal size={15} />
+                </button>
+                {menuOpen && (
+                  <ActionMenu
+                    row={row}
+                    actions={actions.filter((a) => !a.inline)}
+                    anchorRef={btnRef}
+                    onClose={() => setMenuOpen(false)}
+                  />
+                )}
+              </>
+            )}
+          </div>
         </td>
       )}
     </tr>
@@ -608,9 +671,11 @@ export default function DataTable<T = Record<string, unknown>>({
   dividers = true,
   hoverable = true,
   actions,
+  actionsDisplay = "menu",
   columnToggle = false,
   globalSearch = false,
   filterFields,
+  tabs,
   showSummary = false,
   pagination = false,
   pageSizeOptions = [10, 25, 50, 100],
@@ -635,6 +700,7 @@ export default function DataTable<T = Record<string, unknown>>({
   const [pageSize, setPageSize]         = useState(defaultPageSize);
   const [filterOpen, setFilterOpen]     = useState(false);
   const [colPanelOpen, setColPanelOpen] = useState(false);
+  const [activeTab, setActiveTab]       = useState(0);
 
   const filterBtnRef = useRef<HTMLButtonElement>(null);
   const colBtnRef    = useRef<HTMLButtonElement>(null);
@@ -642,19 +708,24 @@ export default function DataTable<T = Record<string, unknown>>({
   // ── Derived data ──
   const filtered = useMemo(() => {
     let result = rows;
+    if (tabs && tabs[activeTab]) {
+      const fn = getTabFilter(tabs[activeTab]);
+      if (fn) result = result.filter(fn);
+    }
     if (searchQ)  result = result.filter((r) => matchesGlobal(r, searchQ));
     if (Object.values(filters).some(Boolean)) result = result.filter((r) => matchesFilters(r, filters));
     if (sortKey && sortDir) result = sortRows(result, sortKey, sortDir, columns);
     return result;
-  }, [rows, searchQ, filters, sortKey, sortDir, columns]);
+  }, [rows, tabs, activeTab, searchQ, filters, sortKey, sortDir, columns]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageRows = pagination
     ? filtered.slice((page - 1) * pageSize, page * pageSize)
     : filtered;
 
-  // Reset to page 1 when filters/search changes
-  useEffect(() => { setPage(1); }, [searchQ, filters, sortKey]);
+  // Reset to page 1 when filters/search/tab changes
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setPage(1); }, [searchQ, filters, sortKey, activeTab]);
 
   const visibleCols = useMemo(
     () => columns.filter((c) => !hiddenCols.has(c.key)),
@@ -671,7 +742,7 @@ export default function DataTable<T = Record<string, unknown>>({
   const handleToggleCol = useCallback((key: string) => {
     setHiddenCols((prev) => {
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
   }, []);
@@ -782,7 +853,41 @@ export default function DataTable<T = Record<string, unknown>>({
       )}
 
       {/* ── Table ── */}
-      <div className="w-full rounded-xl overflow-hidden border border-zinc-200 overflow-x-auto">
+      <div className="w-full rounded-xl overflow-hidden border border-zinc-200">
+
+        {/* Tab bar */}
+        {tabs && tabs.length > 0 && (
+          <div className="flex overflow-x-auto border-b border-zinc-200 bg-zinc-50/50">
+            {tabs.map((tab, i) => {
+              const fn = getTabFilter(tab);
+              const count = tab.showCount ? (fn ? rows.filter(fn).length : rows.length) : null;
+              return (
+                <button
+                  key={i}
+                  onClick={() => { setActiveTab(i); setPage(1); }}
+                  className={twMerge(
+                    "px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2",
+                    activeTab === i
+                      ? "border-indigo-500 text-indigo-600 bg-white"
+                      : "border-transparent text-zinc-500 hover:text-zinc-700 hover:bg-white/60",
+                  )}
+                >
+                  {tab.label}
+                  {count !== null && (
+                    <span className={twMerge(
+                      "ml-1.5 inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none",
+                      activeTab === i ? "bg-indigo-100 text-indigo-700" : "bg-zinc-200 text-zinc-500",
+                    )}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           {/* Head */}
           <thead>
@@ -819,16 +924,28 @@ export default function DataTable<T = Record<string, unknown>>({
               })}
 
               {/* Actions column header */}
-              {actions && actions.length > 0 && (
-                <th
-                  className={twMerge(
-                    SIZE_TH[size],
-                    "text-right",
-                    bordered && "border-l border-zinc-200",
-                  )}
-                  style={{ width: 48, minWidth: 48 }}
-                />
-              )}
+              {actions && actions.length > 0 && (() => {
+                const inlineCount = actionsDisplay === "inline"
+                  ? actions.length
+                  : actions.filter((a) => a.inline).length;
+                const hasMenu = actionsDisplay !== "inline" && actions.some((a) => !a.inline);
+                const hasInline = inlineCount > 0;
+                const hasLabel = hasInline;
+                const colW = inlineCount * 32 + (hasMenu ? 36 : 0) + 16;
+                return (
+                  <th
+                    className={twMerge(
+                      SIZE_TH[size],
+                      "text-right",
+                      hasLabel && "font-semibold text-zinc-500 tracking-wide uppercase",
+                      bordered && "border-l border-zinc-200",
+                    )}
+                    style={{ width: Math.max(colW, 48), minWidth: Math.max(colW, 48) }}
+                  >
+                    {hasLabel ? "Ações" : null}
+                  </th>
+                );
+              })()}
             </tr>
           </thead>
 
@@ -851,6 +968,7 @@ export default function DataTable<T = Record<string, unknown>>({
                   idx={idx}
                   visibleCols={visibleCols}
                   actions={actions}
+                  actionsDisplay={actionsDisplay}
                   size={size}
                   variant={variant}
                   dividers={dividers}
@@ -896,6 +1014,7 @@ export default function DataTable<T = Record<string, unknown>>({
             </tfoot>
           )}
         </table>
+        </div>
       </div>
 
       {/* ── Pagination ── */}

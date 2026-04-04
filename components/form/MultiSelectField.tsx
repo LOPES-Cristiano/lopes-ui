@@ -40,7 +40,7 @@ const INPUT = {
 
 export default function MultiSelectField({
   label, labelInline, labelWidth, required, tooltip, error, helpText, width, className,
-  id: idProp, name,
+  id: idProp,
   options,
   value: controlledValue,
   defaultValue = [],
@@ -164,7 +164,7 @@ export default function MultiSelectField({
         <div
           className={wrapCls}
           onClick={() => { setOpen(true); inputRef.current?.focus(); }}
-          {...(componentId ? { "data-component-id": componentId } as any : {})}
+          {...(componentId ? { "data-component-id": componentId } : {})}
         >
           {/* Chips */}
           {selected.map((val) => {
