@@ -1,4 +1,4 @@
-# LopesWare UI Playground
+# Lopes UI Playground
 
 > Biblioteca de componentes React construída com **Next.js 16**, **Tailwind CSS v4** e **TypeScript** — sem dependências de UI externas.
 
@@ -308,7 +308,7 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ```tsx
 <Accordion
   items={[
-    { id: "1", title: "O que é LopesWare UI?", content: <p>...</p> },
+    { id: "1", title: "O que é Lopes UI?", content: <p>...</p> },
     { id: "2", title: "Como instalar?",          content: <p>...</p> },
   ]}
   multiple

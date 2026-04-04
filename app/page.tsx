@@ -422,7 +422,7 @@ export default function Home() {
         <section id="overview" className="border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-10 py-16 sm:py-24">
           <div className="max-w-2xl">
             <p className="text-xs font-medium tracking-widest uppercase text-zinc-400 dark:text-zinc-500 mb-4">
-              LopesWare UI
+              Lopes UI
             </p>
             <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 leading-tight mb-4">
               Componentes prontos para produção
@@ -471,7 +471,7 @@ export default function Home() {
               <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Default</h3>
               <Accordion
                 items={[
-                  { title: "O que é o LopesWare UI?", content: "É uma biblioteca de componentes React construída com Next.js e Tailwind CSS." },
+                  { title: "O que é o Lopes UI?", content: "É uma biblioteca de componentes React construída com Next.js e Tailwind CSS." },
                   { title: "Posso usar em produção?", content: "Sim! Todos os componentes são acessíveis e foram projetados pensando em produção.", defaultOpen: true },
                   { title: "Como instalar?", content: "Clone o repositório e instale as dependências com npm install." },
                   { title: "Suporte a dark mode?", content: "Em breve.", disabled: true },
@@ -2708,7 +2708,7 @@ import ContextMenu from "@/components/ContextMenu";
               <div className="overflow-hidden rounded-xl border border-zinc-200 h-[520px] flex">
                 <Sidebar
                   isolated
-                  title="LopesWare"
+                  title="Lopes"
                   subtitle="v2.0"
                   logo={<span className="text-xl">🅻</span>}
                   collapsible
@@ -2757,7 +2757,7 @@ import ContextMenu from "@/components/ContextMenu";
               <CodeBlock filename="Sidebar usage" language="tsx" code={`import Sidebar from "@/components/Sidebar";
 
 <Sidebar
-  title="LopesWare"
+  title="Lopes"
   logo={<Logo />}
   collapsible
   announcements={[
@@ -3376,7 +3376,7 @@ import ContextMenu from "@/components/ContextMenu";
 
           {/* Footer */}
           <footer className="pt-8 border-t border-zinc-200 text-center text-sm text-zinc-400">
-            <p>LopesWare UI — construído com Next.js, Tailwind CSS e lucide-react.</p>
+            <p>Lopes UI — construído com Next.js, Tailwind CSS e lucide-react.</p>
           </footer>
         </div>
 

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "@/components/Toast";
 import SiteHeader from "@/components/SiteHeader";
@@ -23,15 +22,14 @@ export default async function RootLayout({
 
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <head />
-      <body className="min-h-full w-full flex flex-col bg-[--background]">
-        <Script
-          id="theme-init"
-          strategy="beforeInteractive"
+      <head>
+        <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('theme')||((window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){}})();`,
           }}
         />
+      </head>
+      <body className="min-h-full w-full flex flex-col bg-[--background]">
         <ThemeProvider>
           <Toaster position="top-right" />
           <ShellProvider defaultCollapsed={sidebarCollapsed} defaultHasSidebar>

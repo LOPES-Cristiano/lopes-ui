@@ -197,7 +197,7 @@ export default function ChatMessage({
           {/* Audio */}
           {type === "audio" && (
             <div className="flex items-center gap-2.5 px-3 py-2.5 min-w-[200px]">
-              <button className={twMerge(
+              <button aria-label="Reproduzir áudio" className={twMerge(
                 "flex items-center justify-center w-8 h-8 rounded-full shrink-0 transition-colors",
                 isMine ? "bg-indigo-500 hover:bg-indigo-400" : "bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600"
               )}>

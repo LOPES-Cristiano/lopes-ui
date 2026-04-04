@@ -12,7 +12,7 @@ import {
 export default function AppSidebar() {
   return (
     <Sidebar
-      title="LopesWare UI"
+      title="Lopes UI"
       subtitle="Lopes UI"
       logo={<span className="text-lg font-black text-zinc-800">🅻</span>}
       collapsible

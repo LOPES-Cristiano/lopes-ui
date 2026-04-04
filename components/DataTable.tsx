@@ -325,7 +325,7 @@ function FilterDialog({
               <p className="text-xs text-zinc-400 mt-0.5">{activeCount} filtro{activeCount > 1 ? "s" : ""} ativo{activeCount > 1 ? "s" : ""}</p>
             )}
           </div>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700 transition-colors p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+          <button onClick={onClose} aria-label="Fechar filtros" className="text-zinc-400 hover:text-zinc-700 transition-colors p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
             <X size={16} />
           </button>
         </div>
@@ -781,7 +781,7 @@ export default function DataTable<T = Record<string, unknown>>({
                   className="pl-8 pr-3 py-1.5 rounded-lg border border-zinc-200 bg-white text-sm text-zinc-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-44 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500"
                 />
                 {searchQ && (
-                  <button onClick={() => setSearchQ("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                  <button onClick={() => setSearchQ("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
                     <X size={12} />
                   </button>
                 )}
@@ -1031,6 +1031,7 @@ export default function DataTable<T = Record<string, unknown>>({
             <select
               value={pageSize}
               onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+              aria-label="Itens por página"
               className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
             >
               {pageSizeOptions.map((n) => (
@@ -1040,8 +1041,8 @@ export default function DataTable<T = Record<string, unknown>>({
           </div>
 
           <div className="flex items-center gap-1">
-            <PageBtn onClick={() => setPage(1)}           disabled={page === 1}><ChevronsLeft  size={14} /></PageBtn>
-            <PageBtn onClick={() => setPage((p) => p - 1)} disabled={page === 1}><ChevronLeft   size={14} /></PageBtn>
+            <PageBtn onClick={() => setPage(1)}           disabled={page === 1} aria-label="Primeira página"><ChevronsLeft  size={14} /></PageBtn>
+            <PageBtn onClick={() => setPage((p) => p - 1)} disabled={page === 1} aria-label="Página anterior"><ChevronLeft   size={14} /></PageBtn>
 
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               const start = Math.max(1, Math.min(page - 2, totalPages - 4));
@@ -1062,8 +1063,8 @@ export default function DataTable<T = Record<string, unknown>>({
               );
             })}
 
-            <PageBtn onClick={() => setPage((p) => p + 1)} disabled={page === totalPages}><ChevronRight  size={14} /></PageBtn>
-            <PageBtn onClick={() => setPage(totalPages)}   disabled={page === totalPages}><ChevronsRight size={14} /></PageBtn>
+            <PageBtn onClick={() => setPage((p) => p + 1)} disabled={page === totalPages} aria-label="Próxima página"><ChevronRight  size={14} /></PageBtn>
+            <PageBtn onClick={() => setPage(totalPages)}   disabled={page === totalPages} aria-label="Última página"><ChevronsRight size={14} /></PageBtn>
           </div>
         </div>
       )}
@@ -1078,15 +1079,18 @@ function PageBtn({
   children,
   onClick,
   disabled,
+  "aria-label": ariaLabel,
 }: {
   children: React.ReactNode;
   onClick: () => void;
   disabled: boolean;
+  "aria-label"?: string;
 }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
+      aria-label={ariaLabel}
       className="w-8 h-8 rounded-lg text-zinc-500 hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center dark:text-zinc-400 dark:hover:bg-zinc-800"
     >
       {children}

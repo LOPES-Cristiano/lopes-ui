@@ -150,7 +150,7 @@ export default function ProfileActions() {
       <ProfileMenuHeader
         initials="CL"
         name="Cristiano Lopes"
-        email="cristiano@lopesware.com"
+        email="cristiano@Lopes.com"
       />
       <div className="py-1">
         <ProfileMenuItem icon={User} label="Perfil" description="Ver e editar perfil" href="/profile" />

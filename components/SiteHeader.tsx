@@ -72,9 +72,9 @@ export default function SiteHeader() {
         <Brand
           logo={
             // eslint-disable-next-line @next/next/no-img-element
-            <img src="/logo.svg" alt="LopesWare" width={80} height={64} />
+            <img src="/logo.svg" alt="Lopes" width={80} height={64} />
           }
-          title="LopesWare"
+          title="Lopes"
         />
       }
       search={<CommandMenu items={SITE_COMMANDS} triggerLabel="Buscar..." />}
