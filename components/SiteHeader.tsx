@@ -18,7 +18,6 @@ import {
   MessageCircle,
   Navigation,
   Play,
-  Code2,
   Settings,
   User,
   LogOut,
@@ -27,7 +26,6 @@ import {
 
 const SITE_NAV: NavItem[] = [
   { label: "Home", href: "/", icon: Home },
-  { label: "UI Builder", href: "/ui-builder", icon: Code2, badge: "Beta" },
   {
     label: "Componentes",
     icon: Layers,
@@ -83,7 +81,6 @@ const SITE_NAV: NavItem[] = [
 const SITE_COMMANDS: CommandItem[] = [
   // Páginas
   { id: "nav-home",   label: "Home",               icon: Home,          href: "/",                        group: "Páginas" },
-  { id: "nav-builder",label: "UI Builder",        icon: Code2,         href: "/ui-builder",              group: "Páginas",    description: "Editor visual" },
   // Componentes
   { id: "sc-forms",   label: "Formulários",         icon: FormInput,     href: "/showcase/forms",          group: "Componentes", keywords: ["form", "input", "login", "otp"] },
   { id: "sc-display", label: "Display",             icon: Layers,        href: "/showcase/display",        group: "Componentes", keywords: ["avatar", "badge", "card", "carousel"] },

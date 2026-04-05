@@ -11,7 +11,7 @@ import {
   LayoutGrid, TrendingUp, Activity, Mail,
   LayoutTemplate, PackageOpen, ShieldAlert,
   Rss, LogIn, KeyRound, LockKeyhole,
-  PanelRightOpen, Radio, Filter, Inbox, Columns, Banknote, Command, Sparkles, PenLine, PanelBottom,
+  PanelRightOpen, Radio, Filter, Inbox, Columns, Banknote, Command, Sparkles, PanelBottom,
 } from "lucide-react";
 
 export default function AppSidebar() {
@@ -29,13 +29,6 @@ export default function AppSidebar() {
           items: [
             { label: "Visão geral", href: "/#overview", icon: Home },
             { label: "Instalação",  href: "/#install",  icon: Zap },
-          ],
-        },
-        {
-          id: "tools",
-          label: "Ferramentas",
-          items: [
-            { label: "UI Builder", href: "/ui-builder", icon: PenLine },
           ],
         },
         {
@@ -283,13 +276,13 @@ export default function AppSidebar() {
             },
             {
               label: "Footer",
-              href: "/#footer",
+              href: "/showcase/navigation#footer",
               icon: PanelBottom,
               children: [
-                { label: "Padrão",   href: "/#footer-default" },
-                { label: "Minimal",  href: "/#footer-minimal" },
-                { label: "Bordered", href: "/#footer-bordered" },
-                { label: "Props",    href: "/#footer-props" },
+                { label: "Padrão",   href: "/showcase/navigation#footer-default" },
+                { label: "Minimal",  href: "/showcase/navigation#footer-minimal" },
+                { label: "Bordered", href: "/showcase/navigation#footer-bordered" },
+                { label: "Props",    href: "/showcase/navigation#footer-props" },
               ],
             },
             {

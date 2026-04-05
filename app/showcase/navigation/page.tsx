@@ -15,6 +15,7 @@ import Button from "@/components/Button";
 import toast from "@/components/Toast";
 import ShortcutHint from "@/components/ShortcutHint";
 import { SectionHeader, DemoCard, PropsTable } from "@/app/showcase/_shared";
+import Footer from "@/components/Footer";
 
 const DEMO_APPS: AppItem[] = [
   { id: "hub",     label: "Project Hub",    icon: LayoutDashboard, color: "indigo",  category: "Core",        href: "#" },
@@ -816,6 +817,54 @@ const COMMANDS: CommandItem[] = [
                 ["maxFirst",     "number",  "90",  "Tamanho máximo do primeiro painel (%)"],
                 ["first",        "ReactNode","—",  "Conteúdo do primeiro painel"],
                 ["second",       "ReactNode","—",  "Conteúdo do segundo painel"],
+              ]} />
+            </div>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          <section id="footer" className="scroll-mt-20 space-y-10 pb-10 sm:pb-14">
+            <SectionHeader
+              label="Navegação & Layout"
+              title="Footer"
+              description="Rodapé de site com colunas de links, tagline e variantes de estilo."
+            />
+
+            <DemoCard id="footer-default" title="Padrão">
+              <Footer
+                brand="Lopes UI"
+                tagline="Componentes React modernos para sua aplicação."
+                columns={[
+                  { title: "Produto", links: [{ label: "Componentes", href: "#" }, { label: "UI Builder", href: "#" }, { label: "Changelog", href: "#" }] },
+                  { title: "Recursos", links: [{ label: "Documentação", href: "#" }, { label: "GitHub", href: "#" }, { label: "Suporte", href: "#" }] },
+                ]}
+              />
+            </DemoCard>
+
+            <DemoCard id="footer-minimal" title="Minimal">
+              <Footer variant="minimal" brand="Lopes UI" />
+            </DemoCard>
+
+            <DemoCard id="footer-bordered" title="Bordered">
+              <Footer
+                variant="bordered"
+                brand="Lopes UI"
+                tagline="Design system open source."
+                columns={[
+                  { title: "Links", links: [{ label: "Home", href: "#" }, { label: "Docs", href: "#" }] },
+                ]}
+              />
+            </DemoCard>
+
+            <div id="footer-props" className="space-y-4">
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200">Props</h3>
+              <PropsTable rows={[
+                ["brand",     "string",                             "\"Lopes UI\"", "Nome exibido no rodapé"],
+                ["tagline",   "string",                             "—",            "Subtítulo abaixo da marca"],
+                ["columns",   "FooterColumn[]",                     "—",            "Colunas de links"],
+                ["copyright", "string",                             "—",            "Texto de copyright (gerado automaticamente se omitido)"],
+                ["variant",   "\"default\" | \"minimal\" | \"bordered\"", "\"default\"",  "Estilo visual do footer"],
+                ["className", "string",                             "—",            "Classes extras"],
               ]} />
             </div>
           </section>

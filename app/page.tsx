@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { FormInput, Layers, Zap, BarChart2, MessageCircle, Navigation, Play, Code } from "lucide-react";
+import { FormInput, Layers, Zap, BarChart2, MessageCircle, Navigation, Play } from "lucide-react";
 import CodeBlock from "@/components/CodeBlock";
 
 const INSTALL_CODE = `npm install github:LOPES-Cristiano/lopes-ui`;
@@ -73,13 +73,6 @@ const CATEGORIES = [
     title: "Animação & Conteúdo",
     description: "TextRotate, CodeBlock, Stepper, Timeline.",
     count: 4,
-  },
-  {
-    href: "/ui-builder",
-    icon: Code,
-    title: "UI Builder",
-    description: "Editor visual drag-and-drop para compor layouts com os componentes.",
-    count: null,
   },
 ] as const;
 
