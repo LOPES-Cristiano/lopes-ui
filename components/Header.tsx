@@ -22,7 +22,6 @@ export default function Header({ nav, brand, search, extra, profile, componentId
   const shell = useShell();
   const hasSidebar = !!shell?.hasSidebar;
   const sidebarMounted = !!shell?.sidebarMounted;
-  const sidebarCollapsed = shell?.sidebarCollapsed ?? false;
 
   // When a sidebar is mounted, mobile hamburger opens the sidebar drawer.
   // When hasSidebar (SSR hint) but no sidebar is actually mounted (e.g. 404 page),
@@ -70,20 +69,8 @@ export default function Header({ nav, brand, search, extra, profile, componentId
               </button>
             )}
           </div>
-
-          {/* ── Desktop row (≥ md): sidebar-mirrored brand + content ──────── */}
+          {/* ── Desktop row (≥ md): full-width toolbar (brand lives in sidebar header) ── */}
           <div className="hidden md:flex h-16 w-full">
-            {/* Brand section — mirrors sidebar width */}
-            <div
-              className={[
-                "flex shrink-0 items-center border-r border-zinc-100/80 dark:border-zinc-800/80 transition-[width] duration-300 ease-in-out overflow-hidden",
-                sidebarCollapsed ? "w-[4.5rem] px-0" : "w-64 px-4",
-              ].join(" ")}
-            >
-              {!sidebarCollapsed && (brand ?? null)}
-            </div>
-
-            {/* Content section */}
             <div className="flex flex-1 items-center justify-between px-4 sm:px-6 min-w-0">
               {nav && nav.length ? <Nav items={nav} onNavigate={onNavigate} dropdown={navDropdown} /> : null}
               <div className="flex items-center gap-2">

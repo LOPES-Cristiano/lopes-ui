@@ -1,10 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useLayoutEffect, useEffect } from "react";
+import React, { createContext, useContext, useRef, useState, useCallback, useLayoutEffect, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   ChevronDown,
-  PanelLeftClose,
-  PanelLeftOpen,
+  ArrowLeftFromLine,
   X,
   Pin,
   PinOff,
@@ -163,26 +163,36 @@ function SidebarBadge({ value, variant = "default" }: { value: string | number; 
 // ── Tooltip (exibido apenas no modo collapsed) ─────────────────────────────────
 
 function Tooltip({ label, badge, children }: { label: string; badge?: string | number; children: React.ReactNode }) {
+  const [show, setShow] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  const onEnter = () => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    setPos({ top: r.top + r.height / 2, left: r.right + 12 });
+    setShow(true);
+  };
+
   return (
-    <div className="relative group/tt w-full">
+    <div ref={ref} className="w-full" onMouseEnter={onEnter} onMouseLeave={() => setShow(false)}>
       {children}
-      <div
-        role="tooltip"
-        className={[
-          "pointer-events-none absolute left-full top-1/2 z-[60] ml-3 -translate-y-1/2",
-          "flex items-center gap-1.5 whitespace-nowrap select-none",
-          "rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white shadow-xl",
-          "opacity-0 scale-95 group-hover/tt:opacity-100 group-hover/tt:scale-100",
-          "transition-all duration-150 ease-out",
-        ].join(" ")}
-      >
-        {label}
-        {badge !== undefined && (
-          <span className="rounded-full bg-white/20 px-1.5 py-px text-[9px] font-bold leading-none">{badge}</span>
-        )}
-        {/* seta */}
-        <span className="absolute right-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-r-zinc-900" />
-      </div>
+      {show && createPortal(
+        <div
+          role="tooltip"
+          aria-hidden="true"
+          className="pointer-events-none fixed flex items-center gap-1.5 whitespace-nowrap select-none rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white shadow-xl z-[9999]"
+          style={{ top: pos.top, left: pos.left, transform: "translateY(-50%)" }}
+        >
+          {label}
+          {badge !== undefined && (
+            <span className="rounded-full bg-white/20 px-1.5 py-px text-[9px] font-bold leading-none">{badge}</span>
+          )}
+          {/* Arrow pointing left toward the sidebar */}
+          <span className="absolute right-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-r-zinc-900" />
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
@@ -505,10 +515,20 @@ function NavGroup({ group, onNavigate }: { group: SidebarNavGroup; onNavigate?: 
   );
 }
 
-// ── User Block ────────────────────────────────────────────────────────────────
+// ── User Popover ─────────────────────────────────────────────────────────────
 
-function UserBlock({ user }: { user: SidebarUser }) {
+function UserPopover({ user, footerItems }: { user: SidebarUser; footerItems: SidebarFooterItem[] }) {
   const { collapsed } = useSidebar();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
 
   const avatarEl = (
     <div className="relative shrink-0">
@@ -527,24 +547,83 @@ function UserBlock({ user }: { user: SidebarUser }) {
   if (collapsed) {
     return (
       <Tooltip label={`${user.name}${user.status ? ` · ${statusLabel[user.status]}` : ""}`}>
-        <div className="flex justify-center py-1">{avatarEl}</div>
+        <button
+          type="button"
+          aria-label="Menu do perfil"
+          onClick={() => setOpen((s) => !s)}
+          className="flex w-full justify-center py-1"
+        >
+          {avatarEl}
+        </button>
       </Tooltip>
     );
   }
 
   return (
-    <div className="flex items-center gap-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 px-3 py-2.5 ring-1 ring-zinc-100 dark:ring-zinc-800">
-      {avatarEl}
-      <div className="flex-1 min-w-0">
-        <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-snug">{user.name}</p>
-        <p className="truncate text-[11px] text-zinc-400 dark:text-zinc-500 leading-snug">{user.role ?? user.email ?? ""}</p>
-      </div>
-      {user.status && (
-        <div className="shrink-0 flex items-center gap-1">
-          <span className={`h-2 w-2 rounded-full ${statusDot[user.status]}`} />
-          <span className="text-[10px] text-zinc-400 capitalize">{statusLabel[user.status]}</span>
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        aria-label="Menu do perfil"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={() => setOpen((s) => !s)}
+        className="flex w-full items-center gap-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 px-3 py-2.5 ring-1 ring-zinc-100 dark:ring-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-colors"
+      >
+        {avatarEl}
+        <div className="flex-1 min-w-0 text-left">
+          <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-snug">{user.name}</p>
+          <p className="truncate text-[11px] text-zinc-400 dark:text-zinc-500 leading-snug">{user.role ?? user.email ?? ""}</p>
         </div>
-      )}
+        <ChevronDown size={13} className={`shrink-0 text-zinc-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {/* Menu — opens upward */}
+      <div
+        role="menu"
+        className={[
+          "absolute bottom-full left-0 right-0 mb-2 rounded-xl bg-white dark:bg-zinc-900 shadow-xl ring-1 ring-black/[0.06] dark:ring-white/[0.08] overflow-hidden z-50",
+          "transition-all duration-150 ease-out origin-bottom",
+          open ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none",
+        ].join(" ")}
+      >
+        <div className="flex items-center gap-3 px-3 py-3 border-b border-zinc-100 dark:border-zinc-800">
+          {avatarEl}
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 truncate">{user.name}</p>
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 truncate">{user.email ?? user.role ?? ""}</p>
+          </div>
+        </div>
+        {footerItems.length > 0 && (
+          <div className="py-1">
+            {footerItems.map((fi, i) => {
+              const Icon = fi.icon;
+              const cls = [
+                "group flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors duration-100",
+                fi.danger
+                  ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer"
+                  : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer",
+              ].join(" ");
+              const inner = (
+                <>
+                  <span className={`shrink-0 ${fi.danger ? "text-red-400 group-hover:text-red-500" : "text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-300"}`}>
+                    <Icon size={15} strokeWidth={1.75} />
+                  </span>
+                  <span className="flex-1 text-left leading-snug">{fi.label}</span>
+                </>
+              );
+              return fi.href ? (
+                <a key={i} href={fi.href} className={cls} role="menuitem" {...(fi.componentId ? { "data-component-id": fi.componentId } : {})}>
+                  {inner}
+                </a>
+              ) : (
+                <button key={i} type="button" role="menuitem" className={cls} onClick={() => { setOpen(false); fi.onClick?.(); }} {...(fi.componentId ? { "data-component-id": fi.componentId } : {})}>
+                  {inner}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -694,9 +773,25 @@ export default function Sidebar({
           className,
         ].join(" ")}
       >
-        {/* ── Header (hidden when Shell is managing it) ──────────────── */}
-        {!shell && (
-        <div className={["flex shrink-0 items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 py-4", isCollapsed ? "justify-center px-2" : "px-4"].join(" ")}>
+        {/* ── Header ─────────────────────────────────────────────────── */}
+        <div className={[
+          "flex shrink-0 border-b border-zinc-100 dark:border-zinc-800",
+          isCollapsed ? "flex-col items-center gap-2 py-3 px-2" : "flex-row items-center gap-2 py-4 px-4",
+        ].join(" ")}>
+          {/* Toggle — first slot in collapsed (top), last in expanded (right) */}
+          {collapsible && (
+            <button
+              type="button"
+              onClick={toggle}
+              aria-label={isCollapsed ? "Expandir menu" : "Recolher menu"}
+              title={isCollapsed ? "Expandir" : "Recolher"}
+              className={["hidden md:flex rounded-lg p-1.5 shrink-0 text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors", isCollapsed ? "" : "order-last"].join(" ")}
+            >
+              <ArrowLeftFromLine size={15} className={["transition-transform duration-300 ease-out", isCollapsed ? "rotate-180" : ""].join(" ")} />
+            </button>
+          )}
+
+          {/* Logo — second slot in collapsed, first in expanded */}
           {logo && (
             <div className="shrink-0">
               {isCollapsed && title
@@ -704,26 +799,25 @@ export default function Sidebar({
                 : logo}
             </div>
           )}
-          <div className={["flex-1 min-w-0 overflow-hidden transition-opacity duration-200 ease-out", isCollapsed ? "opacity-0" : "opacity-100"].join(" ")}>
+
+          {/* Title + subtitle — expanded only */}
+          <div className={["flex-1 min-w-0 overflow-hidden transition-opacity duration-200 ease-out", isCollapsed ? "hidden" : "opacity-100"].join(" ")}>
             {title && <p className="truncate text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug">{title}</p>}
             {subtitle && <p className="truncate text-[11px] text-zinc-400 dark:text-zinc-500">{subtitle}</p>}
           </div>
-          {headerExtra && <div className={["shrink-0 overflow-hidden transition-opacity duration-200 ease-out", isCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"].join(" ")}>{headerExtra}</div>}
-          <div className="flex items-center gap-1 shrink-0">
-            <button type="button" aria-label="Fechar menu" onClick={closeMobile} className="md:hidden rounded-lg p-1.5 text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
-              <X size={15} />
-            </button>
-            {collapsible && (
-              <button type="button" onClick={toggle} aria-label={isCollapsed ? "Expandir menu" : "Recolher menu"} className="hidden md:flex rounded-lg p-1.5 text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors" title={isCollapsed ? "Expandir" : "Recolher"}>
-                <span className="relative flex items-center justify-center w-[15px] h-[15px]">
-                  <PanelLeftOpen size={15} className={["absolute transition-[opacity,transform] duration-300 ease-out", isCollapsed ? "opacity-100 scale-100" : "opacity-0 scale-75"].join(" ")} />
-                  <PanelLeftClose size={15} className={["absolute transition-[opacity,transform] duration-300 ease-out", isCollapsed ? "opacity-0 scale-75" : "opacity-100 scale-100"].join(" ")} />
-                </span>
-              </button>
-            )}
-          </div>
+
+          {/* headerExtra — expanded only */}
+          {headerExtra && (
+            <div className={["shrink-0 overflow-hidden transition-opacity duration-200 ease-out", isCollapsed ? "hidden" : "opacity-100"].join(" ")}>
+              {headerExtra}
+            </div>
+          )}
+
+          {/* Mobile close button */}
+          <button type="button" aria-label="Fechar menu" onClick={closeMobile} className="md:hidden rounded-lg p-1.5 shrink-0 text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+            <X size={15} />
+          </button>
         </div>
-        )}
 
         {/* ── Body (scrollável) ─────────────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-2 py-3 space-y-4">
@@ -750,31 +844,13 @@ export default function Sidebar({
 
         {/* ── Footer ───────────────────────────────────────────────────── */}
         <div className="shrink-0 border-t border-zinc-100 dark:border-zinc-800 px-2 py-3 space-y-0.5">
-          {shell && collapsible && (
-            <button
-              type="button"
-              onClick={toggle}
-              title={isCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
-              className={[
-                "flex w-full items-center justify-center gap-2 rounded-lg px-2.5 py-2",
-                "text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300",
-                "transition-colors",
-              ].join(" ")}
-            >
-              <span className="relative flex shrink-0 items-center justify-center w-4 h-4">
-                <PanelLeftOpen size={16} strokeWidth={1.75} className={["absolute transition-[opacity,transform] duration-300 ease-out", isCollapsed ? "opacity-100 scale-100" : "opacity-0 scale-75"].join(" ")} />
-                <PanelLeftClose size={16} strokeWidth={1.75} className={["absolute transition-[opacity,transform] duration-300 ease-out", isCollapsed ? "opacity-0 scale-75" : "opacity-100 scale-100"].join(" ")} />
-              </span>
-              <span className={["text-sm overflow-hidden whitespace-nowrap transition-opacity duration-200 ease-out", isCollapsed ? "opacity-0 max-w-0 pointer-events-none" : "opacity-100 max-w-[8rem]"].join(" ")}>Recolher</span>
-            </button>
-          )}
-          {footerItems.map((fi, i) => (
+          {!user && footerItems.map((fi, i) => (
             <FooterItem key={`fi-${i}`} item={fi} />
           ))}
           {footerExtra && <div className={["pt-2 overflow-hidden transition-opacity duration-200 ease-out", isCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"].join(" ")}>{footerExtra}</div>}
           {user && (
             <div className="pt-2">
-              <UserBlock user={user} />
+              <UserPopover user={user} footerItems={footerItems} />
             </div>
           )}
         </div>

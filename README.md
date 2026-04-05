@@ -1,64 +1,103 @@
-# Lopes UI Playground
+# Lopes UI
 
 > Biblioteca de componentes React construída com **Next.js 16**, **Tailwind CSS v4** e **TypeScript** — sem dependências de UI externas.
-
----
 
 ## Stack
 
 | Tecnologia | Versão |
 |---|---|
-| Next.js | 16.2 |
-| React | 19 |
+| Next.js | 16.2.2 |
+| React | 19.2.4 |
 | Tailwind CSS | 4.2 |
 | TypeScript | 5 |
 | lucide-react | 1.7 |
 | tailwind-merge | 3.5 |
-| react-hot-toast | 2.6 |
+| motion | 12.38 |
+| shiki | 4.0 |
+| clsx | 2.1 |
+
+## Rodando o projeto
+
+```bash
+npm install
+npm run dev
+```
+
+Acesse [http://localhost:3000](http://localhost:3000) para o playground interativo com todos os componentes.
+
+## Scripts
+
+| Comando | Descrição |
+|---|---|
+| `npm run dev` | Servidor de desenvolvimento |
+| `npm run build` | Build de produção |
+| `npm run start` | Servidor de produção |
+| `npm run lint` | ESLint |
 
 ---
 
 ## Estrutura
 
 ```
-playground/
+lopes-ui/
 ├── app/
 │   ├── page.tsx              # Playground interativo com todos os demos
 │   ├── layout.tsx            # Shell com Sidebar + SiteHeader
-│   ├── access-denied/        # Página de acesso negado
-│   └── cause-error/          # Página de erro de teste
+│   ├── globals.css           # Estilos base, dark mode, scrollbar
+│   ├── access-denied/        # Página de acesso negado (403)
+│   └── cause-error/          # Página de teste de error boundary
 │
 ├── components/
-│   ├── form/                 # Componentes de formulário
+│   ├── form/                 # Campos de formulário
 │   │   ├── FieldWrapper      # Wrapper base: label, erro, tooltip, helpText
 │   │   ├── TextField         # Input texto / email / url / password / search
 │   │   ├── NumberField       # Input numérico com spin buttons
-│   │   ├── DateField         # Input data e datetime com calendário
+│   │   ├── DateField         # Input data e datetime
 │   │   ├── TimeField         # Input de horário
 │   │   ├── CheckboxGroup     # Grupo de checkboxes com layout grid
 │   │   ├── Switch            # Toggle on/off
 │   │   ├── AutocompleteField # Dropdown pesquisável (combobox)
 │   │   ├── MultiSelectField  # Seleção múltipla com chips
-│   │   └── FileField         # Upload de arquivos com drag-and-drop
+│   │   └── FileField         # Upload com drag-and-drop
+│   │
+│   ├── header/               # Partes do SiteHeader
+│   │   ├── Brand             # Logo + nome da aplicação
+│   │   ├── Nav               # Navegação com dropdowns aninhados
+│   │   ├── SearchInput       # Campo de busca do header
+│   │   ├── ProfileMenu       # Dropdown de perfil do usuário
+│   │   └── ProfileActions    # Ações do header (notificações, tema…)
 │   │
 │   ├── Accordion.tsx         # Painéis colapsáveis com animação
-│   ├── ActionButton.tsx      # Botão de ação com ícone e tooltip
-│   ├── ActionDialog.tsx      # Dialog de confirmação de ações
+│   ├── ActionDialog.tsx      # Dialog de confirmação de ações críticas
 │   ├── Alert.tsx             # Alertas inline e modais
 │   ├── Avatar.tsx            # Avatar com imagem, iniciais e status
 │   ├── Badge.tsx             # Badges com variantes e cores
 │   ├── Button.tsx            # Botão base com variantes e loading
 │   ├── Card.tsx              # Cards com header/body/footer compostos
-│   ├── CodeBlock.tsx         # Bloco de código com syntax highlight
+│   ├── Carousel.tsx          # Carrossel com navegação e autoplay
+│   ├── ChatComposer.tsx      # Área de composição de mensagens
+│   ├── ChatConversationItem.tsx # Item de lista de conversas
+│   ├── ChatMessage.tsx       # Bolha de mensagem (texto, imagem, áudio…)
+│   ├── ChatWindow.tsx        # Janela de chat completa
+│   ├── CodeBlock.tsx         # Bloco de código com syntax highlight (Shiki)
 │   ├── CommandMenu.tsx       # Paleta de comandos (⌘K / Ctrl+K)
 │   ├── ContextMenu.tsx       # Menu de contexto com sub-menus
 │   ├── DataTable.tsx         # Tabela avançada com todas as features
+│   ├── Header.tsx            # Header genérico reutilizável
 │   ├── Sidebar.tsx           # Sidebar colapsável com navegação aninhada
-│   ├── SiteHeader.tsx        # Header do site com CommandMenu
+│   ├── SiteHeader.tsx        # Header do site com CommandMenu integrado
 │   ├── StatusPage.tsx        # Páginas de status (404, 403, 500…)
-│   └── Table.tsx             # Tabela simples e configurável
+│   ├── Stepper.tsx           # Wizard multi-steps
+│   ├── Table.tsx             # Tabela simples e configurável
+│   ├── TextRotate.tsx        # Texto animado com rotação de itens
+│   ├── ThemeContext.tsx      # Provider de tema dark/light
+│   ├── ThemeToggle.tsx       # Botão de alternância de tema
+│   ├── Timeline.tsx          # Linha do tempo vertical
+│   ├── Toast.tsx             # Sistema de notificações (toast)
+│   └── TreeView.tsx          # Árvore navegável com expand/collapse
 │
 └── hooks/
+    ├── useAsyncButton.ts     # Gerencia estado de loading de botões async
     └── useBodyScrollLock.ts  # Bloqueia scroll do body (modais)
 ```
 
@@ -308,11 +347,11 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ```tsx
 <Accordion
   items={[
-    { id: "1", title: "O que é Lopes UI?", content: <p>...</p> },
-    { id: "2", title: "Como instalar?",          content: <p>...</p> },
+    { title: "O que é Lopes UI?", content: <p>...</p> },
+    { title: "Como instalar?",    content: <p>...</p> },
   ]}
   multiple
-  defaultOpen={["1"]}
+  variant="bordered"   // default | bordered | separated
 />
 ```
 
@@ -321,38 +360,119 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 <StatusPage variant="404" />  // 404 | 403 | 500 | maintenance | empty | success
 ```
 
+#### `Toast`
+
+Sistema de notificações próprio, sem dependências externas.
+
+```tsx
+import { toast, Toaster } from "@/components/Toast";
+
+// No layout
+<Toaster position="top-right" />
+
+// Em qualquer componente
+toast.success("Salvo com sucesso!");
+toast.error("Algo deu errado.");
+toast.warning("Atenção: ação irreversível.");
+toast.info("Nova atualização disponível.", {
+  action: { label: "Atualizar", onClick: () => {} },
+});
+toast.loading("Carregando...");
+toast.promise(minhaPromise, {
+  loading: "Salvando...",
+  success: "Pronto!",
+  error:   "Falha ao salvar.",
+});
+```
+
+#### `TextRotate`
+
+Texto animado que alterna entre itens com animações de entrada/saída.
+
+```tsx
+<TextRotate
+  items={["velocidade", "qualidade", "beleza"]}
+  duration={2500}
+  animation="slide"   // slide | discrete | fade | rise
+  className="text-indigo-600 font-bold"
+/>
+```
+
+#### `Timeline`
+
+```tsx
+<Timeline
+  items={[
+    { title: "Criação", description: "Projeto iniciado.", date: "Jan 2024", status: "done" },
+    { title: "Beta",    description: "Primeira versão.",  date: "Mar 2024", status: "current" },
+    { title: "v1.0",   description: "Lançamento.",        date: "Jun 2024", status: "upcoming" },
+  ]}
+/>
+```
+
+#### `Stepper`
+
+```tsx
+<Stepper
+  steps={["Dados pessoais", "Endereço", "Confirmação"]}
+  currentStep={1}
+  variant="default"   // default | compact | dots
+/>
+```
+
+#### `TreeView`
+
+```tsx
+<TreeView
+  nodes={[
+    {
+      id: "docs",
+      label: "Documentos",
+      icon: Folder,
+      children: [
+        { id: "readme", label: "README.md", icon: FileText },
+        { id: "license", label: "LICENSE",  icon: FileText },
+      ],
+    },
+  ]}
+  onSelect={(node) => console.log(node.id)}
+/>
+```
+
+#### `ChatWindow`
+
+```tsx
+<ChatWindow
+  conversations={conversas}
+  onSend={(msg) => enviar(msg)}
+  currentUserId="user-1"
+/>
+```
+
+---
+
+## Dark Mode
+
+Tema dark/light baseado em classe (`class="dark"` no `<html>`), sem flash no reload: o tema é aplicado via `<script>` inline no `<head>` antes de qualquer renderização React.
+
+```tsx
+import { useTheme } from "@/components/ThemeContext";
+
+const { theme, toggle } = useTheme();
+```
+
 ---
 
 ## Controle de Acesso
 
-Todos os componentes aceitam a prop `componentId` que é emitida como `data-component-id` no DOM, permitindo integração com qualquer sistema de controle de acesso baseado em atributos.
+Todos os componentes aceitam a prop `componentId` que é emitida como `data-component-id` no DOM, permitindo integração com qualquer sistema de controle de acesso baseado em atributos (ABAC).
 
 ```tsx
 <Button componentId="btn-excluir-pedido">Excluir</Button>
 // → <button data-component-id="btn-excluir-pedido">Excluir</button>
 ```
 
----
-
-## Rodando o projeto
-
-```bash
-npm install
-npm run dev
-```
-
-Acesse [http://localhost:3000](http://localhost:3000) para ver o playground interativo com todos os componentes e suas variantes documentadas.
-
----
-
-## Scripts
-
-| Comando | Descrição |
-|---|---|
-| `npm run dev` | Servidor de desenvolvimento |
-| `npm run build` | Build de produção |
-| `npm run start` | Servidor de produção |
-| `npm run lint` | ESLint |
+Consulte [docs/ACCESS_CONTROL.md](docs/ACCESS_CONTROL.md) para detalhes sobre a implementação.
 
 ---
 

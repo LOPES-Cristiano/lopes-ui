@@ -14,7 +14,7 @@ export default function AppSidebar() {
     <Sidebar
       title="Lopes UI"
       subtitle="Lopes UI"
-      logo={<span className="text-lg font-black text-zinc-800">🅻</span>}
+      logo={<span className="text-lg font-black text-zinc-800 dark:text-zinc-100 ">🅻</span>}
       collapsible
       pinnable
       groups={[
