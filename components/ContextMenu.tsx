@@ -4,6 +4,7 @@ import React, { createContext, useContext, useCallback, useEffect, useRef, useSt
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { ChevronRight, type LucideIcon } from "lucide-react";
+import { calcCursorPos, calcSubMenuPos } from "@/hooks/useSmartPosition";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -47,19 +48,9 @@ export type ContextMenuProps = {
 
 type Pos = { x: number; y: number };
 
-const MENU_W = 224; // min-w-56
-const ITEM_H = 34;
-const PAD    = 8;
-
-function clampPos(pos: Pos, itemCount: number): Pos {
-  const h = itemCount * ITEM_H + PAD * 2;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  return {
-    x: Math.min(pos.x, vw - MENU_W - 8),
-    y: Math.min(pos.y, vh - h - 8),
-  };
-}
+const MENU_W  = 224; // min-w-56
+const ITEM_H  = 34;
+const MENU_PAD = 16; // top + bottom padding
 
 // ── Sub-menu context ──────────────────────────────────────────────────────────
 
@@ -76,8 +67,21 @@ function MenuItem({
 }) {
   const close = useContext(CloseCtx);
   const [subVisible, setSubVisible] = useState(false);
+  const [subPlacement, setSubPlacement] = useState<{ side: "left" | "right"; topOffset: number }>({
+    side: "right",
+    topOffset: -4,
+  });
+  const btnRef = useRef<HTMLButtonElement>(null);
   const hasChildren = !!item.children?.length;
   const Icon = item.icon;
+
+  function revealSub() {
+    if (btnRef.current) {
+      const subH = (item.children?.length ?? 0) * ITEM_H + MENU_PAD;
+      setSubPlacement(calcSubMenuPos(btnRef.current.getBoundingClientRect(), MENU_W, subH));
+    }
+    setSubVisible(true);
+  }
 
   function handleClick(e: React.MouseEvent) {
     e.stopPropagation();
@@ -122,14 +126,15 @@ function MenuItem({
     return (
       <div
         className="relative group/sub"
-        onMouseEnter={() => setSubVisible(true)}
+        onMouseEnter={revealSub}
         onMouseLeave={() => setSubVisible(false)}
       >
         <button
+          ref={btnRef}
           type="button"
           className={itemCls}
           tabIndex={item.disabled ? -1 : 0}
-          onFocus={() => setSubVisible(true)}
+          onFocus={revealSub}
           onBlur={() => setSubVisible(false)}
           aria-haspopup="menu"
           {...(item.componentId ? { "data-component-id": item.componentId } : {})}
@@ -138,7 +143,13 @@ function MenuItem({
         </button>
         {subVisible && (
           <div
-            className="absolute left-full top-0 -mt-1 ml-0.5 z-[120] min-w-[180px] rounded-xl bg-white dark:bg-zinc-900 p-1 shadow-xl ring-1 ring-black/[0.06] dark:ring-white/[0.08]"
+            style={{
+              top: subPlacement.topOffset,
+              ...(subPlacement.side === "right"
+                ? { left: "100%", marginLeft: 2 }
+                : { right: "100%", marginRight: 2 }),
+            }}
+            className="absolute z-[120] min-w-[180px] rounded-xl bg-white dark:bg-zinc-900 p-1 shadow-xl ring-1 ring-black/[0.06] dark:ring-white/[0.08]"
             role="menu"
           >
             {item.children!.map((child, ci) => (
@@ -238,7 +249,7 @@ export default function ContextMenu({
 
   function open(x: number, y: number) {
     if (disabled) return;
-    setPos(clampPos({ x, y }, items.length));
+    setPos(calcCursorPos({ x, y }, MENU_W, items.length * ITEM_H + MENU_PAD));
   }
 
   function handleContextMenu(e: React.MouseEvent) {

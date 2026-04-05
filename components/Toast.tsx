@@ -323,13 +323,13 @@ function ToastCard({ item, position }: { item: ToastItem; position: ToastPositio
       {/* Card */}
       <div className={twMerge(
         "relative flex items-start gap-3 overflow-hidden",
-        "rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 px-4 py-3.5",
+        "bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 px-4 py-3.5",
         "shadow-2xl shadow-zinc-900/[0.12]",
       )}>
         {/* Left accent bar — crossfades colour on type change */}
         <div
           key={`bar-${item.type}`}
-          className={twMerge("absolute inset-y-0 left-0 w-[3px] rounded-l-2xl transition-colors duration-300", cfg.bar)}
+          className={twMerge("absolute inset-y-0 left-0 w-[3px] transition-colors duration-300", cfg.bar)}
           style={{ animation: "_t-bar-fade-in 0.3s ease forwards" }}
         />
 
@@ -419,10 +419,10 @@ export function ToastPreview({ type = "default", message, icon, action, showBar 
     <div className="w-80 sm:w-96">
       <div className={twMerge(
         "relative flex items-start gap-3 overflow-hidden",
-        "rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 px-4 py-3.5",
+        "bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 px-4 py-3.5",
         "shadow-2xl shadow-zinc-900/[0.12]",
       )}>
-        <div className={twMerge("absolute inset-y-0 left-0 w-[3px] rounded-l-2xl", cfg.bar)} />
+        <div className={twMerge("absolute inset-y-0 left-0 w-[3px]", cfg.bar)} />
         {iconNode != null && (
           <span className={twMerge("mt-px shrink-0", cfg.iconCls)}>{iconNode}</span>
         )}

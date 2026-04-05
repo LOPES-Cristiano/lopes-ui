@@ -6,7 +6,9 @@ import {
   LayoutDashboard, PanelLeft, Shield, Bell, HelpCircle,
   FormInput, ToggleLeft,
   UserCircle2, ChevronDown, BellRing, Tag, SquareStack, TableProperties, Database,
-  GalleryHorizontal, ListChecks, GitCommitVertical, RefreshCw, MessageCircle, Navigation, FileCode, Network, CheckSquare,
+  GalleryHorizontal, ListChecks, GitCommitVertical, RefreshCw, MessageCircle, Navigation, FileCode, Network, CheckSquare, FileEdit,
+  LayoutGrid, TrendingUp, Activity, Mail,
+  LayoutTemplate, PackageOpen, ShieldAlert,
 } from "lucide-react";
 
 export default function AppSidebar() {
@@ -295,6 +297,70 @@ export default function AppSidebar() {
               ],
             },
             {
+              label: "Notification Bell",
+              href: "/#notification-bell",
+              icon: BellRing,
+              children: [
+                { label: "Demo interativo", href: "/#notification-bell-demo" },
+                { label: "Estado vazio",    href: "/#notification-bell-empty" },
+                { label: "Props",           href: "/#notification-bell-props" },
+              ],
+            },
+            {
+              label: "Rich Text Editor",
+              href: "/#rich-text-editor",
+              icon: FileEdit,
+              children: [
+                { label: "Editor completo",  href: "/#rte-demo" },
+                { label: "Modo email",       href: "/#rte-email" },
+                { label: "Somente leitura", href: "/#rte-readonly" },
+                { label: "Borderless",      href: "/#rte-borderless" },
+                { label: "Props",           href: "/#rte-props" },
+              ],
+            },
+            {
+              label: "App Launcher",
+              href: "/#app-launcher",
+              icon: LayoutGrid,
+              children: [
+                { label: "Grade básica",     href: "/#app-launcher-basic" },
+                { label: "Com busca",        href: "/#app-launcher-search" },
+                { label: "Agrupado",         href: "/#app-launcher-grouped" },
+                { label: "Props",            href: "/#app-launcher-props" },
+              ],
+            },
+            {
+              label: "Stat Card",
+              href: "/#stat-card",
+              icon: TrendingUp,
+              children: [
+                { label: "Básico",           href: "/#stat-card-basic" },
+                { label: "Com sparkline",    href: "/#stat-card-spark" },
+                { label: "Cores & variantes",href: "/#stat-card-colors" },
+                { label: "Props",            href: "/#stat-card-props" },
+              ],
+            },
+            {
+              label: "Service Status",
+              href: "/#service-status",
+              icon: Activity,
+              children: [
+                { label: "Cards de status",  href: "/#service-status-cards" },
+                { label: "Uptime Bar",       href: "/#service-status-uptime" },
+                { label: "Props",            href: "/#service-status-props" },
+              ],
+            },
+            {
+              label: "Email Composer",
+              href: "/#email-composer",
+              icon: Mail,
+              children: [
+                { label: "Janela padrão",    href: "/#email-composer-window" },
+                { label: "Inline",           href: "/#email-composer-inline" },
+                { label: "Props",            href: "/#email-composer-props" },
+              ],
+            },
+            {
               label: "Tree View",
               href: "/#treeview",
               icon: Network,
@@ -304,6 +370,41 @@ export default function AppSidebar() {
                 { label: "Seleção múltipla", href: "/#treeview-multiselect" },
                 { label: "Drag & Drop",     href: "/#treeview-dnd" },
                 { label: "Props",           href: "/#treeview-props" },
+              ],
+            },
+            {
+              label: "Confirm Dialog",
+              href: "/#confirm-dialog",
+              icon: ShieldAlert,
+              children: [
+                { label: "Danger",   href: "/#confirm-dialog-danger" },
+                { label: "Warning",  href: "/#confirm-dialog-warning" },
+                { label: "Info",     href: "/#confirm-dialog-info" },
+                { label: "Com body", href: "/#confirm-dialog-body" },
+                { label: "Props",    href: "/#confirm-dialog-props" },
+              ],
+            },
+            {
+              label: "Empty State",
+              href: "/#empty-state",
+              icon: PackageOpen,
+              children: [
+                { label: "Presets",          href: "/#empty-state-presets" },
+                { label: "Com ações",        href: "/#empty-state-actions" },
+                { label: "Tamanhos",         href: "/#empty-state-sizes" },
+                { label: "fill",             href: "/#empty-state-fill" },
+                { label: "Props",            href: "/#empty-state-props" },
+              ],
+            },
+            {
+              label: "Page Header",
+              href: "/#page-header",
+              icon: LayoutTemplate,
+              children: [
+                { label: "Básico",        href: "/#page-header-basic" },
+                { label: "Com actions",   href: "/#page-header-actions" },
+                { label: "Variantes",     href: "/#page-header-variants" },
+                { label: "Props",         href: "/#page-header-props" },
               ],
             },
           ],

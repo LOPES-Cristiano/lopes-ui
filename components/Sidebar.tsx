@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useShell } from "@/components/ShellContext";
+import { filterNavGroups } from "@/utils/filterNavItems";
 
 // ── Context ───────────────────────────────────────────────────────────────────
 
@@ -135,6 +136,12 @@ export type SidebarProps = {
   onMobileOpenChange?: (v: boolean) => void;
   // ── Style
   className?: string;
+  /**
+   * Optional access check. When provided, nav items and footer items whose
+   * `componentId` returns false are hidden. Items without `componentId` are
+   * always shown. Parents with all children filtered out are also hidden.
+   */
+  canAccess?: (componentId: string) => boolean;
   /**
    * When true, this Sidebar does not register with ShellContext.
    * Use for demo/preview instances that should not affect the app layout.
@@ -297,7 +304,8 @@ function PinnedSection({ groups, onNavigate }: { groups: SidebarNavGroup[]; onNa
           const row = (
             <div
               className={[
-            "group/pin flex items-center gap-2.5 rounded-lg px-2.5 py-2 cursor-pointer transition-colors",
+            `group/pin flex items-center rounded-lg py-2 cursor-pointer transition-colors ${collapsed ? "justify-center px-2" : "gap-2.5 px-2.5"}`,
+
             "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900",
             "dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
           ].join(" ")}
@@ -352,7 +360,7 @@ function NavItem({ item, depth = 0, onNavigate }: { item: SidebarNavItem; depth?
 
   const rowBase = [
     "relative flex w-full items-center rounded-lg transition-all duration-150 select-none",
-    depth > 0 ? "pl-[1.875rem] pr-2.5 py-1.5 gap-2" : "px-2.5 py-2 gap-2.5",
+    depth > 0 ? "pl-[1.875rem] pr-2.5 py-1.5 gap-2" : collapsed ? "justify-center py-2 px-2" : "px-2.5 py-2 gap-2.5",
     item.disabled ? "cursor-not-allowed opacity-40 pointer-events-none" : "cursor-pointer",
     item.active
       ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
@@ -681,7 +689,13 @@ export default function Sidebar({
   onMobileOpenChange,
   className = "",
   isolated = false,
+  canAccess,
 }: SidebarProps) {
+  const visibleGroups = canAccess ? filterNavGroups(groups, canAccess) : groups;
+  const visibleFooterItems = canAccess
+    ? footerItems.filter((fi) => !fi.componentId || canAccess(fi.componentId))
+    : footerItems;
+
   const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
   const shellRaw = useShell();
   // Isolated sidebars (demos/previews) never connect to the shell so they
@@ -831,11 +845,11 @@ export default function Sidebar({
           )}
 
           {/* Grupos de navegação */}
-          {groups.length > 0 && (
+          {visibleGroups.length > 0 && (
             <nav aria-label="Sidebar navigation" className="space-y-4">
               {/* Pinned items section */}
-              {pinnable && <PinnedSection groups={groups} onNavigate={onNavigate} />}
-              {groups.map((g, gi) => (
+              {pinnable && <PinnedSection groups={visibleGroups} onNavigate={onNavigate} />}
+              {visibleGroups.map((g, gi) => (
                 <NavGroup key={g.id ?? `g-${gi}`} group={g} onNavigate={onNavigate} />
               ))}
             </nav>
@@ -844,13 +858,13 @@ export default function Sidebar({
 
         {/* ── Footer ───────────────────────────────────────────────────── */}
         <div className="shrink-0 border-t border-zinc-100 dark:border-zinc-800 px-2 py-3 space-y-0.5">
-          {!user && footerItems.map((fi, i) => (
+          {!user && visibleFooterItems.map((fi, i) => (
             <FooterItem key={`fi-${i}`} item={fi} />
           ))}
           {footerExtra && <div className={["pt-2 overflow-hidden transition-opacity duration-200 ease-out", isCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"].join(" ")}>{footerExtra}</div>}
           {user && (
             <div className="pt-2">
-              <UserPopover user={user} footerItems={footerItems} />
+              <UserPopover user={user} footerItems={visibleFooterItems} />
             </div>
           )}
         </div>

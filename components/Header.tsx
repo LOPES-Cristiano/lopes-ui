@@ -55,19 +55,23 @@ export default function Header({ nav, brand, search, extra, profile, componentId
       {hasSidebar ? (
         /* ── Fused layout ────────────────────────────────────────────────── */
         <>
-          {/* ── Mobile row (< md): brand + hamburger only, no sidebar area ── */}
+          {/* ── Mobile row (< md): brand + extra/profile + hamburger ── */}
           <div className="flex h-16 w-full items-center justify-between px-4 md:hidden">
             {brand ?? null}
-            {/* Only show hamburger if there's nav content to open */}
-            {(sidebarMounted || (nav && nav.length > 0)) && (
-              <button
-                aria-label="Abrir menu"
-                onClick={toggleMobile}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
-              >
-                {isMobileOpen ? <X size={18} /> : <Menu size={18} />}
-              </button>
-            )}
+            <div className="flex items-center gap-1">
+              {extra ?? null}
+              {profile ?? null}
+              {/* Only show hamburger if there's nav content to open */}
+              {(sidebarMounted || (nav && nav.length > 0)) && (
+                <button
+                  aria-label="Abrir menu"
+                  onClick={toggleMobile}
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                >
+                  {isMobileOpen ? <X size={18} /> : <Menu size={18} />}
+                </button>
+              )}
+            </div>
           </div>
           {/* ── Desktop row (≥ md): full-width toolbar (brand lives in sidebar header) ── */}
           <div className="hidden md:flex h-16 w-full">
@@ -109,26 +113,33 @@ export default function Header({ nav, brand, search, extra, profile, componentId
       )}
 
       {/* Mobile nav panel — shown when no sidebar is mounted (e.g. 404 page) and there is nav */}
-      {!useDrawer && mobileOpen && nav && nav.length > 0 && (
+      {!useDrawer && mobileOpen && (nav?.length || search) && (
         <div className="md:hidden border-t border-zinc-100 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-sm">
-          <nav className="px-4 py-3 flex flex-col gap-1">
-            {nav.map((n, idx) => (
-              <a
-                key={`${n.href ?? "#"}-${n.label}-${idx}`}
-                href={n.href ?? "#"}
-                onClick={(e) => {
-                  if (onNavigate && n.href) {
-                    e.preventDefault();
-                    onNavigate(n.href);
-                  }
-                  setMobileOpen(false);
-                }}
-                className="block rounded-md px-3 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/60"
-              >
-                {n.label}
-              </a>
-            ))}
-          </nav>
+          {search && (
+            <div className="px-4 pt-3 pb-1">
+              {search}
+            </div>
+          )}
+          {nav && nav.length > 0 && (
+            <nav className="px-4 py-3 flex flex-col gap-1">
+              {nav.map((n, idx) => (
+                <a
+                  key={`${n.href ?? "#"}-${n.label}-${idx}`}
+                  href={n.href ?? "#"}
+                  onClick={(e) => {
+                    if (onNavigate && n.href) {
+                      e.preventDefault();
+                      onNavigate(n.href);
+                    }
+                    setMobileOpen(false);
+                  }}
+                  className="block rounded-md px-3 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/60"
+                >
+                  {n.label}
+                </a>
+              ))}
+            </nav>
+          )}
         </div>
       )}
     </header>

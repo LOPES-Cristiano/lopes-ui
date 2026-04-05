@@ -2,6 +2,7 @@
 
 import React from "react";
 import { ChevronDown, ChevronRight, type LucideIcon } from "lucide-react";
+import { filterNavItems } from "@/utils/filterNavItems";
 
 export type NavItem = {
   label: string;
@@ -130,14 +131,18 @@ export default function Nav({
   items,
   onNavigate,
   dropdown = false,
+  canAccess,
 }: {
   items: NavItem[];
   onNavigate?: (href: string) => void;
   dropdown?: boolean;
+  /** Optional access check — items whose `componentId` returns false are hidden. */
+  canAccess?: (componentId: string) => boolean;
 }) {
+  const visibleItems = canAccess ? filterNavItems(items, canAccess) : items;
   return (
     <nav className="hidden md:flex md:items-center md:gap-1">
-      {items.map((n, idx) => {
+      {visibleItems.map((n, idx) => {
         const key = `${n.href ?? "#"}-${n.label}-${idx}`;
         const Icon = n.icon;
 

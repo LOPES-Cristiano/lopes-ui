@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { TableSize, TableVariant } from "./Table";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
+import { calcSmartPos } from "@/hooks/useSmartPosition";
 import TextField from "./form/TextField";
 import NumberField from "./form/NumberField";
 import DateField from "./form/DateField";
@@ -214,16 +215,8 @@ function ActionMenu<T>({
       const rect = anchorRef.current.getBoundingClientRect();
       const menuH = actions.length * 36 + 16;
       const menuW = 192;
-      const top = rect.bottom + window.scrollY + 4;
-      const left = Math.min(
-        rect.left + window.scrollX,
-        window.innerWidth - menuW - 8,
-      );
-      const clampedTop =
-        rect.bottom + menuH > window.innerHeight
-          ? rect.top + window.scrollY - menuH - 4
-          : top;
-      setPos({ top: clampedTop, left });
+      const { top, left } = calcSmartPos({ anchor: rect, panelW: menuW, panelH: menuH });
+      setPos({ top, left });
     }
   }, [anchorRef, actions.length]);
 
@@ -248,7 +241,7 @@ function ActionMenu<T>({
     <ActionMenuContext.Provider value={{ close: onClose }}>
       <div
         ref={menuRef}
-        style={{ position: "absolute", top: pos.top, left: pos.left, zIndex: 9999 }}
+        style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999 }}
         className="min-w-48 rounded-xl border border-zinc-200 bg-white shadow-lg py-1.5 outline-none dark:border-zinc-700 dark:bg-zinc-900"
       >
         {actions.map((action, i) => {
@@ -461,9 +454,11 @@ function ColumnPanel<T>({
     setMounted(true);
     if (anchorRef.current) {
       const rect = anchorRef.current.getBoundingClientRect();
-      setPos({ top: rect.bottom + window.scrollY + 4, left: Math.max(8, rect.right + window.scrollX - 220) });
+      const panelH = columns.filter((c) => !c.required).length * 32 + 40;
+      const { top, left } = calcSmartPos({ anchor: rect, panelW: 224, panelH, preferH: "end" });
+      setPos({ top, left });
     }
-  }, [anchorRef]);
+  }, [anchorRef, columns]);
 
   useEffect(() => {
     function onClickOut(e: MouseEvent) {
@@ -483,7 +478,7 @@ function ColumnPanel<T>({
   return createPortal(
     <div
       ref={panelRef}
-      style={{ position: "absolute", top: pos.top, left: pos.left, zIndex: 9999 }}
+      style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999 }}
       className="w-56 rounded-xl border border-zinc-200 bg-white shadow-xl py-2 outline-none dark:border-zinc-700 dark:bg-zinc-900"
     >
       <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase text-zinc-400 tracking-wider">Colunas</p>

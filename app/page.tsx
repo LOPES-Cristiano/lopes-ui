@@ -47,6 +47,15 @@ import StatusPage from "@/components/StatusPage";
 import CodeBlock from "@/components/CodeBlock";
 import Sidebar from "@/components/Sidebar";
 import TreeView from "@/components/TreeView";
+import NotificationBell, { type NotificationItem } from "@/components/NotificationBell";
+import RichTextEditor from "@/components/RichTextEditor";
+import AppLauncher, { type AppItem } from "@/components/AppLauncher";
+import StatCard, { type SparkPoint } from "@/components/StatCard";
+import ServiceStatusCard, { UptimeBar, type UptimeDay, type ServiceIncident } from "@/components/ServiceStatusCard";
+import EmailComposer, { type EmailAttachment } from "@/components/EmailComposer";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 // ── DataTable full demo (extracted to keep Home lean) ──────────────────────
 
@@ -134,6 +143,118 @@ const EMPLOYEE_FILTERS: FilterField[] = [
   ]},
   { key: "joined", label: "Admissão a partir de", type: "date" },
 ];
+
+// ── Demo data for new components ──────────────────────────────────────────
+
+const DEMO_APPS: AppItem[] = [
+  { id: "hub",     label: "Project Hub",    icon: LayoutDashboard, color: "indigo",  category: "Core",        href: "#" },
+  { id: "pdv",     label: "PDV",            icon: ShoppingCart,    color: "emerald", category: "Comercial",   href: "#" },
+  { id: "erp",     label: "ERP",            icon: Cpu,             color: "blue",    category: "Core",        href: "#" },
+  { id: "email",   label: "E-mail Corp.",   icon: Mail,            color: "amber",   category: "Comunicação", href: "#", badge: "Novo" },
+  { id: "reports", label: "Relatórios",     icon: BarChart2,       color: "violet",  category: "Analytics",   href: "#" },
+  { id: "users",   label: "Usuários",       icon: Users,           color: "pink",    category: "Core",        href: "#" },
+  { id: "docs",    label: "Documentação",   icon: BookOpen,        color: "teal",    category: "Suporte",     href: "#", external: true },
+  { id: "settings",label: "Configurações",  icon: Settings,        color: "zinc",    category: "Core",        href: "#" },
+];
+
+const DEMO_SPARK_UP:   SparkPoint[] = [4,6,5,8,7,9,8,10,11,13,12,15].map((v) => ({ value: v }));
+const DEMO_SPARK_DOWN: SparkPoint[] = [15,14,12,13,11,10,9,8,7,6,7,5].map((v) => ({ value: v }));
+const DEMO_SPARK_ERR:  SparkPoint[] = [2,3,2,4,3,5,8,12,9,14,11,15].map((v) => ({ value: v }));
+
+function mkDays(pattern: ("ok"|"deg"|"out")[], length = 90): UptimeDay[] {
+  return Array.from({ length }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (length - 1 - i));
+    const s = pattern[i % pattern.length];
+    return {
+      date: d.toISOString().slice(0, 10),
+      status: s === "ok" ? "operational" : s === "deg" ? "degraded" : "outage",
+    } as UptimeDay;
+  });
+}
+const DEMO_HISTORY_OK:  UptimeDay[] = mkDays(["ok","ok","ok","ok","ok","ok","ok","ok","ok","ok"]);
+const DEMO_HISTORY_DEG: UptimeDay[] = mkDays(["ok","ok","ok","deg","ok","ok","ok","ok","deg","ok"]);
+const DEMO_HISTORY_ERR: UptimeDay[] = mkDays(["ok","ok","deg","ok","ok","out","ok","ok","ok","deg"]);
+
+const DEMO_INCIDENTS: ServiceIncident[] = [
+  { id: "i1", title: "Latência elevada no login SSO", status: "resolved",      timestamp: new Date(Date.now()-3600000*2).toISOString() },
+  { id: "i2", title: "Timeout intermitente no token", status: "investigating",  timestamp: new Date(Date.now()-1800000).toISOString() },
+];
+
+const DEMO_CONTACTS = [
+  { name: "Ana Souza",      email: "ana.souza@empresa.com" },
+  { name: "Bruno Lima",     email: "bruno.lima@empresa.com" },
+  { name: "Carla Matos",    email: "carla.matos@empresa.com" },
+  { name: "Diego Ferreira", email: "diego@infra.empresa.com" },
+  { name: "Suporte TI",     email: "suporte@empresa.com" },
+];
+
+function EmailComposerDemo() {
+  const [attachments, setAttachments] = React.useState<EmailAttachment[]>([]);
+  return (
+    <EmailComposer
+      defaultTo={[{ name: "Ana Souza", email: "ana.souza@empresa.com" }]}
+      defaultSubject="Reunião de alinhamento — Q3"
+      contactSuggestions={DEMO_CONTACTS}
+      attachments={attachments}
+      signature="<strong>Cristiano Lopes</strong><br/>Engenharia de Produto · <a href='#'>empresa.com</a>"
+      onAttach={(files) => {
+        const newAtts: EmailAttachment[] = files.map((f, i) => ({
+          id: `${Date.now()}-${i}`,
+          name: f.name,
+          size: f.size,
+          type: f.type,
+        }));
+        setAttachments((prev) => [...prev, ...newAtts]);
+      }}
+      onRemoveAttachment={(id) => setAttachments((prev) => prev.filter((a) => a.id !== id))}
+      onSend={(p) => { toast(`Enviado para ${p.to.map((r) => r.email).join(", ")}`); }}
+      onDiscard={() => { toast("Mensagem descartada"); }}
+    />
+  );
+}
+
+function ConfirmDialogDemo({
+  variant,
+  triggerLabel,
+  title,
+  description,
+  confirmLabel,
+  loading,
+  children,
+}: {
+  variant: "danger" | "warning" | "info";
+  triggerLabel: string;
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  loading?: boolean;
+  children?: React.ReactNode;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const handleConfirm = () => {
+    if (loading) {
+      return new Promise<void>((resolve) => setTimeout(() => { setOpen(false); toast("Ação confirmada!"); resolve(); }, 1800));
+    }
+    setOpen(false);
+    toast("Ação confirmada!");
+  };
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>{triggerLabel}</Button>
+      <ConfirmDialog
+        open={open}
+        variant={variant}
+        title={title}
+        description={description}
+        confirmLabel={confirmLabel}
+        onConfirm={handleConfirm}
+        onCancel={() => setOpen(false)}
+      >
+        {children}
+      </ConfirmDialog>
+    </>
+  );
+}
 
 function DataTableFullDemo() {
   return (
@@ -415,6 +536,48 @@ export default function Home() {
   );
   const notifyStyled = () => toast('Olá! 👋', { icon: '🌙', duration: 5000 });
 
+  // NotificationBell demo state
+  const [demoNotifs, setDemoNotifs] = React.useState<NotificationItem[]>([
+    {
+      id: "dn1", type: "success",
+      title: "Deploy concluído",
+      description: "Versão 2.4.1 publicada em produção sem erros.",
+      timestamp: new Date(Date.now() - 5 * 60_000),
+      reference: { label: "ver-2.4.1", href: "#" },
+    },
+    {
+      id: "dn2", type: "warning",
+      title: "Limite de uso próximo",
+      description: "Você está a 85% do limite mensal do plano atual.",
+      timestamp: new Date(Date.now() - 35 * 60_000),
+      href: "#",
+    },
+    {
+      id: "dn3", type: "info",
+      title: "Novo membro adicionado",
+      description: "Ana Lima entrou na equipe como desenvolvedora.",
+      timestamp: new Date(Date.now() - 2 * 3600_000),
+      avatarFallback: "AL",
+      read: true,
+    },
+    {
+      id: "dn4", type: "danger",
+      title: "Falha no webhook",
+      description: "3 tentativas sem resposta do endpoint /api/events.",
+      timestamp: new Date(Date.now() - 26 * 3600_000),
+      reference: { label: "Ver logs", href: "#" },
+      read: true,
+    },
+    {
+      id: "dn5",
+      title: "Relatório mensal disponível",
+      description: "O relatório de março já pode ser baixado.",
+      timestamp: new Date(Date.now() - 8 * 24 * 3600_000),
+      href: "#",
+      read: true,
+    },
+  ]);
+
   return (
     <>
     <main className="flex-1 min-w-0 overflow-x-hidden bg-zinc-50 dark:bg-zinc-950">
@@ -454,7 +617,7 @@ export default function Home() {
           <section id="install">
             <SectionHeader label="Instalação" title="Comece em segundos" description="Adicione os pacotes necessários e importe os componentes diretamente." />
             <div className="mt-8 space-y-4">
-              <CodeBlock filename="terminal" language="bash" code={`npm install lucide-react tailwind-merge clsx`} />
+              <CodeBlock filename="terminal" language="bash" code={`npm install lucide-react tailwind-merge clsx motion shiki`} />
               <CodeBlock filename="Button.tsx" language="tsx" code={`import Button from "@/components/Button";\n\nexport default function MyPage() {\n  return <Button variant="primary">Salvar</Button>;\n}`} />
             </div>
           </section>
@@ -3375,7 +3538,704 @@ import ContextMenu from "@/components/ContextMenu";
 
           <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-          {/* Footer */}
+          {/* ── NotificationBell ──────────────────────────────────────── */}
+          <section id="notification-bell" className="space-y-10 pb-10 sm:pb-14">
+            <SectionHeader
+              label="Header"
+              title="Notification Bell"
+              description="Sino de notificações com contagem, painel agrupado por data, avatar, referência clicável e ações por item."
+            />
+
+            <DemoCard id="notification-bell-demo" title="Demo interativo — clique no sino">
+              <div className="flex items-center gap-4">
+                <NotificationBell
+                  notifications={demoNotifs}
+                  onMarkRead={(id) => setDemoNotifs((p) => p.map((n) => n.id === id ? { ...n, read: true } : n))}
+                  onMarkAllRead={() => setDemoNotifs((p) => p.map((n) => ({ ...n, read: true })))}
+                  onDismiss={(id) => setDemoNotifs((p) => p.filter((n) => n.id !== id))}
+                />
+                <span className="text-sm text-zinc-400">← clique para abrir o painel</span>
+              </div>
+            </DemoCard>
+
+            <DemoCard id="notification-bell-empty" title="Estado vazio">
+              <NotificationBell notifications={[]} />
+            </DemoCard>
+
+            <div className="mt-6 space-y-4">
+              <CodeBlock filename="NotificationBell.tsx" language="tsx" code={`import NotificationBell, { type NotificationItem } from "@/components/NotificationBell";
+
+const [notifs, setNotifs] = useState<NotificationItem[]>([
+  {
+    id: "1",
+    type: "success",            // default | info | success | warning | danger
+    title: "Deploy concluído",
+    description: "v2.4.1 publicada sem erros.",
+    timestamp: new Date(),      // Date ou ISO string
+    reference: { label: "ver-2.4.1", href: "/releases/2.4.1" },
+  },
+  {
+    id: "2",
+    type: "info",
+    title: "Novo membro",
+    description: "Ana Lima entrou na equipe.",
+    timestamp: new Date(Date.now() - 2 * 3600_000),
+    avatarFallback: "AL",       // ou avatar: "/foto.jpg"
+    read: true,
+  },
+]);
+
+<NotificationBell
+  notifications={notifs}
+  onMarkRead={(id) => setNotifs((p) => p.map((n) => n.id === id ? { ...n, read: true } : n))}
+  onMarkAllRead={() => setNotifs((p) => p.map((n) => ({ ...n, read: true })))}
+  onDismiss={(id) => setNotifs((p) => p.filter((n) => n.id !== id))}
+  onNotificationClick={(n) => console.log("clicked", n.id)}
+/>`} />
+            </div>
+
+            <div id="notification-bell-props" className="space-y-4">
+              <PropsTable rows={[
+                ["notifications",        "NotificationItem[]",              "[]",  "Lista de notificações"],
+                ["onMarkRead",           "(id: string) => void",            "—",   "Chamado ao marcar uma notificação como lida"],
+                ["onMarkAllRead",        "() => void",                      "—",   "Chamado ao marcar todas como lidas"],
+                ["onDismiss",            "(id: string) => void",            "—",   "Remove uma notificação da lista"],
+                ["onNotificationClick",  "(n: NotificationItem) => void",   "—",   "Chamado ao clicar em qualquer notificação"],
+                ["componentId",          "string",                          "—",   "Identificador para controle de acesso"],
+              ]} />
+              <p className="text-xs text-zinc-400 mt-2">
+                NotificationItem:{" "}
+                <code className="font-mono text-indigo-600">
+                  {"{ id, title, timestamp, type?, description?, href?, reference?, avatar?, avatarFallback?, read?, onClick? }"}
+                </code>
+              </p>
+            </div>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Rich Text Editor ────────────────────────────────────────────── */}
+          <section id="rich-text-editor" className="space-y-10 pb-10 sm:pb-14">
+            <SectionHeader
+              label="Editor"
+              title="Rich Text Editor"
+              description="Editor de texto rico baseado em Tiptap. Suporta formatação completa, links, tabelas, imagens e contagem de caracteres."
+            />
+
+            <DemoCard id="rte-demo" title="Editor completo">
+              <RichTextEditor
+                showCount
+                defaultValue="<h2>Bem-vindo ao editor</h2><p>Experimente a barra de ferramentas acima. Você pode <strong>negrito</strong>, <em>itálico</em>, <u>sublinhado</u> e muito mais.</p><ul><li>Listas com marcadores</li><li>Listas numeradas</li><li>Citações</li></ul>"
+                onChange={(html) => console.log(html)}
+                placeholder="Comece a escrever..."
+              />
+            </DemoCard>
+
+            <DemoCard id="rte-email" title="Modo email — toolbar reduzida">
+              <RichTextEditor
+                toolbar={["history", "inline", "align", "list", "link"]}
+                minHeight="8rem"
+                placeholder="Escreva a mensagem..."
+              />
+            </DemoCard>
+
+            <DemoCard id="rte-readonly" title="Somente leitura">
+              <RichTextEditor
+                readOnly
+                defaultValue="<p>Este conteúdo é <strong>somente leitura</strong>. A toolbar não é exibida e o texto não pode ser editado.</p>"
+              />
+            </DemoCard>
+
+            <DemoCard id="rte-borderless" title="Variante sem borda (borderless)">
+              <div className="rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 p-2">
+                <RichTextEditor
+                  variant="borderless"
+                  minHeight="6rem"
+                  placeholder="Escreva um comentário..."
+                  toolbar={["inline", "link"]}
+                />
+              </div>
+            </DemoCard>
+
+            <CodeBlock
+              language="tsx"
+              code={`import RichTextEditor from "@/components/RichTextEditor";
+
+// Completo
+<RichTextEditor
+  showCount
+  maxLength={5000}
+  placeholder="Escreva aqui..."
+  onChange={(html) => setValue(html)}
+/>
+
+// Email — toolbar reduzida
+<RichTextEditor
+  toolbar={["history", "inline", "align", "list", "link"]}
+  placeholder="Mensagem..."
+/>
+
+// Somente leitura
+<RichTextEditor readOnly value={html} />`}
+            />
+
+            <div id="rte-props" className="space-y-4">
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200">Props</h3>
+              <PropsTable rows={[
+                ["value",          "string",                          "—",           "Valor HTML controlado"],
+                ["defaultValue",   "string",                          "—",           "Valor HTML inicial (não controlado)"],
+                ["onChange",       "(html: string) => void",          "—",           "Chamado a cada mudança no conteúdo"],
+                ["placeholder",    "string",                          "'Escreva aqui...'", "Texto placeholder"],
+                ["minHeight",      "string",                          "'10rem'",     "Altura mínima da área editável"],
+                ["maxHeight",      "string",                          "'32rem'",     "Altura máxima antes de rolar"],
+                ["disabled",       "boolean",                         "false",       "Desativa o editor"],
+                ["readOnly",       "boolean",                         "false",       "Somente leitura (sem toolbar)"],
+                ["showCount",      "boolean",                         "false",       "Exibe rodapé com contagem de palavras/caracteres"],
+                ["maxLength",      "number",                          "—",           "Limite de caracteres"],
+                ["toolbar",        "ToolbarGroup[]",                  "todos os grupos", "Grupos de ferramentas a exibir"],
+                ["variant",        "'default' | 'borderless'",        "'default'",   "Estilo visual da borda"],
+                ["className",      "string",                          "—",           "Classe extra no container"],
+              ]} />
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <strong>ToolbarGroup:</strong>{" "}
+                <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 rounded">'history' | 'block' | 'inline' | 'align' | 'list' | 'link' | 'table' | 'media'</code>
+              </p>
+            </div>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── App Launcher ─────────────────────────────────────── */}
+          <section id="app-launcher" className="space-y-10 pb-10 sm:pb-14">
+            <SectionHeader
+              label="Lançador"
+              title="App Launcher"
+              description="Grade de acesso rápido a aplicações e módulos do portal. Suporta busca, agrupamento por categoria, atalhos externos e marcadores de novidade."
+            />
+
+            <DemoCard id="app-launcher-basic" title="Grade básica (4 colunas)">
+              <div className="p-6">
+                <AppLauncher
+                  columns={4}
+                  apps={DEMO_APPS}
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="app-launcher-search" title="Com busca e tamanho sm">
+              <div className="p-6">
+                <AppLauncher
+                  apps={DEMO_APPS}
+                  searchable
+                  columns={5}
+                  size="sm"
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="app-launcher-grouped" title="Agrupado por categoria">
+              <div className="p-6">
+                <AppLauncher
+                  apps={DEMO_APPS}
+                  grouped
+                  columns={4}
+                />
+              </div>
+            </DemoCard>
+
+            <div id="app-launcher-props" className="space-y-4">
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200">Props</h3>
+              <PropsTable rows={[
+                ["apps",            "AppItem[]",                        "[]",        "Lista de aplicações a exibir"],
+                ["columns",         "2|3|4|5|6|'auto'",                 "4",         "Número de colunas na grade"],
+                ["size",            "'sm'|'md'|'lg'",                  "'md'",      "Tamanho dos cards"],
+                ["searchable",      "boolean",                          "auto (>6)", "Exibe campo de busca"],
+                ["grouped",         "boolean",                          "false",     "Agrupa apps por category"],
+                ["showDescription", "boolean",                          "false",     "Exibe descrição abaixo do label"],
+                ["title",           "string",                           "—",         "Título opcional acima da grade"],
+                ["className",       "string",                           "—",         "Classe extra no container"],
+              ]} />
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mt-6">AppItem</h3>
+              <PropsTable rows={[
+                ["id",          "string",         "—",      "Identificador único"],
+                ["label",       "string",         "—",      "Nome da aplicação"],
+                ["description", "string",         "—",      "Descrição curta (exibe com showDescription)"],
+                ["icon",        "LucideIcon",     "—",      "Ícone Lucide"],
+                ["logoUrl",     "string",         "—",      "URL de logo (substitui icon/initials)"],
+                ["initials",    "string",         "—",      "Sigla fallback (até 2 chars)"],
+                ["href",        "string",         "—",      "Link de navegação"],
+                ["onClick",     "() => void",     "—",      "Handler de clique (alternativa a href)"],
+                ["badge",       "string",         "—",      "Marcador exibido no canto do card"],
+                ["category",    "string",         "—",      "Categoria para agrupamento"],
+                ["color",       "string",         "'zinc'", "Cor do avatar (10 opções)"],
+                ["disabled",    "boolean",        "false",  "Desativa o card"],
+                ["external",    "boolean",        "false",  "Abre link em nova aba com ícone externo"],
+              ]} />
+            </div>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Stat Card ────────────────────────────────────────── */}
+          <section id="stat-card" className="space-y-10 pb-10 sm:pb-14">
+            <SectionHeader
+              label="Métricas"
+              title="Stat Card"
+              description="Cards de KPI para dashboards e páginas home de sub-sistemas. Suportam sparkline SVG, badge de tendência e skeleton de carregamento."
+            />
+
+            <DemoCard id="stat-card-basic" title="Básico">
+              <div className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <StatCard title="Usuários" value="12.4k" trend={{ value: 8.3 }} />
+                <StatCard title="Receita"  value="R$ 47k" trend={{ value: -2.1 }} />
+                <StatCard title="Pedidos"  value="1.892" trend={{ value: 14 }} />
+                <StatCard title="Churn"    value="3.2%" trend={{ value: -0.5, inverted: true }} color="red" />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="stat-card-spark" title="Com sparkline">
+              <div className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <StatCard
+                  title="Sessões"
+                  value="84.2k"
+                  trend={{ value: 5.7 }}
+                  spark={DEMO_SPARK_UP}
+                  color="indigo"
+                />
+                <StatCard
+                  title="Tempo médio"
+                  value="2m 38s"
+                  trend={{ value: 12 }}
+                  spark={DEMO_SPARK_UP}
+                  color="emerald"
+                />
+                <StatCard
+                  title="Erros 5xx"
+                  value="142"
+                  trend={{ value: 33, inverted: true }}
+                  spark={DEMO_SPARK_ERR}
+                  color="red"
+                />
+                <StatCard
+                  title="Latência P95"
+                  value="218ms"
+                  trend={{ value: -7, inverted: true }}
+                  spark={DEMO_SPARK_DOWN}
+                  color="amber"
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="stat-card-colors" title="Cores & skeleton">
+              <div className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {(["default","indigo","blue","emerald","amber","red","violet","teal"] as const).map((c) => (
+                  <StatCard key={c} title={c} value="9.876" color={c} trend={{ value: 5 }} spark={DEMO_SPARK_UP} />
+                ))}
+                <StatCard title="Carregando..." value="—" loading />
+              </div>
+            </DemoCard>
+
+            <div id="stat-card-props" className="space-y-4">
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200">Props</h3>
+              <PropsTable rows={[
+                ["title",         "string",                               "—",        "Rótulo da métrica"],
+                ["value",         "string | number",                      "—",        "Valor principal"],
+                ["unit",          "string",                               "—",        "Unidade exibida após o valor"],
+                ["previousValue", "string | number",                      "—",        "Valor anterior (para diff automático)"],
+                ["trend",         "StatCardTrend",                        "—",        "Badge de tendência"],
+                ["spark",         "SparkPoint[]",                         "—",        "Dados do sparkline { value: number }[]"],
+                ["icon",          "LucideIcon",                           "—",        "Ícone decorativo"],
+                ["color",         "StatCardColor",                        "'default'","Paleta de cor"],
+                ["loading",       "boolean",                              "false",    "Exibe skeleton de carregamento"],
+                ["onClick",       "() => void",                           "—",        "Torna o card clicável"],
+              ]} />
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <strong>StatCardTrend:</strong>{" "}
+                <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 rounded">{"{ pct: number; direction: 'up'|'down'; inverted?: boolean }"}</code>
+              </p>
+            </div>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Service Status ───────────────────────────────────── */}
+          <section id="service-status" className="space-y-10 pb-10 sm:pb-14">
+            <SectionHeader
+              label="Monitoramento"
+              title="Service Status Card"
+              description="Cards de health check para a página de status do portal. Exporta também o componente standalone UptimeBar estilo Statuspage."
+            />
+
+            <DemoCard id="service-status-cards" title="Cards de status">
+              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <ServiceStatusCard
+                  name="API Gateway"
+                  description="REST + gRPC"
+                  status="operational"
+                  latencyMs={42}
+                  uptimePct={99.98}
+                  history={DEMO_HISTORY_OK}
+                  incidents={[]}
+                />
+                <ServiceStatusCard
+                  name="Serviço de Auth"
+                  description="OAuth2 / JWT"
+                  status="degraded"
+                  latencyMs={320}
+                  uptimePct={98.5}
+                  history={DEMO_HISTORY_DEG}
+                  incidents={DEMO_INCIDENTS}
+                />
+                <ServiceStatusCard
+                  name="Banco de Dados"
+                  description="PostgreSQL cluster"
+                  status="operational"
+                  latencyMs={8}
+                  uptimePct={100}
+                  history={DEMO_HISTORY_OK}
+                />
+                <ServiceStatusCard
+                  name="CDN / Arquivos"
+                  description="Cloudflare R2"
+                  status="outage"
+                  latencyMs={undefined}
+                  uptimePct={95.1}
+                  history={DEMO_HISTORY_ERR}
+                  incidents={[{ id: "i3", title: "Falha na CDN leste", status: "investigating", timestamp: new Date().toISOString() }]}
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="service-status-uptime" title="UptimeBar standalone">
+              <div className="p-6 space-y-3">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4 font-medium">90 dias — passe o mouse sobre os slots para ver detalhes</p>
+                <UptimeBar history={DEMO_HISTORY_OK} />
+                <UptimeBar history={DEMO_HISTORY_DEG} />
+                <UptimeBar history={DEMO_HISTORY_ERR} />
+              </div>
+            </DemoCard>
+
+            <div id="service-status-props" className="space-y-4">
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200">Props — ServiceStatusCard</h3>
+              <PropsTable rows={[
+                ["name",             "string",                  "—",     "Nome do serviço"],
+                ["description",      "string",                  "—",     "Subtítulo opcional"],
+                ["status",           "ServiceStatus",           "—",     "Estado atual"],
+                ["latencyMs",        "number",                  "—",     "Latência em ms"],
+                ["uptimePct",        "number",                  "—",     "% de uptime"],
+                ["history",          "UptimeDay[]",             "—",     "Dados dos 90 dias para UptimeBar"],
+                ["incidents",        "ServiceIncident[]",       "—",     "Lista de incidentes"],
+                ["href",             "string",                  "—",     "Link para página de status detalhada"],
+                ["refreshInterval",  "number",                  "—",     "Recarrega a cada N ms (chama onRefresh)"],
+                ["onRefresh",        "() => Promise<void>",     "—",     "Callback de atualização"],
+                ["loading",          "boolean",                 "false", "Exibe skeleton"],
+              ]} />
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <strong>ServiceStatus:</strong>{" "}
+                <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 rounded">"operational" | "degraded" | "outage" | "maintenance" | "unknown"</code>
+              </p>
+            </div>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Email Composer ───────────────────────────────────── */}
+          <section id="email-composer" className="space-y-10 pb-10 sm:pb-14">
+            <SectionHeader
+              label="Comunicação"
+              title="Email Composer"
+              description="Componente de composição de email com campos para destinatários (tag input + autocomplete), assunto, editor Rico e anexos. Pode ser usado em modo janela flutuante ou inline."
+            />
+
+            <DemoCard id="email-composer-window" title="Modo janela">
+              <div className="p-6 flex justify-center">
+                <EmailComposerDemo />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="email-composer-inline" title="Modo inline (em formulário)">
+              <div className="p-6">
+                <EmailComposer
+                  mode="inline"
+                  defaultTo={[{ name: "Suporte", email: "suporte@empresa.com" }]}
+                  defaultSubject="Solicitação de suporte"
+                  contactSuggestions={DEMO_CONTACTS}
+                  onSend={(p) => { toast(`Enviado para ${p.to.map((r) => r.email).join(", ")}`); }}
+                  onDiscard={() => { toast("Descartado"); }}
+                />
+              </div>
+            </DemoCard>
+
+            <div id="email-composer-props" className="space-y-4">
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200">Props</h3>
+              <PropsTable rows={[
+                ["defaultTo",          "EmailRecipient[]",        "[]",           "Destinatários iniciais"],
+                ["defaultCc",          "EmailRecipient[]",        "[]",           "CC inicial"],
+                ["defaultBcc",         "EmailRecipient[]",        "[]",           "BCC inicial"],
+                ["defaultSubject",     "string",                  "''",           "Assunto inicial"],
+                ["defaultBody",        "string",                  "''",           "Corpo HTML inicial"],
+                ["signature",          "string",                  "—",            "HTML da assinatura (zona separada)"],
+                ["contactSuggestions", "EmailRecipient[]",        "[]",           "Contatos para autocomplete"],
+                ["bodyToolbar",        "ToolbarGroup[]",          "padrão email", "Grupos de toolbar do editor"],
+                ["title",              "string",                  "'Nova mensagem'",  "Título na barra do composer"],
+                ["mode",               "'window'|'inline'",       "'window'",     "Exibição como janela ou inline"],
+                ["attachments",        "EmailAttachment[]",       "[]",           "Anexos controlados externamente"],
+                ["onSend",             "(p: EmailPayload) => void","—",           "Callback de envio"],
+                ["onDiscard",          "() => void",              "—",            "Callback de descarte"],
+                ["onAttach",           "(files: File[]) => void", "—",            "Callback ao adicionar anexos"],
+                ["sending",            "boolean",                 "false",        "Estado de envio (loading no botão)"],
+              ]} />
+            </div>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Page Header ──────────────────────────────────────── */}
+          <section id="page-header" className="space-y-10 pb-10 sm:pb-14">
+            <SectionHeader
+              label="Utilitários"
+              title="Page Header"
+              description="Cabeçalho padrão de página com título, descrição, breadcrumb, badge e slot de ações. Usado em todas as telas do ERP e sub-sistemas."
+            />
+
+            <DemoCard id="page-header-basic" title="Básico">
+              <div className="p-6 space-y-6">
+                <PageHeader
+                  title="Pedidos"
+                  description="Gerencie e acompanhe todos os pedidos do sistema."
+                />
+                <PageHeader
+                  title="Usuários"
+                  icon={Users}
+                  description="Cadastro e permissões de usuários."
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="page-header-actions" title="Com breadcrumb e ações">
+              <div className="p-6">
+                <PageHeader
+                  title="Detalhes do pedido"
+                  description="Pedido #PD-2024-00841"
+                  icon={ShoppingCart}
+                  breadcrumbs={[
+                    { label: "Início", href: "#" },
+                    { label: "PDV",    href: "#" },
+                    { label: "Pedidos", href: "#" },
+                    { label: "#PD-2024-00841" },
+                  ]}
+                  badge={<Badge variant="success" size="sm" label="Aprovado" />}
+                  actions={
+                    <>
+                      <Button variant="outline" size="sm" leftIcon={<Copy size={14} />}>Duplicar</Button>
+                      <Button variant="solid"   size="sm" leftIcon={<Save size={14} />}>Salvar</Button>
+                    </>
+                  }
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="page-header-variants" title="Variantes">
+              <div className="p-6 space-y-6 divide-y divide-zinc-100 dark:divide-zinc-800">
+                <div className="pb-4">
+                  <p className="text-xs text-zinc-400 mb-3 font-medium">default</p>
+                  <PageHeader title="Dashboard" description="Visão geral do sistema." variant="default" />
+                </div>
+                <div className="py-4">
+                  <p className="text-xs text-zinc-400 mb-3 font-medium">muted</p>
+                  <PageHeader title="Relatórios" description="Exportar e visualizar dados." variant="muted" icon={BarChart2} />
+                </div>
+                <div className="pt-4">
+                  <p className="text-xs text-zinc-400 mb-3 font-medium">bordered</p>
+                  <PageHeader title="Configurações" description="Preferências do sistema." variant="bordered" icon={Settings} />
+                </div>
+              </div>
+            </DemoCard>
+
+            <div id="page-header-props" className="space-y-4">
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200">Props</h3>
+              <PropsTable rows={[
+                ["title",        "string",                       "—",         "Título principal da página"],
+                ["description",  "string",                       "—",         "Subtítulo abaixo do título"],
+                ["icon",         "LucideIcon",                   "—",         "Ícone à esquerda do título"],
+                ["breadcrumbs",  "PageHeaderCrumb[]",            "—",         "Migalhas de navegação acima do título"],
+                ["actions",      "ReactNode",                    "—",         "Slot de ações (topo direito)"],
+                ["badge",        "ReactNode",                    "—",         "Badge/chip ao lado do título"],
+                ["variant",      "'default'|'muted'|'bordered'", "'default'", "Estilo visual de fundo/borda"],
+                ["noPadding",    "boolean",                      "false",     "Remove padding vertical padrão"],
+              ]} />
+            </div>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Empty State ───────────────────────────────────────── */}
+          <section id="empty-state" className="space-y-10 pb-10 sm:pb-14">
+            <SectionHeader
+              label="Utilitários"
+              title="Empty State"
+              description="Tela de estado vazio com preset, ícone, título, descrição e ações. Cobre: lista vazia, sem resulados de busca, erro, sem permissão, offline e 404 inline."
+            />
+
+            <DemoCard id="empty-state-presets" title="Presets">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-zinc-100 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-800">
+                {(["empty","search","error","no-access","offline","not-found"] as const).map((p) => (
+                  <div key={p} className="bg-white dark:bg-zinc-900 flex items-center justify-center">
+                    <EmptyState preset={p} size="sm" />
+                  </div>
+                ))}
+              </div>
+            </DemoCard>
+
+            <DemoCard id="empty-state-actions" title="Com ações">
+              <div className="p-6">
+                <EmptyState
+                  preset="empty"
+                  title="Nenhum pedido ainda"
+                  description="Crie seu primeiro pedido para começar a usar o sistema."
+                  actions={[
+                    { label: "Criar pedido", variant: "primary", onClick: () => toast("Criar pedido") },
+                    { label: "Importar CSV", variant: "secondary", onClick: () => toast("Importar") },
+                  ]}
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="empty-state-sizes" title="Tamanhos">
+              <div className="grid grid-cols-3 divide-x divide-zinc-100 dark:divide-zinc-800">
+                {(["sm","md","lg"] as const).map((s) => (
+                  <EmptyState key={s} preset="search" size={s} />
+                ))}
+              </div>
+            </DemoCard>
+
+            <DemoCard id="empty-state-fill" title="fill — ocupa 100% da altura">
+              <div className="h-72 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden">
+                <EmptyState
+                  preset="empty"
+                  title="Nenhum resultado"
+                  description="Tente ajustar os filtros para encontrar o que procura."
+                  size="sm"
+                  fill
+                  actions={[
+                    { label: "Limpar filtros", variant: "primary", onClick: () => toast("Filtros limpos") },
+                  ]}
+                />
+              </div>
+            </DemoCard>
+
+            <div id="empty-state-props" className="space-y-4">
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200">Props</h3>
+              <PropsTable rows={[
+                ["preset",        "EmptyStatePreset",             "'empty'",  "Preset com ícone e copy padrão"],
+                ["title",         "string",                       "—",        "Substitui o título do preset"],
+                ["description",   "string",                       "—",        "Substitui a descrição do preset"],
+                ["icon",          "LucideIcon",                   "—",        "Ícone customizado (sobrescreve preset)"],
+                ["illustration",  "ReactNode",                    "—",        "Nó custom (SVG, imagem) no lugar do ícone"],
+                ["actions",       "EmptyStateAction[]",           "—",        "Botões de ação abaixo do texto"],
+                ["size",          "'sm'|'md'|'lg'",               "'md'",     "Tamanho geral do componente"],
+                ["fill",          "boolean",                      "false",    "Ocupa 100% da altura e centraliza"],
+              ]} />
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <strong>EmptyStatePreset:</strong>{" "}
+                <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 rounded">
+                  'empty' | 'search' | 'error' | 'no-access' | 'offline' | 'not-found' | 'custom'
+                </code>
+              </p>
+            </div>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Confirm Dialog ────────────────────────────────────── */}
+          <section id="confirm-dialog" className="space-y-10 pb-10 sm:pb-14">
+            <SectionHeader
+              label="Utilitários"
+              title="Confirm Dialog"
+              description="Dialog de confirmação focado em ações destrutivas. Suporta variantes danger, warning e info, estado de loading, conteúdo extra e foco automático no botão Cancelar."
+            />
+
+            <DemoCard id="confirm-dialog-danger" title="Danger (padrão)">
+              <div className="p-6 flex flex-wrap gap-3">
+                <ConfirmDialogDemo
+                  variant="danger"
+                  triggerLabel="Excluir registro"
+                  title="Excluir registro?"
+                  description="Esta ação não pode ser desfeita. O registro será removido permanentemente."
+                  confirmLabel="Excluir"
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="confirm-dialog-warning" title="Warning">
+              <div className="p-6 flex flex-wrap gap-3">
+                <ConfirmDialogDemo
+                  variant="warning"
+                  triggerLabel="Arquivar projeto"
+                  title="Arquivar projeto?"
+                  description="O projeto será movido para a área de arquivados e ficará inacessível para a equipe."
+                  confirmLabel="Arquivar"
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="confirm-dialog-info" title="Info">
+              <div className="p-6 flex flex-wrap gap-3">
+                <ConfirmDialogDemo
+                  variant="info"
+                  triggerLabel="Reatribuir responsável"
+                  title="Reatribuir responsável?"
+                  description="O responsável atual será notificado e perderá o acesso de edição ao item."
+                  confirmLabel="Reatribuir"
+                />
+                <ConfirmDialogDemo
+                  variant="info"
+                  triggerLabel="Enviar para revisão"
+                  title="Enviar para revisão?"
+                  description="O documento seguirá para a fila de aprovação e não poderá ser editado durante o processo."
+                  confirmLabel="Enviar"
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="confirm-dialog-body" title="Com conteúdo extra e loading simulado">
+              <div className="p-6 flex flex-wrap gap-3">
+                <ConfirmDialogDemo
+                  variant="danger"
+                  loading
+                  triggerLabel="Cancelar contrato"
+                  title="Cancelar contrato #CT-0042?"
+                  description="Ao confirmar, as seguintes consequências serão aplicadas:"
+                  confirmLabel="Confirmar cancelamento"
+                >
+                  <ul className="mt-2 space-y-1 list-disc pl-4 text-sm text-zinc-500 dark:text-zinc-400">
+                    <li>Todos os serviços associados serão suspensos</li>
+                    <li>O cliente receberá um e-mail de notificação</li>
+                    <li>O faturamento será encerrado no ciclo atual</li>
+                  </ul>
+                </ConfirmDialogDemo>
+              </div>
+            </DemoCard>
+
+            <div id="confirm-dialog-props" className="space-y-4">
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200">Props</h3>
+              <PropsTable rows={[
+                ["open",          "boolean",                           "—",        "Controla visibilidade"],
+                ["title",         "string",                            "—",        "Título do dialog"],
+                ["description",   "string",                            "—",        "Texto descritivo"],
+                ["children",      "ReactNode",                         "—",        "Conteúdo extra abaixo da descrição"],
+                ["variant",       "'danger'|'warning'|'info'",         "'danger'", "Tom visual e cor do botão confirmar"],
+                ["icon",          "LucideIcon",                        "—",        "Ícone custom (sobrescreve preset)"],
+                ["confirmLabel",  "string",                            "'Confirmar'","Label do botão confirmar"],
+                ["cancelLabel",   "string",                            "'Cancelar'","Label do botão cancelar"],
+                ["loading",       "boolean",                           "false",    "Estado de loading externo no confirmar"],
+                ["onConfirm",     "() => void | Promise<void>",        "—",        "Callback de confirmação (suporta async)"],
+                ["onCancel",      "() => void",                        "—",        "Callback de cancelamento"],
+              ]} />
+            </div>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
           <footer className="pt-8 border-t border-zinc-200 text-center text-sm text-zinc-400">
             <p>Lopes UI — construído com Next.js, Tailwind CSS e lucide-react.</p>
           </footer>
