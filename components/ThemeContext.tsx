@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useSyncExternalStore } from "react";
+import { flushSync } from "react-dom";
 
 type Theme = "light" | "dark";
 
@@ -38,11 +39,21 @@ function getServerSnapshot(): Theme {
 }
 
 function applyTheme(next: Theme): void {
-  document.documentElement.classList.toggle("dark", next === "dark");
+  const el = document.documentElement;
+  el.classList.add("no-transition");
+  el.classList.toggle("dark", next === "dark");
+  // Force reflow so the browser applies no-transition before any paint.
+  void el.offsetHeight;
   try {
     localStorage.setItem("theme", next);
   } catch {}
-  listeners.forEach((fn) => fn());
+  // flushSync forces React to commit all pending re-renders synchronously
+  // before continuing — so React's DOM changes are included in the same
+  // paint frame as the CSS class change, with no transitions.
+  flushSync(() => {
+    listeners.forEach((fn) => fn());
+  });
+  el.classList.remove("no-transition");
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

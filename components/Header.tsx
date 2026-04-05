@@ -40,7 +40,7 @@ export default function Header({ nav, brand, search, extra, profile, componentId
   }, []);
 
   const headerClass = [
-    "z-10 w-full border-b transition-colors duration-300",
+    "z-10 w-full border-b transition-colors duration-150",
     sticky ? "sticky top-0" : "relative",
     scrolled
       ? "bg-white/90 dark:bg-zinc-950/95 backdrop-blur-md border-zinc-100/60 dark:border-zinc-800/60"
