@@ -1278,6 +1278,4 @@ Consulte [docs/ACCESS_CONTROL.md](docs/ACCESS_CONTROL.md) para detalhes sobre a 
 
 ---
 
-<p align="center">
-  Feito por <strong>Cristiano Lopes</strong> · construído com Next.js, Tailwind CSS e lucide-react
-</p>
+
