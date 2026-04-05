@@ -11,12 +11,14 @@ import { type NavItem } from "@/components/header/Nav";
 import NotificationBell, { type NotificationItem } from "@/components/NotificationBell";
 import {
   Home,
-  LayoutDashboard,
-  BookOpen,
-  Map,
+  FormInput,
+  Layers,
+  Zap,
+  BarChart2,
+  MessageCircle,
+  Navigation,
+  Play,
   Code2,
-  Rocket,
-  FlaskConical,
   Settings,
   User,
   LogOut,
@@ -24,45 +26,80 @@ import {
 } from "lucide-react";
 
 const SITE_NAV: NavItem[] = [
-  { label: "Home",      href: "/",         icon: Home },
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, badge: "Novo" },
+  { label: "Home", href: "/", icon: Home },
+  { label: "UI Builder", href: "/ui-builder", icon: Code2, badge: "Beta" },
   {
-    label: "Docs", href: "/docs", icon: BookOpen,
+    label: "Componentes",
+    icon: Layers,
     children: [
       {
-        label: "Guides", href: "/docs/guides", icon: Map,
-        description: "Tutoriais passo a passo",
-        children: [
-          { label: "Getting Started",  href: "/docs/guides/getting-started", icon: Rocket,       description: "Comece em minutos" },
-          { label: "Advanced Topics",  href: "/docs/guides/advanced-topics",  icon: FlaskConical, description: "Aprofunde-se", divider: true },
-        ],
+        label: "Formulários",
+        href: "/showcase/forms",
+        icon: FormInput,
+        description: "TextField, OTPInput, LoginForm…",
       },
       {
-        label: "API", href: "/docs/api", icon: Code2,
-        description: "Referência completa",
+        label: "Display",
+        href: "/showcase/display",
+        icon: Layers,
+        description: "Avatar, Badge, Card, Carousel…",
+      },
+      {
+        label: "Ações & Feedback",
+        href: "/showcase/actions",
+        icon: Zap,
+        description: "Button, Alert, Toast, Drawer…",
         divider: true,
-        children: [
-          { label: "Reference", href: "/docs/api/reference", description: "Todos os métodos" },
-          { label: "Examples",  href: "/docs/api/examples",  description: "Código de exemplo" },
-        ],
+      },
+      {
+        label: "Dados & Tabelas",
+        href: "/showcase/data",
+        icon: BarChart2,
+        description: "DataTable, Kanban, TreeView…",
+      },
+      {
+        label: "Comunicação",
+        href: "/showcase/communication",
+        icon: MessageCircle,
+        description: "Chat, Email, Notifications…",
+      },
+      {
+        label: "Navegação & Layout",
+        href: "/showcase/navigation",
+        icon: Navigation,
+        description: "Sidebar, Breadcrumb, CommandMenu…",
+        divider: true,
+      },
+      {
+        label: "Animação & Conteúdo",
+        href: "/showcase/animation",
+        icon: Play,
+        description: "TextRotate, Stepper, Timeline…",
       },
     ],
   },
 ];
 
 const SITE_COMMANDS: CommandItem[] = [
-  // Navegação
-  { id: "nav-home",    label: "Home",           icon: Home,          href: "/",                               group: "Navegação" },
-  { id: "nav-dash",    label: "Dashboard",      icon: LayoutDashboard, href: "/dashboard",                   group: "Navegação", description: "Painel principal" },
-  { id: "nav-docs",    label: "Documentação",   icon: BookOpen,      href: "/docs",                          group: "Navegação", keywords: ["docs", "guides", "api"] },
-  { id: "nav-guides",  label: "Getting Started",icon: Rocket,        href: "/docs/guides/getting-started",   group: "Navegação", description: "Comece em minutos" },
-  { id: "nav-api",     label: "API Reference",  icon: Code2,         href: "/docs/api/reference",            group: "Navegação", description: "Todos os endpoints" },
+  // Páginas
+  { id: "nav-home",   label: "Home",               icon: Home,          href: "/",                        group: "Páginas" },
+  { id: "nav-builder",label: "UI Builder",        icon: Code2,         href: "/ui-builder",              group: "Páginas",    description: "Editor visual" },
+  // Componentes
+  { id: "sc-forms",   label: "Formulários",         icon: FormInput,     href: "/showcase/forms",          group: "Componentes", keywords: ["form", "input", "login", "otp"] },
+  { id: "sc-display", label: "Display",             icon: Layers,        href: "/showcase/display",        group: "Componentes", keywords: ["avatar", "badge", "card", "carousel"] },
+  { id: "sc-actions", label: "Ações & Feedback",    icon: Zap,           href: "/showcase/actions",        group: "Componentes", keywords: ["button", "alert", "toast", "drawer"] },
+  { id: "sc-data",    label: "Dados & Tabelas",     icon: BarChart2,     href: "/showcase/data",           group: "Componentes", keywords: ["datatable", "kanban", "treeview", "table"] },
+  { id: "sc-comm",    label: "Comunicação",         icon: MessageCircle, href: "/showcase/communication", group: "Componentes", keywords: ["chat", "email", "notification"] },
+  { id: "sc-nav",     label: "Navegação & Layout",  icon: Navigation,    href: "/showcase/navigation",    group: "Componentes", keywords: ["sidebar", "breadcrumb", "accordion", "command"] },
+  { id: "sc-anim",    label: "Animação & Conteúdo", icon: Play,          href: "/showcase/animation",     group: "Componentes", keywords: ["text-rotate", "stepper", "timeline", "codeblock"] },
   // Ações
-  { id: "act-settings",label: "Configurações",  icon: Settings,      href: "/settings",                      group: "Ações",     shortcut: "⌘S" },
-  { id: "act-profile", label: "Meu Perfil",     icon: User,          href: "/profile",                       group: "Ações",     shortcut: "⌘P" },
-  { id: "act-help",    label: "Suporte",        icon: HelpCircle,    href: "/support",                       group: "Ações" },
-  { id: "act-logout",  label: "Sair",           icon: LogOut,        onSelect: () => console.log("logout"),  group: "Ações",     keywords: ["logout", "sair", "exit"] },
+  { id: "act-settings", label: "Configurações", icon: Settings, href: "/settings",                    group: "Ações", shortcut: "⌘S" },
+  { id: "act-profile",  label: "Meu Perfil",    icon: User,     href: "/profile",                    group: "Ações", shortcut: "⌘P" },
+  { id: "act-help",     label: "Suporte",       icon: HelpCircle, href: "/support",                  group: "Ações" },
+  { id: "act-logout",   label: "Sair",          icon: LogOut,   onSelect: () => console.log("logout"), group: "Ações", keywords: ["logout", "sair", "exit"] },
 ];
+
+const NOW = Date.now();
 
 export default function SiteHeader() {
   const [notifs, setNotifs] = useState<NotificationItem[]>([
@@ -71,7 +108,7 @@ export default function SiteHeader() {
       type: "success",
       title: "Deploy concluído",
       description: "Versão 2.4.1 publicada em produção sem erros.",
-      timestamp: new Date(Date.now() - 5 * 60_000),
+      timestamp: new Date(NOW - 5 * 60_000),
       reference: { label: "ver-2.4.1", href: "#" },
     },
     {
@@ -79,7 +116,7 @@ export default function SiteHeader() {
       type: "warning",
       title: "Limite de uso próximo",
       description: "Você está a 85% do limite mensal do plano atual.",
-      timestamp: new Date(Date.now() - 35 * 60_000),
+      timestamp: new Date(NOW - 35 * 60_000),
       href: "#",
     },
     {
@@ -87,7 +124,7 @@ export default function SiteHeader() {
       type: "info",
       title: "Novo membro adicionado",
       description: "Ana Lima entrou na equipe como desenvolvedora.",
-      timestamp: new Date(Date.now() - 2 * 3600_000),
+      timestamp: new Date(NOW - 2 * 3600_000),
       avatarFallback: "AL",
       read: true,
     },
@@ -96,7 +133,7 @@ export default function SiteHeader() {
       type: "danger",
       title: "Falha no webhook",
       description: "3 tentativas sem resposta do endpoint /api/events.",
-      timestamp: new Date(Date.now() - 26 * 3600_000),
+      timestamp: new Date(NOW - 26 * 3600_000),
       reference: { label: "Ver logs", href: "#" },
       read: true,
     },
@@ -104,7 +141,7 @@ export default function SiteHeader() {
       id: "n5",
       title: "Relatório mensal disponível",
       description: "O relatório de março já pode ser baixado.",
-      timestamp: new Date(Date.now() - 8 * 24 * 3600_000),
+      timestamp: new Date(NOW - 8 * 24 * 3600_000),
       href: "#",
       read: true,
     },
@@ -127,7 +164,7 @@ export default function SiteHeader() {
         <Brand
           logo={
             // eslint-disable-next-line @next/next/no-img-element
-            <img src="/logo.svg" alt="Lopes" width={80} height={64} />
+            <img src="/logo.svg" alt="Lopes" width={64} height={64} className="dark:invert" />
           }
           title="Lopes"
         />

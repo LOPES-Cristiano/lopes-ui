@@ -4,9 +4,14 @@ import React, { useRef, useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { MessageCircle, Minus, X, ChevronLeft, Search, Phone, Video, MoreHorizontal } from "lucide-react";
 import ChatMessage, { type ChatMessageProps } from "@/components/ChatMessage";
+import type { EntityResolver } from "@/components/ChatMessage";
 import ChatComposer from "@/components/ChatComposer";
+import type { EntitySuggestion } from "@/components/ChatComposer";
 import ChatConversationItem from "@/components/ChatConversationItem";
 import Avatar from "@/components/Avatar";
+import Drawer from "@/components/Drawer";
+import SmartObject from "@/components/SmartObject";
+import type { SmartObjectProps } from "@/components/SmartObject";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -27,6 +32,21 @@ export type ChatWindowProps = {
   onSend?: (conversationId: string, message: string) => void;
   /** Start open on conversation list (default: false — shows bubble) */
   defaultOpen?: boolean;
+  /**
+   * Provide entity suggestions for the @-mention autocomplete in the composer.
+   * When the user types @, a dropdown appears from this list.
+   */
+  entitySuggestions?: EntitySuggestion[];
+  /**
+   * Resolve live data for entity chips shown inside messages.
+   * Called with ref_id (e.g. "VENDA123"). Return kind/title/status or undefined.
+   */
+  entityResolver?: EntityResolver;
+  /**
+   * Full SmartObject props registry.
+   * When user clicks a chip, the matching entry is shown in a Drawer.
+   */
+  entityRegistry?: Record<string, SmartObjectProps>;
   className?: string;
   componentId?: string;
 };
@@ -40,6 +60,9 @@ export default function ChatWindow({
   conversations,
   onSend,
   defaultOpen = false,
+  entitySuggestions,
+  entityResolver,
+  entityRegistry,
   className,
   componentId,
 }: ChatWindowProps) {
@@ -49,6 +72,7 @@ export default function ChatWindow({
   const [searchQuery, setSearchQuery] = useState("");
   const [replyTo, setReplyTo] = useState<{ senderName: string; content: string } | null>(null);
   const [localConvs, setLocalConvs] = useState<ChatConversation[]>(conversations);
+  const [openEntityId, setOpenEntityId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const activeConv = localConvs.find((c) => c.id === activeId) ?? null;
@@ -262,6 +286,8 @@ export default function ChatWindow({
                   <ChatMessage
                     key={i}
                     {...msg}
+                    onEntityClick={(ref_id) => setOpenEntityId(ref_id)}
+                    entityResolver={entityResolver}
                     onReact={(emoji) => {
                       // Toggle reaction on last message for demo
                       setLocalConvs((prev) =>
@@ -297,10 +323,36 @@ export default function ChatWindow({
                 onEmoji={() => {}}
                 onVoice={() => {}}
                 replyTo={replyTo ? { ...replyTo, onCancel: () => setReplyTo(null) } : undefined}
+                entitySuggestions={entitySuggestions}
               />
             </div>
           )}
         </>
+      )}
+
+      {/* SmartObject detail drawer */}
+      {entityRegistry && (
+        <Drawer
+          open={openEntityId !== null}
+          onClose={() => setOpenEntityId(null)}
+          side="right"
+          size="lg"
+          title={
+            openEntityId
+              ? entityRegistry[openEntityId]?.title ?? `@${openEntityId}`
+              : ""
+          }
+          description={openEntityId ? `@${openEntityId}` : ""}
+        >
+          {openEntityId && entityRegistry[openEntityId] && (
+            <SmartObject
+              {...entityRegistry[openEntityId]}
+              ref_id={openEntityId}
+              mode="card"
+              onOpen={() => {}}
+            />
+          )}
+        </Drawer>
       )}
     </div>
   );

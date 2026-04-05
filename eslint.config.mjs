@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Library build output — compiled code should not be linted
+    "dist/**",
+    // CLI source uses Node.js require()-style dynamic imports intentionally
+    "cli/**",
   ]),
 ]);
 

@@ -4,11 +4,19 @@ import React from "react";
 import { twMerge } from "tailwind-merge";
 import { Check, CheckCheck, AlertCircle, Clock, Paperclip, Play, File } from "lucide-react";
 import Avatar from "@/components/Avatar";
+import { SmartObjectChip, parseMessageEntities } from "@/components/SmartObject";
+import type { SmartObjectProps, EntityStatus } from "@/components/SmartObject";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type MessageStatus = "sending" | "sent" | "delivered" | "read" | "failed";
 export type MessageType   = "text" | "image" | "audio" | "attachment" | "typing";
+
+/**
+ * If a message contains entity references (e.g. @VENDA123),
+ * you can pass a resolver so the chip can show live status.
+ */
+export type EntityResolver = (ref_id: string) => Pick<SmartObjectProps, "kind" | "title" | "status"> | undefined;
 
 export type MessageReaction = {
   emoji: string;
@@ -48,6 +56,10 @@ export type ChatMessageProps = {
    */
   showAvatar?: boolean;
   onReact?: (emoji: string) => void;
+  /** Called when user clicks a @ENTITYREF chip inside the message */
+  onEntityClick?: (ref_id: string) => void;
+  /** Resolves live data for entity chips */
+  entityResolver?: EntityResolver;
   className?: string;
   componentId?: string;
 };
@@ -83,6 +95,8 @@ export default function ChatMessage({
   audioDuration,
   showAvatar = true,
   onReact,
+  onEntityClick,
+  entityResolver,
   className,
   componentId,
 }: ChatMessageProps) {
@@ -220,14 +234,29 @@ export default function ChatMessage({
             </div>
           )}
 
-          {/* Text */}
+          {/* Text — with entity chip rendering */}
           {content && (
-            <p className={twMerge(
-              "text-sm px-3.5 leading-relaxed whitespace-pre-wrap break-words",
+            <div className={twMerge(
+              "text-sm px-3.5 leading-relaxed break-words",
               hasMedia || replyTo ? "pt-1.5 pb-1" : "py-2.5"
             )}>
-              {content}
-            </p>
+              {parseMessageEntities(content).map((seg, i) => {
+                if (seg.kind === "text") {
+                  return <span key={i} className="whitespace-pre-wrap">{seg.text}</span>;
+                }
+                const resolved = entityResolver?.(seg.ref_id);
+                return (
+                  <SmartObjectChip
+                    key={i}
+                    kind={resolved?.kind ?? seg.entityKind}
+                    ref_id={seg.ref_id}
+                    title={resolved?.title ?? seg.ref_id}
+                    status={(resolved?.status ?? "pending") as EntityStatus}
+                    onOpen={() => onEntityClick?.(seg.ref_id)}
+                  />
+                );
+              })}
+            </div>
           )}
 
           {/* Timestamp + status */}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { createPortal } from "react-dom";
 import {
   Bell, Check, CheckCheck, X, ExternalLink,
@@ -150,7 +151,7 @@ function NotificationRow({
         {item.avatar || item.avatarFallback ? (
           <div className="h-9 w-9 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center shrink-0">
             {item.avatar
-              ? <img src={item.avatar} alt="" className="h-full w-full object-cover" />
+              ? <Image src={item.avatar} alt="" width={36} height={36} className="h-full w-full object-cover" />
               : <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">{item.avatarFallback}</span>
             }
           </div>

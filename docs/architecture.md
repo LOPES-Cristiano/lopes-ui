@@ -118,31 +118,53 @@ Componente de navegação lateral totalmente autônomo. Ao montar, registra-se n
 
 ```
 app/
-└── (shell)/
-    └── layout.tsx        ← ShellProvider + Header + gap para sidebar
-        └── page.tsx      ← AppSidebar + conteúdo
+├── layout.tsx            ← ShellProvider + ThemeProvider + SiteHeader + AppSidebar
+├── page.tsx              ← Landing page
+└── showcase/
+    ├── actions/page.tsx
+    ├── animation/page.tsx
+    ├── communication/page.tsx
+    ├── data/page.tsx
+    ├── display/page.tsx
+    ├── forms/page.tsx
+    └── navigation/page.tsx
 ```
 
 ```tsx
-// app/(shell)/layout.tsx
-export default function ShellLayout({ children }) {
-  return (
-    <div className="flex min-h-screen flex-col">
-      <Header nav={mainNav} search={<CommandMenu />} profile={<ProfileMenu />} />
-      <div className="flex flex-1">{children}</div>
-    </div>
-  );
-}
+// app/layout.tsx
+import { ShellProvider } from "@/components/ShellContext";
+import { ThemeProvider } from "@/components/ThemeContext";
+import AppSidebar from "@/components/AppSidebar";
+import SiteHeader from "@/components/SiteHeader";
 
-// app/(shell)/page.tsx
-export default function Page() {
+export default async function RootLayout({ children }) {
+  const jar = await cookies();
+  const collapsed = jar.get("shell_sidebar_collapsed")?.value === "true";
+
   return (
-    <>
-      <AppSidebar />
-      <main className="flex-1 p-6">...</main>
-    </>
+    <html>
+      <body>
+        <ThemeProvider>
+          <ShellProvider defaultCollapsed={collapsed} defaultHasSidebar>
+            <SiteHeader />
+            <div className="flex flex-1">
+              <AppSidebar />
+              <main className="flex-1 overflow-auto">{children}</main>
+            </div>
+          </ShellProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }
 ```
 
+O `SiteHeader` e o `AppSidebar` são as implementações concretas do `Header` e `Sidebar` usadas no projeto. Ambas leem o `ShellContext` para adaptar o layout.
+
 O `Header` lê `hasSidebar` do `ShellContext`. Enquanto o `<Sidebar>` ainda não montou (SSR ou rota sem sidebar), `defaultHasSidebar` sinaliza ao Header para já reservar o layout correto — evitando o Cumulative Layout Shift (CLS).
+
+### `AppSidebar`
+
+**Arquivo:** `components/AppSidebar.tsx`
+
+Instância de `<Sidebar>` pré-configurada com todos os grupos de navegação do projeto. Cada grupo de itens corresponde a uma página de showcase em `app/showcase/{categoria}/page.tsx`. Os `href` usam o padrão `/showcase/{categoria}#{ancora}`.

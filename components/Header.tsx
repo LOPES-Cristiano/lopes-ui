@@ -40,7 +40,7 @@ export default function Header({ nav, brand, search, extra, profile, componentId
   }, []);
 
   const headerClass = [
-    "z-10 w-full border-b transition-colors duration-150",
+    "z-40 w-full border-b transition-colors duration-150",
     sticky ? "sticky top-0" : "relative",
     scrolled
       ? "bg-white/90 dark:bg-zinc-950/95 backdrop-blur-md border-zinc-100/60 dark:border-zinc-800/60"
@@ -73,10 +73,13 @@ export default function Header({ nav, brand, search, extra, profile, componentId
               )}
             </div>
           </div>
-          {/* ── Desktop row (≥ md): full-width toolbar (brand lives in sidebar header) ── */}
+          {/* ── Desktop row (≥ md): full-width toolbar ── */}
           <div className="hidden md:flex h-16 w-full">
             <div className="flex flex-1 items-center justify-between px-4 sm:px-6 min-w-0">
-              {nav && nav.length ? <Nav items={nav} onNavigate={onNavigate} dropdown={navDropdown} /> : null}
+              <div className="flex items-center gap-4 min-w-0">
+                {brand ?? null}
+                {nav && nav.length ? <Nav items={nav} onNavigate={onNavigate} dropdown={navDropdown} /> : null}
+              </div>
               <div className="flex items-center gap-2">
                 {search ?? null}
                 {extra ?? null}

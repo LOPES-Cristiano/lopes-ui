@@ -302,14 +302,14 @@ function PinnedSection({ groups, onNavigate }: { groups: SidebarNavGroup[]; onNa
           const id = getItemPinId(item);
           const Icon = item.icon;
           const row = (
-            <div
+            <a
+              href={item.href ?? undefined}
               className={[
-            `group/pin flex items-center rounded-lg py-2 cursor-pointer transition-colors ${collapsed ? "justify-center px-2" : "gap-2.5 px-2.5"}`,
-
-            "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900",
-            "dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
-          ].join(" ")}
-              onClick={() => { if (onNavigate && item.href) onNavigate(item.href); else if (item.href) window.location.hash = item.href.replace(/.*#/, ""); }}
+                `group/pin flex items-center rounded-lg py-2 transition-colors ${collapsed ? "justify-center px-2" : "gap-2.5 px-2.5"}`,
+                "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900",
+                "dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
+              ].join(" ")}
+              onClick={(e) => { if (onNavigate && item.href) { e.preventDefault(); onNavigate(item.href); } }}
             >
               {Icon ? (
                 <span className="shrink-0 text-zinc-400"><Icon size={16} strokeWidth={1.75} /></span>
@@ -329,7 +329,7 @@ function PinnedSection({ groups, onNavigate }: { groups: SidebarNavGroup[]; onNa
                   </button>
                 </>
               )}
-            </div>
+            </a>
           );
           return collapsed ? (
             <Tooltip key={id} label={item.label}>{row}</Tooltip>
@@ -774,15 +774,27 @@ export default function Sidebar({
         onClick={closeMobile}
       />
 
+      {/* Desktop spacer — in-flow vazio, apenas reserva largura no layout */}
+      <div
+        aria-hidden
+        className="hidden md:block shrink-0"
+        style={{
+          width: isCollapsed ? "4.5rem" : "16rem",
+          transition: "width 250ms cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      />
+
       {/* Sidebar panel */}
       <aside
         className={[
           "flex flex-col h-full overflow-x-hidden bg-white dark:bg-zinc-950 border-r border-zinc-100 dark:border-zinc-800",
-          "duration-300 ease-out md:[will-change:width]",
           isCollapsed ? "w-[4.5rem]" : "w-64",
+          // Sempre fixed — no mobile: cobre a tela; no desktop: abaixo do header
           "fixed inset-y-0 left-0 z-[70] shadow-xl",
-          "md:relative md:z-auto md:inset-auto md:shadow-none",
-          "transition-transform md:transition-[width]",
+          "md:top-16 md:shadow-none md:z-30",
+          // Mobile: anima translateX | Desktop: anima width sem impacto no layout do doc
+          "transition-[transform,width] duration-300 ease-out",
+          "md:transition-[width] md:duration-[250ms] md:[will-change:width]",
           isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           className,
         ].join(" ")}

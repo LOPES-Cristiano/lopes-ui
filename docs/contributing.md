@@ -123,20 +123,65 @@ Evite `duration-300` ou mais — causa stagger perceptível durante a troca de t
 
 ---
 
-## Registrando na AppSidebar
+## Segurança contra hidratação
 
-Se o novo componente tiver uma seção na página de apresentação, adicione um item em `components/AppSidebar.tsx`:
+Quando um componente `"use client"` gera valores que dependem do momento de execução (`new Date()`, `Date.now()`, `Math.random()`), pode ocorrer **hidration mismatch** — o HTML gerado no servidor diverge do que o React produz no cliente.
+
+### Regras obrigatórias
+
+1. **Nunca use `Date.now()` ou `new Date()` no nível de módulo** (fora de funções) em arquivos `"use client"`.
+2. **Nunca use `Date.now()` ou `new Date()` como valor inicial de `useState()`** — esse valor é calculado no servidor E no cliente em momentos diferentes.
+3. Para dados de demo com datas relativas, use uma **âncora ISO fixa**:
 
 ```tsx
-// Dentro do grupo "Componentes"
+// ✅ correto — âncora estável
+const REF = new Date("2026-04-05T14:00:00.000Z").getTime();
+const INITIAL_ITEMS = [
+  { id: 1, time: new Date(REF - 5 * 60_000) }, // 5 min atrás
+];
+
+// ❌ errado — diverge entre SSR e CSR
+const INITIAL_ITEMS = [
+  { id: 1, time: new Date(Date.now() - 5 * 60_000) },
+];
+```
+
+4. Quando um `<span>` ou `<p>` exibe um timestamp formatado que pode divergir levemente entre SSR e CSR (ex.: `"há 5 min"`), adicione `suppressHydrationWarning` na tag:
+
+```tsx
+<span suppressHydrationWarning>{formatarTempo(item.time)}</span>
+```
+
+---
+
+## Registrando na AppSidebar
+
+Se o novo componente tiver uma seção na página de apresentação, adicione um item em `components/AppSidebar.tsx`.
+
+As páginas de showcase ficam em `app/showcase/{categoria}/page.tsx`. As categorias existentes são:
+
+| Categoria | Rota |
+|---|---|
+| Exibição | `/showcase/display` |
+| Ações | `/showcase/actions` |
+| Navegação | `/showcase/navigation` |
+| Dados | `/showcase/data` |
+| Formulários | `/showcase/forms` |
+| Comunicação | `/showcase/communication` |
+| Animação | `/showcase/animation` |
+
+Use o padrão `"/showcase/{categoria}#{ancora}"` para o `href`:
+
+```tsx
+// Em components/AppSidebar.tsx, dentro do grupo correto
 {
   label: "MeuComponente",
-  href: "/#meu-componente",
+  href: "/showcase/display#meu-componente",
   icon: IconeEscolhido,
   children: [
-    { label: "Padrão",   href: "/#meu-componente-default" },
-    { label: "Variantes", href: "/#meu-componente-variants" },
-    { label: "Props",     href: "/#meu-componente-props" },
+    { label: "Padrão",    href: "/showcase/display#meu-componente-default" },
+    { label: "Variantes", href: "/showcase/display#meu-componente-variants" },
+    { label: "Props",     href: "/showcase/display#meu-componente-props" },
   ],
 },
 ```

@@ -3,8 +3,6 @@
 import React, { useCallback, useRef, useState } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
@@ -317,14 +315,17 @@ export default function RichTextEditor({
 }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Underline,
+      StarterKit.configure({
+        // Tiptap v3 StarterKit bundles Underline and Link — configure them
+        // here instead of adding standalone imports (avoids duplicate-extension warnings).
+        link: {
+          openOnClick: false,
+          HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
+        },
+        // underline: uses defaults — no override needed
+      }),
       TextStyle,
       Color,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
-      }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Table.configure({ resizable: false }),
       TableRow,
@@ -359,6 +360,25 @@ export default function RichTextEditor({
   const charCount = editor?.storage.characterCount.characters() ?? 0;
   const wordCount = editor?.storage.characterCount.words() ?? 0;
   const atLimit = maxLength !== undefined && charCount >= maxLength;
+
+  // With immediatelyRender:false, useEditor returns null on the first render
+  // (before ProseMirror mounts). Rendering a stable placeholder prevents
+  // ProseMirror's DOM mutations from conflicting with React 19 hydration.
+  if (!editor) {
+    return (
+      <div
+        className={twMerge(
+          "flex flex-col overflow-hidden text-sm",
+          !isBorderless && "rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900",
+          isBorderless && "bg-transparent",
+          (disabled || readOnly) && "opacity-60",
+          className,
+        )}
+        style={{ minHeight }}
+        {...(componentId ? { "data-component-id": componentId } : {})}
+      />
+    );
+  }
 
   return (
     <div

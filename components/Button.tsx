@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Loader } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
-import ActionDialog from "@/components/ActionDialog";
+import ConfirmDialog, { type ConfirmDialogVariant } from "@/components/ConfirmDialog";
 
 // ── Confirm type (same API as the old ActionButton) ───────────────────────────
 
@@ -13,13 +13,8 @@ type ConfirmOptions = {
   description?: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  variant?: ConfirmDialogVariant;
   onConfirm?: () => void | Promise<void>;
-  dialogClassName?: string;
-  overlayClassName?: string;
-  titleClassName?: string;
-  descriptionClassName?: string;
-  confirmButtonClassName?: string;
-  cancelButtonClassName?: string;
 };
 
 type ButtonProps = {
@@ -190,20 +185,15 @@ export default function Button({
   return (
     <>
       {btn}
-      <ActionDialog
+      <ConfirmDialog
         open={confirmOpen}
+        variant={typeof confirm === "object" ? (confirm.variant ?? "danger") : "danger"}
         title={typeof confirm === "object" ? confirm.title : undefined}
         description={typeof confirm === "object" ? confirm.description : undefined}
         confirmLabel={typeof confirm === "object" ? confirm.confirmLabel : undefined}
         cancelLabel={typeof confirm === "object" ? confirm.cancelLabel : undefined}
         onConfirm={handleConfirm}
         onCancel={() => setConfirmOpen(false)}
-        dialogClassName={typeof confirm === "object" ? confirm.dialogClassName : undefined}
-        overlayClassName={typeof confirm === "object" ? confirm.overlayClassName : undefined}
-        titleClassName={typeof confirm === "object" ? confirm.titleClassName : undefined}
-        descriptionClassName={typeof confirm === "object" ? confirm.descriptionClassName : undefined}
-        confirmButtonClassName={typeof confirm === "object" ? confirm.confirmButtonClassName : undefined}
-        cancelButtonClassName={typeof confirm === "object" ? confirm.cancelButtonClassName : undefined}
       />
     </>
   );

@@ -271,7 +271,7 @@ export default function ServiceStatusCard({
                     {inc.message && (
                       <p className="text-[11px] text-zinc-400 dark:text-zinc-500 leading-snug mt-0.5">{inc.message}</p>
                     )}
-                    <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">
+                    <p suppressHydrationWarning className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">
                       {INCIDENT_STATUS[inc.status]} ·{" "}
                       {new Date(inc.timestamp).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                     </p>

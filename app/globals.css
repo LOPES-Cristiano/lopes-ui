@@ -47,9 +47,13 @@ html {
 }
 
 /* ── Focus rings ─────────────────────────────────────────────────────────────── */
-:focus-visible {
-  outline: 2px solid rgb(99 102 241 / 0.7);
-  outline-offset: 2px;
+/* Declared in @layer base so Tailwind utility classes (outline-none, etc.) can override it
+   for components that have their own styled focus wrappers (inputs, selects, etc.). */
+@layer base {
+  :focus-visible {
+    outline: 2px solid rgb(99 102 241 / 0.7);
+    outline-offset: 2px;
+  }
 }
 
 /* ── Scrollbars ──────────────────────────────────────────────────────────── */

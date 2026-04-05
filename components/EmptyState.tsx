@@ -4,7 +4,7 @@ import React from "react";
 import { twMerge } from "tailwind-merge";
 import {
   Inbox, FileSearch, Lock, AlertTriangle, WifiOff,
-  Search, PackageOpen, Frown, type LucideIcon,
+  PackageOpen, Frown, type LucideIcon,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
