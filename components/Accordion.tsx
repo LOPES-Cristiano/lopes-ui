@@ -15,6 +15,10 @@ export type AccordionItem = {
   icon?: LucideIcon;
   /** Badge / chip shown after the title */
   badge?: string | number;
+  /** Extra Tailwind classes applied to the badge chip (e.g. custom color) */
+  badgeClassName?: string;
+  /** Extra Tailwind classes applied to the leading icon wrapper */
+  iconClassName?: string;
   content: React.ReactNode;
   disabled?: boolean;
   /** Open by default */
@@ -37,21 +41,38 @@ export type AccordionProps = {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const SIZE = {
-  sm: { trigger: "px-3 py-2.5 text-sm gap-2",   content: "px-3 pb-3 text-sm",   icon: 14, chevron: 13 },
-  md: { trigger: "px-4 py-3 text-sm gap-2.5",   content: "px-4 pb-4 text-sm",   icon: 16, chevron: 14 },
-  lg: { trigger: "px-5 py-4 text-base gap-3",   content: "px-5 pb-5 text-base", icon: 18, chevron: 16 },
+  sm: {
+    trigger: "px-3 py-2.5 text-sm gap-2",
+    content: "px-3 pb-3 text-sm",
+    icon: 14,
+    chevron: 13,
+  },
+  md: {
+    trigger: "px-4 py-3 text-sm gap-2.5",
+    content: "px-4 pb-4 text-sm",
+    icon: 16,
+    chevron: 14,
+  },
+  lg: {
+    trigger: "px-5 py-4 text-base gap-3",
+    content: "px-5 pb-5 text-base",
+    icon: 18,
+    chevron: 16,
+  },
 } as const;
 
 const VARIANT_WRAP: Record<AccordionVariant, string> = {
-  default:   "divide-y divide-zinc-100 dark:divide-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden",
-  bordered:  "divide-y divide-zinc-200 dark:divide-zinc-700",
+  default:
+    "divide-y divide-zinc-100 dark:divide-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden",
+  bordered: "divide-y divide-zinc-200 dark:divide-zinc-700",
   separated: "flex flex-col gap-2",
 };
 
 const VARIANT_ITEM: Record<AccordionVariant, string> = {
-  default:   "bg-white dark:bg-zinc-900",
-  bordered:  "bg-white dark:bg-zinc-900",
-  separated: "rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900",
+  default: "bg-white dark:bg-zinc-900",
+  bordered: "bg-white dark:bg-zinc-900",
+  separated:
+    "rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900",
 };
 
 // ── Panel ─────────────────────────────────────────────────────────────────────
@@ -89,23 +110,39 @@ function Panel({
         className={twMerge(
           "flex w-full items-center text-left transition-colors duration-150 select-none",
           s.trigger,
-          open ? "text-zinc-900 dark:text-zinc-50" : "text-zinc-700 dark:text-zinc-200",
-          item.disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800",
+          open
+            ? "text-zinc-900 dark:text-zinc-50"
+            : "text-zinc-700 dark:text-zinc-200",
+          item.disabled
+            ? "cursor-not-allowed opacity-40"
+            : "cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800",
         )}
       >
         {Icon && (
-          <span className="shrink-0 text-zinc-400 dark:text-zinc-500">
+          <span
+            className={twMerge(
+              "shrink-0 text-zinc-400 dark:text-zinc-500",
+              item.iconClassName,
+            )}
+          >
             <Icon size={s.icon} strokeWidth={1.75} />
           </span>
         )}
         <span className="flex-1 font-medium leading-snug">{item.title}</span>
         {item.badge !== undefined && (
-          <span className="ml-auto shrink-0 rounded-full bg-zinc-100 dark:bg-zinc-800 px-1.5 py-px text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 leading-none">
+          <span
+            className={twMerge(
+              "ml-auto shrink-0 rounded-full bg-zinc-100 dark:bg-zinc-800 px-1.5 py-px text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 leading-none",
+              item.badgeClassName,
+            )}
+          >
             {item.badge}
           </span>
         )}
         {item.subtitle && !open && (
-          <span className="ml-2 shrink-0 text-xs text-zinc-400 truncate max-w-[8rem]">{item.subtitle}</span>
+          <span className="ml-2 shrink-0 text-xs text-zinc-400 truncate max-w-[8rem]">
+            {item.subtitle}
+          </span>
         )}
         <ChevronDown
           size={s.chevron}
@@ -127,7 +164,12 @@ function Panel({
         style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
-          <div className={twMerge("text-zinc-600 dark:text-zinc-400 leading-relaxed", s.content)}>
+          <div
+            className={twMerge(
+              "text-zinc-600 dark:text-zinc-400 leading-relaxed",
+              s.content,
+            )}
+          >
             {item.content}
           </div>
         </div>
@@ -150,7 +192,9 @@ export default function Accordion({
 
   const [openSet, setOpenSet] = useState<Set<number>>(() => {
     const init = new Set<number>();
-    items.forEach((item, i) => { if (item.defaultOpen) init.add(i); });
+    items.forEach((item, i) => {
+      if (item.defaultOpen) init.add(i);
+    });
     return init;
   });
 
