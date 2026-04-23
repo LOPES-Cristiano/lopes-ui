@@ -42,28 +42,20 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Types
 
 export type RichTextEditorProps = {
-  /** Controlled HTML value */
   value?: string;
-  /** Default HTML (uncontrolled) */
   defaultValue?: string;
   onChange?: (html: string) => void;
   placeholder?: string;
-  /** Min-height of the editable area (default: "10rem") */
   minHeight?: string;
-  /** Max-height before the area scrolls (default: "32rem") */
   maxHeight?: string;
   disabled?: boolean;
   readOnly?: boolean;
-  /** Show the character count footer */
   showCount?: boolean;
-  /** Hard character limit */
   maxLength?: number;
-  /** Extra toolbar groups to show. Defaults to all. */
   toolbar?: ToolbarGroup[];
-  /** Variant — defaults to "default" */
   variant?: "default" | "borderless";
   className?: string;
   editorClassName?: string;
@@ -91,7 +83,7 @@ const ALL_GROUPS: ToolbarGroup[] = [
   "media",
 ];
 
-// ── Toolbar button ────────────────────────────────────────────────────────────
+// ── Toolbar button
 
 function ToolBtn({
   icon: Icon,
@@ -113,33 +105,26 @@ function ToolBtn({
       aria-label={label}
       aria-pressed={active}
       onMouseDown={(e) => {
-        e.preventDefault(); // prevent editor losing focus
+        e.preventDefault();
         if (!disabled) onClick();
       }}
       disabled={disabled}
       className={twMerge(
         "inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors",
-        "text-zinc-500 dark:text-zinc-400",
-        "hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-zinc-700 dark:hover:text-zinc-200",
+        "text-zinc-700 dark:text-zinc-200",
+        "hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100",
         "disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none",
-        active &&
-          "bg-zinc-100 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-100",
+        active && "bg-zinc-900 text-white dark:bg-zinc-200 dark:text-zinc-900",
       )}
     >
-      <Icon size={13} strokeWidth={1.6} />
+      <Icon size={14} strokeWidth={1.8} />
     </button>
   );
 }
 
-// ── Separator ─────────────────────────────────────────────────────────────────
-
 function Sep() {
-  return (
-    <div className="mx-0.5 h-5 w-px bg-zinc-200 dark:bg-zinc-700 shrink-0" />
-  );
+  return <div className="mx-0.5 h-5 w-px bg-zinc-200 shrink-0" />;
 }
-
-// ── Link dialog ───────────────────────────────────────────────────────────────
 
 function LinkDialog({
   editor,
@@ -157,15 +142,11 @@ function LinkDialog({
     if (!trimmed) {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
     } else {
-      className={twMerge(
-        "inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors",
-        "text-zinc-700 dark:text-zinc-200",
-        "hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100",
-        "disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none",
-        active && "bg-zinc-900 text-white dark:bg-zinc-200 dark:text-zinc-900",
-      )}
-          rel: "noopener noreferrer",
-      <Icon size={14} strokeWidth={1.8} />
+      editor
+        .chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({ href: trimmed, target: "_blank", rel: "noopener noreferrer" })
         .run();
     }
     onClose();
@@ -173,7 +154,7 @@ function LinkDialog({
 
   return (
     <div
-      className="absolute z-50 mt-1 flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg px-2 py-1.5"
+      className="absolute z-50 mt-1 flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white shadow-lg px-2 py-1.5"
       onMouseDown={(e) => e.preventDefault()}
     >
       <input
@@ -190,7 +171,7 @@ function LinkDialog({
           if (e.key === "Escape") onClose();
         }}
         placeholder="https://"
-        className="w-56 rounded-md border border-zinc-200 dark:border-zinc-700 bg-transparent px-2 py-1 text-xs text-zinc-800 dark:text-zinc-100 outline-none focus:border-blue-400 dark:focus:border-blue-500"
+        className="w-56 rounded-md border border-zinc-200 bg-transparent px-2 py-1 text-xs text-zinc-800 outline-none focus:border-blue-400"
       />
       <button
         type="button"
@@ -208,15 +189,13 @@ function LinkDialog({
           e.preventDefault();
           onClose();
         }}
-        className="rounded-md px-2 py-1 text-xs text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+        className="rounded-md px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 transition-colors"
       >
         Cancelar
       </button>
     </div>
   );
 }
-
-// ── Toolbar ───────────────────────────────────────────────────────────────────
 
 function Toolbar({
   editor,
@@ -229,11 +208,7 @@ function Toolbar({
   const has = (g: ToolbarGroup) => groups.includes(g);
 
   const insertTable = useCallback(() => {
-    editor
-      .chain()
-      .focus()
-      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-      .run();
+    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
   }, [editor]);
 
   const insertImage = useCallback(() => {
@@ -242,236 +217,79 @@ function Toolbar({
   }, [editor]);
 
   return (
-    <div className="relative flex flex-wrap items-center gap-0.5 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900/60 px-2 py-1 rounded-md shadow-sm">
-      {/* History */}
+    <div className="relative flex flex-wrap items-center gap-0.5 border border-zinc-200 bg-white px-2 py-1 rounded-md shadow-sm">
       {has("history") && (
         <>
-          <ToolBtn
-            icon={Undo}
-            label="Desfazer (Ctrl+Z)"
-            onClick={() => editor.chain().focus().undo().run()}
-            disabled={!editor.can().undo()}
-          />
-          <ToolBtn
-            icon={Redo}
-            label="Refazer (Ctrl+Y)"
-            onClick={() => editor.chain().focus().redo().run()}
-            disabled={!editor.can().redo()}
-          />
-          {(has("block") ||
-            has("inline") ||
-            has("align") ||
-            has("list") ||
-            has("link") ||
-            has("table") ||
-            has("media")) && <Sep />}
+          <ToolBtn icon={Undo} label="Desfazer (Ctrl+Z)" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} />
+          <ToolBtn icon={Redo} label="Refazer (Ctrl+Y)" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} />
+          {(has("block") || has("inline") || has("align") || has("list") || has("link") || has("table") || has("media")) && <Sep />}
         </>
       )}
 
-      {/* Block type */}
       {has("block") && (
         <>
-          <ToolBtn
-            icon={Pilcrow}
-            label="Parágrafo"
-            onClick={() => editor.chain().focus().setParagraph().run()}
-            active={editor.isActive("paragraph")}
-          />
-          <ToolBtn
-            icon={Heading1}
-            label="Título 1"
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 1 }).run()
-            }
-            active={editor.isActive("heading", { level: 1 })}
-          />
-          <ToolBtn
-            icon={Heading2}
-            label="Título 2"
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 2 }).run()
-            }
-            active={editor.isActive("heading", { level: 2 })}
-          />
-          <ToolBtn
-            icon={Heading3}
-            label="Título 3"
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 3 }).run()
-            }
-            active={editor.isActive("heading", { level: 3 })}
-          />
-          {(has("inline") ||
-            has("align") ||
-            has("list") ||
-            has("link") ||
-            has("table") ||
-            has("media")) && <Sep />}
+          <ToolBtn icon={Pilcrow} label="Parágrafo" onClick={() => editor.chain().focus().setParagraph().run()} active={editor.isActive("paragraph")} />
+          <ToolBtn icon={Heading1} label="Título 1" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive("heading", { level: 1 })} />
+          <ToolBtn icon={Heading2} label="Título 2" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive("heading", { level: 2 })} />
+          <ToolBtn icon={Heading3} label="Título 3" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive("heading", { level: 3 })} />
+          {(has("inline") || has("align") || has("list") || has("link") || has("table") || has("media")) && <Sep />}
         </>
       )}
 
-      {/* Inline marks */}
       {has("inline") && (
         <>
-          <ToolBtn
-            icon={Bold}
-            label="Negrito (Ctrl+B)"
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            active={editor.isActive("bold")}
-          />
-          <ToolBtn
-            icon={Italic}
-            label="Itálico (Ctrl+I)"
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            active={editor.isActive("italic")}
-          />
-          <ToolBtn
-            icon={UnderlineIcon}
-            label="Sublinhado (Ctrl+U)"
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-            active={editor.isActive("underline")}
-          />
-          <ToolBtn
-            icon={Strikethrough}
-            label="Tachado"
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-            <div className="px-2 pb-1">
-              <Toolbar editor={editor} groups={toolbar} />
-            </div>
-          />
-          <ToolBtn
-            icon={Code}
-            label="Código inline"
-            onClick={() => editor.chain().focus().toggleCode().run()}
-            active={editor.isActive("code")}
-          />
-          <ToolBtn
-            icon={Code2}
-            label="Bloco de código"
-            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-            active={editor.isActive("codeBlock")}
-          />
-          {(has("align") ||
-            has("list") ||
-            has("link") ||
-            has("table") ||
-            has("media")) && <Sep />}
+          <ToolBtn icon={Bold} label="Negrito (Ctrl+B)" onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} />
+          <ToolBtn icon={Italic} label="Itálico (Ctrl+I)" onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} />
+          <ToolBtn icon={UnderlineIcon} label="Sublinhado (Ctrl+U)" onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} />
+          <ToolBtn icon={Strikethrough} label="Tachado" onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} />
+          <ToolBtn icon={Code} label="Código inline" onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive("code")} />
+          <ToolBtn icon={Code2} label="Bloco de código" onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={editor.isActive("codeBlock")} />
+          {(has("align") || has("list") || has("link") || has("table") || has("media")) && <Sep />}
         </>
       )}
 
-      {/* Alignment */}
       {has("align") && (
         <>
-          <ToolBtn
-            icon={AlignLeft}
-            label="Alinhar à esquerda"
-            onClick={() => editor.chain().focus().setTextAlign("left").run()}
-            active={editor.isActive({ textAlign: "left" })}
-          />
-          <ToolBtn
-            icon={AlignCenter}
-            label="Centralizar"
-            onClick={() => editor.chain().focus().setTextAlign("center").run()}
-            active={editor.isActive({ textAlign: "center" })}
-          />
-          <ToolBtn
-            icon={AlignRight}
-            label="Alinhar à direita"
-            onClick={() => editor.chain().focus().setTextAlign("right").run()}
-            active={editor.isActive({ textAlign: "right" })}
-          />
-          <ToolBtn
-            icon={AlignJustify}
-            label="Justificar"
-            onClick={() => editor.chain().focus().setTextAlign("justify").run()}
-            active={editor.isActive({ textAlign: "justify" })}
-          />
-          {(has("list") || has("link") || has("table") || has("media")) && (
-            <Sep />
-          )}
+          <ToolBtn icon={AlignLeft} label="Alinhar à esquerda" onClick={() => editor.chain().focus().setTextAlign("left").run()} active={editor.isActive({ textAlign: "left" })} />
+          <ToolBtn icon={AlignCenter} label="Centralizar" onClick={() => editor.chain().focus().setTextAlign("center").run()} active={editor.isActive({ textAlign: "center" })} />
+          <ToolBtn icon={AlignRight} label="Alinhar à direita" onClick={() => editor.chain().focus().setTextAlign("right").run()} active={editor.isActive({ textAlign: "right" })} />
+          <ToolBtn icon={AlignJustify} label="Justificar" onClick={() => editor.chain().focus().setTextAlign("justify").run()} active={editor.isActive({ textAlign: "justify" })} />
+          {(has("list") || has("link") || has("table") || has("media")) && <Sep />}
         </>
       )}
 
-      {/* Lists */}
       {has("list") && (
         <>
-          <ToolBtn
-            icon={List}
-            label="Lista"
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            active={editor.isActive("bulletList")}
-          />
-          <ToolBtn
-            icon={ListOrdered}
-            label="Lista numerada"
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            active={editor.isActive("orderedList")}
-          />
-          <ToolBtn
-            icon={Quote}
-            label="Citação"
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            active={editor.isActive("blockquote")}
-          />
-          <ToolBtn
-            icon={Minus}
-            label="Separador"
-            onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          />
+          <ToolBtn icon={List} label="Lista" onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} />
+          <ToolBtn icon={ListOrdered} label="Lista numerada" onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} />
+          <ToolBtn icon={Quote} label="Citação" onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} />
+          <ToolBtn icon={Minus} label="Separador" onClick={() => editor.chain().focus().setHorizontalRule().run()} />
           {(has("link") || has("table") || has("media")) && <Sep />}
         </>
       )}
 
-      {/* Link */}
       {has("link") && (
         <>
           <div className="relative">
-            <ToolBtn
-              icon={LinkIcon}
-              label="Inserir link (Ctrl+K)"
-              onClick={() => setLinkOpen((s) => !s)}
-              active={editor.isActive("link") || linkOpen}
-            />
-            {linkOpen && (
-              <LinkDialog editor={editor} onClose={() => setLinkOpen(false)} />
-            )}
+            <ToolBtn icon={LinkIcon} label="Inserir link (Ctrl+K)" onClick={() => setLinkOpen((s) => !s)} active={editor.isActive("link") || linkOpen} />
+            {linkOpen && <LinkDialog editor={editor} onClose={() => setLinkOpen(false)} />}
           </div>
-          {editor.isActive("link") && (
-            <ToolBtn
-              icon={Link2Off}
-              label="Remover link"
-              onClick={() => editor.chain().focus().unsetLink().run()}
-            />
-          )}
+          {editor.isActive("link") && <ToolBtn icon={Link2Off} label="Remover link" onClick={() => editor.chain().focus().unsetLink().run()} />}
           {(has("table") || has("media")) && <Sep />}
         </>
       )}
 
-      {/* Table */}
       {has("table") && (
         <>
-          <ToolBtn
-            icon={TableIcon}
-            label="Inserir tabela"
-            onClick={insertTable}
-          />
+          <ToolBtn icon={TableIcon} label="Inserir tabela" onClick={insertTable} />
           {has("media") && <Sep />}
         </>
       )}
 
-      {/* Media */}
-      {has("media") && (
-        <ToolBtn
-          icon={ImageIcon}
-          label="Inserir imagem"
-          onClick={insertImage}
-        />
-      )}
+      {has("media") && <ToolBtn icon={ImageIcon} label="Inserir imagem" onClick={insertImage} />}
     </div>
   );
 }
-
-// ── Main component ────────────────────────────────────────────────────────────
 
 export default function RichTextEditor({
   value,
@@ -493,13 +311,7 @@ export default function RichTextEditor({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // Tiptap v3 StarterKit bundles Underline and Link — configure them
-        // here instead of adding standalone imports (avoids duplicate-extension warnings).
-        link: {
-          openOnClick: false,
-          HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
-        },
-        // underline: uses defaults — no override needed
+        link: { openOnClick: false, HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" } },
       }),
       TextStyle,
       Color,
@@ -520,15 +332,11 @@ export default function RichTextEditor({
     immediatelyRender: false,
   });
 
-  // Sync controlled value
   React.useEffect(() => {
     if (!editor || value === undefined) return;
-    if (editor.getHTML() !== value) {
-      editor.commands.setContent(value);
-    }
+    if (editor.getHTML() !== value) editor.commands.setContent(value);
   }, [editor, value]);
 
-  // Sync disabled/readOnly
   React.useEffect(() => {
     editor?.setEditable(!disabled && !readOnly);
   }, [editor, disabled, readOnly]);
@@ -538,16 +346,12 @@ export default function RichTextEditor({
   const wordCount = editor?.storage.characterCount.words() ?? 0;
   const atLimit = maxLength !== undefined && charCount >= maxLength;
 
-  // With immediatelyRender:false, useEditor returns null on the first render
-  // (before ProseMirror mounts). Rendering a stable placeholder prevents
-  // ProseMirror's DOM mutations from conflicting with React 19 hydration.
   if (!editor) {
     return (
       <div
         className={twMerge(
           "flex flex-col overflow-hidden text-sm",
-          !isBorderless &&
-            "rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900",
+          !isBorderless && "rounded-lg border border-zinc-200 bg-white",
           isBorderless && "bg-transparent",
           (disabled || readOnly) && "opacity-60",
           className,
@@ -562,45 +366,29 @@ export default function RichTextEditor({
     <div
       className={twMerge(
         "flex flex-col overflow-hidden text-sm",
-        !isBorderless &&
-          "rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900",
+        !isBorderless && "rounded-lg border border-zinc-200 bg-white",
         isBorderless && "bg-transparent",
         (disabled || readOnly) && "opacity-60",
         className,
       )}
       {...(componentId ? { "data-component-id": componentId } : {})}
     >
-      {/* Toolbar */}
-      {!readOnly && editor && <Toolbar editor={editor} groups={toolbar} />}
+      {!readOnly && editor && (
+        <div className="px-2 pb-1">
+          <Toolbar editor={editor} groups={toolbar} />
+        </div>
+      )}
 
-      {/* Editable area */}
       <EditorContent
         editor={editor}
-        className={twMerge(
-          "rte-content flex-1 px-4 py-3 focus:outline-none focus:ring-0",
-          "prose prose-sm max-w-none",
-          editorClassName,
-        )}
+        className={twMerge("rte-content flex-1 px-4 py-3 focus:outline-none text-zinc-900 prose prose-sm max-w-none", editorClassName)}
         style={{ minHeight, maxHeight }}
       />
 
-      {/* Footer: word/char count */}
       {showCount && editor && (
-        <div className="flex items-center justify-end gap-3 border-t border-zinc-100 dark:border-zinc-800 px-3 py-1.5">
-          <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
-            {wordCount} {wordCount === 1 ? "palavra" : "palavras"}
-          </span>
-          <span
-            className={twMerge(
-              "text-[11px]",
-              atLimit
-                ? "text-red-500 font-medium"
-                : "text-zinc-400 dark:text-zinc-500",
-            )}
-          >
-            {charCount}
-            {maxLength !== undefined ? ` / ${maxLength}` : ""} caracteres
-          </span>
+        <div className="flex items-center justify-end gap-3 border-t border-zinc-100 px-3 py-1.5">
+          <span className="text-[11px] text-zinc-400">{wordCount} {wordCount === 1 ? "palavra" : "palavras"}</span>
+          <span className={twMerge("text-[11px]", atLimit ? "text-red-500 font-medium" : "text-zinc-400")}>{charCount}{maxLength !== undefined ? ` / ${maxLength}` : ""} caracteres</span>
         </div>
       )}
     </div>
