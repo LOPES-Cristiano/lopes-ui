@@ -146,7 +146,11 @@ function LinkDialog({
         .chain()
         .focus()
         .extendMarkRange("link")
-        .setLink({ href: trimmed, target: "_blank", rel: "noopener noreferrer" })
+        .setLink({
+          href: trimmed,
+          target: "_blank",
+          rel: "noopener noreferrer",
+        })
         .run();
     }
     onClose();
@@ -208,7 +212,11 @@ function Toolbar({
   const has = (g: ToolbarGroup) => groups.includes(g);
 
   const insertTable = useCallback(() => {
-    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+    editor
+      .chain()
+      .focus()
+      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+      .run();
   }, [editor]);
 
   const insertImage = useCallback(() => {
@@ -220,50 +228,172 @@ function Toolbar({
     <div className="relative flex flex-wrap items-center gap-0.5 border border-zinc-200 bg-white px-2 py-1 rounded-md shadow-sm">
       {has("history") && (
         <>
-          <ToolBtn icon={Undo} label="Desfazer (Ctrl+Z)" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} />
-          <ToolBtn icon={Redo} label="Refazer (Ctrl+Y)" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} />
-          {(has("block") || has("inline") || has("align") || has("list") || has("link") || has("table") || has("media")) && <Sep />}
+          <ToolBtn
+            icon={Undo}
+            label="Desfazer (Ctrl+Z)"
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().undo()}
+          />
+          <ToolBtn
+            icon={Redo}
+            label="Refazer (Ctrl+Y)"
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!editor.can().redo()}
+          />
+          {(has("block") ||
+            has("inline") ||
+            has("align") ||
+            has("list") ||
+            has("link") ||
+            has("table") ||
+            has("media")) && <Sep />}
         </>
       )}
 
       {has("block") && (
         <>
-          <ToolBtn icon={Pilcrow} label="Parágrafo" onClick={() => editor.chain().focus().setParagraph().run()} active={editor.isActive("paragraph")} />
-          <ToolBtn icon={Heading1} label="Título 1" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive("heading", { level: 1 })} />
-          <ToolBtn icon={Heading2} label="Título 2" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive("heading", { level: 2 })} />
-          <ToolBtn icon={Heading3} label="Título 3" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive("heading", { level: 3 })} />
-          {(has("inline") || has("align") || has("list") || has("link") || has("table") || has("media")) && <Sep />}
+          <ToolBtn
+            icon={Pilcrow}
+            label="Parágrafo"
+            onClick={() => editor.chain().focus().setParagraph().run()}
+            active={editor.isActive("paragraph")}
+          />
+          <ToolBtn
+            icon={Heading1}
+            label="Título 1"
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 1 }).run()
+            }
+            active={editor.isActive("heading", { level: 1 })}
+          />
+          <ToolBtn
+            icon={Heading2}
+            label="Título 2"
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+            }
+            active={editor.isActive("heading", { level: 2 })}
+          />
+          <ToolBtn
+            icon={Heading3}
+            label="Título 3"
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+            }
+            active={editor.isActive("heading", { level: 3 })}
+          />
+          {(has("inline") ||
+            has("align") ||
+            has("list") ||
+            has("link") ||
+            has("table") ||
+            has("media")) && <Sep />}
         </>
       )}
 
       {has("inline") && (
         <>
-          <ToolBtn icon={Bold} label="Negrito (Ctrl+B)" onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} />
-          <ToolBtn icon={Italic} label="Itálico (Ctrl+I)" onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} />
-          <ToolBtn icon={UnderlineIcon} label="Sublinhado (Ctrl+U)" onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} />
-          <ToolBtn icon={Strikethrough} label="Tachado" onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} />
-          <ToolBtn icon={Code} label="Código inline" onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive("code")} />
-          <ToolBtn icon={Code2} label="Bloco de código" onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={editor.isActive("codeBlock")} />
-          {(has("align") || has("list") || has("link") || has("table") || has("media")) && <Sep />}
+          <ToolBtn
+            icon={Bold}
+            label="Negrito (Ctrl+B)"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            active={editor.isActive("bold")}
+          />
+          <ToolBtn
+            icon={Italic}
+            label="Itálico (Ctrl+I)"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            active={editor.isActive("italic")}
+          />
+          <ToolBtn
+            icon={UnderlineIcon}
+            label="Sublinhado (Ctrl+U)"
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            active={editor.isActive("underline")}
+          />
+          <ToolBtn
+            icon={Strikethrough}
+            label="Tachado"
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            active={editor.isActive("strike")}
+          />
+          <ToolBtn
+            icon={Code}
+            label="Código inline"
+            onClick={() => editor.chain().focus().toggleCode().run()}
+            active={editor.isActive("code")}
+          />
+          <ToolBtn
+            icon={Code2}
+            label="Bloco de código"
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            active={editor.isActive("codeBlock")}
+          />
+          {(has("align") ||
+            has("list") ||
+            has("link") ||
+            has("table") ||
+            has("media")) && <Sep />}
         </>
       )}
 
       {has("align") && (
         <>
-          <ToolBtn icon={AlignLeft} label="Alinhar à esquerda" onClick={() => editor.chain().focus().setTextAlign("left").run()} active={editor.isActive({ textAlign: "left" })} />
-          <ToolBtn icon={AlignCenter} label="Centralizar" onClick={() => editor.chain().focus().setTextAlign("center").run()} active={editor.isActive({ textAlign: "center" })} />
-          <ToolBtn icon={AlignRight} label="Alinhar à direita" onClick={() => editor.chain().focus().setTextAlign("right").run()} active={editor.isActive({ textAlign: "right" })} />
-          <ToolBtn icon={AlignJustify} label="Justificar" onClick={() => editor.chain().focus().setTextAlign("justify").run()} active={editor.isActive({ textAlign: "justify" })} />
-          {(has("list") || has("link") || has("table") || has("media")) && <Sep />}
+          <ToolBtn
+            icon={AlignLeft}
+            label="Alinhar à esquerda"
+            onClick={() => editor.chain().focus().setTextAlign("left").run()}
+            active={editor.isActive({ textAlign: "left" })}
+          />
+          <ToolBtn
+            icon={AlignCenter}
+            label="Centralizar"
+            onClick={() => editor.chain().focus().setTextAlign("center").run()}
+            active={editor.isActive({ textAlign: "center" })}
+          />
+          <ToolBtn
+            icon={AlignRight}
+            label="Alinhar à direita"
+            onClick={() => editor.chain().focus().setTextAlign("right").run()}
+            active={editor.isActive({ textAlign: "right" })}
+          />
+          <ToolBtn
+            icon={AlignJustify}
+            label="Justificar"
+            onClick={() => editor.chain().focus().setTextAlign("justify").run()}
+            active={editor.isActive({ textAlign: "justify" })}
+          />
+          {(has("list") || has("link") || has("table") || has("media")) && (
+            <Sep />
+          )}
         </>
       )}
 
       {has("list") && (
         <>
-          <ToolBtn icon={List} label="Lista" onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} />
-          <ToolBtn icon={ListOrdered} label="Lista numerada" onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} />
-          <ToolBtn icon={Quote} label="Citação" onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} />
-          <ToolBtn icon={Minus} label="Separador" onClick={() => editor.chain().focus().setHorizontalRule().run()} />
+          <ToolBtn
+            icon={List}
+            label="Lista"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            active={editor.isActive("bulletList")}
+          />
+          <ToolBtn
+            icon={ListOrdered}
+            label="Lista numerada"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            active={editor.isActive("orderedList")}
+          />
+          <ToolBtn
+            icon={Quote}
+            label="Citação"
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            active={editor.isActive("blockquote")}
+          />
+          <ToolBtn
+            icon={Minus}
+            label="Separador"
+            onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          />
           {(has("link") || has("table") || has("media")) && <Sep />}
         </>
       )}
@@ -271,22 +401,45 @@ function Toolbar({
       {has("link") && (
         <>
           <div className="relative">
-            <ToolBtn icon={LinkIcon} label="Inserir link (Ctrl+K)" onClick={() => setLinkOpen((s) => !s)} active={editor.isActive("link") || linkOpen} />
-            {linkOpen && <LinkDialog editor={editor} onClose={() => setLinkOpen(false)} />}
+            <ToolBtn
+              icon={LinkIcon}
+              label="Inserir link (Ctrl+K)"
+              onClick={() => setLinkOpen((s) => !s)}
+              active={editor.isActive("link") || linkOpen}
+            />
+            {linkOpen && (
+              <LinkDialog editor={editor} onClose={() => setLinkOpen(false)} />
+            )}
           </div>
-          {editor.isActive("link") && <ToolBtn icon={Link2Off} label="Remover link" onClick={() => editor.chain().focus().unsetLink().run()} />}
+          {editor.isActive("link") && (
+            <ToolBtn
+              icon={Link2Off}
+              label="Remover link"
+              onClick={() => editor.chain().focus().unsetLink().run()}
+            />
+          )}
           {(has("table") || has("media")) && <Sep />}
         </>
       )}
 
       {has("table") && (
         <>
-          <ToolBtn icon={TableIcon} label="Inserir tabela" onClick={insertTable} />
+          <ToolBtn
+            icon={TableIcon}
+            label="Inserir tabela"
+            onClick={insertTable}
+          />
           {has("media") && <Sep />}
         </>
       )}
 
-      {has("media") && <ToolBtn icon={ImageIcon} label="Inserir imagem" onClick={insertImage} />}
+      {has("media") && (
+        <ToolBtn
+          icon={ImageIcon}
+          label="Inserir imagem"
+          onClick={insertImage}
+        />
+      )}
     </div>
   );
 }
@@ -311,7 +464,10 @@ export default function RichTextEditor({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        link: { openOnClick: false, HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" } },
+        link: {
+          openOnClick: false,
+          HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
+        },
       }),
       TextStyle,
       Color,
@@ -381,14 +537,27 @@ export default function RichTextEditor({
 
       <EditorContent
         editor={editor}
-        className={twMerge("rte-content flex-1 px-4 py-3 focus:outline-none text-zinc-900 prose prose-sm max-w-none", editorClassName)}
+        className={twMerge(
+          "rte-content flex-1 px-4 py-3 focus:outline-none text-zinc-900 prose prose-sm max-w-none",
+          editorClassName,
+        )}
         style={{ minHeight, maxHeight }}
       />
 
       {showCount && editor && (
         <div className="flex items-center justify-end gap-3 border-t border-zinc-100 px-3 py-1.5">
-          <span className="text-[11px] text-zinc-400">{wordCount} {wordCount === 1 ? "palavra" : "palavras"}</span>
-          <span className={twMerge("text-[11px]", atLimit ? "text-red-500 font-medium" : "text-zinc-400")}>{charCount}{maxLength !== undefined ? ` / ${maxLength}` : ""} caracteres</span>
+          <span className="text-[11px] text-zinc-400">
+            {wordCount} {wordCount === 1 ? "palavra" : "palavras"}
+          </span>
+          <span
+            className={twMerge(
+              "text-[11px]",
+              atLimit ? "text-red-500 font-medium" : "text-zinc-400",
+            )}
+          >
+            {charCount}
+            {maxLength !== undefined ? ` / ${maxLength}` : ""} caracteres
+          </span>
         </div>
       )}
     </div>
