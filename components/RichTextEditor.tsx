@@ -157,15 +157,15 @@ function LinkDialog({
     if (!trimmed) {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
     } else {
-      editor
-        .chain()
-        .focus()
-        .extendMarkRange("link")
-        .setLink({
-          href: trimmed,
-          target: "_blank",
+      className={twMerge(
+        "inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors",
+        "text-zinc-700 dark:text-zinc-200",
+        "hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100",
+        "disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none",
+        active && "bg-zinc-900 text-white dark:bg-zinc-200 dark:text-zinc-900",
+      )}
           rel: "noopener noreferrer",
-        })
+      <Icon size={14} strokeWidth={1.8} />
         .run();
     }
     onClose();
@@ -335,7 +335,9 @@ function Toolbar({
             icon={Strikethrough}
             label="Tachado"
             onClick={() => editor.chain().focus().toggleStrike().run()}
-            active={editor.isActive("strike")}
+            <div className="px-2 pb-1">
+              <Toolbar editor={editor} groups={toolbar} />
+            </div>
           />
           <ToolBtn
             icon={Code}
