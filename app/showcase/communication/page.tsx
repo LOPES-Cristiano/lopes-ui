@@ -469,7 +469,7 @@ export default function Page() {
               </p>
               <div className="relative bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-end justify-end min-h-[480px]">
                 {/* Faux app content — below the window via z-0 */}
-                <div className="absolute inset-0 p-6 space-y-4 pointer-events-none z-0" aria-hidden>
+                <div className="absolute inset-0 p-2 space-y-4 pointer-events-none z-0" aria-hidden>
                   <div className="space-y-2">
                     <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-1/3" />
                     <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded w-2/3" />
@@ -499,7 +499,7 @@ export default function Page() {
                 Digite <kbd className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono text-[11px]">@</kbd> no composer para ver sugestões de entidades. Clique num chip <span className="font-semibold text-indigo-500">@VENDA123</span> para abrir o painel de detalhes com ações assíncronas.
               </p>
               <div className="relative bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-end justify-end min-h-[480px]">
-                <div className="absolute inset-0 p-6 space-y-4 pointer-events-none z-0" aria-hidden>
+                <div className="absolute inset-0 p-2 space-y-4 pointer-events-none z-0" aria-hidden>
                   <div className="space-y-2">
                     <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-1/4" />
                     <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded w-3/5" />
