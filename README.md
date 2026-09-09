@@ -4,18 +4,18 @@
 
 ## Stack
 
-| Tecnologia | Versão |
-|---|---|
-| Next.js | 16.2.2 |
-| React | 19.2.4 |
-| Tailwind CSS | 4.2 |
-| TypeScript | 5 |
-| lucide-react | 1.7 |
-| tailwind-merge | 3.5 |
-| motion | 12.38 |
-| shiki | 4.0 |
-| clsx | 2.1 |
-| @tiptap/starter-kit | 3.22 |
+| Tecnologia          | Versão |
+| ------------------- | ------ |
+| Next.js             | 16.2.2 |
+| React               | 19.2.4 |
+| Tailwind CSS        | 4.2    |
+| TypeScript          | 5      |
+| lucide-react        | 1.7    |
+| tailwind-merge      | 3.5    |
+| motion              | 12.38  |
+| shiki               | 4.0    |
+| clsx                | 2.1    |
+| @tiptap/starter-kit | 3.22   |
 
 ## Rodando o projeto
 
@@ -28,12 +28,12 @@ Acesse [http://localhost:3000](http://localhost:3000) para o playground interati
 
 ## Scripts
 
-| Comando | Descrição |
-|---|---|
-| `npm run dev` | Servidor de desenvolvimento |
-| `npm run build` | Build de produção |
-| `npm run start` | Servidor de produção |
-| `npm run lint` | ESLint |
+| Comando         | Descrição                   |
+| --------------- | --------------------------- |
+| `npm run dev`   | Servidor de desenvolvimento |
+| `npm run build` | Build de produção           |
+| `npm run start` | Servidor de produção        |
+| `npm run lint`  | ESLint                      |
 
 ---
 
@@ -150,6 +150,7 @@ lopes-ui/
 ### Formulários
 
 #### `TextField`
+
 ```tsx
 <TextField
   label="E-mail"
@@ -157,22 +158,25 @@ lopes-ui/
   placeholder="voce@empresa.com"
   leftIcon={<Mail />}
   helpText="Usado para notificações"
-  size="md"           // xs | sm | md | lg
-  variant="default"   // default | filled
+  size="md" // xs | sm | md | lg
+  variant="default" // default | filled
 />
 ```
 
 #### `NumberField`
+
 ```tsx
 <NumberField label="Preço" prefix="R$" suffix="por kg" min={0} step={0.01} />
 ```
 
 #### `DateField`
+
 ```tsx
-<DateField label="Data de nascimento" mode="date" />  // date | datetime
+<DateField label="Data de nascimento" mode="date" /> // date | datetime
 ```
 
 #### `CheckboxGroup`
+
 ```tsx
 <CheckboxGroup
   label="Permissões"
@@ -184,11 +188,13 @@ lopes-ui/
 ```
 
 #### `Switch`
+
 ```tsx
 <Switch label="Ativar notificações" checked={on} onChange={setOn} size="md" />
 ```
 
 #### `AutocompleteField`
+
 ```tsx
 <AutocompleteField
   label="Departamento"
@@ -199,6 +205,7 @@ lopes-ui/
 ```
 
 #### `MultiSelectField`
+
 ```tsx
 <MultiSelectField
   label="Tags"
@@ -210,21 +217,24 @@ lopes-ui/
 ```
 
 #### `FileField`
+
 ```tsx
 <FileField label="Contrato" accept=".pdf,.docx" maxSizeMB={5} multiple />
 ```
 
 #### `PriceInput`
+
 ```tsx
 <PriceInput
   value={price}
   onChange={setPrice}
-  currency="BRL"      // ISO 4217
-  locale="pt-BR"      // BCP 47
+  currency="BRL" // ISO 4217
+  locale="pt-BR" // BCP 47
 />
 ```
 
 #### `RichTextEditor`
+
 ```tsx
 <RichTextEditor
   value={html}
@@ -232,16 +242,27 @@ lopes-ui/
   placeholder="Escreva aqui..."
   showCount
   maxLength={2000}
-  toolbar={["history", "block", "inline", "align", "list", "link", "table", "media"]}
+  toolbar={[
+    "history",
+    "block",
+    "inline",
+    "align",
+    "list",
+    "link",
+    "table",
+    "media",
+  ]}
 />
 ```
 
 #### `OTPInput`
+
 ```tsx
 <OTPInput length={6} onComplete={(code) => verificar(code)} />
 ```
 
 #### `PasswordStrength`
+
 ```tsx
 <PasswordStrength password={senha} />
 ```
@@ -251,6 +272,7 @@ lopes-ui/
 ### Layout
 
 #### `Sidebar`
+
 ```tsx
 <Sidebar
   title="Minha App"
@@ -260,10 +282,11 @@ lopes-ui/
       items: [
         { label: "Dashboard", href: "/", icon: LayoutDashboard },
         {
-          label: "Relatórios", icon: BarChart2,
+          label: "Relatórios",
+          icon: BarChart2,
           children: [
             { label: "Mensal", href: "/reports/monthly" },
-            { label: "Anual",  href: "/reports/yearly"  },
+            { label: "Anual", href: "/reports/yearly" },
           ],
         },
       ],
@@ -274,12 +297,13 @@ lopes-ui/
 ```
 
 #### `Drawer`
+
 ```tsx
 <Drawer
   open={open}
   onClose={() => setOpen(false)}
-  side="right"        // right | left | top | bottom
-  size="md"           // sm | md | lg | xl
+  side="right" // right | left | top | bottom
+  size="md" // sm | md | lg | xl
   title="Filtros"
 >
   {/* conteúdo */}
@@ -287,6 +311,7 @@ lopes-ui/
 ```
 
 #### `SplitPane`
+
 ```tsx
 <SplitPane direction="horizontal" defaultSplit={30}>
   <div>Painel esquerdo</div>
@@ -295,6 +320,7 @@ lopes-ui/
 ```
 
 #### `PageHeader`
+
 ```tsx
 <PageHeader
   title="Clientes"
@@ -309,7 +335,14 @@ lopes-ui/
 ### Card
 
 ```tsx
-<Card variant="elevated" shadow="md" color="primary" accent radius="xl" hoverable>
+<Card
+  variant="elevated"
+  shadow="md"
+  color="primary"
+  accent
+  radius="xl"
+  hoverable
+>
   <CardHeader
     icon={TrendingUp}
     iconColor="primary"
@@ -361,21 +394,21 @@ Calendário mensal com seleção simples, intervalo e visualização de eventos.
 />
 ```
 
-| Prop | Tipo | Padrão | Descrição |
-|---|---|---|---|
-| `value` | `Date\|null` | — | Data selecionada (controlado) |
-| `defaultValue` | `Date\|null` | — | Data inicial (não-controlado) |
-| `onChange` | `(date: Date) => void` | — | Callback ao selecionar dia |
-| `rangeMode` | `boolean` | `false` | Ativa seleção de intervalo |
-| `rangeValue` | `[Date\|null, Date\|null]` | — | Intervalo controlado |
-| `onRangeChange` | `(range) => void` | — | Callback de intervalo |
-| `events` | `CalendarEvent[]` | `[]` | Eventos a exibir |
-| `eventDisplay` | `'dot'\|'chip'` | `'dot'` | Forma de exibição dos eventos |
-| `size` | `'sm'\|'md'\|'lg'` | `'md'` | Tamanho do calendário |
-| `firstDayOfWeek` | `0\|1` | `0` | 0=domingo, 1=segunda |
-| `showWeekNumbers` | `boolean` | `false` | Exibe coluna de número de semana |
-| `minDate` / `maxDate` | `Date` | — | Limites de seleção |
-| `disabledDate` | `(date: Date) => boolean` | — | Desabilita datas individuais |
+| Prop                  | Tipo                       | Padrão  | Descrição                        |
+| --------------------- | -------------------------- | ------- | -------------------------------- |
+| `value`               | `Date\|null`               | —       | Data selecionada (controlado)    |
+| `defaultValue`        | `Date\|null`               | —       | Data inicial (não-controlado)    |
+| `onChange`            | `(date: Date) => void`     | —       | Callback ao selecionar dia       |
+| `rangeMode`           | `boolean`                  | `false` | Ativa seleção de intervalo       |
+| `rangeValue`          | `[Date\|null, Date\|null]` | —       | Intervalo controlado             |
+| `onRangeChange`       | `(range) => void`          | —       | Callback de intervalo            |
+| `events`              | `CalendarEvent[]`          | `[]`    | Eventos a exibir                 |
+| `eventDisplay`        | `'dot'\|'chip'`            | `'dot'` | Forma de exibição dos eventos    |
+| `size`                | `'sm'\|'md'\|'lg'`         | `'md'`  | Tamanho do calendário            |
+| `firstDayOfWeek`      | `0\|1`                     | `0`     | 0=domingo, 1=segunda             |
+| `showWeekNumbers`     | `boolean`                  | `false` | Exibe coluna de número de semana |
+| `minDate` / `maxDate` | `Date`                     | —       | Limites de seleção               |
+| `disabledDate`        | `(date: Date) => boolean`  | —       | Desabilita datas individuais     |
 
 #### `Agenda`
 
@@ -395,39 +428,44 @@ Lista de eventos organizada por dia com localização e participantes.
       attendees: [{ name: "Ana Lima" }, { name: "Bruno Costa" }],
     },
   ]}
-  daysAhead={14}             // 0 = todos os eventos futuros
-  dateFormat="both"          // relative | date | both
-  size="md"                  // sm | md | lg
+  daysAhead={14} // 0 = todos os eventos futuros
+  dateFormat="both" // relative | date | both
+  size="md" // sm | md | lg
 />
 ```
 
-| Prop | Tipo | Padrão | Descrição |
-|---|---|---|---|
-| `events` | `AgendaEvent[]` | required | Lista de eventos |
-| `startDate` | `Date` | hoje | Primeira data a exibir |
-| `daysAhead` | `number` | `0` | Janela de dias (0 = todos) |
-| `dateFormat` | `'relative'\|'date'\|'both'` | `'both'` | Formato do rótulo de dia |
-| `showTime` | `boolean` | `true` | Exibe horário |
-| `showLocation` | `boolean` | `true` | Exibe localização |
-| `showAttendees` | `boolean` | `true` | Exibe avatares dos participantes |
-| `size` | `'sm'\|'md'\|'lg'` | `'md'` | Tamanho |
-| `emptyMessage` | `string` | — | Texto quando não há eventos |
+| Prop            | Tipo                         | Padrão   | Descrição                        |
+| --------------- | ---------------------------- | -------- | -------------------------------- |
+| `events`        | `AgendaEvent[]`              | required | Lista de eventos                 |
+| `startDate`     | `Date`                       | hoje     | Primeira data a exibir           |
+| `daysAhead`     | `number`                     | `0`      | Janela de dias (0 = todos)       |
+| `dateFormat`    | `'relative'\|'date'\|'both'` | `'both'` | Formato do rótulo de dia         |
+| `showTime`      | `boolean`                    | `true`   | Exibe horário                    |
+| `showLocation`  | `boolean`                    | `true`   | Exibe localização                |
+| `showAttendees` | `boolean`                    | `true`   | Exibe avatares dos participantes |
+| `size`          | `'sm'\|'md'\|'lg'`           | `'md'`   | Tamanho                          |
+| `emptyMessage`  | `string`                     | —        | Texto quando não há eventos      |
 
 ---
 
 ### Tabelas
 
 #### `Table` — tabela estática configurável
+
 ```tsx
 <Table
-  variant="striped"   // default | striped | bordered | minimal
-  size="md"           // xs | sm | md | lg
+  variant="striped" // default | striped | bordered | minimal
+  size="md" // xs | sm | md | lg
   hoverable
   stickyHeader
   columns={[
-    { key: "name",   label: "Nome" },
-    { key: "status", label: "Status", align: "center",
-      render: (v) => <Badge variant="success" label={v as string} /> },
+    { key: "name", label: "Nome" },
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: (v) => <Badge variant="success" label={v as string} />,
+    },
   ]}
   rows={dados}
   rowKey={(r) => r.id}
@@ -436,16 +474,17 @@ Lista de eventos organizada por dia com localização e participantes.
 ```
 
 #### `DataTable` — tabela completa com estado interno
+
 ```tsx
 <DataTable
-  columns={colunas}         // sortable, hidden, required, summary, getValue
+  columns={colunas} // sortable, hidden, required, summary, getValue
   rows={dados}
   rowKey={(r) => r.id}
-  actions={acoes}           // menu ⋯ por linha, com danger / divider / disabled
-  globalSearch              // barra de busca na toolbar
-  filterFields={filtros}    // dialog com TextField / NumberField / DateField / Autocomplete
-  columnToggle              // painel de visibilidade de colunas
-  showSummary               // rodapé com sum | avg | min | max | count
+  actions={acoes} // menu ⋯ por linha, com danger / divider / disabled
+  globalSearch // barra de busca na toolbar
+  filterFields={filtros} // dialog com TextField / NumberField / DateField / Autocomplete
+  columnToggle // painel de visibilidade de colunas
+  showSummary // rodapé com sum | avg | min | max | count
   pagination
   defaultPageSize={10}
   pageSizeOptions={[10, 25, 50]}
@@ -455,20 +494,27 @@ Lista de eventos organizada por dia com localização e participantes.
 ```
 
 #### `KanbanBoard`
+
 ```tsx
 <KanbanBoard
-  columns={colunas}   // { id, title, color, limit, items[] }
+  columns={colunas} // { id, title, color, limit, items[] }
   onCardMove={(cardId, targetColumnId) => mover(cardId, targetColumnId)}
 />
 ```
 
 #### `FilterBar`
+
 ```tsx
 <FilterBar
   fields={[
-    { key: "status", label: "Status",   type: "autocomplete", options: statusOptions },
-    { key: "date",   label: "Data",     type: "date" },
-    { key: "amount", label: "Valor",    type: "number" },
+    {
+      key: "status",
+      label: "Status",
+      type: "autocomplete",
+      options: statusOptions,
+    },
+    { key: "date", label: "Data", type: "date" },
+    { key: "amount", label: "Valor", type: "number" },
   ]}
   value={filtros}
   onChange={setFiltros}
@@ -480,18 +526,20 @@ Lista de eventos organizada por dia com localização e participantes.
 ### Dados e Feed
 
 #### `StatCard`
+
 ```tsx
 <StatCard
   title="Receita mensal"
   value="R$ 48.230"
   trend={{ pct: 12.4, direction: "up" }}
-  spark={[4,6,5,8,7,9,8,10,11,13,12,15].map((v) => ({ value: v }))}
+  spark={[4, 6, 5, 8, 7, 9, 8, 10, 11, 13, 12, 15].map((v) => ({ value: v }))}
   icon={DollarSign}
   color="success"
 />
 ```
 
 #### `ActivityFeed`
+
 ```tsx
 <ActivityFeed
   events={[
@@ -510,6 +558,7 @@ Lista de eventos organizada por dia com localização e participantes.
 ```
 
 #### `InboxList`
+
 ```tsx
 <InboxList
   items={mensagens}
@@ -520,11 +569,12 @@ Lista de eventos organizada por dia com localização e participantes.
 ```
 
 #### `ServiceStatusCard`
+
 ```tsx
 <ServiceStatusCard
   service={{ name: "API Gateway", status: "operational" }}
-  history={historico}      // UptimeDay[]
-  incidents={incidentes}   // ServiceIncident[]
+  history={historico} // UptimeDay[]
+  incidents={incidentes} // ServiceIncident[]
 />
 ```
 
@@ -533,18 +583,32 @@ Lista de eventos organizada por dia com localização e participantes.
 ### Interação
 
 #### `CommandMenu`
+
 Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
+
 ```tsx
 <CommandMenu
   items={[
-    { group: "Navegação", label: "Dashboard", icon: LayoutDashboard, href: "/" },
-    { group: "Ações",     label: "Novo pedido", icon: Plus, onSelect: criarPedido, shortcut: "⌘N" },
+    {
+      group: "Navegação",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      href: "/",
+    },
+    {
+      group: "Ações",
+      label: "Novo pedido",
+      icon: Plus,
+      onSelect: criarPedido,
+      shortcut: "⌘N",
+    },
   ]}
   triggerLabel="Buscar..."
 />
 ```
 
 #### `ContextMenu`
+
 ```tsx
 <ContextMenu trigger="contextmenu" items={menuItems} onSelect={handleSelect}>
   <div>Clique com botão direito aqui</div>
@@ -552,6 +616,7 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ```
 
 #### `ActionDialog`
+
 ```tsx
 <ActionDialog
   title="Excluir registro"
@@ -563,6 +628,7 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ```
 
 #### `Alert`
+
 ```tsx
 // Inline
 <Alert variant="warning" title="Atenção" description="Campos obrigatórios não preenchidos." />
@@ -579,6 +645,7 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ```
 
 #### `NotificationBell`
+
 ```tsx
 <NotificationBell
   notifications={notificacoes}
@@ -589,11 +656,12 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ```
 
 #### `QuickActions`
+
 ```tsx
 <QuickActions
   actions={[
-    { id: "new-order",  label: "Novo pedido",  icon: Plus,   color: "indigo" },
-    { id: "export",     label: "Exportar",     icon: Download, color: "emerald" },
+    { id: "new-order", label: "Novo pedido", icon: Plus, color: "indigo" },
+    { id: "export", label: "Exportar", icon: Download, color: "emerald" },
   ]}
   onAction={(id) => executar(id)}
 />
@@ -604,6 +672,7 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ### Outros
 
 #### `Avatar` / `AvatarGroup`
+
 ```tsx
 <Avatar name="Cristiano Lopes" src="/foto.jpg" status="online" size="md" />
 
@@ -614,6 +683,7 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ```
 
 #### `Badge`
+
 ```tsx
 <Badge variant="success" label="Ativo"   size="sm" />
 <Badge variant="danger"  label="Erro"    dot />
@@ -622,18 +692,20 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ```
 
 #### `Accordion`
+
 ```tsx
 <Accordion
   items={[
     { title: "O que é Lopes UI?", content: <p>...</p> },
-    { title: "Como instalar?",    content: <p>...</p> },
+    { title: "Como instalar?", content: <p>...</p> },
   ]}
   multiple
-  variant="bordered"   // default | bordered | separated
+  variant="bordered" // default | bordered | separated
 />
 ```
 
 #### `EmptyState`
+
 ```tsx
 <EmptyState
   title="Nenhum resultado"
@@ -644,41 +716,46 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ```
 
 #### `PingIndicator`
+
 ```tsx
 <PingIndicator status="operational" label="Todos os sistemas normais" />
 // status: operational | degraded | outage | unknown
 ```
 
 #### `ShortcutHint`
+
 ```tsx
-<ShortcutHint keys={["⌘", "K"]} />   // renders ⌘ K badges
+<ShortcutHint keys={["⌘", "K"]} /> // renders ⌘ K badges
 ```
 
 #### `Breadcrumb`
+
 ```tsx
 <Breadcrumb
   items={[
-    { label: "Home",      href: "/" },
-    { label: "Clientes",  href: "/clients" },
+    { label: "Home", href: "/" },
+    { label: "Clientes", href: "/clients" },
     { label: "Editar" },
   ]}
 />
 ```
 
 #### `AppLauncher`
+
 ```tsx
 <AppLauncher
   apps={[
-    { id: "hub",     label: "Project Hub",  icon: LayoutDashboard, color: "indigo" },
-    { id: "billing", label: "Faturamento",  icon: DollarSign,       color: "emerald" },
+    { id: "hub", label: "Project Hub", icon: LayoutDashboard, color: "indigo" },
+    { id: "billing", label: "Faturamento", icon: DollarSign, color: "emerald" },
   ]}
   onSelect={(id) => navegarPara(id)}
 />
 ```
 
 #### `StatusPage`
+
 ```tsx
-<StatusPage variant="404" />  // 404 | 403 | 500 | maintenance | empty | success
+<StatusPage variant="404" /> // 404 | 403 | 500 | maintenance | empty | success
 ```
 
 #### `Toast`
@@ -689,7 +766,7 @@ Sistema de notificações próprio, sem dependências externas.
 import { toast, Toaster } from "@/components/Toast";
 
 // No layout
-<Toaster position="top-right" />
+<Toaster position="top-right" />;
 
 // Em qualquer componente
 toast.success("Salvo com sucesso!");
@@ -702,7 +779,7 @@ toast.loading("Carregando...");
 toast.promise(minhaPromise, {
   loading: "Salvando...",
   success: "Pronto!",
-  error:   "Falha ao salvar.",
+  error: "Falha ao salvar.",
 });
 ```
 
@@ -714,7 +791,7 @@ Texto animado que alterna entre itens com animações de entrada/saída.
 <TextRotate
   items={["velocidade", "qualidade", "beleza"]}
   duration={2500}
-  animation="slide"   // slide | discrete | fade | rise
+  animation="slide" // slide | discrete | fade | rise
   className="text-indigo-600 font-bold"
 />
 ```
@@ -724,9 +801,24 @@ Texto animado que alterna entre itens com animações de entrada/saída.
 ```tsx
 <Timeline
   items={[
-    { title: "Criação", description: "Projeto iniciado.", date: "Jan 2024", status: "done" },
-    { title: "Beta",    description: "Primeira versão.",  date: "Mar 2024", status: "current" },
-    { title: "v1.0",   description: "Lançamento.",        date: "Jun 2024", status: "upcoming" },
+    {
+      title: "Criação",
+      description: "Projeto iniciado.",
+      date: "Jan 2024",
+      status: "done",
+    },
+    {
+      title: "Beta",
+      description: "Primeira versão.",
+      date: "Mar 2024",
+      status: "current",
+    },
+    {
+      title: "v1.0",
+      description: "Lançamento.",
+      date: "Jun 2024",
+      status: "upcoming",
+    },
   ]}
 />
 ```
@@ -737,7 +829,7 @@ Texto animado que alterna entre itens com animações de entrada/saída.
 <Stepper
   steps={["Dados pessoais", "Endereço", "Confirmação"]}
   currentStep={1}
-  variant="default"   // default | compact | dots
+  variant="default" // default | compact | dots
 />
 ```
 
@@ -752,7 +844,7 @@ Texto animado que alterna entre itens com animações de entrada/saída.
       icon: Folder,
       children: [
         { id: "readme", label: "README.md", icon: FileText },
-        { id: "license", label: "LICENSE",  icon: FileText },
+        { id: "license", label: "LICENSE", icon: FileText },
       ],
     },
   ]}
@@ -771,7 +863,7 @@ Cartão de entidade estruturada com campos, ações e metadata.
   subtitle="Engenheira de Software"
   fields={[
     { label: "E-mail", value: "ana@empresa.com", type: "email" },
-    { label: "Time",   value: "Plataforma" },
+    { label: "Time", value: "Plataforma" },
   ]}
   actions={[{ label: "Ver perfil", href: "/team/ana" }]}
 />
@@ -829,12 +921,12 @@ Acesse [http://localhost:3000](http://localhost:3000) para o playground interati
 
 ## Scripts
 
-| Comando | Descrição |
-|---|---|
-| `npm run dev` | Servidor de desenvolvimento |
-| `npm run build` | Build de produção |
-| `npm run start` | Servidor de produção |
-| `npm run lint` | ESLint |
+| Comando         | Descrição                   |
+| --------------- | --------------------------- |
+| `npm run dev`   | Servidor de desenvolvimento |
+| `npm run build` | Build de produção           |
+| `npm run start` | Servidor de produção        |
+| `npm run lint`  | ESLint                      |
 
 ---
 
@@ -910,6 +1002,7 @@ lopes-ui/
 ### Formulários
 
 #### `TextField`
+
 ```tsx
 <TextField
   label="E-mail"
@@ -917,22 +1010,25 @@ lopes-ui/
   placeholder="voce@empresa.com"
   leftIcon={<Mail />}
   helpText="Usado para notificações"
-  size="md"           // xs | sm | md | lg
-  variant="default"   // default | filled
+  size="md" // xs | sm | md | lg
+  variant="default" // default | filled
 />
 ```
 
 #### `NumberField`
+
 ```tsx
 <NumberField label="Preço" prefix="R$" suffix="por kg" min={0} step={0.01} />
 ```
 
 #### `DateField`
+
 ```tsx
-<DateField label="Data de nascimento" mode="date" />  // date | datetime
+<DateField label="Data de nascimento" mode="date" /> // date | datetime
 ```
 
 #### `CheckboxGroup`
+
 ```tsx
 <CheckboxGroup
   label="Permissões"
@@ -944,11 +1040,13 @@ lopes-ui/
 ```
 
 #### `Switch`
+
 ```tsx
 <Switch label="Ativar notificações" checked={on} onChange={setOn} size="md" />
 ```
 
 #### `AutocompleteField`
+
 ```tsx
 <AutocompleteField
   label="Departamento"
@@ -959,6 +1057,7 @@ lopes-ui/
 ```
 
 #### `MultiSelectField`
+
 ```tsx
 <MultiSelectField
   label="Tags"
@@ -970,6 +1069,7 @@ lopes-ui/
 ```
 
 #### `FileField`
+
 ```tsx
 <FileField label="Contrato" accept=".pdf,.docx" maxSizeMB={5} multiple />
 ```
@@ -979,6 +1079,7 @@ lopes-ui/
 ### Layout
 
 #### `Sidebar`
+
 ```tsx
 <Sidebar
   title="Minha App"
@@ -988,10 +1089,11 @@ lopes-ui/
       items: [
         { label: "Dashboard", href: "/", icon: LayoutDashboard },
         {
-          label: "Relatórios", icon: BarChart2,
+          label: "Relatórios",
+          icon: BarChart2,
           children: [
             { label: "Mensal", href: "/reports/monthly" },
-            { label: "Anual",  href: "/reports/yearly"  },
+            { label: "Anual", href: "/reports/yearly" },
           ],
         },
       ],
@@ -1002,8 +1104,16 @@ lopes-ui/
 ```
 
 #### `Card`
+
 ```tsx
-<Card variant="elevated" shadow="md" color="primary" accent radius="xl" hoverable>
+<Card
+  variant="elevated"
+  shadow="md"
+  color="primary"
+  accent
+  radius="xl"
+  hoverable
+>
   <CardHeader
     icon={TrendingUp}
     iconColor="primary"
@@ -1029,16 +1139,21 @@ lopes-ui/
 ### Tabelas
 
 #### `Table` — tabela estática configurável
+
 ```tsx
 <Table
-  variant="striped"   // default | striped | bordered | minimal
-  size="md"           // xs | sm | md | lg
+  variant="striped" // default | striped | bordered | minimal
+  size="md" // xs | sm | md | lg
   hoverable
   stickyHeader
   columns={[
-    { key: "name",   label: "Nome" },
-    { key: "status", label: "Status", align: "center",
-      render: (v) => <Badge variant="success" label={v as string} /> },
+    { key: "name", label: "Nome" },
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: (v) => <Badge variant="success" label={v as string} />,
+    },
   ]}
   rows={dados}
   rowKey={(r) => r.id}
@@ -1047,16 +1162,17 @@ lopes-ui/
 ```
 
 #### `DataTable` — tabela completa com estado interno
+
 ```tsx
 <DataTable
-  columns={colunas}         // sortable, hidden, required, summary, getValue
+  columns={colunas} // sortable, hidden, required, summary, getValue
   rows={dados}
   rowKey={(r) => r.id}
-  actions={acoes}           // menu ⋯ por linha, com danger / divider / disabled
-  globalSearch              // barra de busca na toolbar
-  filterFields={filtros}    // dialog com TextField / NumberField / DateField / Autocomplete
-  columnToggle              // painel de visibilidade de colunas
-  showSummary               // rodapé com sum | avg | min | max | count
+  actions={acoes} // menu ⋯ por linha, com danger / divider / disabled
+  globalSearch // barra de busca na toolbar
+  filterFields={filtros} // dialog com TextField / NumberField / DateField / Autocomplete
+  columnToggle // painel de visibilidade de colunas
+  showSummary // rodapé com sum | avg | min | max | count
   pagination
   defaultPageSize={10}
   pageSizeOptions={[10, 25, 50]}
@@ -1066,8 +1182,9 @@ lopes-ui/
 ```
 
 **`summary` por coluna:**
+
 ```tsx
-{ key: "salary", summary: "sum"  }   // Σ 48.000
+{ key: "salary", summary: "sum"  }   //   48.000
 { key: "score",  summary: "avg"  }   // x̄ 87,5
 { key: "id",     summary: "count"}   // # 12
 { key: "total",  summary: (rows) => `R$ ${somarTudo(rows)}` }  // função customizada
@@ -1078,18 +1195,32 @@ lopes-ui/
 ### Interação
 
 #### `CommandMenu`
+
 Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
+
 ```tsx
 <CommandMenu
   items={[
-    { group: "Navegação", label: "Dashboard", icon: LayoutDashboard, href: "/" },
-    { group: "Ações",     label: "Novo pedido", icon: Plus, onSelect: criarPedido, shortcut: "⌘N" },
+    {
+      group: "Navegação",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      href: "/",
+    },
+    {
+      group: "Ações",
+      label: "Novo pedido",
+      icon: Plus,
+      onSelect: criarPedido,
+      shortcut: "⌘N",
+    },
   ]}
   triggerLabel="Buscar..."
 />
 ```
 
 #### `ContextMenu`
+
 ```tsx
 <ContextMenu trigger="contextmenu" items={menuItems} onSelect={handleSelect}>
   <div>Clique com botão direito aqui</div>
@@ -1097,6 +1228,7 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ```
 
 #### `ActionDialog`
+
 ```tsx
 <ActionDialog
   title="Excluir registro"
@@ -1108,6 +1240,7 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ```
 
 #### `Alert`
+
 ```tsx
 // Inline
 <Alert variant="warning" title="Atenção" description="Campos obrigatórios não preenchidos." />
@@ -1128,6 +1261,7 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ### Outros
 
 #### `Avatar` / `AvatarGroup`
+
 ```tsx
 <Avatar name="Cristiano Lopes" src="/foto.jpg" status="online" size="md" />
 
@@ -1138,6 +1272,7 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ```
 
 #### `Badge`
+
 ```tsx
 <Badge variant="success" label="Ativo"   size="sm" />
 <Badge variant="danger"  label="Erro"    dot />
@@ -1146,20 +1281,22 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 ```
 
 #### `Accordion`
+
 ```tsx
 <Accordion
   items={[
     { title: "O que é Lopes UI?", content: <p>...</p> },
-    { title: "Como instalar?",    content: <p>...</p> },
+    { title: "Como instalar?", content: <p>...</p> },
   ]}
   multiple
-  variant="bordered"   // default | bordered | separated
+  variant="bordered" // default | bordered | separated
 />
 ```
 
 #### `StatusPage`
+
 ```tsx
-<StatusPage variant="404" />  // 404 | 403 | 500 | maintenance | empty | success
+<StatusPage variant="404" /> // 404 | 403 | 500 | maintenance | empty | success
 ```
 
 #### `Toast`
@@ -1170,7 +1307,7 @@ Sistema de notificações próprio, sem dependências externas.
 import { toast, Toaster } from "@/components/Toast";
 
 // No layout
-<Toaster position="top-right" />
+<Toaster position="top-right" />;
 
 // Em qualquer componente
 toast.success("Salvo com sucesso!");
@@ -1183,7 +1320,7 @@ toast.loading("Carregando...");
 toast.promise(minhaPromise, {
   loading: "Salvando...",
   success: "Pronto!",
-  error:   "Falha ao salvar.",
+  error: "Falha ao salvar.",
 });
 ```
 
@@ -1195,7 +1332,7 @@ Texto animado que alterna entre itens com animações de entrada/saída.
 <TextRotate
   items={["velocidade", "qualidade", "beleza"]}
   duration={2500}
-  animation="slide"   // slide | discrete | fade | rise
+  animation="slide" // slide | discrete | fade | rise
   className="text-indigo-600 font-bold"
 />
 ```
@@ -1205,9 +1342,24 @@ Texto animado que alterna entre itens com animações de entrada/saída.
 ```tsx
 <Timeline
   items={[
-    { title: "Criação", description: "Projeto iniciado.", date: "Jan 2024", status: "done" },
-    { title: "Beta",    description: "Primeira versão.",  date: "Mar 2024", status: "current" },
-    { title: "v1.0",   description: "Lançamento.",        date: "Jun 2024", status: "upcoming" },
+    {
+      title: "Criação",
+      description: "Projeto iniciado.",
+      date: "Jan 2024",
+      status: "done",
+    },
+    {
+      title: "Beta",
+      description: "Primeira versão.",
+      date: "Mar 2024",
+      status: "current",
+    },
+    {
+      title: "v1.0",
+      description: "Lançamento.",
+      date: "Jun 2024",
+      status: "upcoming",
+    },
   ]}
 />
 ```
@@ -1218,7 +1370,7 @@ Texto animado que alterna entre itens com animações de entrada/saída.
 <Stepper
   steps={["Dados pessoais", "Endereço", "Confirmação"]}
   currentStep={1}
-  variant="default"   // default | compact | dots
+  variant="default" // default | compact | dots
 />
 ```
 
@@ -1233,7 +1385,7 @@ Texto animado que alterna entre itens com animações de entrada/saída.
       icon: Folder,
       children: [
         { id: "readme", label: "README.md", icon: FileText },
-        { id: "license", label: "LICENSE",  icon: FileText },
+        { id: "license", label: "LICENSE", icon: FileText },
       ],
     },
   ]}
@@ -1277,5 +1429,3 @@ Todos os componentes aceitam a prop `componentId` que é emitida como `data-comp
 Consulte [docs/ACCESS_CONTROL.md](docs/ACCESS_CONTROL.md) para detalhes sobre a implementação.
 
 ---
-
-

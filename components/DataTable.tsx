@@ -1,15 +1,31 @@
 "use client";
 
 import React, {
-  useState, useMemo, useRef, useEffect, useCallback, createContext,
+  useState,
+  useMemo,
+  useRef,
+  useEffect,
+  useCallback,
+  createContext,
 } from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import {
-  ChevronUp, ChevronDown, ChevronsUpDown,
-  Filter, X, Search, MoreHorizontal,
-  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  EyeOff, Eye, SlidersHorizontal, type LucideIcon,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
+  Filter,
+  X,
+  Search,
+  MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  EyeOff,
+  Eye,
+  SlidersHorizontal,
+  type LucideIcon,
 } from "lucide-react";
 import type { TableSize, TableVariant } from "./Table";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
@@ -17,7 +33,9 @@ import { calcSmartPos } from "@/hooks/useSmartPosition";
 import TextField from "./form/TextField";
 import NumberField from "./form/NumberField";
 import DateField from "./form/DateField";
-import AutocompleteField, { type AutocompleteOption } from "./form/AutocompleteField";
+import AutocompleteField, {
+  type AutocompleteOption,
+} from "./form/AutocompleteField";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -42,7 +60,13 @@ export type DataTableColumn<T = Record<string, unknown>> = {
   headerClassName?: string;
   cellClassName?: string;
   /** Summary aggregation for this column */
-  summary?: "sum" | "avg" | "min" | "max" | "count" | ((rows: T[]) => React.ReactNode);
+  summary?:
+    | "sum"
+    | "avg"
+    | "min"
+    | "max"
+    | "count"
+    | ((rows: T[]) => React.ReactNode);
 };
 
 export type DataTableAction<T = Record<string, unknown>> = {
@@ -137,9 +161,9 @@ const SIZE_TD: Record<TableSize, string> = {
   lg: "px-5 py-4   text-base",
 };
 const ALIGN: Record<string, string> = {
-  left:   "text-left",
+  left: "text-left",
   center: "text-center",
-  right:  "text-right",
+  right: "text-right",
 };
 
 function getRaw<T>(row: T, col: DataTableColumn<T>): unknown {
@@ -147,7 +171,12 @@ function getRaw<T>(row: T, col: DataTableColumn<T>): unknown {
   return (row as Record<string, unknown>)[col.key];
 }
 
-function sortRows<T>(rows: T[], key: string, dir: SortDir, cols: DataTableColumn<T>[]): T[] {
+function sortRows<T>(
+  rows: T[],
+  key: string,
+  dir: SortDir,
+  cols: DataTableColumn<T>[],
+): T[] {
   if (!dir) return rows;
   const col = cols.find((c) => c.key === key);
   return [...rows].sort((a, b) => {
@@ -156,7 +185,9 @@ function sortRows<T>(rows: T[], key: string, dir: SortDir, cols: DataTableColumn
     const cmp =
       typeof av === "number" && typeof bv === "number"
         ? av - bv
-        : String(av ?? "").localeCompare(String(bv ?? ""), undefined, { numeric: true });
+        : String(av ?? "").localeCompare(String(bv ?? ""), undefined, {
+            numeric: true,
+          });
     return dir === "asc" ? cmp : -cmp;
   });
 }
@@ -172,16 +203,21 @@ function matchesGlobal<T>(row: T, q: string): boolean {
 function matchesFilters<T>(row: T, filters: Record<string, string>): boolean {
   for (const [key, val] of Object.entries(filters)) {
     if (!val) continue;
-    const rowVal = String((row as Record<string, unknown>)[key] ?? "").toLowerCase();
+    const rowVal = String(
+      (row as Record<string, unknown>)[key] ?? "",
+    ).toLowerCase();
     if (!rowVal.includes(val.toLowerCase())) return false;
   }
   return true;
 }
 
-function getTabFilter<T>(tab: DataTableTab<T>): ((row: T) => boolean) | undefined {
+function getTabFilter<T>(
+  tab: DataTableTab<T>,
+): ((row: T) => boolean) | undefined {
   if (tab.filter) return tab.filter;
   if (tab.field !== undefined) {
-    return (row: T) => (row as Record<string, unknown>)[tab.field!] === tab.value;
+    return (row: T) =>
+      (row as Record<string, unknown>)[tab.field!] === tab.value;
   }
   return undefined;
 }
@@ -215,7 +251,11 @@ function ActionMenu<T>({
       const rect = anchorRef.current.getBoundingClientRect();
       const menuH = actions.length * 36 + 16;
       const menuW = 192;
-      const { top, left } = calcSmartPos({ anchor: rect, panelW: menuW, panelH: menuH });
+      const { top, left } = calcSmartPos({
+        anchor: rect,
+        panelW: menuW,
+        panelH: menuH,
+      });
       setPos({ top, left });
     }
   }, [anchorRef, actions.length]);
@@ -225,7 +265,8 @@ function ActionMenu<T>({
       if (e.key === "Escape") onClose();
     }
     function onClickOut(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) onClose();
+      if (menuRef.current && !menuRef.current.contains(e.target as Node))
+        onClose();
     }
     document.addEventListener("mousedown", onClickOut);
     document.addEventListener("keydown", onKey);
@@ -241,7 +282,12 @@ function ActionMenu<T>({
     <ActionMenuContext.Provider value={{ close: onClose }}>
       <div
         ref={menuRef}
-        style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999 }}
+        style={{
+          position: "fixed",
+          top: pos.top,
+          left: pos.left,
+          zIndex: 9999,
+        }}
         className="min-w-48 rounded-xl border border-zinc-200 bg-white shadow-lg py-1.5 outline-none dark:border-zinc-700 dark:bg-zinc-900"
       >
         {actions.map((action, i) => {
@@ -249,10 +295,15 @@ function ActionMenu<T>({
           const isDisabled = action.disabled?.(row) ?? false;
           return (
             <React.Fragment key={i}>
-              {action.divider && i > 0 && <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" />}
+              {action.divider && i > 0 && (
+                <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" />
+              )}
               <button
                 disabled={isDisabled}
-                onClick={() => { action.onClick(row); onClose(); }}
+                onClick={() => {
+                  action.onClick(row);
+                  onClose();
+                }}
                 className={twMerge(
                   "flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors",
                   "disabled:opacity-40 disabled:cursor-not-allowed",
@@ -293,9 +344,13 @@ function FilterDialog({
   const [mounted, setMounted] = useState(false);
   useBodyScrollLock(true);
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { setMounted(true); }, []);
   useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    setMounted(true);
+  }, []);
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
@@ -307,18 +362,29 @@ function FilterDialog({
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 p-4"
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-zinc-200 overflow-hidden dark:bg-zinc-900 dark:border-zinc-700">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800">
           <div>
-            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Filtros</p>
+            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+              Filtros
+            </p>
             {activeCount > 0 && (
-              <p className="text-xs text-zinc-400 mt-0.5">{activeCount} filtro{activeCount > 1 ? "s" : ""} ativo{activeCount > 1 ? "s" : ""}</p>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                {activeCount} filtro{activeCount > 1 ? "s" : ""} ativo
+                {activeCount > 1 ? "s" : ""}
+              </p>
             )}
           </div>
-          <button onClick={onClose} aria-label="Fechar filtros" className="text-zinc-400 hover:text-zinc-700 transition-colors p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+          <button
+            onClick={onClose}
+            aria-label="Fechar filtros"
+            className="text-zinc-400 hover:text-zinc-700 transition-colors p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+          >
             <X size={16} />
           </button>
         </div>
@@ -331,10 +397,14 @@ function FilterDialog({
             if (field.type === "select" || field.type === "boolean") {
               const opts: AutocompleteOption[] =
                 field.type === "boolean"
-                  ? [{ value: "true", label: "Sim" }, { value: "false", label: "Não" }]
+                  ? [
+                      { value: "true", label: "Sim" },
+                      { value: "false", label: "Não" },
+                    ]
                   : (field.options ?? []);
               // Derive display label from stored value
-              const displayVal = opts.find((o) => o.value === rawVal)?.label ?? "";
+              const displayVal =
+                opts.find((o) => o.value === rawVal)?.label ?? "";
               return (
                 <AutocompleteField
                   key={field.key}
@@ -344,7 +414,9 @@ function FilterDialog({
                   value={displayVal}
                   clearable
                   placeholder={`Selecionar ${field.label.toLowerCase()}...`}
-                  onChange={(text) => { if (!text) onChange(field.key, ""); }}
+                  onChange={(text) => {
+                    if (!text) onChange(field.key, "");
+                  }}
                   onSelect={(opt) => onChange(field.key, opt.value)}
                 />
               );
@@ -357,11 +429,17 @@ function FilterDialog({
                     label={field.label}
                     size="sm"
                     value={rawVal}
-                    placeholder={field.placeholder ?? `Filtrar por ${field.label.toLowerCase()}...`}
+                    placeholder={
+                      field.placeholder ??
+                      `Filtrar por ${field.label.toLowerCase()}...`
+                    }
                     onChange={(e) => onChange(field.key, e.target.value)}
                   />
                   {rawVal && (
-                    <button onClick={() => onChange(field.key, "")} className="mt-0.5 text-xs text-indigo-600 hover:underline">
+                    <button
+                      onClick={() => onChange(field.key, "")}
+                      className="mt-0.5 text-xs text-indigo-600 hover:underline"
+                    >
                       Limpar
                     </button>
                   )}
@@ -379,7 +457,10 @@ function FilterDialog({
                     onChange={(e) => onChange(field.key, e.target.value)}
                   />
                   {rawVal && (
-                    <button onClick={() => onChange(field.key, "")} className="mt-0.5 text-xs text-indigo-600 hover:underline">
+                    <button
+                      onClick={() => onChange(field.key, "")}
+                      className="mt-0.5 text-xs text-indigo-600 hover:underline"
+                    >
                       Limpar
                     </button>
                   )}
@@ -394,11 +475,17 @@ function FilterDialog({
                   label={field.label}
                   size="sm"
                   value={rawVal}
-                  placeholder={field.placeholder ?? `Filtrar por ${field.label.toLowerCase()}...`}
+                  placeholder={
+                    field.placeholder ??
+                    `Filtrar por ${field.label.toLowerCase()}...`
+                  }
                   onChange={(e) => onChange(field.key, e.target.value)}
                 />
                 {rawVal && (
-                  <button onClick={() => onChange(field.key, "")} className="mt-0.5 text-xs text-indigo-600 hover:underline">
+                  <button
+                    onClick={() => onChange(field.key, "")}
+                    className="mt-0.5 text-xs text-indigo-600 hover:underline"
+                  >
                     Limpar
                   </button>
                 )}
@@ -455,16 +542,24 @@ function ColumnPanel<T>({
     if (anchorRef.current) {
       const rect = anchorRef.current.getBoundingClientRect();
       const panelH = columns.filter((c) => !c.required).length * 32 + 40;
-      const { top, left } = calcSmartPos({ anchor: rect, panelW: 224, panelH, preferH: "end" });
+      const { top, left } = calcSmartPos({
+        anchor: rect,
+        panelW: 224,
+        panelH,
+        preferH: "end",
+      });
       setPos({ top, left });
     }
   }, [anchorRef, columns]);
 
   useEffect(() => {
     function onClickOut(e: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) onClose();
+      if (panelRef.current && !panelRef.current.contains(e.target as Node))
+        onClose();
     }
-    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
     document.addEventListener("mousedown", onClickOut);
     document.addEventListener("keydown", onKey);
     return () => {
@@ -481,22 +576,28 @@ function ColumnPanel<T>({
       style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999 }}
       className="w-56 rounded-xl border border-zinc-200 bg-white shadow-xl py-2 outline-none dark:border-zinc-700 dark:bg-zinc-900"
     >
-      <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase text-zinc-400 tracking-wider">Colunas</p>
-      {columns.filter((c) => !c.required).map((col) => {
-        const isHidden = hidden.has(col.key);
-        return (
-          <button
-            key={col.key}
-            onClick={() => onToggle(col.key)}
-            className="flex w-full items-center gap-2.5 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors dark:text-zinc-300 dark:hover:bg-zinc-800"
-          >
-            {isHidden
-              ? <EyeOff size={13} className="text-zinc-400" />
-              : <Eye size={13} className="text-indigo-500" />}
-            {col.label}
-          </button>
-        );
-      })}
+      <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase text-zinc-400 tracking-wider">
+        Colunas
+      </p>
+      {columns
+        .filter((c) => !c.required)
+        .map((col) => {
+          const isHidden = hidden.has(col.key);
+          return (
+            <button
+              key={col.key}
+              onClick={() => onToggle(col.key)}
+              className="flex w-full items-center gap-2.5 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              {isHidden ? (
+                <EyeOff size={13} className="text-zinc-400" />
+              ) : (
+                <Eye size={13} className="text-indigo-500" />
+              )}
+              {col.label}
+            </button>
+          );
+        })}
     </div>,
     document.body,
   );
@@ -506,13 +607,18 @@ function ColumnPanel<T>({
 // Summary helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-function computeSummary<T>(col: DataTableColumn<T>, rows: T[]): React.ReactNode {
+function computeSummary<T>(
+  col: DataTableColumn<T>,
+  rows: T[],
+): React.ReactNode {
   if (!col.summary) return null;
   if (typeof col.summary === "function") return col.summary(rows);
 
   const nums = rows
     .map((r) => {
-      const v = col.getValue ? col.getValue(r) : (r as Record<string, unknown>)[col.key];
+      const v = col.getValue
+        ? col.getValue(r)
+        : (r as Record<string, unknown>)[col.key];
       return typeof v === "number" ? v : parseFloat(String(v));
     })
     .filter((n) => !isNaN(n));
@@ -520,11 +626,19 @@ function computeSummary<T>(col: DataTableColumn<T>, rows: T[]): React.ReactNode 
   if (nums.length === 0) return "—";
 
   switch (col.summary) {
-    case "sum":   return nums.reduce((a, b) => a + b, 0).toLocaleString("pt-BR");
-    case "avg":   return (nums.reduce((a, b) => a + b, 0) / nums.length).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
-    case "min":   return Math.min(...nums).toLocaleString("pt-BR");
-    case "max":   return Math.max(...nums).toLocaleString("pt-BR");
-    case "count": return rows.length.toLocaleString("pt-BR");
+    case "sum":
+      return nums.reduce((a, b) => a + b, 0).toLocaleString("pt-BR");
+    case "avg":
+      return (nums.reduce((a, b) => a + b, 0) / nums.length).toLocaleString(
+        "pt-BR",
+        { maximumFractionDigits: 2 },
+      );
+    case "min":
+      return Math.min(...nums).toLocaleString("pt-BR");
+    case "max":
+      return Math.max(...nums).toLocaleString("pt-BR");
+    case "count":
+      return rows.length.toLocaleString("pt-BR");
   }
 }
 
@@ -561,24 +675,33 @@ function DataRow<T>({
   const [menuOpen, setMenuOpen] = useState(false);
 
   const rowCls = twMerge(
-    variant === "striped" && idx % 2 === 1 ? "bg-zinc-50/70 dark:bg-zinc-800/40" : "bg-white dark:bg-zinc-950",
+    variant === "striped" && idx % 2 === 1
+      ? "bg-zinc-50/70 dark:bg-zinc-800/40"
+      : "bg-white dark:bg-zinc-950",
     dividers && "border-b border-zinc-100 last:border-0 dark:border-zinc-800",
-    hoverable && "transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60 group",
+    hoverable &&
+      "transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60 group",
     onRowClick && "cursor-pointer",
   );
 
   return (
-    <tr className={rowCls} onClick={onRowClick ? () => onRowClick(row, idx) : undefined}>
+    <tr
+      className={rowCls}
+      onClick={onRowClick ? () => onRowClick(row, idx) : undefined}
+    >
       {visibleCols.map((col) => {
         const raw = (row as Record<string, unknown>)[col.key];
-        const cell = col.render ? col.render(raw, row, idx) : (raw as React.ReactNode);
+        const cell = col.render
+          ? col.render(raw, row, idx)
+          : (raw as React.ReactNode);
         return (
           <td
             key={col.key}
             className={twMerge(
               SIZE_TD[size],
               "text-zinc-700",
-              bordered && "border-x border-zinc-100 first:border-l-0 last:border-r-0",
+              bordered &&
+                "border-x border-zinc-100 first:border-l-0 last:border-r-0",
               ALIGN[col.align ?? "left"],
               col.cellClassName,
             )}
@@ -618,7 +741,13 @@ function DataRow<T>({
                         : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300",
                     )}
                   >
-                    {Icon ? <Icon size={14} /> : <span className="text-[11px] font-medium">{action.label.slice(0, 3)}</span>}
+                    {Icon ? (
+                      <Icon size={14} />
+                    ) : (
+                      <span className="text-[11px] font-medium">
+                        {action.label.slice(0, 3)}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -684,21 +813,21 @@ export default function DataTable<T = Record<string, unknown>>({
   componentId,
 }: DataTableProps<T>) {
   // ── State ──
-  const [sortKey, setSortKey]           = useState<string | null>(null);
-  const [sortDir, setSortDir]           = useState<SortDir>(null);
-  const [searchQ, setSearchQ]           = useState("");
-  const [filters, setFilters]           = useState<Record<string, string>>({});
-  const [hiddenCols, setHiddenCols]     = useState<Set<string>>(
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>(null);
+  const [searchQ, setSearchQ] = useState("");
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [hiddenCols, setHiddenCols] = useState<Set<string>>(
     new Set(columns.filter((c) => c.hidden).map((c) => c.key)),
   );
-  const [page, setPage]                 = useState(1);
-  const [pageSize, setPageSize]         = useState(defaultPageSize);
-  const [filterOpen, setFilterOpen]     = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [colPanelOpen, setColPanelOpen] = useState(false);
-  const [activeTab, setActiveTab]       = useState(0);
+  const [activeTab, setActiveTab] = useState(0);
 
   const filterBtnRef = useRef<HTMLButtonElement>(null);
-  const colBtnRef    = useRef<HTMLButtonElement>(null);
+  const colBtnRef = useRef<HTMLButtonElement>(null);
 
   // ── Derived data ──
   const filtered = useMemo(() => {
@@ -707,9 +836,11 @@ export default function DataTable<T = Record<string, unknown>>({
       const fn = getTabFilter(tabs[activeTab]);
       if (fn) result = result.filter(fn);
     }
-    if (searchQ)  result = result.filter((r) => matchesGlobal(r, searchQ));
-    if (Object.values(filters).some(Boolean)) result = result.filter((r) => matchesFilters(r, filters));
-    if (sortKey && sortDir) result = sortRows(result, sortKey, sortDir, columns);
+    if (searchQ) result = result.filter((r) => matchesGlobal(r, searchQ));
+    if (Object.values(filters).some(Boolean))
+      result = result.filter((r) => matchesFilters(r, filters));
+    if (sortKey && sortDir)
+      result = sortRows(result, sortKey, sortDir, columns);
     return result;
   }, [rows, tabs, activeTab, searchQ, filters, sortKey, sortDir, columns]);
 
@@ -720,7 +851,9 @@ export default function DataTable<T = Record<string, unknown>>({
 
   // Reset to page 1 when filters/search/tab changes
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { setPage(1); }, [searchQ, filters, sortKey, activeTab]);
+  useEffect(() => {
+    setPage(1);
+  }, [searchQ, filters, sortKey, activeTab]);
 
   const visibleCols = useMemo(
     () => columns.filter((c) => !hiddenCols.has(c.key)),
@@ -728,16 +861,25 @@ export default function DataTable<T = Record<string, unknown>>({
   );
 
   // ── Handlers ──
-  const handleSort = useCallback((key: string) => {
-    if (sortKey !== key) { setSortKey(key); setSortDir("asc"); }
-    else if (sortDir === "asc") setSortDir("desc");
-    else { setSortKey(null); setSortDir(null); }
-  }, [sortKey, sortDir]);
+  const handleSort = useCallback(
+    (key: string) => {
+      if (sortKey !== key) {
+        setSortKey(key);
+        setSortDir("asc");
+      } else if (sortDir === "asc") setSortDir("desc");
+      else {
+        setSortKey(null);
+        setSortDir(null);
+      }
+    },
+    [sortKey, sortDir],
+  );
 
   const handleToggleCol = useCallback((key: string) => {
     setHiddenCols((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) next.delete(key); else next.add(key);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   }, []);
@@ -750,7 +892,8 @@ export default function DataTable<T = Record<string, unknown>>({
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
   const bordered = variant === "bordered";
-  const headerBg = variant === "minimal" ? "bg-transparent" : "bg-zinc-50 dark:bg-zinc-800/50";
+  const headerBg =
+    variant === "minimal" ? "bg-transparent" : "bg-zinc-50 dark:bg-zinc-800/50";
 
   return (
     <div
@@ -758,16 +901,32 @@ export default function DataTable<T = Record<string, unknown>>({
       {...(componentId ? { "data-component-id": componentId } : {})}
     >
       {/* ── Toolbar ── */}
-      {(title || description || globalSearch || filterFields || columnToggle || toolbarSlot) && (
+      {(title ||
+        description ||
+        globalSearch ||
+        filterFields ||
+        columnToggle ||
+        toolbarSlot) && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div>
-            {title && <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{title}</p>}
-            {description && <p className="text-xs text-zinc-500 dark:text-zinc-400">{description}</p>}
+            {title && (
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                {title}
+              </p>
+            )}
+            {description && (
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                {description}
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {globalSearch && (
               <div className="relative">
-                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                <Search
+                  size={13}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
+                />
                 <input
                   type="text"
                   value={searchQ}
@@ -776,7 +935,11 @@ export default function DataTable<T = Record<string, unknown>>({
                   className="pl-8 pr-3 py-1.5 rounded-lg border border-zinc-200 bg-white text-sm text-zinc-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-44 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500"
                 />
                 {searchQ && (
-                  <button onClick={() => setSearchQ("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                  <button
+                    onClick={() => setSearchQ("")}
+                    aria-label="Limpar busca"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                  >
                     <X size={12} />
                   </button>
                 )}
@@ -849,17 +1012,23 @@ export default function DataTable<T = Record<string, unknown>>({
 
       {/* ── Table ── */}
       <div className="w-full rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700">
-
         {/* Tab bar */}
         {tabs && tabs.length > 0 && (
           <div className="flex overflow-x-auto border-b border-zinc-200 bg-zinc-50/50 dark:border-zinc-700 dark:bg-zinc-800/50">
             {tabs.map((tab, i) => {
               const fn = getTabFilter(tab);
-              const count = tab.showCount ? (fn ? rows.filter(fn).length : rows.length) : null;
+              const count = tab.showCount
+                ? fn
+                  ? rows.filter(fn).length
+                  : rows.length
+                : null;
               return (
                 <button
                   key={i}
-                  onClick={() => { setActiveTab(i); setPage(1); }}
+                  onClick={() => {
+                    setActiveTab(i);
+                    setPage(1);
+                  }}
                   className={twMerge(
                     "px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2",
                     activeTab === i
@@ -869,10 +1038,14 @@ export default function DataTable<T = Record<string, unknown>>({
                 >
                   {tab.label}
                   {count !== null && (
-                    <span className={twMerge(
-                      "ml-1.5 inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none",
-                      activeTab === i ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300" : "bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400",
-                    )}>
+                    <span
+                      className={twMerge(
+                        "ml-1.5 inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none",
+                        activeTab === i
+                          ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
+                          : "bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400",
+                      )}
+                    >
                       {count}
                     </span>
                   )}
@@ -883,132 +1056,180 @@ export default function DataTable<T = Record<string, unknown>>({
         )}
 
         <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          {/* Head */}
-          <thead>
-            <tr className={twMerge(headerBg, "border-b border-zinc-200 dark:border-zinc-700")}>
-              {visibleCols.map((col) => {
-                const isSorted = sortKey === col.key;
-                return (
-                  <th
-                    key={col.key}
-                    className={twMerge(
-                      SIZE_TH[size],
-                      "font-semibold text-zinc-600 tracking-wide uppercase whitespace-nowrap select-none dark:text-zinc-400",
-                      stickyHeader && "sticky top-0 z-10 bg-zinc-50 shadow-[0_1px_0_0_#e4e4e7] dark:bg-zinc-800 dark:shadow-[0_1px_0_0_#27272a]",
-                      bordered && "border-x border-zinc-200 first:border-l-0 last:border-r-0 dark:border-zinc-700",
-                      ALIGN[col.align ?? "left"],
-                      col.sortable && "cursor-pointer hover:bg-zinc-100 transition-colors dark:hover:bg-zinc-800",
-                      col.headerClassName,
-                    )}
-                    style={col.width ? { width: col.width, minWidth: col.width } : undefined}
-                    onClick={col.sortable ? () => handleSort(col.key) : undefined}
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      {col.label}
-                      {col.sortable && (
-                        isSorted
-                          ? sortDir === "asc"
-                            ? <ChevronUp size={12} className="text-indigo-500" />
-                            : <ChevronDown size={12} className="text-indigo-500" />
-                          : <ChevronsUpDown size={12} className="text-zinc-300 dark:text-zinc-600" />
-                      )}
-                    </span>
-                  </th>
-                );
-              })}
-
-              {/* Actions column header */}
-              {actions && actions.length > 0 && (() => {
-                const inlineCount = actionsDisplay === "inline"
-                  ? actions.length
-                  : actions.filter((a) => a.inline).length;
-                const hasMenu = actionsDisplay !== "inline" && actions.some((a) => !a.inline);
-                const hasInline = inlineCount > 0;
-                const hasLabel = hasInline;
-                const colW = inlineCount * 32 + (hasMenu ? 36 : 0) + 16;
-                return (
-                  <th
-                    className={twMerge(
-                      SIZE_TH[size],
-                      "text-right",
-                      hasLabel && "font-semibold text-zinc-500 tracking-wide uppercase",
-                      bordered && "border-l border-zinc-200",
-                    )}
-                    style={{ width: Math.max(colW, 48), minWidth: Math.max(colW, 48) }}
-                  >
-                    {hasLabel ? "Ações" : null}
-                  </th>
-                );
-              })()}
-            </tr>
-          </thead>
-
-          {/* Body */}
-          <tbody>
-            {pageRows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={visibleCols.length + (actions ? 1 : 0)}
-                  className="text-center py-12 text-zinc-400 text-sm"
-                >
-                  {emptySlot ?? "Nenhum dado encontrado."}
-                </td>
-              </tr>
-            ) : (
-              pageRows.map((row, idx) => (
-                <DataRow
-                  key={rowKey ? rowKey(row, idx) : idx}
-                  row={row}
-                  idx={idx}
-                  visibleCols={visibleCols}
-                  actions={actions}
-                  actionsDisplay={actionsDisplay}
-                  size={size}
-                  variant={variant}
-                  dividers={dividers}
-                  hoverable={hoverable}
-                  onRowClick={onRowClick}
-                  bordered={bordered}
-                />
-              ))
-            )}
-          </tbody>
-
-          {/* Summary row */}
-          {showSummary && pageRows.length > 0 && visibleCols.some((c) => c.summary) && (
-            <tfoot>
-              <tr className="bg-zinc-50 border-t-2 border-zinc-200 dark:bg-zinc-800/50 dark:border-zinc-700">
+          <table className="w-full border-collapse">
+            {/* Head */}
+            <thead>
+              <tr
+                className={twMerge(
+                  headerBg,
+                  "border-b border-zinc-200 dark:border-zinc-700",
+                )}
+              >
                 {visibleCols.map((col) => {
-                  const val = computeSummary(col, filtered);
-                  const label =
-                    typeof col.summary === "string"
-                      ? { sum: "Σ", avg: "x̄", min: "min", max: "max", count: "#" }[col.summary]
-                      : "";
+                  const isSorted = sortKey === col.key;
                   return (
-                    <td
+                    <th
                       key={col.key}
                       className={twMerge(
-                        SIZE_TD[size],
-                        "font-semibold text-zinc-700 dark:text-zinc-300",
+                        SIZE_TH[size],
+                        "font-semibold text-zinc-600 tracking-wide uppercase whitespace-nowrap select-none dark:text-zinc-400",
+                        stickyHeader &&
+                          "sticky top-0 z-10 bg-zinc-50 shadow-[0_1px_0_0_#e4e4e7] dark:bg-zinc-800 dark:shadow-[0_1px_0_0_#27272a]",
+                        bordered &&
+                          "border-x border-zinc-200 first:border-l-0 last:border-r-0 dark:border-zinc-700",
                         ALIGN[col.align ?? "left"],
-                        bordered && "border-x border-zinc-200 first:border-l-0 last:border-r-0 dark:border-zinc-700",
+                        col.sortable &&
+                          "cursor-pointer hover:bg-zinc-100 transition-colors dark:hover:bg-zinc-800",
+                        col.headerClassName,
                       )}
+                      style={
+                        col.width
+                          ? { width: col.width, minWidth: col.width }
+                          : undefined
+                      }
+                      onClick={
+                        col.sortable ? () => handleSort(col.key) : undefined
+                      }
                     >
-                      {val != null ? (
-                        <span className="inline-flex items-center gap-1">
-                          {label && <span className="text-[10px] text-zinc-400 font-mono">{label}</span>}
-                          {val}
-                        </span>
-                      ) : null}
-                    </td>
+                      <span className="inline-flex items-center gap-1">
+                        {col.label}
+                        {col.sortable &&
+                          (isSorted ? (
+                            sortDir === "asc" ? (
+                              <ChevronUp
+                                size={12}
+                                className="text-indigo-500"
+                              />
+                            ) : (
+                              <ChevronDown
+                                size={12}
+                                className="text-indigo-500"
+                              />
+                            )
+                          ) : (
+                            <ChevronsUpDown
+                              size={12}
+                              className="text-zinc-300 dark:text-zinc-600"
+                            />
+                          ))}
+                      </span>
+                    </th>
                   );
                 })}
-                {actions && <td />}
+
+                {/* Actions column header */}
+                {actions &&
+                  actions.length > 0 &&
+                  (() => {
+                    const inlineCount =
+                      actionsDisplay === "inline"
+                        ? actions.length
+                        : actions.filter((a) => a.inline).length;
+                    const hasMenu =
+                      actionsDisplay !== "inline" &&
+                      actions.some((a) => !a.inline);
+                    const hasInline = inlineCount > 0;
+                    const hasLabel = hasInline;
+                    const colW = inlineCount * 32 + (hasMenu ? 36 : 0) + 16;
+                    return (
+                      <th
+                        className={twMerge(
+                          SIZE_TH[size],
+                          "text-right",
+                          hasLabel &&
+                            "font-semibold text-zinc-500 tracking-wide uppercase",
+                          bordered && "border-l border-zinc-200",
+                        )}
+                        style={{
+                          width: Math.max(colW, 48),
+                          minWidth: Math.max(colW, 48),
+                        }}
+                      >
+                        {hasLabel ? "Ações" : null}
+                      </th>
+                    );
+                  })()}
               </tr>
-            </tfoot>
-          )}
-        </table>
+            </thead>
+
+            {/* Body */}
+            <tbody>
+              {pageRows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={visibleCols.length + (actions ? 1 : 0)}
+                    className="text-center py-12 text-zinc-400 text-sm"
+                  >
+                    {emptySlot ?? "Nenhum dado encontrado."}
+                  </td>
+                </tr>
+              ) : (
+                pageRows.map((row, idx) => (
+                  <DataRow
+                    key={rowKey ? rowKey(row, idx) : idx}
+                    row={row}
+                    idx={idx}
+                    visibleCols={visibleCols}
+                    actions={actions}
+                    actionsDisplay={actionsDisplay}
+                    size={size}
+                    variant={variant}
+                    dividers={dividers}
+                    hoverable={hoverable}
+                    onRowClick={onRowClick}
+                    bordered={bordered}
+                  />
+                ))
+              )}
+            </tbody>
+
+            {/* Summary row */}
+            {showSummary &&
+              pageRows.length > 0 &&
+              visibleCols.some((c) => c.summary) && (
+                <tfoot>
+                  <tr className="bg-zinc-50 border-t-2 border-zinc-200 dark:bg-zinc-800/50 dark:border-zinc-700">
+                    {visibleCols.map((col) => {
+                      const val = computeSummary(col, filtered);
+                      const label =
+                        typeof col.summary === "string"
+                          ? {
+                              sum: " ",
+                              avg: "x̄",
+                              min: "min",
+                              max: "max",
+                              count: "#",
+                            }[col.summary]
+                          : "";
+                      return (
+                        <td
+                          key={col.key}
+                          className={twMerge(
+                            SIZE_TD[size],
+                            "font-semibold text-zinc-700 dark:text-zinc-300",
+                            ALIGN[col.align ?? "left"],
+                            bordered &&
+                              "border-x border-zinc-200 first:border-l-0 last:border-r-0 dark:border-zinc-700",
+                          )}
+                        >
+                          {val != null ? (
+                            <span className="inline-flex items-center gap-1">
+                              {label && (
+                                <span className="text-[10px] text-zinc-400 font-mono">
+                                  {label}
+                                </span>
+                              )}
+                              {val}
+                            </span>
+                          ) : null}
+                        </td>
+                      );
+                    })}
+                    {actions && <td />}
+                  </tr>
+                </tfoot>
+              )}
+          </table>
         </div>
       </div>
 
@@ -1025,19 +1246,36 @@ export default function DataTable<T = Record<string, unknown>>({
             <span>por página</span>
             <select
               value={pageSize}
-              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
               aria-label="Itens por página"
               className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
             >
               {pageSizeOptions.map((n) => (
-                <option key={n} value={n}>{n}</option>
+                <option key={n} value={n}>
+                  {n}
+                </option>
               ))}
             </select>
           </div>
 
           <div className="flex items-center gap-1">
-            <PageBtn onClick={() => setPage(1)}           disabled={page === 1} aria-label="Primeira página"><ChevronsLeft  size={14} /></PageBtn>
-            <PageBtn onClick={() => setPage((p) => p - 1)} disabled={page === 1} aria-label="Página anterior"><ChevronLeft   size={14} /></PageBtn>
+            <PageBtn
+              onClick={() => setPage(1)}
+              disabled={page === 1}
+              aria-label="Primeira página"
+            >
+              <ChevronsLeft size={14} />
+            </PageBtn>
+            <PageBtn
+              onClick={() => setPage((p) => p - 1)}
+              disabled={page === 1}
+              aria-label="Página anterior"
+            >
+              <ChevronLeft size={14} />
+            </PageBtn>
 
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               const start = Math.max(1, Math.min(page - 2, totalPages - 4));
@@ -1058,13 +1296,27 @@ export default function DataTable<T = Record<string, unknown>>({
               );
             })}
 
-            <PageBtn onClick={() => setPage((p) => p + 1)} disabled={page === totalPages} aria-label="Próxima página"><ChevronRight  size={14} /></PageBtn>
-            <PageBtn onClick={() => setPage(totalPages)}   disabled={page === totalPages} aria-label="Última página"><ChevronsRight size={14} /></PageBtn>
+            <PageBtn
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page === totalPages}
+              aria-label="Próxima página"
+            >
+              <ChevronRight size={14} />
+            </PageBtn>
+            <PageBtn
+              onClick={() => setPage(totalPages)}
+              disabled={page === totalPages}
+              aria-label="Última página"
+            >
+              <ChevronsRight size={14} />
+            </PageBtn>
           </div>
         </div>
       )}
 
-      {caption && <p className="mt-2 text-xs text-zinc-400 text-center">{caption}</p>}
+      {caption && (
+        <p className="mt-2 text-xs text-zinc-400 text-center">{caption}</p>
+      )}
     </div>
   );
 }
