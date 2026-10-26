@@ -156,31 +156,30 @@ export default function StatCard({
       type={onClick ? "button" : undefined}
       onClick={onClick}
       className={twMerge(
-        "group/stat relative flex flex-col gap-3 rounded-2xl border border-zinc-100 dark:border-zinc-800",
-        "bg-white dark:bg-zinc-900 p-5 text-left w-full",
+        "group/stat relative flex flex-col gap-1.5 sm:gap-3 rounded-xl sm:rounded-2xl border border-zinc-100 dark:border-zinc-800",
+        "bg-white dark:bg-zinc-900 p-2.5 sm:p-5 text-left w-full",
         onClick && "cursor-pointer hover:border-zinc-200 dark:hover:border-zinc-700 hover:shadow-md hover:shadow-zinc-900/5 dark:hover:shadow-black/20 transition-all duration-150",
         className,
       )}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
+      >
       {/* Top row: icon + sparkline */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="flex items-start justify-between gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {Icon && (
-            <div className={twMerge("h-9 w-9 rounded-xl flex items-center justify-center shrink-0", COLOR_ICON_BG[color])}>
-              {loading ? <Skeleton className="h-5 w-5 rounded" /> : <Icon size={18} strokeWidth={1.75} />}
+            <div className={twMerge("h-7 w-7 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0", COLOR_ICON_BG[color])}>
+              {loading ? <Skeleton className="h-4 w-4 sm:h-5 sm:w-5 rounded" /> : <Icon className="h-3.5 w-3.5 sm:h-[18px] sm:w-[18px]" strokeWidth={1.75} />}
             </div>
           )}
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             {loading
-              ? <Skeleton className="h-3.5 w-24 rounded" />
-              : <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 truncate">{title}</p>
+              ? <Skeleton className="h-3 sm:h-3.5 w-16 sm:w-24 rounded" />
+              : <p className="text-[11px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 truncate">{title}</p>
             }
           </div>
         </div>
 
         {spark && !loading && (
-          <div className="shrink-0 opacity-70 group-hover/stat:opacity-100 transition-opacity">
+          <div className="hidden sm:block shrink-0 opacity-70 group-hover/stat:opacity-100 transition-opacity">
             <Sparkline data={spark} color={sparkColor} />
           </div>
         )}
@@ -190,21 +189,21 @@ export default function StatCard({
       <div className="flex items-end justify-between gap-2">
         <div className="min-w-0">
           {loading ? (
-            <Skeleton className="h-8 w-28 rounded mt-1" />
+            <Skeleton className="h-6 sm:h-8 w-20 sm:w-28 rounded mt-1" />
           ) : (
-            <div className="flex items-baseline gap-1.5 flex-wrap">
-              <span className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 leading-none">
+            <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
+              <span className="text-base sm:text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 leading-none">
                 {value}
               </span>
               {unit && (
-                <span className="text-xs text-zinc-400 dark:text-zinc-500 font-medium">{unit}</span>
+                <span className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-500 font-medium">{unit}</span>
               )}
             </div>
           )}
 
           {/* Previous period */}
           {!loading && previousValue !== undefined && (
-            <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1">
+            <p className="hidden sm:block text-[11px] text-zinc-400 dark:text-zinc-500 mt-1">
               Anterior: <span className="font-medium text-zinc-500 dark:text-zinc-400">{previousValue}</span>
             </p>
           )}
@@ -215,7 +214,7 @@ export default function StatCard({
           <div className="shrink-0 flex flex-col items-end gap-0.5">
             <TrendBadge trend={trend} />
             {trend.label && (
-              <span className="text-[10px] text-zinc-400 dark:text-zinc-500 whitespace-nowrap">{trend.label}</span>
+              <span className="hidden sm:block text-[10px] text-zinc-400 dark:text-zinc-500 whitespace-nowrap">{trend.label}</span>
             )}
           </div>
         )}
