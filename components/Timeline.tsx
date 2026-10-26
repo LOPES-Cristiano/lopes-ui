@@ -163,9 +163,9 @@ function EventCard({
           )}
         </div>
         {item.description && (
-          <p className={twMerge("text-zinc-500 dark:text-zinc-400 mt-0.5", s.body)}>
+          <div className={twMerge("text-zinc-500 dark:text-zinc-400 mt-0.5", s.body)}>
             {item.description}
-          </p>
+          </div>
         )}
         {item.date && (
           <p className={twMerge("text-zinc-400 mt-1", s.date)}>
@@ -197,7 +197,7 @@ function SimpleCard({ item, size }: { item: TimelineItem; size: TimelineSize }) 
         )}
       </div>
       {item.description && (
-        <p className={twMerge("text-zinc-500 dark:text-zinc-400", s.body)}>{item.description}</p>
+        <div className={twMerge("text-zinc-500 dark:text-zinc-400", s.body)}>{item.description}</div>
       )}
       {item.date && (
         <p className={twMerge("text-zinc-400 mt-0.5", s.date)}>{item.date}</p>
@@ -225,8 +225,7 @@ export default function Timeline({
       <div
         role="list"
         className={twMerge("relative isolate", className)}
-        {...(componentId ? { "data-component-id": componentId } : {})}
-      >
+        >
         {/* center line */}
         <div
           className={twMerge(
@@ -271,8 +270,7 @@ export default function Timeline({
     <div
       role="list"
       className={twMerge("relative isolate", className)}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
+      >
       <div className={twMerge("flex flex-col", s.gap)}>
         {items.map((item, i) => {
           const isLast = i === items.length - 1;
