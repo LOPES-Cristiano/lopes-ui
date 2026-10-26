@@ -157,8 +157,7 @@ export default function CheckboxGroup({
         <div
           role={multiple ? "group" : "radiogroup"}
           className={twMerge("grid gap-3", CARD_COLS[columns])}
-          {...(componentId ? { "data-component-id": componentId } : {})}
-        >
+          >
           {options.map((opt) => {
             const checked = selected.includes(opt.value);
             const optId = `${groupId}-${opt.value}`;
@@ -184,6 +183,7 @@ export default function CheckboxGroup({
                   disabled={opt.disabled}
                   onChange={() => toggle(opt.value)}
                   className="peer sr-only"
+                  data-component-id={componentId ? `${componentId}.${opt.value}` : undefined}
                 />
                 {/* Top row: icon + indicator */}
                 <div className="flex items-start justify-between gap-2">
@@ -230,8 +230,7 @@ export default function CheckboxGroup({
         <div
           role={multiple ? "group" : "radiogroup"}
           className="flex flex-wrap gap-2"
-          {...(componentId ? { "data-component-id": componentId } : {})}
-        >
+          >
           {options.map((opt) => {
             const checked = selected.includes(opt.value);
             const optId = `${groupId}-${opt.value}`;
@@ -243,8 +242,8 @@ export default function CheckboxGroup({
                   "group/cb inline-flex items-center gap-1.5 cursor-pointer select-none font-medium border-2 transition-all duration-150",
                   BTN_SIZE[size],
                   checked
-                    ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
-                    : "bg-white border-zinc-200 text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-800",
+                    ? "bg-primary border-primary text-white shadow-sm"
+                    : "bg-surface border-border text-surface-foreground hover:border-border-strong hover:bg-surface-hover",
                   opt.disabled && "cursor-not-allowed opacity-50 pointer-events-none",
                 )}
               >
@@ -257,6 +256,7 @@ export default function CheckboxGroup({
                   disabled={opt.disabled}
                   onChange={() => toggle(opt.value)}
                   className="peer sr-only"
+                  data-component-id={componentId ? `${componentId}.${opt.value}` : undefined}
                 />
                 {opt.icon && (
                   <span className={twMerge("shrink-0", checked ? "text-white" : "text-zinc-400")}>
@@ -290,8 +290,7 @@ export default function CheckboxGroup({
           "flex",
           direction === "horizontal" ? "flex-row flex-wrap gap-x-5 gap-y-2.5" : "flex-col gap-2.5",
         )}
-        {...(componentId ? { "data-component-id": componentId } : {})}
-      >
+        >
         {options.map((opt) => {
           const checked = selected.includes(opt.value);
           const optId = `${groupId}-${opt.value}`;
@@ -315,6 +314,7 @@ export default function CheckboxGroup({
                 disabled={opt.disabled}
                 onChange={() => toggle(opt.value)}
                 className="peer sr-only"
+                data-component-id={componentId ? `${componentId}.${opt.value}` : undefined}
               />
               <span className="mt-px">
                 <Indicator checked={checked} shape={shape} size={size} multiple={multiple} />
