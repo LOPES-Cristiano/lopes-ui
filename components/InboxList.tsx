@@ -185,6 +185,7 @@ export default function InboxList({
             {/* Star */}
             {onToggleStar && (
               <button
+                data-component-id={`erp.inbox.star-${item.id}`}
                 type="button"
                 aria-label={item.starred ? "Remover estrela" : "Marcar com estrela"}
                 onClick={(e) => { e.stopPropagation(); onToggleStar(item.id); }}
