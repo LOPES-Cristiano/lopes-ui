@@ -42,6 +42,7 @@ export type ContextMenuProps = {
   onSelect?: (item: ContextMenuItem) => void;
   disabled?: boolean;
   className?: string;
+  header?: React.ReactNode;
 };
 
 // ── Position ──────────────────────────────────────────────────────────────────
@@ -130,6 +131,7 @@ function MenuItem({
         onMouseLeave={() => setSubVisible(false)}
       >
         <button
+          data-component-id={item.componentId ?? (item.id ? `erp.context-menu.${item.id}` : 'erp.context-menu.item')}
           ref={btnRef}
           type="button"
           className={itemCls}
@@ -137,8 +139,7 @@ function MenuItem({
           onFocus={revealSub}
           onBlur={() => setSubVisible(false)}
           aria-haspopup="menu"
-          {...(item.componentId ? { "data-component-id": item.componentId } : {})}
-        >
+          >
           {inner}
         </button>
         {subVisible && (
@@ -166,14 +167,14 @@ function MenuItem({
 
   return (
     <button
+      data-component-id={item.componentId ?? (item.id ? `erp.context-menu.${item.id}` : 'erp.context-menu.item')}
       type="button"
       role="menuitem"
       tabIndex={item.disabled ? -1 : 0}
       className={itemCls}
       onClick={handleClick}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleClick(e as unknown as React.MouseEvent); }}
-      {...(item.componentId ? { "data-component-id": item.componentId } : {})}
-    >
+      >
       {inner}
     </button>
   );
@@ -186,11 +187,13 @@ function MenuPanel({
   pos,
   onSelect,
   onClose,
+  header,
 }: {
   items: ContextMenuItem[];
   pos: Pos;
   onSelect?: (item: ContextMenuItem) => void;
   onClose: () => void;
+  header?: React.ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -220,9 +223,14 @@ function MenuPanel({
       role="menu"
       aria-label="Context menu"
       style={{ top: pos.y, left: pos.x, minWidth: MENU_W }}
-      className="fixed z-[110] rounded-xl bg-white dark:bg-zinc-900 p-1 shadow-xl ring-1 ring-black/[0.06] dark:ring-white/[0.08] focus:outline-none"
+      className="fixed z-[9999] rounded-xl bg-white dark:bg-zinc-900 p-1 shadow-xl ring-1 ring-black/[0.06] dark:ring-white/[0.08] focus:outline-none"
       onContextMenu={(e) => e.preventDefault()}
     >
+      {header && (
+        <div className="px-1 py-1 border-b border-zinc-100 dark:border-zinc-800/80 mb-1">
+          {header}
+        </div>
+      )}
       {items.map((item, i) => (
         <React.Fragment key={item.id ?? `${item.label}-${i}`}>
           {item.divider && <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" role="separator" />}
@@ -242,6 +250,7 @@ export default function ContextMenu({
   onSelect,
   disabled = false,
   className,
+  header,
 }: ContextMenuProps) {
   const [pos, setPos] = useState<Pos | null>(null);
 
@@ -293,7 +302,7 @@ export default function ContextMenu({
       </div>
       {pos && typeof document !== "undefined" &&
         createPortal(
-          <MenuPanel items={items} pos={pos} onSelect={onSelect} onClose={close} />,
+          <MenuPanel items={items} pos={pos} onSelect={onSelect} onClose={close} header={header} />,
           document.body,
         )
       }
