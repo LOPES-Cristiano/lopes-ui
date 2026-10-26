@@ -10,6 +10,8 @@ import ActivityFeed, { type ActivityEvent } from "@/components/ActivityFeed";
 import FilterBar, { type FilterChip } from "@/components/FilterBar";
 import TreeView from "@/components/TreeView";
 import Badge from "@/components/Badge";
+import Spreadsheet, { type SpreadsheetColumn } from "@/components/spreadsheet";
+import TransferList, { type TransferListItem } from "@/components/TransferList";
 
 import Button from "@/components/Button";
 import toast from "@/components/Toast";
@@ -821,7 +823,94 @@ export default function Page() {
           </section>
 
           <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Spreadsheet ──────────────────────────────────────────── */}
+          <section id="spreadsheet" className="space-y-10 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Grade Analítica"
+              title="Spreadsheet"
+              description="Planilha interativa de alta densidade com virtualização, colunas fixadas (pinned), grupos de cabeçalho, filtros por operadores (>, <, intervalo), edição inline, agregação de rodapé e exportação."
+            />
+
+            <DemoCard id="spreadsheet-demo" title="Estoque e Preços por Filial (RO / AM)">
+              <div className="h-[380px]">
+                <Spreadsheet
+                  title="Posição de Estoque — Móveis & Eletrodomésticos"
+                  description="Duplo clique em células editáveis ou filtre usando operadores numéricos (ex: >10)"
+                  height={320}
+                  showFooter
+                  showRowNumbers
+                  rowKey={(r) => r.sku}
+                  columns={[
+                    { key: "sku", header: "SKU", width: 100, pinned: true, sortable: true },
+                    { key: "produto", header: "Produto", width: 240, pinned: true, sortable: true, filterable: true },
+                    { key: "setor", header: "Setor", width: 150, filterable: true, filterType: "multiselect" },
+                    { key: "pvh", header: "Porto Velho (RO)", group: "Saldo por Filial", type: "integer", width: 140, align: "right", aggregate: "sum", editable: true },
+                    { key: "jpr", header: "Ji-Paraná (RO)", group: "Saldo por Filial", type: "integer", width: 140, align: "right", aggregate: "sum", editable: true },
+                    { key: "mao", header: "Manaus (AM)", group: "Saldo por Filial", type: "integer", width: 140, align: "right", aggregate: "sum", editable: true },
+                    { key: "preco", header: "Preço Varejo", type: "currency", width: 140, align: "right", aggregate: "avg", sortable: true },
+                  ] satisfies SpreadsheetColumn<any>[]}
+                  rows={[
+                    { sku: "MOV-101", produto: "Guarda-Roupa Casal 6 Portas", setor: "Móveis", pvh: 18, jpr: 24, mao: 15, preco: 1899.9 },
+                    { sku: "EST-204", produto: "Sofá Retrátil 3 Lugares 2,50m", setor: "Estofados", pvh: 12, jpr: 19, mao: 22, preco: 2690.0 },
+                    { sku: "COL-309", produto: "Colchão Queen Molas Ensacadas", setor: "Colchões", pvh: 30, jpr: 25, mao: 18, preco: 1549.0 },
+                    { sku: "ELE-412", produto: "Geladeira Frost Free 400L Inox", setor: "Eletrodomésticos", pvh: 9, jpr: 14, mao: 11, preco: 3499.0 },
+                    { sku: "ELE-450", produto: "Lavadora de Roupas 12kg Automática", setor: "Eletrodomésticos", pvh: 16, jpr: 20, mao: 14, preco: 2199.0 },
+                    { sku: "MOV-188", produto: "Mesa de Jantar 6 Cadeiras Madeira", setor: "Móveis", pvh: 7, jpr: 11, mao: 8, preco: 2390.0 },
+                  ]}
+                  onCellEdit={(row, col, val) => toast.success(`Célula ${row.sku} [${col}] atualizada para ${val}`)}
+                />
+              </div>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── TransferList ─────────────────────────────────────────── */}
+          <section id="transfer-list" className="space-y-10 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Associação Dupla"
+              title="TransferList"
+              description="Lista dupla para transferência e vinculação de itens (permissões, filiais autorizadas, produtos em campanha) com busca independente, seleção em lote e badges."
+            />
+
+            <DemoCard id="transfer-list-demo" title="Filiais Autorizadas (Rondônia & Amazonas)">
+              <div className="p-4">
+                <TransferListDemo />
+              </div>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
       </div>
     </main>
+  );
+}
+
+function TransferListDemo() {
+  const [source, setSource] = React.useState<TransferListItem[]>([
+    { id: "jpr", title: "Filial 01 — Ji-Paraná (Matriz)", subtitle: "Av. Marechal Rondon · (69) 3421-0000", tag: "RO", tagTone: "success" },
+    { id: "pvh", title: "Filial 02 — Porto Velho Centro", subtitle: "Av. Sete de Setembro · (69) 3224-0000", tag: "RO", tagTone: "success" },
+    { id: "mao1", title: "Filial 05 — Manaus Cidade Nova", subtitle: "Av. Noel Nutels · (92) 3642-0000", tag: "AM", tagTone: "info" },
+  ]);
+  const [target, setTarget] = React.useState<TransferListItem[]>([
+    { id: "ari", title: "Filial 03 — Ariquemes", subtitle: "Av. Tancredo Neves · (69) 3535-0000", tag: "RO", tagTone: "success" },
+    { id: "caco", title: "Filial 04 — Cacoal", subtitle: "Av. Porto Velho · (69) 3441-0000", tag: "RO", tagTone: "success" },
+    { id: "hta", title: "Filial 06 — Humaitá", subtitle: "Centro · (92) 3373-0000", tag: "AM", tagTone: "info" },
+    { id: "itc", title: "Filial 07 — Itacoatiara", subtitle: "Centro · (92) 3521-0000", tag: "AM", tagTone: "info" },
+  ]);
+
+  return (
+    <TransferList
+      sourceTitle="Filiais Vinculadas ao Vendedor"
+      targetTitle="Filiais Disponíveis (RO / AM)"
+      sourceItems={source}
+      targetItems={target}
+      height={340}
+      onChange={(nextSource, nextTarget) => {
+        setSource(nextSource);
+        setTarget(nextTarget);
+      }}
+    />
   );
 }
