@@ -132,6 +132,7 @@ export default function OTPInput({
     >
       {Array.from({ length }).map((_, idx) => (
         <input
+          data-component-id={componentId ? `${componentId}.slot-${idx}` : `erp.otp.slot-${idx}`}
           key={`${uid}-${idx}`}
           ref={(el) => { inputsRef.current[idx] = el; }}
           id={idx === 0 ? `${uid}-0` : undefined}
