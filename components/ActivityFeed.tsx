@@ -243,6 +243,8 @@ export default function ActivityFeed({
       {onLoadMore && (
         <div className="pt-2 flex justify-center">
           <button
+            data-component-id="erp.activity-feed.load-more"
+            type="button"
             onClick={onLoadMore}
             className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded px-2 py-1"
           >
