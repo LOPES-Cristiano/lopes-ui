@@ -91,7 +91,7 @@ function HighlightedCode({
         if (!cancelled) setHtml(result);
       })
       .catch(() => {
-        if (!cancelled) setHtml(`<pre style="color:#f8f8f2">${trimmed}</pre>`);
+        if (!cancelled) setHtml(`<pre style="color:#f8f8f2">${trimmed.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`);
       });
 
     return () => { cancelled = true; };
@@ -118,7 +118,7 @@ function HighlightedCode({
       transformers: lineNumbers ? [{ line(node, line) { node.properties["data-line"] = line; } }] : [],
     })
       .then((r) => { if (!cancelled) setVisibleHtml(r); })
-      .catch(() => { if (!cancelled) setVisibleHtml(`<pre style="color:#f8f8f2">${visibleCode}</pre>`); });
+      .catch(() => { if (!cancelled) setVisibleHtml(`<pre style="color:#f8f8f2">${visibleCode.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`); });
     return () => { cancelled = true; };
   }, [visibleCode, language, lineNumbers, html, isCollapsible]);
 
@@ -132,10 +132,11 @@ function HighlightedCode({
           lineNumbers ? "line-numbers" : "",
         ].join(" ")}
         style={{ background: "#282a36" }}
-        dangerouslySetInnerHTML={{ __html: displayHtml || `<pre style="color:#f8f8f2;background:#282a36;padding:0">${visibleCode}</pre>` }}
+        dangerouslySetInnerHTML={{ __html: displayHtml || `<pre style="color:#f8f8f2;background:#282a36;padding:0">${visibleCode.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>` }}
       />
       {isCollapsible && (
         <button
+          data-component-id="erp.codeblock.collapse-toggle"
           type="button"
           onClick={() => setExpanded((v) => !v)}
           className="flex w-full items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors"
@@ -165,6 +166,8 @@ function CopyButton({ code }: { code: string }) {
 
   return (
     <button
+      data-component-id="erp.codeblock.copy"
+      type="button"
       onClick={handleCopy}
       aria-label="Copiar código"
       className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors"
@@ -223,6 +226,7 @@ export default function CodeBlock({
             <div className="flex items-center">
               {tabs.map((t, i) => (
                 <button
+                  data-component-id={`erp.codeblock.tab-${i}`}
                   key={i}
                   type="button"
                   onClick={() => setActiveTab(i)}
