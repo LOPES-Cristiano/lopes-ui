@@ -10,6 +10,9 @@ import Carousel from "@/components/Carousel";
 import StatCard, { type SparkPoint } from "@/components/StatCard";
 import ServiceStatusCard, { UptimeBar, type UptimeDay, type ServiceIncident } from "@/components/ServiceStatusCard";
 import PingIndicator from "@/components/PingIndicator";
+import StatusBadge from "@/components/StatusBadge";
+import { DetailHeader, DetailGrid, DetailPanel, InfoField, MetricField, DetailTabs } from "@/components/DetailLayout";
+import EmojiPicker from "@/components/EmojiPicker";
 import CodeBlock from "@/components/CodeBlock";
 import toast from "@/components/Toast";
 import { TrendingUp, Star, ShoppingCart, Users, Package, ArrowRight, MoreHorizontal, Globe, Cpu, Layers } from "lucide-react";
@@ -923,64 +926,105 @@ import { Star } from "lucide-react";
 
           <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-          {/* ── Agenda ────────────────────────────────────────────────── */}
-          <section id="agenda" className="space-y-10 pb-10 sm:pb-14 scroll-mt-20">
-            <div>
-              <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Agenda</h2>
-              <p className="mt-1 text-zinc-500">Lista de eventos organizada por dia, com marcador de hoje, localização, participantes e suporte a cores.</p>
-            </div>
+          {/* ── StatusBadge ───────────────────────────────────────────── */}
+          <section id="status-badge" className="space-y-10 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Indicadores"
+              title="StatusBadge"
+              description="Badge semântico padronizado para status de registros, pedidos de entrega e situações operacionais com ponto indicador (dot), efeito pulse e variante sólida."
+            />
 
-            {/* Full demo */}
-            <div id="agenda-demo" className="space-y-4 scroll-mt-20">
-              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Demo completo</h3>
-              <div className="p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                <Agenda events={DEMO_AGENDA_EVENTS} daysAhead={14} dateFormat="both" />
-              </div>
-            </div>
-
-            {/* Compact */}
-            <div id="agenda-compact" className="space-y-4 scroll-mt-20">
-              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Tamanhos</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-4 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">sm</p>
-                  <Agenda events={DEMO_AGENDA_EVENTS.slice(0, 4)} size="sm" showAttendees={false} showLocation={false} />
+            <DemoCard id="status-badge-tones" title="Tons semânticos & tamanhos">
+              <div className="p-6 space-y-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <StatusBadge tone="success" label="Entregue & Montado" />
+                  <StatusBadge tone="info" label="Em Rota (RO/AM)" pulse />
+                  <StatusBadge tone="warning" label="Aguardando Montador" />
+                  <StatusBadge tone="danger" label="Avaria no Transporte" />
+                  <StatusBadge tone="primary" label="Separação no CD" />
+                  <StatusBadge tone="brand" label="Garantia BigLar" />
+                  <StatusBadge tone="neutral" label="Rascunho" />
                 </div>
-                <div className="p-4 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">md (padrão)</p>
-                  <Agenda events={DEMO_AGENDA_EVENTS.slice(0, 4)} size="md" showAttendees={false} />
-                </div>
-                <div className="p-4 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">lg</p>
-                  <Agenda events={DEMO_AGENDA_EVENTS.slice(0, 3)} size="lg" />
+                <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                  <StatusBadge tone="success" solid size="xs" label="XS Solid" />
+                  <StatusBadge tone="info" solid size="sm" label="SM Solid" />
+                  <StatusBadge tone="primary" solid size="md" label="MD Solid" />
+                  <StatusBadge tone="brand" solid size="lg" label="LG Solid" />
                 </div>
               </div>
-            </div>
+            </DemoCard>
 
-            {/* Empty state */}
-            <div id="agenda-empty" className="space-y-4 scroll-mt-20">
-              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Estado vazio</h3>
-              <div className="p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                <Agenda events={[]} emptyMessage="Nenhum compromisso para os próximos dias." />
-              </div>
-            </div>
-
-            {/* Props */}
-            <div id="agenda-props" className="space-y-4 scroll-mt-20">
-              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">Props</h3>
+            <div id="status-badge-props" className="space-y-4">
+              <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200">Props</h3>
               <PropsTable rows={[
-                ["events",         "AgendaEvent[]",                               "required", "Lista de eventos"],
-                ["startDate",      "Date",                                         "hoje",     "Primeira data a exibir"],
-                ["daysAhead",      "number",                                       "0",        "Janela de dias (0 = todos)"],
-                ["dateFormat",     "'relative' | 'date' | 'both'",                "'both'",   "Formato do rótulo de dia"],
-                ["showTime",       "boolean",                                     "true",     "Exibe horário ao lado do evento"],
-                ["showLocation",   "boolean",                                     "true",     "Exibe localização do evento"],
-                ["showAttendees",  "boolean",                                     "true",     "Exibe avatares dos participantes"],
-                ["size",           "'sm' | 'md' | 'lg'",                          "'md'",     "Tamanho do componente"],
-                ["emptyMessage",   "string",                                       "—",        "Texto quando não há eventos"],
-                ["className",      "string",                                       "—",        "Classe CSS extra na raiz"],
+                ["tone",    "'success'|'warning'|'danger'|'info'|'neutral'|'primary'|'brand'", "'neutral'", "Tom semântico da badge"],
+                ["size",    "'xs'|'sm'|'md'|'lg'",                                             "'sm'",      "Tamanho do componente"],
+                ["dot",     "boolean",                                                         "true",      "Exibe o círculo colorido à esquerda"],
+                ["pulse",   "boolean",                                                         "false",     "Anima o ponto indicador com ping"],
+                ["solid",   "boolean",                                                         "false",     "Fundo com cor sólida de alto contraste"],
+                ["label",   "ReactNode",                                                       "—",         "Texto da badge"],
               ]} />
             </div>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── DetailLayout ──────────────────────────────────────────── */}
+          <section id="detail-layout" className="space-y-10 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Ficha Cadastral"
+              title="DetailLayout"
+              description="Conjunto de primitivos padronizados (DetailHeader, DetailGrid, DetailPanel, InfoField, MetricField e DetailTabs) para telas e modais de visualização de registros."
+            />
+
+            <DemoCard id="detail-layout-demo" title="Ficha de Produto — Móveis & Eletro">
+              <div className="p-6 space-y-6 bg-white dark:bg-zinc-900 rounded-xl">
+                <DetailHeader
+                  titleLabel="Catálogo de Estofados · SKU #EST-6901"
+                  titleValue="Sofá Retrátil e Reclinável Imperial 3,20m — Veludo Cinza"
+                  avatar={<Avatar initials="SI" size="lg" />}
+                  badge={<StatusBadge tone="success" label="Em Linha" />}
+                />
+
+                <DetailPanel title="Indicadores de Estoque & Vendas" icon={TrendingUp}>
+                  <DetailGrid columns={4}>
+                    <MetricField label="Estoque CD Ji-Paraná (RO)" value="42 un." variant="success" subtext="Pronta entrega (69)" />
+                    <MetricField label="Estoque CD Manaus (AM)" value="28 un." variant="info" subtext="Pronta entrega (92)" />
+                    <MetricField label="Preço à Vista" value="R$ 3.490,00" variant="primary" subtext="Até 10x sem juros" />
+                    <MetricField label="Garantia de Fábrica" value="12 meses" variant="default" subtext="Estrutura em eucalipto" />
+                  </DetailGrid>
+                </DetailPanel>
+
+                <DetailPanel title="Especificações Técnicas" icon={Package}>
+                  <DetailGrid columns={4}>
+                    <InfoField label="Fabricante" value="Estofados Conforto Norte" />
+                    <InfoField label="Dimensões (L × A × P)" value="320 × 105 × 118 cm" />
+                    <InfoField label="Densidade da Espuma" value="D-33 Soft com Molas Ensacadas" highlight />
+                    <InfoField label="Necessita Montagem?" value="Sim (Encaixe de Módulos)" variant="info" />
+                  </DetailGrid>
+                </DetailPanel>
+              </div>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── EmojiPicker ───────────────────────────────────────────── */}
+          <section id="emoji-picker" className="space-y-10 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Interação"
+              title="EmojiPicker"
+              description="Seletor de emojis categorizado com busca em português, reações rápidas e histórico de uso recente."
+            />
+
+            <DemoCard id="emoji-picker-demo" title="Seletor interativo">
+              <div className="p-6 flex justify-center">
+                <EmojiPicker
+                  autoFocus={false}
+                  onSelectEmoji={(emoji) => toast(`Emoji selecionado: ${emoji}`)}
+                />
+              </div>
+            </DemoCard>
           </section>
 
           <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
