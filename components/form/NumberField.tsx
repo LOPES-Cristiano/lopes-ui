@@ -14,17 +14,22 @@ export type NumberFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   value?: number | string;
   defaultValue?: number | string;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  /** Optional callback returning the parsed numeric value (or undefined if blank), handling comma/dot conversion automatically */
+  onValueChange?: (value: number | undefined) => void;
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
   onFocus?: React.FocusEventHandler<HTMLInputElement>;
   disabled?: boolean;
   readOnly?: boolean;
   autoFocus?: boolean;
+  autoComplete?: string;
   /** Minimum allowed value */
   min?: number;
   /** Maximum allowed value */
   max?: number;
   /** Increment / decrement step */
-  step?: number;
+  step?: number | string;
+  /** Fallback if field is left empty on blur. Defaults to '0' (or min if min > 0). Pass false to allow empty on blur. */
+  defaultOnBlur?: number | string | false;
 
   // ── Appearance ────────────────────────────────────────────────────────────
   size?: "sm" | "md" | "lg";
@@ -51,9 +56,9 @@ const SIZE = {
 export default function NumberField({
   label, labelInline, labelWidth, required, tooltip, error, helpText, width, className,
   id: idProp, name, placeholder,
-  value, defaultValue, onChange, onBlur, onFocus,
-  disabled, readOnly, autoFocus,
-  min, max, step = 1,
+  value, defaultValue, onChange, onValueChange, onBlur, onFocus,
+  disabled, readOnly, autoFocus, autoComplete,
+  min, max, step = "any", defaultOnBlur,
   size = "md", variant = "default",
   leftIcon, rightIcon, prefix, suffix,
   inputClassName, componentId,
@@ -62,13 +67,31 @@ export default function NumberField({
   const id = idProp ?? autoId;
   const s = SIZE[size];
 
+  const displayValue = React.useMemo(() => {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'number' && Number.isNaN(value)) return '';
+    if (value === 'NaN') return '';
+    return value;
+  }, [value]);
+
+  const [localText, setLocalText] = React.useState<string>(() =>
+    displayValue === '' ? '' : String(displayValue)
+  );
+  const [isFocused, setIsFocused] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isFocused) {
+      setLocalText(displayValue === '' ? '' : String(displayValue));
+    }
+  }, [displayValue, isFocused]);
+
   const inputCls = twMerge(
     "flex-1 min-w-0 bg-transparent outline-none border-0 ring-0 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500",
     // Hide native spinners (cross-browser)
     "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
     s.h, s.text,
-    leftIcon  ? s.padL : prefix ? "pl-0" : s.pl,
-    rightIcon ? s.padR : suffix ? "pr-0" : s.pr,
+    leftIcon  ? s.padL : s.pl,
+    rightIcon ? s.padR : s.pr,
     (disabled || readOnly) && "cursor-not-allowed",
     inputClassName,
   );
@@ -81,6 +104,83 @@ export default function NumberField({
     error && "border-red-400 hover:border-red-400 focus-within:border-red-500 focus-within:ring-red-500/10",
     (disabled || readOnly) && "opacity-60 pointer-events-none bg-zinc-50 dark:bg-zinc-800/50",
   );
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(true);
+    setLocalText(displayValue === '' ? '' : String(displayValue));
+    try {
+      e.target.select();
+    } catch {}
+    onFocus?.(e);
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(false);
+    const raw = e.target.value.trim();
+    if (raw === '' && defaultOnBlur !== false) {
+      const fallback = defaultOnBlur !== undefined
+        ? String(defaultOnBlur)
+        : (min !== undefined && min > 0 ? String(min) : '0');
+      e.target.value = fallback;
+
+      const fallbackNum = Number(fallback.replace(',', '.'));
+      const validNum = !Number.isNaN(fallbackNum) ? fallbackNum : undefined;
+
+      try {
+        (e as any).valueAsNumber = validNum;
+        (e as any).valueOf = () => (validNum ?? 0);
+      } catch {}
+
+      onValueChange?.(validNum);
+      onChange?.(e as unknown as React.ChangeEvent<HTMLInputElement>);
+    }
+    onBlur?.(e);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let raw = e.target.value;
+
+    // Filter to only valid numeric characters
+    raw = raw.replace(/[^0-9.,-]/g, '');
+
+    // Normalize multiple minus signs: only allow at beginning
+    if (raw.includes('-')) {
+      const isNeg = raw.startsWith('-');
+      raw = (isNeg ? '-' : '') + raw.replace(/-/g, '');
+    }
+
+    // Convert comma to dot for unified decimal handling
+    raw = raw.replace(/,/g, '.');
+
+    // Ensure at most one decimal point
+    const dotIndex = raw.indexOf('.');
+    if (dotIndex !== -1) {
+      raw = raw.slice(0, dotIndex + 1) + raw.slice(dotIndex + 1).replace(/\./g, '');
+    }
+
+    // Strip leading zero if followed by another digit (e.g. '01' -> '1', '015' -> '15', but keep '0.' or '0')
+    if (/^-?0[0-9]/.test(raw)) {
+      const isNeg = raw.startsWith('-');
+      const numPart = (isNeg ? raw.slice(1) : raw).replace(/^0+/, '');
+      raw = (isNeg ? '-' : '') + (numPart === '' ? '0' : numPart);
+    }
+
+    setLocalText(raw);
+    e.target.value = raw;
+
+    const parsedNumber = raw === '' || raw === '-' || raw === '.' || raw === '-.' ? undefined : Number(raw);
+    const validNumber = parsedNumber !== undefined && !Number.isNaN(parsedNumber) ? parsedNumber : undefined;
+
+    // Attach numeric value helpers directly to the event object
+    // This protects against callers doing Number(event) or event.valueAsNumber
+    try {
+      (e as any).valueAsNumber = validNumber;
+      (e as any).valueOf = () => (validNumber ?? 0);
+    } catch {}
+
+    onValueChange?.(validNumber);
+    onChange?.(e);
+  };
 
   return (
     <FieldWrapper
@@ -100,16 +200,16 @@ export default function NumberField({
           </span>
         )}
         <input
-          id={id} name={name} type="number" placeholder={placeholder}
-          value={value} defaultValue={defaultValue}
-          onChange={onChange} onBlur={onBlur} onFocus={onFocus}
+          id={id} name={name} type="text" inputMode="decimal" placeholder={placeholder}
+          value={isFocused ? localText : displayValue} defaultValue={defaultValue}
+          onChange={handleChange} onBlur={handleBlur} onFocus={handleFocus}
           disabled={disabled} readOnly={readOnly} autoFocus={autoFocus}
-          min={min} max={max} step={step}
+          autoComplete={autoComplete ?? "off"}
           required={required}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
           className={inputCls}
-          {...(componentId ? { "data-component-id": componentId } : {})}
+          data-component-id={componentId || (idProp ? `erp.form.number.${idProp}` : undefined)}
         />
         {suffix && (
           <span className={twMerge("shrink-0 select-none self-stretch flex items-center border-l border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400", s.aff)}>
