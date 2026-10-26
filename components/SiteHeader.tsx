@@ -82,13 +82,13 @@ const SITE_COMMANDS: CommandItem[] = [
   // Páginas
   { id: "nav-home",   label: "Home",               icon: Home,          href: "/",                        group: "Páginas" },
   // Componentes
-  { id: "sc-forms",   label: "Formulários",         icon: FormInput,     href: "/showcase/forms",          group: "Componentes", keywords: ["form", "input", "login", "otp"] },
-  { id: "sc-display", label: "Display",             icon: Layers,        href: "/showcase/display",        group: "Componentes", keywords: ["avatar", "badge", "card", "carousel"] },
-  { id: "sc-actions", label: "Ações & Feedback",    icon: Zap,           href: "/showcase/actions",        group: "Componentes", keywords: ["button", "alert", "toast", "drawer"] },
-  { id: "sc-data",    label: "Dados & Tabelas",     icon: BarChart2,     href: "/showcase/data",           group: "Componentes", keywords: ["datatable", "kanban", "treeview", "table"] },
+  { id: "sc-forms",   label: "Formulários",         icon: FormInput,     href: "/showcase/forms",          group: "Componentes", keywords: ["form", "input", "login", "otp", "select", "datepicker", "zod"] },
+  { id: "sc-display", label: "Display",             icon: Layers,        href: "/showcase/display",        group: "Componentes", keywords: ["avatar", "badge", "statusbadge", "detail", "emoji", "card", "carousel"] },
+  { id: "sc-actions", label: "Ações & Feedback",    icon: Zap,           href: "/showcase/actions",        group: "Componentes", keywords: ["button", "alert", "toast", "drawer", "modal", "formmodal", "camera"] },
+  { id: "sc-data",    label: "Dados & Tabelas",     icon: BarChart2,     href: "/showcase/data",           group: "Componentes", keywords: ["datatable", "spreadsheet", "transferlist", "kanban", "treeview", "table"] },
   { id: "sc-comm",    label: "Comunicação",         icon: MessageCircle, href: "/showcase/communication", group: "Componentes", keywords: ["chat", "email", "notification"] },
   { id: "sc-nav",     label: "Navegação & Layout",  icon: Navigation,    href: "/showcase/navigation",    group: "Componentes", keywords: ["sidebar", "breadcrumb", "accordion", "command"] },
-  { id: "sc-anim",    label: "Animação & Conteúdo", icon: Play,          href: "/showcase/animation",     group: "Componentes", keywords: ["text-rotate", "stepper", "timeline", "codeblock"] },
+  { id: "sc-anim",    label: "Animação & Conteúdo", icon: Play,          href: "/showcase/animation",     group: "Componentes", keywords: ["text-rotate", "stepper", "timeline", "codeblock", "codeeditor"] },
   // Ações
   { id: "act-settings", label: "Configurações", icon: Settings, href: "/settings",                    group: "Ações", shortcut: "⌘S" },
   { id: "act-profile",  label: "Meu Perfil",    icon: User,     href: "/profile",                    group: "Ações", shortcut: "⌘P" },
