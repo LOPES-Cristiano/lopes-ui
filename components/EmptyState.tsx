@@ -33,8 +33,8 @@ export type EmptyStateProps = {
   title?: string;
   /** Override description regardless of preset */
   description?: string;
-  /** Custom Lucide icon (overrides preset icon) */
-  icon?: LucideIcon;
+  /** Custom Lucide icon or element (overrides preset icon) */
+  icon?: LucideIcon | React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }> | React.ReactNode;
   /** Custom illustration node (overrides icon entirely) */
   illustration?: React.ReactNode;
   /** One or two action buttons */
@@ -149,7 +149,12 @@ function ActionBtn({ action, size }: { action: EmptyStateAction; size: NonNullab
     return <a href={action.href} className={cls}>{action.label}</a>;
   }
   return (
-    <button type="button" className={cls} onClick={action.onClick}>
+    <button
+      data-component-id="erp.empty-state.action"
+      type="button"
+      className={cls}
+      onClick={action.onClick}
+    >
       {action.label}
     </button>
   );
@@ -176,7 +181,21 @@ export default function EmptyState({
 
   const iconBg  = config?.iconBg  ?? "bg-zinc-100 dark:bg-zinc-800";
   const iconCls = config?.iconCls ?? "text-zinc-400 dark:text-zinc-500";
-  const Icon    = CustomIcon ?? config?.icon ?? Frown;
+
+  const renderIcon = () => {
+    if (!CustomIcon) {
+      const FallbackIcon = config?.icon ?? Frown;
+      return <FallbackIcon size={ICON_SIZE[size]} className={iconCls} strokeWidth={1.5} />;
+    }
+    if (React.isValidElement(CustomIcon)) {
+      return CustomIcon;
+    }
+    if (typeof CustomIcon === "function" || typeof CustomIcon === "object") {
+      const Comp = CustomIcon as React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
+      return <Comp size={ICON_SIZE[size]} className={iconCls} strokeWidth={1.5} />;
+    }
+    return null;
+  };
 
   return (
     <div
@@ -186,8 +205,7 @@ export default function EmptyState({
         fill && "h-full justify-center",
         className,
       )}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
+      >
       {/* Illustration or icon */}
       {illustration ?? (
         <div
@@ -197,7 +215,7 @@ export default function EmptyState({
             iconBg,
           )}
         >
-          <Icon size={ICON_SIZE[size]} className={iconCls} strokeWidth={1.5} />
+          {renderIcon()}
         </div>
       )}
 
