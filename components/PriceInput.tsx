@@ -104,12 +104,7 @@ export default function PriceInput({
         {symbol}
       </span>
 
-      <input
-        id={id}
-        name={name}
-        type="text"
-        inputMode="numeric"
-        autoComplete="off"
+      <input data-component-id={id ? `erp.price-input.${id}` : "erp.price-input"} id={id} name={name} type="text" inputMode="numeric" autoComplete="off"
         aria-label={ariaLabel}
         placeholder={placeholder ? "0,00" : undefined}
         value={displayValue}
