@@ -2,13 +2,13 @@
 
 import React from "react";
 import { twMerge } from "tailwind-merge";
-import { Check, X, type LucideIcon } from "lucide-react";
+import { Check, ChevronRight, X, type LucideIcon } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type StepStatus = "upcoming" | "current" | "completed" | "error";
 export type StepperOrientation = "horizontal" | "vertical";
-export type StepperVariant = "default" | "outlined" | "minimal";
+export type StepperVariant = "default" | "outlined" | "minimal" | "subtle";
 export type StepperSize = "sm" | "md" | "lg";
 
 export type StepItem = {
@@ -16,6 +16,8 @@ export type StepItem = {
   title: string;
   /** Optional sub-label */
   description?: string;
+  /** Optional badge or count displayed inline (useful for subtle variant) */
+  badge?: React.ReactNode;
   /** Override the auto-computed status */
   status?: StepStatus;
   /** Replace the step number/icon with a custom Lucide icon */
@@ -192,8 +194,113 @@ export default function Stepper({
   const s = SIZE_MAP[size];
   const isHorizontal = orientation === "horizontal";
 
+  // ── SUBTLE / COMPACT INLINE VARIANT (Ideal for headers & drawers) ──
+  if (variant === "subtle") {
+    return (
+      <div
+        role="tablist"
+        aria-label="Etapas"
+        data-component-id={componentId}
+        className={twMerge(
+          "flex items-center w-full overflow-x-auto no-scrollbar select-none",
+          className
+        )}
+      >
+        {steps.map((step, i) => {
+          const status = resolveStatus(step, i, activeStep);
+          const isCurrent = i === activeStep;
+          const isCompleted = status === "completed";
+          const isError = status === "error";
+          const isLast = i === steps.length - 1;
+          const Icon = step.icon;
+          const canClick = !step.disabled && (clickable || Boolean(onStepClick));
+
+          return (
+            <React.Fragment key={i}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={isCurrent}
+                disabled={!canClick}
+                onClick={canClick ? () => onStepClick?.(i) : undefined}
+                className={twMerge(
+                  "group relative flex-1 min-w-fit inline-flex items-center justify-between gap-2.5 px-4 py-2.5 text-xs font-semibold transition-all whitespace-nowrap border-b-2 -mb-px",
+                  canClick ? "cursor-pointer" : "cursor-default",
+                  isCurrent
+                    ? "border-indigo-600 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-950/30 font-bold"
+                    : isError
+                    ? "border-transparent hover:border-rose-300 text-rose-600 dark:text-rose-400 hover:bg-rose-50/40 dark:hover:bg-rose-950/20"
+                    : isCompleted
+                    ? "border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100"
+                    : "border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
+                )}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span
+                    className={twMerge(
+                      "inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold transition-colors shrink-0",
+                      isCurrent
+                        ? "bg-indigo-600 text-white shadow-2xs"
+                        : isError
+                        ? "bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300"
+                        : isCompleted
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                        : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700"
+                    )}
+                  >
+                    {Icon ? (
+                      <Icon size={12} />
+                    ) : isCompleted ? (
+                      <Check size={12} strokeWidth={2.5} />
+                    ) : (
+                      <span>{i + 1}</span>
+                    )}
+                  </span>
+
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="truncate">{step.title}</span>
+                    {step.description && (
+                      <span className="hidden 2xl:inline text-[11px] font-normal text-zinc-400 dark:text-zinc-500 truncate">
+                        · {step.description}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {step.badge !== undefined && step.badge !== null && (
+                  <span
+                    className={twMerge(
+                      "inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold leading-none shrink-0",
+                      isCurrent
+                        ? "bg-indigo-600/15 text-indigo-700 dark:bg-indigo-400/20 dark:text-indigo-200"
+                        : isError
+                        ? "bg-rose-500/15 text-rose-700 dark:text-rose-300"
+                        : isCompleted
+                        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                        : "bg-zinc-200/70 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                    )}
+                  >
+                    {step.badge}
+                  </span>
+                )}
+              </button>
+
+              {!isLast && connector && (
+                <ChevronRight
+                  size={14}
+                  className="text-zinc-300 dark:text-zinc-700 shrink-0 mx-0.5"
+                  aria-hidden="true"
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
+  }
+
   const wrapCls = twMerge(
-    isHorizontal ? "flex items-start w-full" : "flex flex-col",
+    isHorizontal ? "flex items-start w-full py-1" : "flex flex-col py-1",
     className,
   );
 
@@ -201,9 +308,9 @@ export default function Stepper({
     <div
       role="list"
       aria-label="Passos"
+      data-component-id={componentId}
       className={wrapCls}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
+      >
       {steps.map((step, i) => {
         const status   = resolveStatus(step, i, activeStep);
         const colors   = STATUS_COLORS[status];
@@ -218,18 +325,18 @@ export default function Stepper({
                 role="listitem"
                 aria-current={status === "current" ? "step" : undefined}
                 className={twMerge(
-                  "flex flex-col items-center gap-2 shrink-0",
+                  "flex flex-col items-center gap-1 sm:gap-2 flex-1 min-w-0 text-center",
                   isClick && "cursor-pointer",
                 )}
                 onClick={isClick ? () => onStepClick?.(i) : undefined}
               >
                 <StepCircle step={step} index={i} status={status} size={size} variant={variant} />
-                <div className="text-center">
-                  <p className={twMerge(s.text, "leading-snug transition-colors duration-200", colors.title)}>
+                <div className="text-center w-full min-w-0 px-0.5">
+                  <p className={twMerge(s.text, "leading-tight sm:leading-snug transition-colors duration-200 whitespace-normal break-words line-clamp-2 text-[10.5px] sm:text-xs md:text-sm font-semibold", colors.title)}>
                     {step.title}
                   </p>
                   {step.description && (
-                    <p className={twMerge(s.subText, "mt-0.5 transition-colors duration-200", colors.description)}>
+                    <p className={twMerge(s.subText, "mt-0.5 transition-colors duration-200 hidden sm:block whitespace-normal break-words line-clamp-2 text-[10px] md:text-[11px]", colors.description)}>
                       {step.description}
                     </p>
                   )}
@@ -237,7 +344,7 @@ export default function Stepper({
               </div>
 
               {!isLast && connector && (
-                <div className="flex-1 flex items-start mt-4 mx-1">
+                <div className="flex-1 min-w-[6px] max-w-[28px] sm:max-w-none flex items-center mt-3.5 sm:mt-4 mx-0.5 sm:mx-1.5">
                   <Connector orientation="horizontal" status={status} size={size} />
                 </div>
               )}
