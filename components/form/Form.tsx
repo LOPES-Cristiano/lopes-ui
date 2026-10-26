@@ -54,12 +54,12 @@ export function FormSection({
   return (
     <div className={twMerge("space-y-4", className)}>
       {(title || description) && (
-        <div className={twMerge(divider && "pb-3 border-b border-zinc-100 dark:border-zinc-800")}>
+        <div className={twMerge(divider && "pb-3 border-b border-border")}>
           {title && (
-            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>
+            <h3 className="text-sm font-semibold text-surface-foreground">{title}</h3>
           )}
           {description && (
-            <p className="mt-0.5 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">{description}</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
           )}
         </div>
       )}
@@ -97,15 +97,14 @@ export default function Form({
     <form
       onSubmit={onSubmit}
       className={twMerge(sp, !card && className)}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
+      >
       {(title || description) && (
         <div>
           {title && (
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">{title}</h2>
+            <h2 className="text-base font-semibold text-surface-foreground">{title}</h2>
           )}
           {description && (
-            <p className="mt-1 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{description}</p>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
           )}
         </div>
       )}
@@ -114,7 +113,7 @@ export default function Form({
         <div
           className={twMerge(
             "flex flex-wrap items-center gap-3",
-            !compact && "border-t border-zinc-100 dark:border-zinc-800 pt-4",
+            !compact && "border-t border-border pt-4",
           )}
         >
           {footer}
@@ -127,7 +126,7 @@ export default function Form({
     return (
       <div
         className={twMerge(
-          "rounded-2xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 shadow-sm",
+          "rounded-2xl border border-border bg-surface shadow-sm",
           compact ? "p-4" : "p-6",
           className,
         )}
