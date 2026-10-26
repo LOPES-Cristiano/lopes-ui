@@ -3,6 +3,7 @@
 import React, { useId } from "react";
 import { twMerge } from "tailwind-merge";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
+import { useAccessControl } from "../useAccessControl";
 
 export type TextFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   // ── Identity ──────────────────────────────────────────────────────────────
@@ -21,6 +22,7 @@ export type TextFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   disabled?: boolean;
   readOnly?: boolean;
   autoComplete?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   autoFocus?: boolean;
   /** Minimum character length */
   minLength?: number;
@@ -41,6 +43,7 @@ export type TextFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   suffix?: string;
   inputClassName?: string;
   componentId?: string;
+  hideIfDenied?: boolean;
 };
 
 const SIZE = {
@@ -53,74 +56,190 @@ export default function TextField({
   label, labelInline, labelWidth, required, tooltip, error, helpText, width, className,
   id: idProp, name, type = "text", placeholder,
   value, defaultValue, onChange, onBlur, onFocus, onKeyDown,
-  disabled, readOnly, autoComplete, autoFocus, minLength, maxLength,
-  size = "md", variant = "default",
+  disabled, readOnly, autoComplete, inputMode, autoFocus, minLength, maxLength,
+  size = "sm", variant = "default",
   leftIcon, rightIcon, prefix, suffix,
-  inputClassName, componentId,
+  inputClassName, componentId, hideIfDenied = false,
 }: TextFieldProps) {
-  const autoId = useId();
-  const id = idProp ?? autoId;
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+
+  const effectiveDisabled = disabled || !hasPermission;
+  const generatedId = useId();
+  const id = idProp ?? generatedId;
   const s = SIZE[size];
 
-  const inputCls = twMerge(
-    "flex-1 min-w-0 bg-transparent outline-none border-0 ring-0 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500",
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const cursorRef = React.useRef<number | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    cursorRef.current = e.target.selectionStart;
+    onChange?.(e);
+  };
+
+  React.useLayoutEffect(() => {
+    if (inputRef.current && cursorRef.current !== null && document.activeElement === inputRef.current) {
+      try {
+        inputRef.current.setSelectionRange(cursorRef.current, cursorRef.current);
+      } catch {}
+    }
+  }, [value]);
+
+  const hasAffix = Boolean(leftIcon || rightIcon || prefix || suffix);
+
+  const baseInput = twMerge(
+    "w-full font-sans transition-colors duration-150 outline-hidden",
+    "text-zinc-900 placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500",
+    "disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400 dark:disabled:bg-zinc-800/60 dark:disabled:text-zinc-500",
+    "read-only:cursor-default read-only:bg-zinc-50 dark:read-only:bg-zinc-800/40",
     s.h, s.text,
-    leftIcon  ? s.padL : prefix ? "pl-0" : s.pl,
-    rightIcon ? s.padR : suffix ? "pr-0" : s.pr,
-    (disabled || readOnly) && "cursor-not-allowed",
+  );
+
+  const standaloneCls = twMerge(
+    baseInput,
+    s.pl, s.pr,
+    "rounded-md",
+    variant === "default" && [
+      "border bg-white dark:bg-zinc-900",
+      error
+        ? "border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
+        : "border-zinc-300 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-zinc-700 dark:focus:border-primary",
+    ],
+    variant === "filled" && [
+      "border border-transparent bg-zinc-100 dark:bg-zinc-800",
+      error
+        ? "border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:bg-white dark:focus:bg-zinc-900"
+        : "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-zinc-900",
+    ],
     inputClassName,
   );
 
   const wrapCls = twMerge(
-    "relative flex w-full items-center overflow-hidden rounded-lg border transition-all duration-150",
-    variant === "filled"
-      ? "bg-zinc-100 border-transparent hover:bg-zinc-200/70 focus-within:bg-white focus-within:border-zinc-300 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 dark:focus-within:bg-zinc-900 dark:focus-within:border-zinc-600"
-      : "bg-white border-zinc-300 hover:border-zinc-400 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:border-zinc-600 dark:focus-within:border-zinc-500",
-    error && "border-red-400 hover:border-red-400 focus-within:border-red-500 focus-within:ring-red-500/10",
-    (disabled || readOnly) && "opacity-60 pointer-events-none bg-zinc-50 dark:bg-zinc-800/50",
+    "relative flex items-center rounded-md transition-colors duration-150",
+    variant === "default" && [
+      "border bg-white dark:bg-zinc-900",
+      error
+        ? "border-rose-500 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20"
+        : "border-zinc-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 dark:border-zinc-700 dark:focus-within:border-primary",
+    ],
+    variant === "filled" && [
+      "border border-transparent bg-zinc-100 dark:bg-zinc-800",
+      error
+        ? "border-rose-500 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20 focus-within:bg-white dark:focus-within:bg-zinc-900"
+        : "focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 focus-within:bg-white dark:focus-within:bg-zinc-900",
+    ],
+  );
+
+  const inputCls = twMerge(
+    baseInput,
+    "bg-transparent border-0 focus:ring-0 focus:outline-hidden",
+    leftIcon  ? s.padL : s.pl,
+    rightIcon ? s.padR : s.pr,
+    inputClassName,
   );
 
   return (
     <FieldWrapper
-      id={id} label={label} labelInline={labelInline} labelWidth={labelWidth}
-      required={required} tooltip={tooltip} error={error} helpText={helpText}
-      width={width} className={className}
+      id={id}
+      label={label}
+      labelInline={labelInline}
+      labelWidth={labelWidth}
+      required={required}
+      tooltip={tooltip}
+      error={error}
+      helpText={helpText}
+      width={width}
+      className={className}
     >
-      <div className={wrapCls}>
-        {leftIcon && (
-          <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-zinc-400", s.iL)}>
-            {React.cloneElement(leftIcon, { size: s.iconSz })}
-          </span>
-        )}
-        {prefix && (
-          <span className={twMerge("shrink-0 select-none self-stretch flex items-center border-r border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400", s.aff)}>
-            {prefix}
-          </span>
-        )}
+      {!hasAffix ? (
         <input
-          id={id} name={name} type={type} placeholder={placeholder}
-          value={value} defaultValue={defaultValue}
-          onChange={onChange} onBlur={onBlur} onFocus={onFocus} onKeyDown={onKeyDown}
-          disabled={disabled} readOnly={readOnly}
-          autoComplete={autoComplete} autoFocus={autoFocus}
-          minLength={minLength} maxLength={maxLength}
+          ref={inputRef}
+          id={id}
+          name={name ?? `input_off_${id}`}
+          type={type}
+          placeholder={placeholder}
+          value={value === null ? '' : value}
+          defaultValue={defaultValue}
+          onChange={handleChange}
+          onBlur={onBlur}
+          onFocus={onFocus}
+          onKeyDown={onKeyDown}
+          disabled={effectiveDisabled}
+          readOnly={readOnly}
+          autoComplete={autoComplete ?? (type === 'password' ? 'current-password' : 'off')}
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          data-1p-ignore="true"
+          data-lpignore="true"
+          data-bwignore="true"
+          data-form-type="other"
+          role="presentation"
+          inputMode={inputMode}
+          autoFocus={autoFocus}
+          minLength={minLength}
+          maxLength={maxLength}
           required={required}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
-          className={inputCls}
-          {...(componentId ? { "data-component-id": componentId } : {})}
-        />
-        {suffix && (
-          <span className={twMerge("shrink-0 select-none self-stretch flex items-center border-l border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400", s.aff)}>
-            {suffix}
-          </span>
-        )}
-        {rightIcon && (
-          <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-zinc-400", s.iR)}>
-            {React.cloneElement(rightIcon, { size: s.iconSz })}
-          </span>
-        )}
-      </div>
+          className={standaloneCls}
+          />
+      ) : (
+        <div className={wrapCls}>
+          {leftIcon && (
+            <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-zinc-400", s.iL)}>
+              {React.cloneElement(leftIcon, { size: s.iconSz })}
+            </span>
+          )}
+          {prefix && (
+            <span className={twMerge("shrink-0 select-none self-stretch flex items-center border-r border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400", s.aff)}>
+              {prefix}
+            </span>
+          )}
+          <input
+            ref={inputRef}
+            id={id}
+            name={name ?? `input_off_${id}`}
+            type={type}
+            placeholder={placeholder}
+            value={value === null ? '' : value}
+            defaultValue={defaultValue}
+            onChange={handleChange}
+            onBlur={onBlur}
+            onFocus={onFocus}
+            onKeyDown={onKeyDown}
+            disabled={effectiveDisabled}
+            readOnly={readOnly}
+            autoComplete={autoComplete ?? (type === 'password' ? 'current-password' : 'off')}
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            data-1p-ignore="true"
+            data-lpignore="true"
+            data-bwignore="true"
+            data-form-type="other"
+            role="presentation"
+            inputMode={inputMode}
+            autoFocus={autoFocus}
+            minLength={minLength}
+            maxLength={maxLength}
+            required={required}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
+            className={inputCls}
+            />
+          {suffix && (
+            <span className={twMerge("shrink-0 select-none self-stretch flex items-center border-l border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400", s.aff)}>
+              {suffix}
+            </span>
+          )}
+          {rightIcon && (
+            <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-zinc-400", s.iR)}>
+              {React.cloneElement(rightIcon, { size: s.iconSz })}
+            </span>
+          )}
+        </div>
+      )}
     </FieldWrapper>
   );
 }
