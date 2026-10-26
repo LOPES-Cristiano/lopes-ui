@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
+import Header from "./Header";
 
 export default function HeaderWrapper(props: React.ComponentProps<typeof Header>) {
   const router = useRouter();
@@ -12,5 +12,6 @@ export default function HeaderWrapper(props: React.ComponentProps<typeof Header>
     void router.push(href);
   };
 
-  return <Header {...props} onNavigate={handleNavigate} />;
+  return <Header {...props} onNavigate={handleNavigate} 
+  />;
 }
