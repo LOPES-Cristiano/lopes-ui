@@ -31,6 +31,8 @@ export type CardColor =
 export type CardProps = {
   /** Visual style */
   variant?: CardVariant;
+  /** Legacy tone alias for variant/style */
+  tone?: "default" | "hero" | "subtle" | "elevated" | "flat" | string;
   /** Color scheme (mainly affects `filled` variant) */
   color?: CardColor;
   /** Drop shadow */
@@ -265,6 +267,7 @@ export function CardImage({
 
 export default function Card({
   variant = "default",
+  tone,
   color = "default",
   shadow = "none",
   radius = "xl",
@@ -277,12 +280,14 @@ export default function Card({
 }: CardProps) {
   const c = COLOR_STYLES[color];
   const isClickable = hoverable || !!onClick;
+  const isHero = tone === "hero";
+  const resolvedVariant = isHero ? "elevated" : variant;
 
   const classes = twMerge(
     "flex flex-col overflow-hidden transition-all duration-200",
-    VARIANT_CLASSES[variant],
-    variant === "filled" ? c.filled : "",
-    SHADOW_CLASSES[shadow],
+    VARIANT_CLASSES[resolvedVariant],
+    resolvedVariant === "filled" ? c.filled : "",
+    isHero ? "shadow-lg bg-gradient-to-br from-white to-slate-50/80 dark:from-zinc-900 dark:to-zinc-900/60 border border-slate-200/80 dark:border-zinc-800" : SHADOW_CLASSES[shadow],
     RADIUS_CLASSES[radius],
     isClickable && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:translate-y-0",
     className,
@@ -295,8 +300,7 @@ export default function Card({
       className={classes}
       onClick={onClick}
       type={onClick ? "button" : undefined}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
+      >
       {accent && (
         <div className={twMerge("h-1 w-full shrink-0", c.accent)} />
       )}
