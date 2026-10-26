@@ -39,6 +39,7 @@ export type SmartObjectAction = {
   /** async: shows spinner until resolved */
   onClick: () => void | Promise<void>;
   disabled?: boolean;
+  componentId?: string;
 };
 
 export type SmartObjectProps = {
@@ -63,6 +64,7 @@ export type SmartObjectProps = {
   mode?: "chip" | "card";
   onOpen?: () => void;
   className?: string;
+  componentId?: string;
 };
 
 // ── Config maps ────────────────────────────────────────────────────────────────
@@ -99,12 +101,14 @@ export function SmartObjectChip({
   ref_id,
   status,
   onOpen,
-}: Pick<SmartObjectProps, "kind" | "ref_id" | "title" | "status" | "onOpen">) {
+  componentId,
+}: Pick<SmartObjectProps, "kind" | "ref_id" | "title" | "status" | "onOpen" | "componentId">) {
   const kc = kindConfig[kind];
   const sc = statusConfig[status];
 
   return (
     <button
+      data-component-id={componentId ? `${componentId}.chip` : `erp.smart-object.${ref_id}.chip`}
       type="button"
       onClick={onOpen}
       className={twMerge(clsx(
@@ -143,6 +147,7 @@ export default function SmartObject({
   mode = "card",
   onOpen,
   className,
+  componentId,
 }: SmartObjectProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const kc = kindConfig[kind];
@@ -257,6 +262,7 @@ export default function SmartObject({
           <div className="flex items-center gap-2 flex-wrap">
             {actions.map((action) => (
               <button
+                data-component-id={action.componentId ?? (componentId ? `${componentId}.action.${action.id}` : `erp.smart-object.${ref_id}.action.${action.id}`)}
                 key={action.id}
                 type="button"
                 disabled={action.disabled || busyId === action.id}
