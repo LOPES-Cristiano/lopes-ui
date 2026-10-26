@@ -80,7 +80,7 @@ export default function TimeField({
           id={id} name={name}
           type="time"
           step={precision === "seconds" ? 1 : 60}
-          value={value} defaultValue={defaultValue}
+          value={value === null ? '' : value} defaultValue={defaultValue}
           onChange={onChange} onBlur={onBlur}
           disabled={disabled} readOnly={readOnly}
           ref={inputRef}
@@ -89,7 +89,7 @@ export default function TimeField({
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
           className={twMerge(inputCls, !disabled && !readOnly && "cursor-pointer")}
-          {...(componentId ? { "data-component-id": componentId } : {})}
+          data-component-id={componentId || (idProp ? `erp.form.time.${idProp}` : undefined)}
         />
       </div>
     </FieldWrapper>
