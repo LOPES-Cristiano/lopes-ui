@@ -2,6 +2,7 @@
 
 import React from "react";
 import { twMerge } from "tailwind-merge";
+import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,14 @@ export type TableColumn<T = Record<string, unknown>> = {
   headerClassName?: string;
   /** Cell className */
   cellClassName?: string;
+  /** Summary calculation: 'sum' | 'count' | 'avg' | 'min' | 'max' | custom function */
+  summary?: "sum" | "count" | "avg" | "min" | "max" | ((rows: T[]) => React.ReactNode);
+  /** Label/symbol prepended to calculated summary */
+  summaryLabel?: string;
+  /** Custom formatter for calculated numeric summary */
+  summaryFormat?: (val: number) => React.ReactNode;
+  /** Custom className for summary cell */
+  summaryClassName?: string;
 };
 
 export type TableProps<T = Record<string, unknown>> = {
@@ -32,6 +41,8 @@ export type TableProps<T = Record<string, unknown>> = {
   rowKey?: (row: T, index: number) => string | number;
   /** Clicked row callback */
   onRowClick?: (row: T, index: number) => void;
+  /** Dynamic row className */
+  rowClassName?: (row: T, index: number) => string | undefined;
   /** Visual variant */
   variant?: TableVariant;
   /** Cell / row density */
@@ -42,12 +53,20 @@ export type TableProps<T = Record<string, unknown>> = {
   dividers?: boolean;
   /** Highlight row on hover */
   hoverable?: boolean;
+  /** Whether to show calculated summary footer */
+  showSummary?: boolean;
+  /** Manual summary values per column key */
+  summaryValues?: Record<string, React.ReactNode>;
+  /** Custom footer node */
+  footerSlot?: React.ReactNode;
   /** Empty state content */
   emptySlot?: React.ReactNode;
   /** Caption shown below the table */
   caption?: React.ReactNode;
   /** Wrap table in a scroll container */
   scrollable?: boolean;
+  /** Rounded corner style */
+  rounded?: "none" | "sm" | "md" | "lg" | "xl";
   className?: string;
   tableClassName?: string;
   componentId?: string;
@@ -75,6 +94,56 @@ const ALIGN: Record<string, string> = {
   right:  "text-right",
 };
 
+// ── Summary helper ────────────────────────────────────────────────────────────
+
+function computeColumnSummary<T>(col: TableColumn<T>, rows: T[]): React.ReactNode {
+  if (!col.summary) return null;
+
+  if (typeof col.summary === "function") {
+    return col.summary(rows);
+  }
+
+  if (col.summary === "count") {
+    const label = col.summaryLabel ?? "#";
+    return `${label} ${rows.length}`;
+  }
+
+  const numericVals = rows
+    .map((r) => {
+      const val = (r as Record<string, unknown>)[col.key];
+      return typeof val === "number" ? val : Number(val);
+    })
+    .filter((v) => !isNaN(v) && isFinite(v));
+
+  if (numericVals.length === 0) return "-";
+
+  let raw = 0;
+  let symbol = "";
+
+  switch (col.summary) {
+    case "sum":
+      raw = numericVals.reduce((acc, v) => acc + v, 0);
+      symbol = col.summaryLabel?.trim() || "";
+      if (/^total(:)?$/i.test(symbol)) symbol = "";
+      break;
+    case "avg":
+      raw = numericVals.reduce((acc, v) => acc + v, 0) / numericVals.length;
+      symbol = col.summaryLabel ?? "x̄";
+      break;
+    case "min":
+      raw = Math.min(...numericVals);
+      symbol = col.summaryLabel ?? "min";
+      break;
+    case "max":
+      raw = Math.max(...numericVals);
+      symbol = col.summaryLabel ?? "max";
+      break;
+  }
+
+  const formatted = col.summaryFormat ? col.summaryFormat(raw) : raw.toLocaleString("pt-BR");
+  return symbol ? `${symbol} ${formatted}` : formatted;
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Table<T = Record<string, unknown>>({
@@ -82,40 +151,75 @@ export default function Table<T = Record<string, unknown>>({
   rows,
   rowKey,
   onRowClick,
+  rowClassName,
   variant = "default",
   size = "md",
   stickyHeader = false,
   dividers = true,
   hoverable = true,
+  showSummary = false,
+  summaryValues,
+  footerSlot,
   emptySlot,
   caption,
   scrollable = true,
+  rounded = "xl",
   className,
   tableClassName,
   componentId,
 }: TableProps<T>) {
+  const { canAccess } = useAccessControl();
+
+  // Calculate summaries if requested
+  const columnSummaries = React.useMemo(() => {
+    if (!showSummary && !summaryValues) return null;
+    return columns.map((col) => {
+      if (summaryValues && col.key in summaryValues) {
+        return summaryValues[col.key];
+      }
+      return computeColumnSummary(col, rows);
+    });
+  }, [showSummary, summaryValues, columns, rows]);
+
+  if (componentId && !canAccess(componentId)) {
+    return null;
+  }
+
   const headerBg =
     variant === "minimal"
       ? "bg-transparent"
       : "bg-zinc-50 dark:bg-zinc-900";
 
-  const rowClass = (idx: number) =>
+  const rowClass = (row: T, idx: number) =>
     twMerge(
       variant === "striped" && idx % 2 === 1 ? "bg-zinc-50/70 dark:bg-zinc-800/40" : "bg-white dark:bg-zinc-950",
       dividers && "border-b border-zinc-100 dark:border-zinc-800 last:border-0",
       hoverable && "transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/60",
       onRowClick && "cursor-pointer",
+      rowClassName ? rowClassName(row, idx) : undefined,
     );
 
   const bordered = variant === "bordered";
 
+  const hasAnySummary = columnSummaries?.some((v) => v !== null && v !== undefined) ?? false;
+  const firstSummaryIdx = columnSummaries ? columnSummaries.findIndex((v) => v !== null && v !== undefined) : -1;
+  const labelTargetIdx = firstSummaryIdx > 0 ? firstSummaryIdx - 1 : -1;
+
+  const roundedClasses: Record<string, string> = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+  };
+
   return (
     <div
       className={twMerge("w-full", className)}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
+      >
       <div className={twMerge(
-        "w-full rounded-xl overflow-hidden border",
+        "w-full overflow-hidden border",
+        roundedClasses[rounded] ?? "rounded-xl",
         bordered ? "border-zinc-200 dark:border-zinc-700" : "border-zinc-200 dark:border-zinc-800",
         scrollable && "overflow-x-auto",
       )}>
@@ -157,7 +261,7 @@ export default function Table<T = Record<string, unknown>>({
               rows.map((row, idx) => (
                 <tr
                   key={rowKey ? rowKey(row, idx) : idx}
-                  className={rowClass(idx)}
+                  className={rowClass(row, idx)}
                   onClick={onRowClick ? () => onRowClick(row, idx) : undefined}
                 >
                   {columns.map((col) => {
@@ -182,6 +286,43 @@ export default function Table<T = Record<string, unknown>>({
               ))
             )}
           </tbody>
+
+          {/* Summary / Footer */}
+          {footerSlot ? (
+            <tfoot className="border-t-2 border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 font-semibold text-xs">
+              {footerSlot}
+            </tfoot>
+          ) : hasAnySummary && columnSummaries ? (
+            <tfoot className="border-t-2 border-zinc-200 dark:border-zinc-700 bg-zinc-50/90 dark:bg-zinc-900/90 font-bold text-xs text-zinc-800 dark:text-zinc-200">
+              <tr>
+                {columns.map((col, idx) => {
+                  let val = columnSummaries[idx];
+                  if ((val === null || val === undefined) && idx === labelTargetIdx) {
+                    val = (
+                      <span className="font-bold text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                        Total
+                      </span>
+                    );
+                  }
+
+                  return (
+                    <td
+                      key={col.key}
+                      className={twMerge(
+                        SIZE_TD[size],
+                        "font-semibold",
+                        bordered && "border-x border-zinc-200 dark:border-zinc-700 first:border-l-0 last:border-r-0",
+                        ALIGN[col.align ?? (idx === labelTargetIdx ? "right" : "left")],
+                        col.summaryClassName,
+                      )}
+                    >
+                      {val ?? ""}
+                    </td>
+                  );
+                })}
+              </tr>
+            </tfoot>
+          ) : null}
         </table>
       </div>
 
