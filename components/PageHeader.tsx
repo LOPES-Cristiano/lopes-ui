@@ -2,7 +2,7 @@
 
 import React from "react";
 import { twMerge } from "tailwind-merge";
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { ChevronRight, X, type LucideIcon } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -30,6 +30,8 @@ export type PageHeaderProps = {
   noPadding?: boolean;
   className?: string;
   componentId?: string;
+  /** Callback para fechar / sair da tela */
+  onClose?: () => void;
 };
 
 // ── Breadcrumb ────────────────────────────────────────────────────────────────
@@ -87,6 +89,7 @@ export default function PageHeader({
   noPadding = false,
   className,
   componentId,
+  onClose,
 }: PageHeaderProps) {
   const wrapCls = twMerge(
     "w-full",
@@ -99,8 +102,7 @@ export default function PageHeader({
   return (
     <div
       className={wrapCls}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
+      >
       {/* Breadcrumbs */}
       {breadcrumbs && breadcrumbs.length > 0 && (
         <div className="mb-2">
@@ -109,32 +111,58 @@ export default function PageHeader({
       )}
 
       {/* Title row */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3 min-w-0">
-          {Icon && (
-            <div className="shrink-0 flex items-center justify-center h-9 w-9 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-              <Icon size={18} />
-            </div>
-          )}
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 leading-tight truncate">
-                {title}
-              </h1>
-              {badge && <div className="shrink-0">{badge}</div>}
-            </div>
-            {description && (
-              <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400 leading-snug">
-                {description}
-              </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-start sm:items-center justify-between gap-2.5 sm:gap-3 min-w-0 w-full sm:w-auto">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            {Icon && (
+              <div className="shrink-0 flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                <Icon size={18} />
+              </div>
             )}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-zinc-900 dark:text-zinc-50 leading-tight truncate">
+                  {title}
+                </h1>
+                {badge && <div className="shrink-0">{badge}</div>}
+              </div>
+              {description && (
+                <p className="mt-0.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-snug line-clamp-2 sm:line-clamp-none">
+                  {description}
+                </p>
+              )}
+            </div>
           </div>
+
+          {/* Botão Fechar no Mobile (topo direito alinhado ao título) */}
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Fechar e sair da tela"
+              title="Fechar e sair da tela"
+              className="sm:hidden shrink-0 cursor-pointer rounded-xl p-1.5 text-muted-foreground opacity-70 transition-all hover:opacity-100 hover:bg-muted focus:outline-none active:scale-95 border-none"
+            >
+              <X size={18} />
+            </button>
+          )}
         </div>
 
-        {/* Actions */}
-        {actions && (
-          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+        {/* Actions e Botão Fechar no Desktop */}
+        {(actions || onClose) && (
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-start sm:justify-end shrink-0">
             {actions}
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Fechar e sair da tela"
+                title="Fechar e sair da tela"
+                className="hidden sm:inline-flex shrink-0 cursor-pointer items-center justify-center rounded-xl p-1.5 text-muted-foreground opacity-70 transition-all hover:opacity-100 hover:bg-muted focus:outline-none active:scale-95 border-none"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
         )}
       </div>
