@@ -6,6 +6,15 @@ import Button from "@/components/Button";
 import Alert from "@/components/Alert";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import Drawer from "@/components/Drawer";
+import Modal from "@/components/Modal";
+import FormModal, { FormSectionHeader } from "@/components/FormModal";
+import FormDrawer from "@/components/FormDrawer";
+import { CameraCaptureModal } from "@/components/CameraCaptureModal";
+import PullToRefresh from "@/components/PullToRefresh";
+import TextField from "@/components/form/TextField";
+import SelectField from "@/components/form/SelectField";
+import NumberField from "@/components/form/NumberField";
+import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
 import StatusPage from "@/components/StatusPage";
 import CodeBlock from "@/components/CodeBlock";
@@ -13,6 +22,189 @@ import toast, { ToastPreview } from "@/components/Toast";
 import { useAsyncButton } from "@/hooks/useAsyncButton";
 import { FileSearch, Lock, AlertTriangle, Download, ArrowRight, ArrowUp, MousePointer2, Plus, Check, RefreshCw, Save, Pencil, Trash2, ExternalLink, Bell, Settings, Search } from "lucide-react";
 import { SectionHeader, DemoCard, PropsTable } from "@/app/showcase/_shared";
+
+function ModalAndFormModalDemo() {
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [modalSize, setModalSize] = React.useState<"compact" | "sm" | "md" | "lg">("compact");
+  const [formModalOpen, setFormModalOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState("geral");
+
+  const tabs = [
+    { id: "geral", label: "Dados Gerais", description: "Identificação e categoria" },
+    { id: "estoque", label: "Preços & Filiais", description: "Praças RO e AM", badge: 2 },
+  ];
+
+  return (
+    <div className="flex flex-wrap gap-3">
+      {(["compact", "sm", "md", "lg"] as const).map((sz) => (
+        <Button
+          key={sz}
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setModalSize(sz);
+            setModalOpen(true);
+          }}
+        >
+          Modal · {sz}
+        </Button>
+      ))}
+      <Button variant="primary" size="sm" onClick={() => setFormModalOpen(true)}>
+        FormModal (CRUD em Abas)
+      </Button>
+
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        size={modalSize}
+        title="Detalhes da Entrega Regional"
+        description={`Visualizando em tamanho "${modalSize}" com pilha global de ESC`}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setModalOpen(false)}>
+              Fechar
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                setModalOpen(false);
+                toast.success("Romaneio confirmado!");
+              }}
+            >
+              Confirmar Romaneio
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3 text-sm text-zinc-600 dark:text-zinc-400">
+          <p>
+            Unidade: <strong>BigLar Móveis &amp; Eletro — Filial Ji-Paraná (RO)</strong>
+          </p>
+          <p>
+            Itens programados: Guarda-Roupa Casal 6 Portas e Colchão Ortopédico Queen.
+          </p>
+        </div>
+      </Modal>
+
+      <FormModal
+        open={formModalOpen}
+        onClose={() => setFormModalOpen(false)}
+        title="Cadastro de Produto"
+        subtitle="Conforto e qualidade para o seu lar"
+        code="PROD-8042"
+        badge={<StatusBadge tone="success" label="Ativo" />}
+        avatar={{ initials: "BL" }}
+        isEditing
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onBack={() => setActiveTab("geral")}
+        onNext={() => setActiveTab("estoque")}
+        onSave={() => {
+          setFormModalOpen(false);
+          toast.success("Produto salvo com sucesso!");
+        }}
+      >
+        {activeTab === "geral" ? (
+          <div className="space-y-4">
+            <FormSectionHeader
+              title="Identificação do Móvel / Eletrodoméstico"
+              description="Preencha os dados principais para exibição no catálogo das lojas de RO e AM."
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <TextField label="Descrição Comercial" defaultValue="Sofá Retrátil e Reclinável 3 Lugares" required />
+              <SelectField
+                label="Setor"
+                defaultValue="estofados"
+                options={[
+                  { value: "moveis", label: "Móveis & Roupeiros" },
+                  { value: "estofados", label: "Estofados & Salas" },
+                  { value: "colchoes", label: "Colchões" },
+                  { value: "eletro", label: "Eletrodomésticos" },
+                ]}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <FormSectionHeader
+              title="Precificação Regional"
+              description="Valores praticados nas filiais de Rondônia (69) e Amazonas (92)."
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <NumberField label="Preço Varejo (RO)" prefix="R$" value={2890} />
+              <NumberField label="Preço Varejo (AM)" prefix="R$" value={2950} />
+            </div>
+          </div>
+        )}
+      </FormModal>
+    </div>
+  );
+}
+
+function FormDrawerAndCameraDemo() {
+  const [formDrawerOpen, setFormDrawerOpen] = React.useState(false);
+  const [cameraOpen, setCameraOpen] = React.useState(false);
+
+  return (
+    <div className="flex flex-wrap gap-3">
+      <Button variant="primary" size="sm" onClick={() => setFormDrawerOpen(true)}>
+        Abrir FormDrawer
+      </Button>
+      <Button variant="outline" size="sm" onClick={() => setCameraOpen(true)}>
+        Abrir CameraCaptureModal
+      </Button>
+
+      <FormDrawer
+        open={formDrawerOpen}
+        onClose={() => setFormDrawerOpen(false)}
+        title="Agendar Montagem"
+        description="Ordem de Serviço #OS-6912 · Porto Velho (RO)"
+        summary={
+          <div className="flex items-center justify-between text-xs">
+            <div>
+              <p className="font-bold text-zinc-900 dark:text-zinc-100">Cliente: Marcos Oliveira</p>
+              <p className="text-zinc-500">Contato: (69) 99214-8800 · Cozinha Modulável 5 Peças</p>
+            </div>
+            <StatusBadge tone="info" label="Agendado" />
+          </div>
+        }
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setFormDrawerOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                setFormDrawerOpen(false);
+                toast.success("Montagem agendada!");
+              }}
+            >
+              Salvar Agendamento
+            </Button>
+          </div>
+        }
+      >
+        <TextField label="Montador Responsável" defaultValue="Carlos Eduardo (Equipe RO)" />
+        <TextField label="Observações de Acesso" placeholder="Ponto de referência da residência..." />
+      </FormDrawer>
+
+      <CameraCaptureModal
+        open={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        title="Capturar Comprovante de Entrega"
+        description="Posicione o canhoto assinado ou foto do móvel montado no quadro central"
+        onCapture={(file) => {
+          toast.success(`Foto capturada: ${file.name}`);
+          setCameraOpen(false);
+        }}
+      />
+    </div>
+  );
+}
 
 function DrawerDemo() {
   const [open, setOpen] = React.useState(false);
