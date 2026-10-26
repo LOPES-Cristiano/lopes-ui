@@ -41,6 +41,8 @@ export type CarouselProps = {
 function Dot({ active, onClick }: { active: boolean; onClick: () => void }) {
   return (
     <button
+      data-component-id="erp.carousel.dot"
+      type="button"
       onClick={onClick}
       aria-label={active ? "Slide atual" : "Ir para slide"}
       className={twMerge(
@@ -66,6 +68,8 @@ function Arrow({
 }) {
   return (
     <button
+      data-component-id="erp.carousel.nav"
+      type="button"
       onClick={onClick}
       disabled={disabled}
       aria-label={dir === "prev" ? "Slide anterior" : "Próximo slide"}
@@ -171,8 +175,7 @@ export default function Carousel({
       aria-roledescription="carousel"
       onMouseEnter={() => pauseOnHover && setPaused(true)}
       onMouseLeave={() => pauseOnHover && setPaused(false)}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
+      >
       {/* Track container */}
       <div
         className="overflow-hidden"
