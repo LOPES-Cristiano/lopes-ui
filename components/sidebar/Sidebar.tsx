@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { useShell } from '../ShellContext';
 import { useAccessControl } from '../useAccessControl';
@@ -108,6 +109,7 @@ export function Sidebar({
   canAccess,
   showItemIcons = true,
 }: SidebarProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
 
   const accessControl = useAccessControl();
@@ -187,14 +189,37 @@ export function Sidebar({
   // Combined navigation handler (navigates + closes mobile drawer + resets hover)
   const handleNavigate = useCallback(
     (href: string) => {
+      if (onNavigate) {
+        onNavigate(href);
+      } else if (href) {
+        if (typeof window !== 'undefined' && href.includes('#')) {
+          try {
+            const url = new URL(href, window.location.origin);
+            if (url.pathname === window.location.pathname && url.hash) {
+              const targetEl = document.getElementById(decodeURIComponent(url.hash.slice(1)));
+              if (targetEl) {
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                window.history.pushState(window.history.state, '', href);
+              } else {
+                void router.push(href);
+              }
+            } else {
+              void router.push(href);
+            }
+          } catch {
+            void router.push(href);
+          }
+        } else {
+          void router.push(href);
+        }
+      }
+      closeMobile();
       resetHover();
       if (autoCollapseAfterNavigation) {
         setCollapsed(true);
       }
-      onNavigate?.(href);
-      closeMobile();
     },
-    [onNavigate, closeMobile, resetHover, autoCollapseAfterNavigation, setCollapsed],
+    [onNavigate, router, closeMobile, resetHover, autoCollapseAfterNavigation, setCollapsed],
   );
 
   // Visually collapsed state and mode resolution (on mobile drawer, always expand full width)
@@ -262,9 +287,20 @@ export function Sidebar({
       <aside
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onFocusCapture={handleMouseEnter}
+        onFocusCapture={(e) => {
+          const target = e.target as HTMLElement | null;
+          if (target && typeof target.matches === 'function') {
+            try {
+              if (!target.matches(':focus-visible') && target.tagName !== 'INPUT') {
+                return;
+              }
+            } catch {}
+          }
+          handleMouseEnter();
+        }}
         onBlurCapture={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          const related = e.relatedTarget as Node | null;
+          if (related && !e.currentTarget.contains(related)) {
             handleMouseLeave();
           }
         }}

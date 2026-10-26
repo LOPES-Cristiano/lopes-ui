@@ -4,7 +4,6 @@ import { ChevronDown } from 'lucide-react';
 import type { SidebarNavGroup as SidebarNavGroupType } from './Sidebar.types';
 import { useSidebar } from './SidebarContext';
 import { SidebarNavItem } from './SidebarNavItem';
-import { SidebarTooltip } from './SidebarTooltip';
 import { resolveGroupId, hasActiveDescendant } from './utils/navigation';
 
 export function SidebarNavGroup({
@@ -22,44 +21,28 @@ export function SidebarNavGroup({
     collapsedGroupIds,
     toggleGroup,
     searchQuery,
-    setCollapsed,
-    handleNavigate,
   } = useSidebar();
 
   const groupId = resolveGroupId(group, index);
   const canCollapse = Boolean(group.label) && (group.collapsible ?? groupsCollapsible);
   const isSearching = Boolean(searchQuery && searchQuery.trim().length > 0);
-  const open = isSearching || !canCollapse || !collapsedGroupIds.has(groupId);
+  const open = effectiveCollapsed || isSearching || !canCollapse || !collapsedGroupIds.has(groupId);
   const groupContentId = `nav-group-content-${groupId}`;
   const GroupIcon = group.icon;
   const isGroupActive = group.items.some(hasActiveDescendant);
 
-  // ── MODO COLAPSADO: Exibe os ícones de todos os itens do grupo diretamente ──
-  if (effectiveCollapsed) {
-    return (
-      <div className="w-full space-y-1 my-0.5">
-        {index > 0 && (
-          <div className="my-1.5 mx-auto w-5 border-t border-[var(--sidebar-border)] opacity-30" />
-        )}
-        {group.items.map((item, i) => (
-          <SidebarNavItem
-            key={item.id ?? `${item.label}-${i}`}
-            item={item}
-            onNavigate={onNavigate}
-            isTopLevelWithoutGroup={true}
-          />
-        ))}
-      </div>
-    );
-  }
-
-  // ── MODO EXPANDIDO: Grupo com destaque visual (maior que os itens) ──
   return (
-    <div className="w-full">
+    <div className={effectiveCollapsed ? 'w-full my-0.5' : 'w-full'}>
       {index > 0 && (
-        <div className="my-2 mx-2 border-t border-[var(--sidebar-border)] opacity-20" />
+        <div
+          className={
+            effectiveCollapsed
+              ? 'my-1.5 mx-auto w-5 border-t border-[var(--sidebar-border)] opacity-30'
+              : 'my-2 mx-2 border-t border-[var(--sidebar-border)] opacity-20'
+          }
+        />
       )}
-      {group.label ? (
+      {!effectiveCollapsed && group.label ? (
         <div>
           {canCollapse ? (
             <button
@@ -114,13 +97,13 @@ export function SidebarNavGroup({
         style={{ gridTemplateRows: open ? '1fr' : '0fr' }}
       >
         <div className="overflow-hidden">
-          <div className="pt-0.5 pb-1 space-y-0.5">
+          <div className={effectiveCollapsed ? 'space-y-1' : 'pt-0.5 pb-1 space-y-0.5'}>
             {group.items.map((item, i) => (
               <SidebarNavItem
                 key={item.id ?? `${item.label}-${i}`}
                 item={item}
                 onNavigate={onNavigate}
-                isTopLevelWithoutGroup={!group.label}
+                isTopLevelWithoutGroup={effectiveCollapsed || !group.label}
               />
             ))}
           </div>

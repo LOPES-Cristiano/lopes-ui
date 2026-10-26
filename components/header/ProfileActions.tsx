@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type LucideIcon, ChevronRight, LogOut, Settings, User, Briefcase, Building2 } from "lucide-react";
 
@@ -176,13 +177,14 @@ export function ProfileMenuItem({
 
   if (href) {
     return (
-      <a
+      <Link
         href={href}
         className={base}
         role="menuitem"
+        onClick={disabled ? (e) => e.preventDefault() : onClick}
         >
         {inner}
-      </a>
+      </Link>
     );
   }
 

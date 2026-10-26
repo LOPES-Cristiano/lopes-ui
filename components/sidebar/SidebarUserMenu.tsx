@@ -156,6 +156,10 @@ export function SidebarUserMenu({
                 className={cls}
                 role="menuitem"
                 onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                    setOpen(false);
+                    return;
+                  }
                   e.preventDefault();
                   setOpen(false);
                   fi.onClick?.();

@@ -117,8 +117,16 @@ export function SidebarNavItem({
   isTopLevelWithoutGroup?: boolean;
   onNavigate?: (href: string) => void;
 }) {
-  const { effectiveCollapsed, pinnable, pinnedIds, togglePin, handleNavigate, searchQuery, showItemIcons } =
-    useSidebar();
+  const {
+    effectiveCollapsed,
+    pinnable,
+    pinnedIds,
+    togglePin,
+    handleNavigate,
+    searchQuery,
+    showItemIcons,
+    setCollapsed,
+  } = useSidebar();
   const hasChildren = Boolean(item.children?.length);
   const hasActiveChild = hasChildren && item.children!.some(hasActiveDescendant);
   const isSearching = Boolean(searchQuery && searchQuery.trim().length > 0);
@@ -143,8 +151,13 @@ export function SidebarNavItem({
   const handleClick = () => {
     if (item.disabled) return;
     if (hasChildren) {
-      setSubOpen((s) => !s);
-      return;
+      if (effectiveCollapsed) {
+        setCollapsed(false);
+        setSubOpen(true);
+      } else {
+        setSubOpen((s) => !s);
+      }
+      if (!item.href) return;
     }
     item.onClick?.();
     if (item.href) {
@@ -244,12 +257,39 @@ export function SidebarNavItem({
           <SidebarBadge value={item.badge} variant={item.badgeVariant} active={item.active} />
         )}
         {hasChildren && (
-          <ChevronDown
-            size={13}
-            className={`text-[var(--sidebar-icon-foreground)] transition-transform duration-200 ${
-              subOpen ? 'rotate-180' : ''
-            }`}
-          />
+          <span
+            role={item.href ? 'button' : undefined}
+            tabIndex={item.href ? 0 : undefined}
+            aria-label={subOpen ? `Recolher submenu de ${item.label}` : `Expandir submenu de ${item.label}`}
+            onClick={
+              item.href
+                ? (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSubOpen((s) => !s);
+                  }
+                : undefined
+            }
+            onKeyDown={
+              item.href
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSubOpen((s) => !s);
+                    }
+                  }
+                : undefined
+            }
+            className="inline-flex items-center justify-center rounded p-0.5 hover:bg-[var(--sidebar-item-hover-background)]"
+          >
+            <ChevronDown
+              size={13}
+              className={`text-[var(--sidebar-icon-foreground)] transition-transform duration-200 ${
+                subOpen ? 'rotate-180' : ''
+              }`}
+            />
+          </span>
         )}
       </span>
     </span>
@@ -265,16 +305,22 @@ export function SidebarNavItem({
   const submenuContentId = `nav-submenu-${item.id ?? item.label.replace(/\s+/g, '-').toLowerCase()}`;
 
   const row =
-    item.href && !hasChildren ? (
+    item.href ? (
       <a
         href={item.disabled ? undefined : item.href}
         className={rowBase}
         aria-label={item.label}
+        {...(hasChildren ? { 'aria-expanded': subOpen, 'aria-controls': submenuContentId } : {})}
         onClick={(e) => {
-          if (!item.disabled) {
+          if (item.disabled) {
             e.preventDefault();
-            handleClick();
+            return;
           }
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+            return;
+          }
+          e.preventDefault();
+          handleClick();
         }}
         {...cid}
       >

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Menu, PanelLeft, PanelLeftClose, X } from "lucide-react";
 import Nav, { type NavItem } from "./header/Nav";
 import { useShell } from "./ShellContext";
@@ -30,6 +31,7 @@ export default function Header({
   hideMobileMenu = false,
   onNavigate,
 }: HeaderProps & { onNavigate?: (href: string) => void }) {
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const shell = useShell();
@@ -160,9 +162,14 @@ export default function Header({
                   key={`${n.href ?? "#"}-${n.label}-${idx}`}
                   href={n.href ?? "#"}
                   onClick={(e) => {
-                    if (onNavigate && n.href) {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                      setMobileOpen(false);
+                      return;
+                    }
+                    if (n.href) {
                       e.preventDefault();
-                      onNavigate(n.href);
+                      if (onNavigate) onNavigate(n.href);
+                      else router.push(n.href);
                     }
                     setMobileOpen(false);
                   }}

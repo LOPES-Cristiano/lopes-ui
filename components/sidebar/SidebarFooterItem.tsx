@@ -45,6 +45,9 @@ export function SidebarFooterItem({ item }: { item: SidebarFooterItemType }) {
       aria-label={item.label}
       className={itemClass}
       onClick={(e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+          return;
+        }
         e.preventDefault();
         item.onClick?.();
         if (item.href) handleNavigate(item.href);

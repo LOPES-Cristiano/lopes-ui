@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronRight, type LucideIcon } from "lucide-react";
 import { filterNavItems } from "@/utils/filterNavItems";
 
@@ -39,6 +40,7 @@ function L2Item({
   item: NavItem;
   onNavigate?: (href: string) => void;
 }) {
+  const router = useRouter();
   const Icon = item.icon;
   const hasChildren = !!item.children?.length;
 
@@ -112,10 +114,17 @@ function L2Item({
       tabIndex={item.disabled ? -1 : 0}
       className={baseClass}
       onClick={(e) => {
-        if (item.disabled) return;
-        if (onNavigate && item.href) {
+        if (item.disabled) {
           e.preventDefault();
-          onNavigate(item.href);
+          return;
+        }
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+          return;
+        }
+        if (item.href) {
+          e.preventDefault();
+          if (onNavigate) onNavigate(item.href);
+          else router.push(item.href);
         }
       }}
       >
@@ -138,6 +147,7 @@ export default function Nav({
   /** Optional access check — items whose `componentId` returns false are hidden. */
   canAccess?: (componentId: string) => boolean;
 }) {
+  const router = useRouter();
   const visibleItems = canAccess ? filterNavItems(items, canAccess) : items;
   return (
     <nav className="hidden md:flex md:items-center md:gap-1">
@@ -199,10 +209,17 @@ export default function Nav({
             key={key}
             href={n.disabled ? undefined : (n.href ?? "#")}
             onClick={(e) => {
-              if (n.disabled) return;
-              if (onNavigate && n.href) {
+              if (n.disabled) {
                 e.preventDefault();
-                onNavigate(n.href);
+                return;
+              }
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                return;
+              }
+              if (n.href) {
+                e.preventDefault();
+                if (onNavigate) onNavigate(n.href);
+                else router.push(n.href);
               }
             }}
             className={[

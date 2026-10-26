@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
@@ -60,6 +61,7 @@ export default function CommandMenu({
   componentId,
   className = '',
 }: Props) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
@@ -152,12 +154,12 @@ export default function CommandMenu({
         if (item.href.startsWith('http')) {
           window.open(item.href, '_blank', 'noopener,noreferrer');
         } else {
-          window.location.href = item.href;
+          router.push(item.href);
         }
       }
       close();
     },
-    [close]
+    [close, router]
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

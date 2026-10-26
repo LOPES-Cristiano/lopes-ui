@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { twMerge } from "tailwind-merge";
 import { ChevronRight, Slash, Home, MoreHorizontal, type LucideIcon } from "lucide-react";
 
@@ -76,13 +77,13 @@ function BreadcrumbLink({
 
   if (item.href) {
     return (
-      <a
+      <Link
         href={item.href}
         className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
         aria-label={homeOnly ? item.label : undefined}
       >
         {content}
-      </a>
+      </Link>
     );
   }
 
