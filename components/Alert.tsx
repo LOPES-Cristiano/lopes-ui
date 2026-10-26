@@ -101,26 +101,83 @@ function AlertContent({
 }: AlertProps & { s: S }) {
   const IconComponent = icon === null ? null : (icon ?? DEFAULT_ICON[variant ?? "neutral"]);
 
+  if (dialog) {
+    return (
+      <div
+        className="w-full relative flex flex-col gap-1 select-none"
+        role="alertdialog"
+        >
+        <div className="flex gap-4 items-start pr-8">
+          {IconComponent && (
+            <span className={twMerge("shrink-0 flex h-10 w-10 items-center justify-center rounded-2xl", s.iconBg)}>
+              <IconComponent size={20} strokeWidth={2} className={s.icon} />
+            </span>
+          )}
+          <div className="flex-1 min-w-0">
+            {title && (
+              <h3 className="font-bold text-lg text-foreground leading-snug">{title}</h3>
+            )}
+            {description && (
+              <div className="text-sm leading-relaxed text-muted-foreground mt-2">
+                {description}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {actions && actions.length > 0 && (
+          <div className="flex justify-end gap-3 mt-6">
+            {actions.map((a, i) => (
+              <button
+                data-component-id={`erp.alert.action-${i}`}
+                key={i}
+                type="button"
+                onClick={a.onClick}
+                className={twMerge(
+                  "rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-150 cursor-pointer shadow-xs",
+                  a.variant === "ghost"
+                    ? "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
+                    : twMerge("bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]", 
+                        variant === "danger" && "bg-red-600 text-white hover:bg-red-700",
+                        variant === "warning" && "bg-amber-500 text-white hover:bg-amber-600",
+                        variant === "success" && "bg-emerald-600 text-white hover:bg-emerald-700",
+                        variant === "info" && "bg-blue-600 text-white hover:bg-blue-700"
+                      )
+                )}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {dismissible && (
+          <button
+            data-component-id="erp.alert.dismiss"
+            type="button"
+            aria-label="Fechar"
+            onClick={onDismiss}
+            className="absolute -top-1 -right-1 text-muted-foreground hover:text-foreground rounded-xl p-1.5 hover:bg-muted transition-colors cursor-pointer"
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
-      className={twMerge(
-        "flex gap-3",
-        dialog
-          ? "w-full"
-          : twMerge("rounded-xl border p-4", s.bg, s.border),
-      )}
-      role={dialog ? "alertdialog" : "alert"}
-      aria-live={dialog ? undefined : "polite"}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
-      {/* Icon */}
+      className={twMerge("flex gap-3 rounded-xl border p-4", s.bg, s.border)}
+      role="alert"
+      aria-live="polite"
+      >
       {IconComponent && (
         <span className={twMerge("mt-0.5 shrink-0 flex h-8 w-8 items-center justify-center rounded-lg", s.iconBg)}>
           <IconComponent size={16} strokeWidth={2} className={s.icon} />
         </span>
       )}
 
-      {/* Text */}
       <div className="flex-1 min-w-0">
         {title && (
           <p className={twMerge("font-semibold text-sm leading-snug", s.title)}>{title}</p>
@@ -134,11 +191,12 @@ function AlertContent({
           <div className="flex flex-wrap gap-2 mt-3">
             {actions.map((a, i) => (
               <button
+                data-component-id={`erp.alert.banner-action-${i}`}
                 key={i}
                 type="button"
                 onClick={a.onClick}
                 className={twMerge(
-                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150",
+                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 cursor-pointer",
                   a.variant === "ghost" ? s.actionGhost : s.actionSolid,
                 )}
               >
@@ -149,13 +207,13 @@ function AlertContent({
         )}
       </div>
 
-      {/* Dismiss */}
       {dismissible && (
         <button
+          data-component-id="erp.alert.banner-dismiss"
           type="button"
           aria-label="Fechar"
           onClick={onDismiss}
-          className={twMerge("shrink-0 rounded-lg p-1 transition-colors duration-150", s.dismiss)}
+          className={twMerge("shrink-0 rounded-lg p-1 transition-colors duration-150 cursor-pointer", s.dismiss)}
         >
           <X size={14} />
         </button>
@@ -178,7 +236,6 @@ export default function Alert({
 
   useBodyScrollLock(!!dialog && !!open);
 
-  // Focus trap & Escape for dialog
   useEffect(() => {
     if (!dialog || !open) return;
     const prev = document.activeElement as HTMLElement | null;
@@ -194,22 +251,20 @@ export default function Alert({
     };
   }, [dialog, open, onClose]);
 
-  // Inline banner
   if (!dialog) {
     return <AlertContent {...rest} variant={variant} s={s} dialog={false} />;
   }
 
-  // Dialog mode — portal
   if (!open || typeof document === "undefined") return null;
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       role="presentation"
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -219,8 +274,12 @@ export default function Alert({
         ref={dialogRef}
         tabIndex={-1}
         className={twMerge(
-          "relative z-10 w-full max-w-md rounded-2xl border p-6 shadow-2xl outline-none",
-          s.bg, s.border,
+          "relative z-10 w-full sm:min-w-[480px] max-w-lg rounded-2xl bg-surface border border-border p-6 shadow-2xl outline-none",
+          variant === "info" && "border-l-4 border-l-blue-500",
+          variant === "success" && "border-l-4 border-l-emerald-500",
+          variant === "warning" && "border-l-4 border-l-amber-500",
+          variant === "danger" && "border-l-4 border-l-red-500",
+          variant === "neutral" && "border-l-4 border-l-zinc-400 dark:border-l-zinc-600",
         )}
         aria-modal="true"
       >
