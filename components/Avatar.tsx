@@ -50,7 +50,7 @@ const SIZE_CLS: Record<AvatarSize, { root: string; text: string; icon: number; r
 
 const SHAPE_CLS: Record<AvatarShape, string> = {
   circle: "rounded-full",
-  square: "rounded-xl",
+  square: "rounded-full",
 };
 
 const STATUS_DOT: Record<AvatarStatus, string> = {
@@ -113,8 +113,7 @@ export default function Avatar({
     <div
       className={twMerge("relative inline-flex shrink-0", className)}
       onClick={onClick}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
+      >
       <div
         className={twMerge(
           "flex items-center justify-center overflow-hidden font-semibold select-none",
@@ -172,16 +171,34 @@ export function AvatarGroup({ avatars, size = "md", max = 4, className }: Avatar
         </div>
       ))}
       {overflow > 0 && (
-        <div
-          className={twMerge(
-            "-ml-2 flex items-center justify-center rounded-full font-semibold bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
-            s.root, s.ring, "ring-white dark:ring-zinc-950", s.text,
-          )}
-          style={{ zIndex: 0 }}
-        >
-          +{overflow}
-        </div>
+        <AvatarGroupCount count={overflow} size={size} />
       )}
     </div>
   );
 }
+
+export function AvatarGroupCount({
+  count,
+  size = "md",
+  className,
+}: {
+  count: number;
+  size?: AvatarSize;
+  className?: string;
+}) {
+  const s = SIZE_CLS[size];
+  return (
+    <div
+      className={twMerge(
+        "-ml-2 flex items-center justify-center rounded-full font-bold bg-zinc-800 text-zinc-100 ring-2 ring-white dark:ring-zinc-950 select-none shadow-xs",
+        s.root,
+        s.text,
+        className
+      )}
+      style={{ zIndex: 0 }}
+    >
+      +{count}
+    </div>
+  );
+}
+
