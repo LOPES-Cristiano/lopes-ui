@@ -10,6 +10,13 @@ const LIB_EXTERNALS = [
   /^motion\//,
   "shiki",
   /^@tiptap\//,
+  /^@radix-ui\//,
+  /^@tanstack\//,
+  "class-variance-authority",
+  "clsx",
+  "tailwind-merge",
+  "react-hot-toast",
+  "zod",
 ];
 
 export default defineConfig([
@@ -18,6 +25,7 @@ export default defineConfig([
     entry: {
       index: "components/index.ts",
       hooks: "hooks/index.ts",
+      utils: "utils/index.ts",
     },
     format: ["esm", "cjs"],
     dts: true,
@@ -49,4 +57,3 @@ export default defineConfig([
     external: [],
   },
 ]);
-
