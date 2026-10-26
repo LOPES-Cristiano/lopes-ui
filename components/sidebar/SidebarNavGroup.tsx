@@ -68,9 +68,9 @@ export function SidebarNavGroup({
               aria-expanded={open}
               aria-controls={groupContentId}
               onClick={() => toggleGroup(groupId)}
-              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer select-none group/grp text-left focus:outline-none hover:bg-white/[0.08] transition-all duration-150"
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer select-none group/grp text-left focus:outline-none hover:bg-[var(--sidebar-item-hover-background)] transition-all duration-150"
             >
-              <span className="flex items-center gap-2 text-[13.5px] font-normal text-[var(--sidebar-foreground)] group-hover/grp:text-white transition-colors tracking-tight">
+              <span className="flex items-center gap-2 text-[13.5px] font-normal text-[var(--sidebar-foreground)] group-hover/grp:text-[var(--sidebar-group-hover-foreground)] transition-colors tracking-tight">
                 {GroupIcon && (
                   <GroupIcon
                     size={16}
@@ -82,7 +82,7 @@ export function SidebarNavGroup({
               </span>
               <div className="flex items-center gap-1.5">
                 {!open && isGroupActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/90 shadow-sm animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--sidebar-foreground)] shadow-sm animate-pulse" />
                 )}
                 <ChevronDown
                   size={14}
