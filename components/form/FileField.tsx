@@ -107,10 +107,7 @@ export default function FileField({
       width={width} className={className}
     >
       {/* Hidden native input */}
-      <input
-        ref={inputRef}
-        id={id} name={name}
-        type="file"
+      <input data-component-id={componentId ? `${componentId}.input` : "erp.filefield.input"} ref={inputRef} id={id} name={name} type="file"
         accept={accept}
         multiple={multiple}
         required={required}
@@ -119,8 +116,7 @@ export default function FileField({
         className="sr-only"
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : autoHelp ? `${id}-help` : undefined}
-        {...(componentId ? { "data-component-id": componentId } : {})}
-      />
+        />
 
       {variant === "compact" ? (
         <div
@@ -131,6 +127,7 @@ export default function FileField({
           )}
         >
           <button
+            data-component-id={componentId ? `${componentId}.browse` : "erp.filefield.browse"}
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={disabled}
@@ -156,6 +153,7 @@ export default function FileField({
           {hasFiles && !disabled && (
             <button
               type="button"
+              data-component-id={componentId ? `${componentId}.clear` : "erp.file.clear"}
               aria-label="Remover arquivo"
               onClick={clear}
               className="flex shrink-0 items-center justify-center px-2 text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors"
@@ -196,6 +194,7 @@ export default function FileField({
                 ))}
               </div>
               <button
+                data-component-id={componentId ? `${componentId}.remove` : "erp.filefield.remove"}
                 type="button"
                 onClick={clear}
                 className="text-xs text-zinc-400 hover:text-red-500 dark:text-zinc-500 transition-colors"
