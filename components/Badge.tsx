@@ -1,19 +1,31 @@
 "use client";
 
 import React from "react";
-import { twMerge } from "tailwind-merge";
+import type { CSSProperties } from "react";
+import { cn } from "@/utils/cn";
 import { X, type LucideIcon } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type BadgeVariant =
-  | "default" | "primary" | "success" | "warning" | "danger"
-  | "info" | "violet" | "pink" | "orange" | "teal";
+  | "default"
+  | "neutral"
+  | "secondary"
+  | "primary"
+  | "success"
+  | "warning"
+  | "danger"
+  | "info"
+  | "violet"
+  | "pink"
+  | "orange"
+  | "teal";
 
 export type BadgeSize = "xs" | "sm" | "md" | "lg";
 
 export type BadgeProps = {
-  label?: string;
+  label?: React.ReactNode;
+  children?: React.ReactNode;
   variant?: BadgeVariant;
   size?: BadgeSize;
   /** Filled background vs soft/subtle */
@@ -23,10 +35,11 @@ export type BadgeProps = {
   /** Colored dot before the label */
   dot?: boolean;
   /** Lucide icon before the label */
-  icon?: LucideIcon;
+  icon?: LucideIcon | React.ComponentType<{ size?: number; className?: string }> | React.ReactNode;
   /** Show × remove button */
   onRemove?: () => void;
   className?: string;
+  style?: CSSProperties;
   /** Access-control identifier */
   componentId?: string;
 };
@@ -37,6 +50,16 @@ type V = { soft: string; solid: string; dot: string };
 
 const VARIANTS: Record<BadgeVariant, V> = {
   default: {
+    soft:  "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+    solid: "bg-zinc-700 text-white dark:bg-zinc-200 dark:text-zinc-900",
+    dot:   "bg-zinc-400",
+  },
+  neutral: {
+    soft:  "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+    solid: "bg-zinc-700 text-white dark:bg-zinc-200 dark:text-zinc-900",
+    dot:   "bg-zinc-400",
+  },
+  secondary: {
     soft:  "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
     solid: "bg-zinc-700 text-white dark:bg-zinc-200 dark:text-zinc-900",
     dot:   "bg-zinc-400",
@@ -99,40 +122,52 @@ const SIZES: Record<BadgeSize, { base: string; text: string; dot: string; icon: 
 
 export default function Badge({
   label,
+  children,
   variant = "default",
   size = "sm",
   solid = false,
   square = false,
   dot = false,
-  icon: Icon,
+  icon,
   onRemove,
   className,
+  style,
   componentId,
 }: BadgeProps) {
-  const v = VARIANTS[variant];
-  const s = SIZES[size];
+  const v = VARIANTS[variant] ?? VARIANTS.default;
+  const s = SIZES[size] ?? SIZES.sm;
 
   const colorCls = solid ? v.solid : v.soft;
   const shapeCls = square ? "rounded-md" : "rounded-full";
+  const content = children ?? label;
+
+  const renderIcon = () => {
+    if (!icon) return null;
+    if (React.isValidElement(icon)) return icon;
+    if (typeof icon === "function" || typeof icon === "object") {
+      const IconComp = icon as React.ComponentType<{ size?: number; className?: string }>;
+      return <IconComp size={s.icon} className="shrink-0" />;
+    }
+    return null;
+  };
 
   return (
     <span
-      className={twMerge(
+      style={style}
+      className={cn(
         "inline-flex items-center font-semibold leading-none select-none whitespace-nowrap",
         s.base, s.px, s.text, colorCls, shapeCls,
         className,
       )}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
-      {dot && !Icon && (
-        <span className={twMerge("shrink-0 rounded-full", s.dot, v.dot)} aria-hidden="true" />
+      >
+      {dot && !icon && (
+        <span className={cn("shrink-0 rounded-full", s.dot, v.dot)} aria-hidden="true" />
       )}
-      {Icon && (
-        <Icon size={s.icon} strokeWidth={2} aria-hidden="true" className="shrink-0" />
-      )}
-      {label}
+      {renderIcon()}
+      {content}
       {onRemove && (
         <button
+          data-component-id="erp.badge.remove"
           type="button"
           aria-label="Remover"
           onClick={(e) => { e.stopPropagation(); onRemove(); }}
