@@ -211,8 +211,7 @@ export default function Agenda({
     return (
       <div
         className={twMerge("flex flex-col items-center justify-center py-12 text-zinc-400 dark:text-zinc-500 text-sm", className)}
-        {...(componentId ? { "data-component-id": componentId } : {})}
-      >
+        >
         <Clock size={28} className="mb-2 opacity-40" />
         {emptyMessage}
       </div>
@@ -222,8 +221,7 @@ export default function Agenda({
   return (
     <div
       className={twMerge("space-y-5", className)}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
+      >
       {groupList.map(({ day, events: dayEvents }) => (
         <div key={day.toDateString()}>
           {/* Day label */}
