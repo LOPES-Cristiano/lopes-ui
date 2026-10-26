@@ -35,12 +35,12 @@ export type BreadcrumbProps = {
 
 function Sep({ type }: { type: BreadcrumbSeparator }) {
   if (type === "slash") {
-    return <Slash className="w-3 h-3 text-zinc-300 dark:text-zinc-600" strokeWidth={2} />;
+    return <Slash className="w-3 h-3 text-header-breadcrumb-separator" strokeWidth={2} />;
   }
   if (type === "dot") {
-    return <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600 flex-shrink-0" />;
+    return <span className="w-1 h-1 rounded-full bg-header-breadcrumb-separator flex-shrink-0" />;
   }
-  return <ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" strokeWidth={2} />;
+  return <ChevronRight className="w-3.5 h-3.5 text-header-breadcrumb-separator" strokeWidth={2} />;
 }
 
 // ── Item link / span ──────────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ function BreadcrumbLink({
     return (
       <span
         aria-current="page"
-        className="flex items-center gap-1.5 text-zinc-900 dark:text-zinc-50 font-medium cursor-default select-none"
+        className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-semibold cursor-default select-none"
       >
         {content}
       </span>
@@ -78,7 +78,7 @@ function BreadcrumbLink({
     return (
       <a
         href={item.href}
-        className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
+        className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
         aria-label={homeOnly ? item.label : undefined}
       >
         {content}
@@ -87,7 +87,7 @@ function BreadcrumbLink({
   }
 
   return (
-    <span className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 cursor-default">
+    <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 cursor-default font-normal">
       {content}
     </span>
   );
@@ -106,11 +106,12 @@ function EllipsisButton({
 
   return (
     <button
+      data-component-id="erp.breadcrumb.expand"
       type="button"
       title={title}
       aria-label={`Mostrar ${hiddenItems.length} itens ocultos: ${title}`}
       onClick={onExpand}
-      className="flex items-center justify-center w-6 h-6 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+      className="flex items-center justify-center w-6 h-6 rounded hover:bg-header-control-hover text-header-breadcrumb-muted hover:text-header-breadcrumb-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-header-breadcrumb-focus-ring"
     >
       <MoreHorizontal className="w-3.5 h-3.5" />
     </button>
@@ -151,9 +152,12 @@ export default function Breadcrumb({
     <nav
       aria-label="Breadcrumb"
       data-component-id={componentId}
-      className={twMerge("flex items-center", className)}
+      className={twMerge(
+        "flex min-w-0 max-w-full items-center overflow-hidden",
+        className,
+      )}
     >
-      <ol className="flex items-center flex-wrap gap-y-1 text-sm">
+      <ol className="flex min-w-0 max-w-full flex-nowrap items-center overflow-hidden whitespace-nowrap text-sm">
         {visibleItems.map((item, index) => {
           const isCurrent = index === visibleItems.length - 1 && !shouldCollapse;
           const isFirst = index === 0;
