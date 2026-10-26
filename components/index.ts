@@ -33,6 +33,9 @@ export * from "./Button";
 export { default as Calendar } from "./Calendar";
 export * from "./Calendar";
 
+export { default as CameraCaptureModal } from "./CameraCaptureModal";
+export * from "./CameraCaptureModal";
+
 export { default as Card } from "./Card";
 export * from "./Card";
 
@@ -54,6 +57,9 @@ export * from "./ChatWindow";
 export { default as CodeBlock } from "./CodeBlock";
 export * from "./CodeBlock";
 
+export { default as CodeEditor } from "./CodeEditor";
+export * from "./CodeEditor";
+
 export { default as CommandMenu } from "./CommandMenu";
 export * from "./CommandMenu";
 
@@ -66,11 +72,16 @@ export * from "./ContextMenu";
 export { default as DataTable } from "./DataTable";
 export * from "./DataTable";
 
+export * from "./DetailLayout";
+
 export { default as Drawer } from "./Drawer";
 export * from "./Drawer";
 
 export { default as EmailComposer } from "./EmailComposer";
 export * from "./EmailComposer";
+
+export { default as EmojiPicker } from "./EmojiPicker";
+export * from "./EmojiPicker";
 
 export { default as EmptyState } from "./EmptyState";
 export * from "./EmptyState";
@@ -80,6 +91,19 @@ export * from "./FilterBar";
 
 export { default as Footer } from "./Footer";
 export * from "./Footer";
+
+export { default as FormDrawer } from "./FormDrawer";
+export * from "./FormDrawer";
+
+export {
+  default as FormModal,
+  FormSectionHeader,
+  FormEmptyLine,
+  FormModalSkeleton,
+  type FormModalProps,
+  type FormTabItem,
+  type FormSectionHeaderProps,
+} from "./FormModal";
 
 export { default as Header } from "./Header";
 export * from "./Header";
@@ -95,6 +119,9 @@ export * from "./KanbanBoard";
 
 export { default as LoginForm } from "./LoginForm";
 export * from "./LoginForm";
+
+export { default as Modal } from "./Modal";
+export * from "./Modal";
 
 export { default as NotificationBell } from "./NotificationBell";
 export * from "./NotificationBell";
@@ -113,6 +140,9 @@ export * from "./PingIndicator";
 
 export { default as PriceInput } from "./PriceInput";
 export * from "./PriceInput";
+
+export { default as PullToRefresh } from "./PullToRefresh";
+export * from "./PullToRefresh";
 
 export { default as QuickActions } from "./QuickActions";
 export * from "./QuickActions";
@@ -141,8 +171,14 @@ export * from "./SmartObject";
 export { default as SplitPane } from "./SplitPane";
 export * from "./SplitPane";
 
+export { default as Spreadsheet } from "./spreadsheet";
+export * from "./spreadsheet";
+
 export { default as StatCard } from "./StatCard";
 export * from "./StatCard";
+
+export { default as StatusBadge } from "./StatusBadge";
+export * from "./StatusBadge";
 
 export { default as StatusPage } from "./StatusPage";
 export * from "./StatusPage";
@@ -168,11 +204,40 @@ export * from "./Timeline";
 export { default as toast } from "./Toast";
 export * from "./Toast";
 
+export { default as TransferList } from "./TransferList";
+export * from "./TransferList";
+
 export { default as TreeView } from "./TreeView";
 export * from "./TreeView";
 
 export { default as UIBuilder } from "./UIBuilder";
 export * from "./UIBuilder";
+
+// ─── Access Control / RBAC ───────────────────────────────────────────────────
+
+export { default as Can } from "./Can";
+export * from "./Can";
+
+export { default as Controllable } from "./Controllable";
+export * from "./Controllable";
+
+export * from "./useAccessControl";
+
+// ─── Compound Patterns ───────────────────────────────────────────────────────
+
+export {
+  FormModal as CompoundFormModal,
+  FormModal as FormDialog,
+  FormModalHeader,
+  FormModalBody,
+  FormModalActions,
+  useFormModal,
+  type FormModalProps as CompoundFormModalProps,
+  type FormModalHeaderProps,
+  type FormModalBodyProps,
+  type FormModalActionsProps,
+  type FormModalSize,
+} from "./patterns/form-modal";
 
 // ─── Sub-components: header/ ──────────────────────────────────────────────────
 
@@ -199,13 +264,19 @@ export * from "./header/SearchInput";
 export { default as AutocompleteField } from "./form/AutocompleteField";
 export * from "./form/AutocompleteField";
 
+export { default as Checkbox } from "./form/Checkbox";
+export * from "./form/Checkbox";
+
 export { default as CheckboxGroup } from "./form/CheckboxGroup";
 export * from "./form/CheckboxGroup";
 
 export { default as DateField } from "./form/DateField";
 export * from "./form/DateField";
 
-export { default as FieldWrapper } from "./form/FieldWrapper";
+export { default as DatePickerField } from "./form/DatePickerField";
+export * from "./form/DatePickerField";
+
+export { default as FieldWrapper, default as FormField } from "./form/FieldWrapper";
 export * from "./form/FieldWrapper";
 
 export { default as FileField } from "./form/FileField";
@@ -214,11 +285,20 @@ export * from "./form/FileField";
 export { default as Form } from "./form/Form";
 export * from "./form/Form";
 
+export { default as MonthPickerField } from "./form/MonthPickerField";
+export * from "./form/MonthPickerField";
+
 export { default as MultiSelectField } from "./form/MultiSelectField";
 export * from "./form/MultiSelectField";
 
+export { default as NativeSelect, default as Select } from "./form/NativeSelect";
+export * from "./form/NativeSelect";
+
 export { default as NumberField } from "./form/NumberField";
 export * from "./form/NumberField";
+
+export { default as SelectField } from "./form/SelectField";
+export * from "./form/SelectField";
 
 export { default as Switch } from "./form/Switch";
 export * from "./form/Switch";
@@ -228,3 +308,9 @@ export * from "./form/TextField";
 
 export { default as TimeField } from "./form/TimeField";
 export * from "./form/TimeField";
+
+export { default as TimePickerField } from "./form/TimePickerField";
+export * from "./form/TimePickerField";
+
+export { default as ZodForm, useFormContext } from "./form/ZodForm";
+export * from "./form/ZodForm";
