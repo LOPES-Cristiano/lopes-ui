@@ -5,6 +5,7 @@ import CodeBlock from "@/components/CodeBlock";
 import TextRotate, { type TextRotateItem, type TextRotateHandle } from "@/components/TextRotate";
 import Stepper from "@/components/Stepper";
 import Timeline from "@/components/Timeline";
+import CodeEditor from "@/components/CodeEditor";
 import { PropsTable } from "@/app/showcase/_shared";
 
 export default function Page() {
@@ -365,7 +366,47 @@ export default function Page() {
           </section>
 
           <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── CodeEditor ──────────────────────────────────────────── */}
+          <section id="code-editor" className="space-y-10 pb-10 sm:pb-14 scroll-mt-20">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-1">CodeEditor</h2>
+              <p className="text-zinc-500 text-sm">Editor de código interativo com realce de sintaxe, validação JSON/SQL em tempo real, busca e substituição, formatação automática e modo tela cheia.</p>
+            </div>
+
+            <div id="code-editor-demo">
+              <CodeEditorDemo />
+            </div>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
       </div>
     </main>
+  );
+}
+
+function CodeEditorDemo() {
+  const [code, setCode] = React.useState(
+    JSON.stringify(
+      {
+        empresa: "BigLar Móveis e Eletrodomésticos Ltda.",
+        slogan: "Conforto e qualidade para o seu lar",
+        pracas: ["Rondônia (69)", "Amazonas (92)"],
+        departamentos: ["Móveis", "Estofados", "Colchões", "Eletrodomésticos"],
+        entregaPropria: true,
+      },
+      null,
+      2
+    )
+  );
+
+  return (
+    <CodeEditor
+      title="configuracao-catalogo.json"
+      language="json"
+      value={code}
+      onChange={setCode}
+      height={280}
+    />
   );
 }
