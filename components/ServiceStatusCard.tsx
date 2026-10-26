@@ -174,8 +174,7 @@ export default function ServiceStatusCard({
         "bg-white dark:bg-zinc-900 p-5",
         className,
       )}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
+      >
       {/* Header row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -211,6 +210,7 @@ export default function ServiceStatusCard({
           </div>
           {onRefresh && (
             <button
+              data-component-id="erp.service-status.refresh"
               type="button"
               aria-label="Atualizar"
               onClick={handleRefresh}
