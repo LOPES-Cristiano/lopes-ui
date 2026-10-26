@@ -384,7 +384,9 @@ export default function TreeView({
 
   // Internal item copy for uncontrolled DnD reordering
   const [internalItems, setInternalItems] = useState(propItems);
-  useEffect(() => { setInternalItems(propItems); }, [propItems]);
+  useEffect(() => {
+    queueMicrotask(() => setInternalItems(propItems));
+  }, [propItems]);
 
   const handleInternalMove = useCallback((dId: string, tId: string, pos: DropPos) => {
     setInternalItems((prev) => moveNode(prev, dId, tId, pos));
