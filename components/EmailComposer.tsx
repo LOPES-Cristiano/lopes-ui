@@ -7,24 +7,19 @@ import {
   Minus, Maximize2, File, FileText, FileImage,
   FileVideo, FileAudio, Archive, Code2,
 } from "lucide-react";
-import RichTextEditor from "@/components/RichTextEditor";
-import { type ToolbarGroup } from "@/components/RichTextEditor";
+import RichTextEditor from "./RichTextEditor";
+import { type ToolbarGroup } from "./RichTextEditor";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type EmailRecipient = {
-  email: string;
-  name?: string;
-};
+import {
+  type EmailAttachment,
+  type EmailPayload,
+  type EmailRecipient,
+  emailPayloadSchema,
+} from "./schemas/email-composer";
 
-export type EmailAttachment = {
-  id: string;
-  name: string;
-  size: number;   // bytes
-  type: string;   // MIME type
-  /** For preview/download — a URL or blob URL */
-  url?: string;
-};
+export type { EmailAttachment, EmailPayload, EmailRecipient };
 
 export type EmailComposerProps = {
   /** Initial TO recipients */
@@ -61,15 +56,6 @@ export type EmailComposerProps = {
   componentId?: string;
 };
 
-export type EmailPayload = {
-  to: EmailRecipient[];
-  cc: EmailRecipient[];
-  bcc: EmailRecipient[];
-  subject: string;
-  body: string;
-  attachments: EmailAttachment[];
-};
-
 // ── Attachment icon ───────────────────────────────────────────────────────────
 
 function attachIcon(mime: string) {
@@ -91,11 +77,12 @@ function fmtSize(bytes: number) {
 
 // ── Recipient chip ────────────────────────────────────────────────────────────
 
-function Chip({ recipient, onRemove }: { recipient: EmailRecipient; onRemove: () => void }) {
+function Chip({ recipient, onRemove, componentId }: { recipient: EmailRecipient; onRemove: () => void; componentId?: string }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 dark:bg-zinc-800 pl-2.5 pr-1 py-0.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 max-w-[220px]">
       <span className="truncate">{recipient.name ?? recipient.email}</span>
       <button
+        data-component-id={componentId}
         type="button"
         aria-label={`Remover ${recipient.email}`}
         onClick={onRemove}
@@ -114,11 +101,13 @@ function RecipientField({
   recipients,
   onChange,
   suggestions = [],
+  componentId,
 }: {
   label: string;
   recipients: EmailRecipient[];
   onChange: (r: EmailRecipient[]) => void;
   suggestions?: EmailRecipient[];
+  componentId?: string;
 }) {
   const [input, setInput] = useState("");
   const [showSug, setShowSug] = useState(false);
@@ -163,9 +152,10 @@ function RecipientField({
       </label>
       <div className="flex flex-wrap items-center gap-1.5 flex-1 relative">
         {recipients.map((r, i) => (
-          <Chip key={`${r.email}-${i}`} recipient={r} onRemove={() => removeAt(i)} />
+          <Chip key={`${r.email}-${i}`} recipient={r} onRemove={() => removeAt(i)} componentId={componentId ? `${componentId}.chip.remove` : undefined} />
         ))}
         <input
+          data-component-id={componentId ? `${componentId}.input` : undefined}
           id={inputId}
           type="email"
           value={input}
@@ -192,6 +182,7 @@ function RecipientField({
           <div className="absolute top-full left-0 z-50 mt-1 w-64 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg py-1 max-h-48 overflow-y-auto">
             {filtered.map((s) => (
               <button
+                data-component-id={componentId ? `${componentId}.suggestion` : undefined}
                 key={s.email}
                 type="button"
                 onMouseDown={(e) => { e.preventDefault(); add(s); }}
@@ -250,7 +241,13 @@ export default function EmailComposer({
 
   const handleSend = async () => {
     if (!onSend || sending) return;
-    await onSend({ to, cc, bcc, subject, body, attachments });
+    const validation = emailPayloadSchema.safeParse({ to, cc, bcc, subject, body, attachments });
+    if (!validation.success) {
+      const issue = validation.error.issues[0];
+      alert(issue ? issue.message : 'Verifique os destinatários do e-mail.');
+      return;
+    }
+    await onSend(validation.data);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -274,13 +271,13 @@ export default function EmailComposer({
   return (
     <div
       className={windowCls}
-      {...(componentId ? { "data-component-id": componentId } : {})}
-    >
+      >
       {/* Title bar */}
       <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
         <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 truncate">{title}</span>
         <div className="flex items-center gap-1">
           <button
+            data-component-id={componentId ? `${componentId}.minimize` : undefined}
             type="button"
             onClick={() => setMinimized((s) => !s)}
             aria-label={minimized ? "Expandir" : "Minimizar"}
@@ -290,6 +287,7 @@ export default function EmailComposer({
           </button>
           {isWindow && (
             <button
+              data-component-id={componentId ? `${componentId}.maximize` : undefined}
               type="button"
               aria-label="Tela cheia"
               className="h-6 w-6 flex items-center justify-center rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
@@ -299,6 +297,7 @@ export default function EmailComposer({
           )}
           {onDiscard && (
             <button
+              data-component-id={componentId ? `${componentId}.discard` : undefined}
               type="button"
               aria-label="Descartar"
               onClick={onDiscard}
@@ -315,22 +314,30 @@ export default function EmailComposer({
         <>
           {/* Recipient fields */}
           <div className="shrink-0">
-            <RecipientField label="Para" recipients={to} onChange={setTo} suggestions={contactSuggestions} />
-            {showCc  && <RecipientField label="CC"  recipients={cc}  onChange={setCc}  suggestions={contactSuggestions} />}
-            {showBcc && <RecipientField label="BCC" recipients={bcc} onChange={setBcc} suggestions={contactSuggestions} />}
+            <RecipientField label="Para" recipients={to} onChange={setTo} suggestions={contactSuggestions} componentId={componentId ? `${componentId}.to` : undefined} />
+            {showCc  && <RecipientField label="CC"  recipients={cc}  onChange={setCc}  suggestions={contactSuggestions} componentId={componentId ? `${componentId}.cc` : undefined} />}
+            {showBcc && <RecipientField label="BCC" recipients={bcc} onChange={setBcc} suggestions={contactSuggestions} componentId={componentId ? `${componentId}.bcc` : undefined} />}
 
             {/* CC/BCC toggles */}
             {(!showCc || !showBcc) && (
               <div className="flex items-center gap-3 px-4 py-1.5 border-b border-zinc-100 dark:border-zinc-800">
                 {!showCc && (
-                  <button type="button" onClick={() => setShowCc(true)}
-                    className="text-[11px] font-semibold text-zinc-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
+                  <button
+                    data-component-id={componentId ? `${componentId}.show-cc` : undefined}
+                    type="button"
+                    onClick={() => setShowCc(true)}
+                    className="text-[11px] font-semibold text-zinc-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                  >
                     + CC
                   </button>
                 )}
                 {!showBcc && (
-                  <button type="button" onClick={() => setShowBcc(true)}
-                    className="text-[11px] font-semibold text-zinc-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
+                  <button
+                    data-component-id={componentId ? `${componentId}.show-bcc` : undefined}
+                    type="button"
+                    onClick={() => setShowBcc(true)}
+                    className="text-[11px] font-semibold text-zinc-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                  >
                     + BCC
                   </button>
                 )}
@@ -343,6 +350,7 @@ export default function EmailComposer({
                 Assunto
               </label>
               <input
+                data-component-id={componentId ? `${componentId}.subject` : undefined}
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
@@ -363,6 +371,7 @@ export default function EmailComposer({
               maxHeight="28rem"
               placeholder="Escreva sua mensagem..."
               editorClassName="text-sm"
+              componentId={componentId ? `${componentId}.body` : undefined}
             />
           </div>
 
@@ -391,6 +400,7 @@ export default function EmailComposer({
                     <span className="text-[10px] text-zinc-400 shrink-0">{fmtSize(att.size)}</span>
                     {onRemoveAttachment && (
                       <button
+                        data-component-id={componentId ? `${componentId}.attachment.remove` : undefined}
                         type="button"
                         aria-label={`Remover ${att.name}`}
                         onClick={() => onRemoveAttachment(att.id)}
@@ -410,6 +420,7 @@ export default function EmailComposer({
             <div className="flex items-center gap-1">
               {/* Attach */}
               <input
+                data-component-id={componentId ? `${componentId}.attachment.file` : undefined}
                 ref={fileRef}
                 type="file"
                 multiple
@@ -417,6 +428,7 @@ export default function EmailComposer({
                 onChange={handleFileChange}
               />
               <button
+                data-component-id={componentId ? `${componentId}.attachment.add` : undefined}
                 type="button"
                 aria-label="Anexar arquivo"
                 onClick={() => fileRef.current?.click()}
@@ -426,6 +438,7 @@ export default function EmailComposer({
               </button>
               {/* Show CC/BCC hint */}
               <button
+                data-component-id={componentId ? `${componentId}.more-options` : undefined}
                 type="button"
                 aria-label="Mais opções"
                 onClick={() => { setShowCc(true); setShowBcc(true); }}
@@ -437,6 +450,7 @@ export default function EmailComposer({
 
             {/* Send */}
             <button
+              data-component-id={componentId ? `${componentId}.send` : undefined}
               type="button"
               onClick={handleSend}
               disabled={sending || to.length === 0}
