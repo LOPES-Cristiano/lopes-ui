@@ -5,14 +5,9 @@ import { X } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 export type FilterChip = {
-  /** Unique key */
   id: string;
-  /** Human-readable label */
   label: string;
-  /** Optional: value shown next to label, e.g. the chosen option */
   value?: string;
 };
 
@@ -20,14 +15,10 @@ export type FilterBarProps = {
   filters: FilterChip[];
   onRemove?: (id: string) => void;
   onClearAll?: () => void;
-  /** Label shown on the "clear all" button. Default: "Limpar tudo" */
   clearAllLabel?: string;
-  /** Hide the "clear all" button. Default: false */
   hideClearAll?: boolean;
   className?: string;
 };
-
-// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function FilterBar({
   filters,
@@ -65,6 +56,7 @@ export default function FilterBar({
           )}
           {onRemove && (
             <button
+              data-component-id={`erp.filter-bar.remove-${chip.id}`}
               type="button"
               aria-label={`Remover filtro ${chip.label}`}
               onClick={() => onRemove(chip.id)}
@@ -83,6 +75,7 @@ export default function FilterBar({
 
       {!hideClearAll && filters.length > 1 && onClearAll && (
         <button
+          data-component-id="erp.filter-bar.clear-all"
           type="button"
           onClick={onClearAll}
           className={clsx(
