@@ -10,6 +10,14 @@ import CheckboxGroup from "@/components/form/CheckboxGroup";
 import AutocompleteField from "@/components/form/AutocompleteField";
 import MultiSelectField from "@/components/form/MultiSelectField";
 import FileField from "@/components/form/FileField";
+import SelectField from "@/components/form/SelectField";
+import NativeSelect from "@/components/form/NativeSelect";
+import Checkbox from "@/components/form/Checkbox";
+import DatePickerField from "@/components/form/DatePickerField";
+import MonthPickerField from "@/components/form/MonthPickerField";
+import TimePickerField from "@/components/form/TimePickerField";
+import ZodForm from "@/components/form/ZodForm";
+import { z } from "zod";
 
 import LoginForm from "@/components/LoginForm";
 import OTPInput from "@/components/OTPInput";
@@ -290,6 +298,149 @@ import NumberField from "@/components/form/NumberField";
   </FormSection>
 </Form>`} />
             </div>
+
+            <DemoCard id="select-fields" title="SelectField & NativeSelect">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <SelectField
+                  label="Filial de Atendimento"
+                  placeholder="Selecionar filial..."
+                  clearable
+                  defaultValue="pvh"
+                  options={[
+                    { value: "pvh", label: "Porto Velho — Centro (RO)" },
+                    { value: "jpr", label: "Ji-Paraná — Matriz (RO)" },
+                    { value: "ari", label: "Ariquemes (RO)" },
+                    { value: "mao", label: "Manaus — Cidade Nova (AM)" },
+                    { value: "hta", label: "Humaitá (AM)" },
+                  ]}
+                />
+                <SelectField
+                  label="Departamento de Produtos"
+                  variant="filled"
+                  placeholder="Selecionar setor..."
+                  options={[
+                    { value: "moveis", label: "Móveis & Roupeiros" },
+                    { value: "estofados", label: "Estofados & Salas" },
+                    { value: "colchoes", label: "Colchões & Box" },
+                    { value: "eletro", label: "Eletrodomésticos & Linha Branca" },
+                  ]}
+                />
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">NativeSelect (compacto com ícone)</label>
+                  <NativeSelect icon={<Package size={14} />} defaultValue="entrega">
+                    <option value="entrega">Entrega e Montagem Domiciliar</option>
+                    <option value="retirada">Retirada no Depósito Regional</option>
+                    <option value="transferencia">Transferência entre Filiais (RO/AM)</option>
+                  </NativeSelect>
+                </div>
+                <SelectField
+                  label="Com erro"
+                  required
+                  error="Selecione uma tabela de preço válida"
+                  options={[
+                    { value: "varejo", label: "Tabela Varejo Padrão" },
+                    { value: "promocional", label: "Campanha Conforto para o seu Lar" },
+                  ]}
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="picker-fields" title="DatePickerField, MonthPickerField e TimePickerField">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <DatePickerField
+                  label="Data de Entrega"
+                  defaultValue="2026-10-26"
+                  helpText="Calendário interativo em portal"
+                />
+                <MonthPickerField
+                  label="Competência / Meta Mensal"
+                  defaultValue="2026-10"
+                  helpText="Seletor de mês e ano (YYYY-MM)"
+                />
+                <TimePickerField
+                  label="Horário de Montagem"
+                  defaultValue="14:30"
+                  stepMinutes={15}
+                  helpText="Intervalos de 15 minutos"
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="checkbox-single" title="Checkbox (unitário)">
+              <div className="flex flex-wrap gap-6 items-start">
+                <Checkbox
+                  defaultChecked
+                  label="Incluir serviço de montagem especializada"
+                  description="Equipe própria BigLar Móveis & Eletro para móveis e roupeiros"
+                />
+                <Checkbox
+                  indeterminate
+                  label="Seleção parcial (indeterminate)"
+                  description="Estado intermediário para cabeçalhos de tabelas"
+                />
+                <Checkbox
+                  disabled
+                  defaultChecked
+                  label="Garantia estendida (bloqueado)"
+                  description="Opção indisponível para mostruário"
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="zod-form-demo" title="ZodForm — validação declarativa com schema Zod">
+              <ZodForm
+                schema={z.object({
+                  produto: z.string().min(3, "Informe o nome do produto (mín. 3 caracteres)"),
+                  filial: z.string().min(1, "Selecione a filial de origem"),
+                  preco: z.number().min(10, "O valor mínimo é R$ 10,00"),
+                })}
+                defaultValues={{ produto: "Sofá Retrátil 3 Lugares", filial: "pvh", preco: 2499.9 }}
+                onSubmit={(vals) => {
+                  toast.success(`Produto "${vals.produto}" validado para a filial ${vals.filial.toUpperCase()}!`);
+                }}
+              >
+                {({ values, errors, setValue, isDirty }) => (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <TextField
+                        label="Produto (Móveis / Eletro)"
+                        required
+                        value={(values.produto as string) ?? ""}
+                        onChange={(e) => setValue("produto", e.target.value)}
+                        error={errors.produto}
+                      />
+                      <SelectField
+                        label="Filial (RO / AM)"
+                        required
+                        value={(values.filial as string) ?? ""}
+                        onChange={(v) => setValue("filial", v)}
+                        error={errors.filial}
+                        options={[
+                          { value: "pvh", label: "Porto Velho (RO) - (69)" },
+                          { value: "mao", label: "Manaus (AM) - (92)" },
+                        ]}
+                      />
+                      <NumberField
+                        label="Preço de Venda"
+                        required
+                        prefix="R$"
+                        value={(values.preco as number) ?? 0}
+                        onValueChange={(v) => setValue("preco", v ?? 0)}
+                        error={errors.preco}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between pt-2">
+                      <span className="text-xs text-zinc-500">
+                        Status: <strong>{isDirty ? "Alterado (dirty)" : "Sem alterações"}</strong>
+                      </span>
+                      <Button type="submit" variant="primary" size="sm">
+                        Validar com Zod
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </ZodForm>
+            </DemoCard>
 
             <DemoCard id="datetime-fields" title="DateField e TimeField">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
