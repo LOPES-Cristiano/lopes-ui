@@ -8,8 +8,8 @@ import { Calendar } from "lucide-react";
 export type DateFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   id?: string;
   name?: string;
-  /** "date" = only date, "datetime" = date + time */
-  mode?: "date" | "datetime";
+  /** "date" = only date, "datetime" = date + time, "month" = month (YYYY-MM) */
+  mode?: "date" | "datetime" | "month";
   value?: string;
   defaultValue?: string;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
@@ -53,14 +53,14 @@ export default function DateField({
   const wrapCls = twMerge(
     "relative flex w-full items-center overflow-hidden rounded-lg border transition-all duration-150",
     variant === "filled"
-      ? "bg-zinc-100 border-transparent hover:bg-zinc-200/70 focus-within:bg-white focus-within:border-zinc-300 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 dark:focus-within:bg-zinc-900 dark:focus-within:border-zinc-600"
-      : "bg-white border-zinc-300 hover:border-zinc-400 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:border-zinc-600 dark:focus-within:border-zinc-500",
+      ? "bg-[var(--surface-muted)] border-transparent hover:bg-[var(--surface-hover)] focus-within:bg-[var(--surface)] focus-within:border-[var(--border-strong)] focus-within:ring-2 focus-within:ring-[var(--ring)]/10"
+      : "bg-[var(--input-background)] border-[var(--input-border)] hover:border-[var(--border-strong)] focus-within:border-[var(--ring)] focus-within:ring-2 focus-within:ring-[var(--ring)]/10",
     error && "border-red-400 hover:border-red-400 focus-within:border-red-500 focus-within:ring-red-500/10",
-    (disabled || readOnly) && "opacity-60 pointer-events-none bg-zinc-50 dark:bg-zinc-800/50",
+    (disabled || readOnly) && "opacity-60 pointer-events-none bg-[var(--surface-muted)]",
   );
 
   const inputCls = twMerge(
-    "flex-1 min-w-0 w-full bg-transparent outline-none border-0 ring-0 text-zinc-900 dark:text-zinc-100 [color-scheme:light] dark:[color-scheme:dark]",
+    "flex-1 min-w-0 w-full bg-transparent outline-none border-0 ring-0 text-[var(--input-foreground)] [color-scheme:light] dark:[color-scheme:dark]",
     s.h, s.text, s.pl, "pr-3",
     (disabled || readOnly) && "cursor-not-allowed",
     inputClassName,
@@ -73,22 +73,23 @@ export default function DateField({
       width={width} className={className}
     >
       <div className={twMerge(wrapCls, !disabled && !readOnly && "cursor-pointer")} onClick={handleWrapperClick}>
-        <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-zinc-400", s.iL)}>
+        <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--surface-muted-foreground)]", s.iL)}>
           <Calendar size={s.iconSz} />
         </span>
         <input
           id={id} name={name}
-          type={mode === "datetime" ? "datetime-local" : "date"}
-          value={value} defaultValue={defaultValue}
+          type={mode === "datetime" ? "datetime-local" : mode === "month" ? "month" : "date"}
+          value={value === null ? '' : value} defaultValue={defaultValue}
           onChange={onChange} onBlur={onBlur}
           disabled={disabled} readOnly={readOnly}
           ref={inputRef}
+          autoComplete="off"
           min={min} max={max}
           required={required}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
           className={twMerge(inputCls, !disabled && !readOnly && "cursor-pointer")}
-          {...(componentId ? { "data-component-id": componentId } : {})}
+          data-component-id={componentId || (idProp ? `erp.form.date.${idProp}` : undefined)}
         />
       </div>
     </FieldWrapper>
