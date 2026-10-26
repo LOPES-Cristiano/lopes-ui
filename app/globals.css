@@ -8,87 +8,87 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Base do app */
-  --background: #fbfbfb;
-  --foreground: #0f172a;
+  /* Base do app — Branco corporativo e preto/zinc */
+  --background: #ffffff;
+  --foreground: #09090b;
 
-  /* Marca e ações principais */
-  --primary: #0347a8;
+  /* Marca e ações principais — Preto corporativo no light mode */
+  --primary: #18181b;
   --primary-foreground: #ffffff;
-  --primary-hover: #024cb4;
-  --primary-active: #0054ca;
-  --primary-soft: #e8f2ff;
-  --primary-soft-foreground: #023672;
+  --primary-hover: #27272a;
+  --primary-active: #09090b;
+  --primary-soft: #f4f4f5;
+  --primary-soft-foreground: #18181b;
 
-  /* Estrutura do Header */
-  --header-background: #f8fbff;
-  --header-foreground: #1e293b;
-  --header-border: #eaf0f8;
-  --header-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+  /* Estrutura do Header — Branco corporativo */
+  --header-background: #ffffff;
+  --header-foreground: #09090b;
+  --header-border: #e4e4e7;
+  --header-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
   --header-control-background: #ffffff;
-  --header-control-foreground: #334155;
-  --header-control-border: #e2e8f0;
-  --header-control-hover-background: #f1f5f9;
-  --header-control-hover-foreground: #0f172a;
-  --header-muted-foreground: #64748b;
-  --header-notification-foreground: #3b82f6;
-  --header-notification-foreground-hover: #1d4ed8;
-  --header-notification-count: #2563eb;
-  --header-ring: rgba(37, 99, 235, 0.25);
-  --header-mobile-background: #f8fbff;
-  --header-mobile-border: #eaf0f8;
-  --header-mobile-item-hover: rgba(37, 99, 235, 0.06);
+  --header-control-foreground: #3f3f46;
+  --header-control-border: #e4e4e7;
+  --header-control-hover-background: #f4f4f5;
+  --header-control-hover-foreground: #09090b;
+  --header-muted-foreground: #71717a;
+  --header-notification-foreground: #3f3f46;
+  --header-notification-foreground-hover: #09090b;
+  --header-notification-count: #18181b;
+  --header-ring: rgba(24, 24, 27, 0.2);
+  --header-mobile-background: #ffffff;
+  --header-mobile-border: #e4e4e7;
+  --header-mobile-item-hover: #f4f4f5;
 
-  --header-command-background: #ffffff;
-  --header-command-foreground: #1e293b;
-  --header-command-placeholder: #94a3b8;
-  --header-command-border: #e2e8f0;
-  --header-command-hover-background: #f8fafc;
-  --header-command-kbd-background: #f1f5f9;
-  --header-command-kbd-foreground: #64748b;
+  --header-command-background: #fafafa;
+  --header-command-foreground: #09090b;
+  --header-command-placeholder: #a1a1aa;
+  --header-command-border: #e4e4e7;
+  --header-command-hover-background: #f4f4f5;
+  --header-command-kbd-background: #f4f4f5;
+  --header-command-kbd-foreground: #71717a;
   --header-command-panel-background: #ffffff;
-  --header-command-panel-foreground: #1e293b;
-  --header-command-panel-border: #e2e8f0;
-  --header-command-panel-muted: #64748b;
-  --header-command-panel-hover: #f8fafc;
-  --header-command-panel-active: #eff6ff;
-  --header-command-panel-active-foreground: #2563eb;
+  --header-command-panel-foreground: #09090b;
+  --header-command-panel-border: #e4e4e7;
+  --header-command-panel-muted: #71717a;
+  --header-command-panel-hover: #f4f4f5;
+  --header-command-panel-active: #f4f4f5;
+  --header-command-panel-active-foreground: #09090b;
 
   --header-theme-background: transparent;
-  --header-theme-foreground: #475569;
-  --header-theme-hover-background: #f1f5f9;
-  --header-theme-hover-foreground: #0f172a;
+  --header-theme-foreground: #52525b;
+  --header-theme-hover-background: #f4f4f5;
+  --header-theme-hover-foreground: #09090b;
 
   --header-profile-trigger-background: transparent;
-  --header-profile-trigger-foreground: #0f172a;
-  --header-profile-trigger-hover-background: rgba(16, 95, 185, 0.08);
-  --header-profile-avatar-background: #dbe7f5;
-  --header-profile-avatar-foreground: #334155;
-  --header-profile-avatar-ring: #b6c5d6;
+  --header-profile-trigger-foreground: #09090b;
+  --header-profile-trigger-hover-background: #f4f4f5;
+  --header-profile-avatar-background: #f4f4f5;
+  --header-profile-avatar-foreground: #18181b;
+  --header-profile-avatar-ring: #e4e4e7;
   --header-profile-menu-background: #ffffff;
-  --header-profile-menu-foreground: #0f172a;
-  --header-profile-menu-border: #dbe4f0;
-  --header-profile-menu-muted: #94a3b8;
-  --header-profile-menu-hover: #f8fafc;
+  --header-profile-menu-foreground: #09090b;
+  --header-profile-menu-border: #e4e4e7;
+  --header-profile-menu-muted: #71717a;
+  --header-profile-menu-hover: #f4f4f5;
   --header-profile-menu-danger: #dc2626;
   --header-profile-menu-danger-hover: #fef2f2;
   --header-profile-menu-radius: 10px;
-  --header-profile-menu-shadow: 0 14px 32px rgba(15, 23, 42, 0.16);
-  --header-nav-foreground: #334155;
-  --header-nav-hover-background: rgba(16, 95, 185, 0.08);
-  --header-nav-hover-foreground: #0f172a;
-  --header-nav-badge-background: rgba(16, 95, 185, 0.08);
-  --header-nav-badge-foreground: #105fb9;
+  --header-profile-menu-shadow: 0 14px 32px rgba(9, 9, 11, 0.12);
+  --header-nav-foreground: #3f3f46;
+  --header-nav-hover-background: #f4f4f5;
+  --header-nav-hover-foreground: #09090b;
+  --header-nav-badge-background: #f4f4f5;
+  --header-nav-badge-foreground: #18181b;
   --header-nav-dropdown-background: #ffffff;
-  --header-nav-dropdown-foreground: #1e293b;
-  --header-nav-dropdown-border: #e2e8f0;
-  --header-nav-dropdown-muted: #64748b;
-  --header-nav-dropdown-hover: #f8fafc;
-  --header-breadcrumb-foreground: #0f172a;
-  --header-breadcrumb-muted: #64748b;
-  --header-breadcrumb-hover: #105fb9;
-  --header-breadcrumb-separator: #cbd5e1;
-  --header-breadcrumb-focus-ring: #93c5fd;
+  --header-nav-dropdown-foreground: #09090b;
+  --header-nav-dropdown-border: #e4e4e7;
+  --header-nav-dropdown-muted: #71717a;
+  --header-nav-dropdown-hover: #f4f4f5;
+  --header-breadcrumb-foreground: #09090b;
+  --header-breadcrumb-muted: #71717a;
+  --header-breadcrumb-hover: #18181b;
+  --header-breadcrumb-separator: #d4d4d8;
+  --header-breadcrumb-focus-ring: #a1a1aa;
 
   /* Tipografia estrutural do app: sidebar, header, breadcrumbs e navegação */
   --app-chrome-font-size: 0.875rem;
@@ -99,46 +99,46 @@
   --sidebar-width: 16rem;
   --sidebar-collapsed-width: 4rem;
 
-  /* Sidebar */
-  --sidebar-background: #0347a8;
-  --sidebar-foreground: #f6f8fc;
-  --sidebar-border: rgba(255, 255, 255, 0.1);
+  /* Sidebar — Branco corporativo limpo */
+  --sidebar-background: #ffffff;
+  --sidebar-foreground: #09090b;
+  --sidebar-border: #e4e4e7;
   --sidebar-shadow: none;
-  --sidebar-muted-foreground: rgba(226, 232, 240, 0.74);
-  --sidebar-group-foreground: rgba(191, 204, 221, 0.78);
-  --sidebar-group-hover-foreground: rgba(248, 250, 252, 0.98);
-  --sidebar-item-foreground: #ffffff;
-  --sidebar-item-hover-background: rgba(255, 255, 255, 0.11);
-  --sidebar-item-hover-foreground: #ffffff;
-  --sidebar-item-active-background: rgba(255, 255, 255, 0.185);
+  --sidebar-muted-foreground: #71717a;
+  --sidebar-group-foreground: #71717a;
+  --sidebar-group-hover-foreground: #09090b;
+  --sidebar-item-foreground: #3f3f46;
+  --sidebar-item-hover-background: #f4f4f5;
+  --sidebar-item-hover-foreground: #09090b;
+  --sidebar-item-active-background: #18181b;
   --sidebar-item-active-foreground: #ffffff;
-  --sidebar-item-active-muted: rgba(255, 255, 255, 0.85);
-  --sidebar-icon-foreground: rgba(255, 255, 255, 0.9);
-  --sidebar-icon-hover-foreground: #ffffff;
-  --sidebar-dot-background: rgba(163, 182, 209, 0.45);
-  --sidebar-dot-hover-background: #e2e8f0;
-  --sidebar-pin-foreground: rgba(201, 212, 226, 0.8);
-  --sidebar-pin-hover-foreground: #ffffff;
-  --sidebar-pin-active-foreground: #fbbf24;
-  --sidebar-pin-active-hover-foreground: #fde68a;
-  --sidebar-toggle-foreground: rgba(237, 242, 248, 0.88);
-  --sidebar-toggle-hover-background: rgba(255, 255, 255, 0.1);
-  --sidebar-toggle-hover-foreground: #ffffff;
-  --sidebar-tooltip-background: #0f1724;
+  --sidebar-item-active-muted: #d4d4d8;
+  --sidebar-icon-foreground: #71717a;
+  --sidebar-icon-hover-foreground: #09090b;
+  --sidebar-dot-background: #d4d4d8;
+  --sidebar-dot-hover-background: #52525b;
+  --sidebar-pin-foreground: #a1a1aa;
+  --sidebar-pin-hover-foreground: #09090b;
+  --sidebar-pin-active-foreground: #d97706;
+  --sidebar-pin-active-hover-foreground: #b45309;
+  --sidebar-toggle-foreground: #52525b;
+  --sidebar-toggle-hover-background: #f4f4f5;
+  --sidebar-toggle-hover-foreground: #09090b;
+  --sidebar-tooltip-background: #18181b;
   --sidebar-tooltip-foreground: #ffffff;
   --sidebar-tooltip-badge-background: rgba(255, 255, 255, 0.18);
-  --sidebar-user-background: rgba(255, 255, 255, 0.06);
-  --sidebar-user-hover-background: rgba(255, 255, 255, 0.1);
-  --sidebar-user-border: rgba(255, 255, 255, 0.09);
-  --sidebar-user-name: #ffffff;
-  --sidebar-user-muted: rgba(226, 232, 240, 0.68);
-  --sidebar-avatar-background: rgba(255, 255, 255, 0.08);
-  --sidebar-avatar-foreground: #ffffff;
-  --sidebar-avatar-ring: rgba(255, 255, 255, 0.1);
-  --sidebar-popover-background: #111c2d;
-  --sidebar-popover-foreground: #e2e8f0;
-  --sidebar-popover-border: rgba(255, 255, 255, 0.1);
-  --sidebar-popover-hover-background: rgba(255, 255, 255, 0.07);
+  --sidebar-user-background: #fafafa;
+  --sidebar-user-hover-background: #f4f4f5;
+  --sidebar-user-border: #e4e4e7;
+  --sidebar-user-name: #09090b;
+  --sidebar-user-muted: #71717a;
+  --sidebar-avatar-background: #f4f4f5;
+  --sidebar-avatar-foreground: #18181b;
+  --sidebar-avatar-ring: #e4e4e7;
+  --sidebar-popover-background: #ffffff;
+  --sidebar-popover-foreground: #09090b;
+  --sidebar-popover-border: #e4e4e7;
+  --sidebar-popover-hover-background: #f4f4f5;
   --sidebar-danger-foreground: #dc2626;
   --sidebar-danger-hover-background: #fef2f2;
   --sidebar-danger-hover-foreground: #b91c1c;
@@ -147,96 +147,104 @@
 
   /* Superfícies & Controles */
   --surface: #ffffff;
-  --surface-foreground: #0f172a;
-  --surface-hover: #f5f5f5;
-  --surface-muted: #f2f2f2;
-  --surface-muted-foreground: #64748b;
+  --surface-foreground: #09090b;
+  --surface-hover: #f4f4f5;
+  --surface-muted: #f4f4f5;
+  --surface-muted-foreground: #71717a;
 
-  --border: #dbe4f0;
-  --border-strong: #cbd5e1;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
   --input-background: #ffffff;
-  --input-text: #ffffff;
-  --input-border: #cbd5e1;
-  --input-foreground: #0f172a;
-  --input-placeholder: #94a3b8;
-  --ring: #105fb9;
+  --input-text: #09090b;
+  --input-border: #d4d4d8;
+  --input-foreground: #09090b;
+  --input-placeholder: #a1a1aa;
+  --ring: #18181b;
 
   --danger: #dc2626;
   --danger-soft: #fef2f2;
-  --status-page-background: #fcfcfc;
+  --status-page-background: #fafafa;
 }
 
 .dark {
-  --background: #18181b;
-  --foreground: #f4f4f5;
-  --primary-soft: rgba(43, 141, 255, 0.16);
-  --primary-soft-foreground: #c7d7ef;
+  --background: #09090b;
+  --foreground: #fafafa;
 
-  --header-background: #252526;
-  --header-foreground: #d4d4d4;
-  --header-border: rgba(255, 255, 255, 0.06);
-  --header-shadow: 0 12px 14px rgba(15, 23, 42, 0);
-  --header-control-background: #2d2d30;
-  --header-control-foreground: #d4d4d4;
-  --header-control-border: rgba(255, 255, 255, 0.08);
-  --header-control-hover-background: #38383d;
+  --primary: #fafafa;
+  --primary-foreground: #09090b;
+  --primary-hover: #e4e4e7;
+  --primary-active: #ffffff;
+  --primary-soft: #27272a;
+  --primary-soft-foreground: #fafafa;
+
+  --header-background: #09090b;
+  --header-foreground: #fafafa;
+  --header-border: #27272a;
+  --header-shadow: none;
+  --header-control-background: #18181b;
+  --header-control-foreground: #d4d4d8;
+  --header-control-border: #27272a;
+  --header-control-hover-background: #27272a;
   --header-control-hover-foreground: #ffffff;
   --header-muted-foreground: #a1a1aa;
-  --header-ring: #5b8bd8;
-  --header-mobile-background: #252526;
-  --header-mobile-border: rgba(255, 255, 255, 0.06);
-  --header-mobile-item-hover: rgba(255, 255, 255, 0.06);
+  --header-notification-foreground: #d4d4d8;
+  --header-notification-foreground-hover: #ffffff;
+  --header-notification-count: #fafafa;
+  --header-ring: rgba(250, 250, 250, 0.25);
+  --header-mobile-background: #09090b;
+  --header-mobile-border: #27272a;
+  --header-mobile-item-hover: #18181b;
 
-  --header-command-background: rgba(255, 255, 255, 0.06);
-  --header-command-foreground: #d4d4d4;
-  --header-command-placeholder: #9ca3af;
-  --header-command-border: rgba(255, 255, 255, 0.08);
-  --header-command-hover-background: rgba(255, 255, 255, 0.08);
-  --header-command-kbd-background: rgba(255, 255, 255, 0.08);
-  --header-command-kbd-foreground: #b3b3b3;
-  --header-command-panel-background: #252526;
-  --header-command-panel-foreground: #d4d4d4;
-  --header-command-panel-border: #3c3c3c;
-  --header-command-panel-muted: #9ca3af;
-  --header-command-panel-hover: #2d2d30;
-  --header-command-panel-active: rgba(43, 141, 255, 0.16);
-  --header-command-panel-active-foreground: #c7d7ef;
+  --header-command-background: #18181b;
+  --header-command-foreground: #fafafa;
+  --header-command-placeholder: #71717a;
+  --header-command-border: #27272a;
+  --header-command-hover-background: #27272a;
+  --header-command-kbd-background: #27272a;
+  --header-command-kbd-foreground: #a1a1aa;
+  --header-command-panel-background: #09090b;
+  --header-command-panel-foreground: #fafafa;
+  --header-command-panel-border: #27272a;
+  --header-command-panel-muted: #a1a1aa;
+  --header-command-panel-hover: #18181b;
+  --header-command-panel-active: #27272a;
+  --header-command-panel-active-foreground: #ffffff;
 
   --header-theme-background: transparent;
-  --header-theme-foreground: #b3b3b3;
-  --header-theme-hover-background: rgba(255, 255, 255, 0.08);
+  --header-theme-foreground: #a1a1aa;
+  --header-theme-hover-background: #18181b;
   --header-theme-hover-foreground: #ffffff;
 
   --header-profile-trigger-background: transparent;
-  --header-profile-trigger-foreground: #d4d4d4;
-  --header-profile-trigger-hover-background: rgba(255, 255, 255, 0.08);
-  --header-profile-avatar-background: #3c3c3c;
-  --header-profile-avatar-foreground: #f5f5f5;
-  --header-profile-avatar-ring: rgba(255, 255, 255, 0.12);
-  --header-profile-menu-background: #252526;
-  --header-profile-menu-foreground: #d4d4d4;
-  --header-profile-menu-border: #3c3c3c;
-  --header-profile-menu-muted: #9ca3af;
-  --header-profile-menu-hover: #2d2d30;
-  --header-profile-menu-danger: #f08c8c;
+  --header-profile-trigger-foreground: #fafafa;
+  --header-profile-trigger-hover-background: #18181b;
+  --header-profile-avatar-background: #27272a;
+  --header-profile-avatar-foreground: #fafafa;
+  --header-profile-avatar-ring: #3f3f46;
+  --header-profile-menu-background: #09090b;
+  --header-profile-menu-foreground: #fafafa;
+  --header-profile-menu-border: #27272a;
+  --header-profile-menu-muted: #a1a1aa;
+  --header-profile-menu-hover: #18181b;
+  --header-profile-menu-danger: #f87171;
   --header-profile-menu-danger-hover: rgba(127, 29, 29, 0.38);
   --header-profile-menu-radius: 10px;
-  --header-profile-menu-shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
-  --header-nav-foreground: #c8c8c8;
-  --header-nav-hover-background: rgba(255, 255, 255, 0.06);
+  --header-profile-menu-shadow: 0 18px 42px rgba(0, 0, 0, 0.55);
+  --header-nav-foreground: #d4d4d8;
+  --header-nav-hover-background: #18181b;
   --header-nav-hover-foreground: #ffffff;
-  --header-nav-badge-background: rgba(255, 255, 255, 0.06);
-  --header-nav-badge-foreground: #b3b3b3;
-  --header-nav-dropdown-background: #2d2d30;
-  --header-nav-dropdown-foreground: #d4d4d4;
-  --header-nav-dropdown-border: rgba(255, 255, 255, 0.08);
-  --header-nav-dropdown-muted: #9ca3af;
-  --header-nav-dropdown-hover: rgba(255, 255, 255, 0.05);
-  --header-breadcrumb-foreground: #e6e6e6;
-  --header-breadcrumb-muted: #9ca3af;
+  --header-nav-badge-background: #27272a;
+  --header-nav-badge-foreground: #fafafa;
+  --header-nav-dropdown-background: #09090b;
+  --header-nav-dropdown-foreground: #fafafa;
+  --header-nav-dropdown-border: #27272a;
+  --header-nav-dropdown-muted: #a1a1aa;
+  --header-nav-dropdown-hover: #18181b;
+  --header-breadcrumb-foreground: #fafafa;
+  --header-breadcrumb-muted: #a1a1aa;
   --header-breadcrumb-hover: #ffffff;
-  --header-breadcrumb-separator: #6b7280;
-  --header-breadcrumb-focus-ring: #5b8bd8;
+  --header-breadcrumb-separator: #52525b;
+  --header-breadcrumb-focus-ring: #a1a1aa;
 
   --app-chrome-font-size: 0.875rem;
   --app-chrome-font-weight: 450;
@@ -246,66 +254,67 @@
   --sidebar-width: 16rem;
   --sidebar-collapsed-width: 4rem;
 
-  --sidebar-background: #252526;
-  --sidebar-foreground: #d4d4d4;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
+  /* Sidebar — Preto corporativo no dark mode */
+  --sidebar-background: #09090b;
+  --sidebar-foreground: #fafafa;
+  --sidebar-border: #27272a;
   --sidebar-shadow: none;
   --sidebar-muted-foreground: #a1a1aa;
-  --sidebar-group-foreground: #9ca3af;
-  --sidebar-group-hover-foreground: #e5e7eb;
-  --sidebar-item-foreground: #d4d4d4;
-  --sidebar-item-hover-background: rgba(255, 255, 255, 0.06);
+  --sidebar-group-foreground: #a1a1aa;
+  --sidebar-group-hover-foreground: #ffffff;
+  --sidebar-item-foreground: #d4d4d8;
+  --sidebar-item-hover-background: #18181b;
   --sidebar-item-hover-foreground: #ffffff;
-  --sidebar-item-active-background: #37373d;
+  --sidebar-item-active-background: #27272a;
   --sidebar-item-active-foreground: #ffffff;
-  --sidebar-item-active-muted: #c5c5c5;
-  --sidebar-icon-foreground: #9da3ad;
+  --sidebar-item-active-muted: #a1a1aa;
+  --sidebar-icon-foreground: #a1a1aa;
   --sidebar-icon-hover-foreground: #ffffff;
-  --sidebar-dot-background: #7c818b;
-  --sidebar-dot-hover-background: #d4d4d4;
-  --sidebar-pin-foreground: #8e939c;
+  --sidebar-dot-background: #52525b;
+  --sidebar-dot-hover-background: #e4e4e7;
+  --sidebar-pin-foreground: #71717a;
   --sidebar-pin-hover-foreground: #ffffff;
-  --sidebar-pin-active-foreground: #d7ba7d;
-  --sidebar-pin-active-hover-foreground: #e6cc8f;
-  --sidebar-toggle-foreground: #c8c8c8;
-  --sidebar-toggle-hover-background: rgba(255, 255, 255, 0.08);
+  --sidebar-pin-active-foreground: #fbbf24;
+  --sidebar-pin-active-hover-foreground: #fde68a;
+  --sidebar-toggle-foreground: #a1a1aa;
+  --sidebar-toggle-hover-background: #18181b;
   --sidebar-toggle-hover-foreground: #ffffff;
-  --sidebar-tooltip-background: #2d2d30;
+  --sidebar-tooltip-background: #27272a;
   --sidebar-tooltip-foreground: #ffffff;
   --sidebar-tooltip-badge-background: rgba(255, 255, 255, 0.16);
-  --sidebar-user-background: rgba(255, 255, 255, 0.06);
-  --sidebar-user-hover-background: rgba(255, 255, 255, 0.09);
-  --sidebar-user-border: rgba(255, 255, 255, 0.08);
-  --sidebar-user-name: #f5f5f5;
+  --sidebar-user-background: #18181b;
+  --sidebar-user-hover-background: #27272a;
+  --sidebar-user-border: #27272a;
+  --sidebar-user-name: #fafafa;
   --sidebar-user-muted: #a1a1aa;
-  --sidebar-avatar-background: #3c3c3c;
-  --sidebar-avatar-foreground: #f5f5f5;
-  --sidebar-avatar-ring: rgba(255, 255, 255, 0.12);
-  --sidebar-popover-background: #2d2d30;
-  --sidebar-popover-foreground: #d4d4d4;
-  --sidebar-popover-border: rgba(255, 255, 255, 0.08);
-  --sidebar-popover-hover-background: rgba(255, 255, 255, 0.05);
-  --sidebar-danger-foreground: #f08c8c;
+  --sidebar-avatar-background: #27272a;
+  --sidebar-avatar-foreground: #fafafa;
+  --sidebar-avatar-ring: #3f3f46;
+  --sidebar-popover-background: #09090b;
+  --sidebar-popover-foreground: #fafafa;
+  --sidebar-popover-border: #27272a;
+  --sidebar-popover-hover-background: #18181b;
+  --sidebar-danger-foreground: #f87171;
   --sidebar-danger-hover-background: rgba(127, 29, 29, 0.38);
-  --sidebar-danger-hover-foreground: #ffb3b3;
+  --sidebar-danger-hover-foreground: #fca5a5;
   --sidebar-announcement-radius: 6px;
   --sidebar-announcement-bar-width: 3px;
 
-  --surface: #252526;
-  --surface-foreground: #d4d4d4;
-  --surface-hover: #2d2d30;
-  --surface-muted: #2d2d30;
+  --surface: #09090b;
+  --surface-foreground: #fafafa;
+  --surface-hover: #18181b;
+  --surface-muted: #18181b;
   --surface-muted-foreground: #a1a1aa;
 
-  --border: #3c3c3c;
-  --border-strong: #4b4b4b;
-  --input-background: #2d2d30;
-  --input-border: #3c3c3c;
-  --input-foreground: #f5f5f5;
-  --input-placeholder: #9ca3af;
-  --ring: #5b8bd8;
+  --border: #27272a;
+  --border-strong: #3f3f46;
+  --input-background: #09090b;
+  --input-border: #27272a;
+  --input-foreground: #fafafa;
+  --input-placeholder: #71717a;
+  --ring: #fafafa;
 
-  --danger: #f08c8c;
+  --danger: #f87171;
   --danger-soft: rgba(127, 29, 29, 0.38);
 }
 
@@ -438,17 +447,17 @@ body {
 
 /* ── Text selection ──────────────────────────────────────────────────────────── */
 ::selection {
-  background: rgb(99 102 241 / 0.2);
+  background: rgba(24, 24, 27, 0.14);
   color: inherit;
 }
 .dark ::selection {
-  background: rgb(99 102 241 / 0.35);
+  background: rgba(250, 250, 250, 0.22);
 }
 
 /* ── Focus rings ─────────────────────────────────────────────────────────────── */
 @layer base {
   :focus-visible {
-    outline: 2px solid rgb(99 102 241 / 0.7);
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
 }
@@ -570,11 +579,11 @@ aside ::-webkit-scrollbar-track {
   background: transparent;
 }
 aside ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--scrollbar-thumb);
   border-radius: 999px;
 }
 aside ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: var(--scrollbar-thumb-hover);
 }
 
 @media (min-width: 768px) {
@@ -734,14 +743,14 @@ aside ::-webkit-scrollbar-thumb:hover {
 }
 
 .rte-content .ProseMirror a {
-  color: #2563eb;
+  color: #18181b;
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
-.dark .rte-content .ProseMirror a { color: #60a5fa; }
-.rte-content .ProseMirror a:hover { color: #1d4ed8; }
-.dark .rte-content .ProseMirror a:hover { color: #93c5fd; }
+.dark .rte-content .ProseMirror a { color: #fafafa; }
+.rte-content .ProseMirror a:hover { color: #52525b; }
+.dark .rte-content .ProseMirror a:hover { color: #d4d4d8; }
 
 .rte-content .ProseMirror hr {
   border: none;
@@ -789,7 +798,7 @@ aside ::-webkit-scrollbar-thumb:hover {
 
 .rte-content .ProseMirror .selectedCell::after,
 .tiptap .selectedCell::after {
-  background: rgb(99 102 241 / 0.15);
+  background: rgba(24, 24, 27, 0.08);
   content: "";
   inset: 0;
   pointer-events: none;
@@ -820,7 +829,7 @@ aside ::-webkit-scrollbar-thumb:hover {
   height: 15px;
   border-radius: 4px;
   border: 1.5px solid #a1a1aa;
-  accent-color: #6366f1;
+  accent-color: #18181b;
   cursor: pointer;
   flex-shrink: 0;
 }
