@@ -41,7 +41,7 @@ function SidebarBadge({
       case 'info':
         return 'bg-blue-500/20 text-blue-300 border border-blue-500/30';
       default:
-        return 'bg-white/10 text-white/90 border border-white/15';
+        return 'bg-[var(--sidebar-item-hover-background)] text-[var(--sidebar-foreground)] border border-[var(--sidebar-border)]';
     }
   };
 
@@ -169,10 +169,10 @@ export function SidebarNavItem({
     item.disabled ? 'cursor-not-allowed opacity-40 pointer-events-none' : 'cursor-pointer',
     item.active
       ? isPinnedMode
-        ? 'bg-white/15 text-white shadow-sm font-normal border border-white/20'
+        ? 'bg-[var(--sidebar-item-active-background)] text-[var(--sidebar-item-active-foreground)] shadow-xs font-semibold'
         : 'bg-[var(--sidebar-item-active-background)] text-[var(--sidebar-item-active-foreground)] shadow-xs font-semibold'
       : isPinnedMode
-        ? 'text-[var(--sidebar-item-foreground)] hover:bg-white/10 hover:text-white'
+        ? 'text-[var(--sidebar-item-foreground)] hover:bg-[var(--sidebar-item-hover-background)] hover:text-[var(--sidebar-item-hover-foreground)]'
         : 'hover:bg-[var(--sidebar-item-hover-background)] hover:text-[var(--sidebar-item-hover-foreground)]',
   ]
     .filter(Boolean)
@@ -187,9 +187,7 @@ export function SidebarNavItem({
     <span
       className={`shrink-0 transition-all duration-150 flex items-center justify-center ${
         item.active
-          ? isPinnedMode
-            ? 'text-white'
-            : 'text-[var(--sidebar-item-active-foreground)]'
+          ? 'text-[var(--sidebar-item-active-foreground)]'
           : 'text-[var(--sidebar-icon-foreground)] group-hover/nav:text-[var(--sidebar-icon-hover-foreground)]'
       }`}
     >
@@ -210,9 +208,7 @@ export function SidebarNavItem({
     <span
       className={`shrink-0 h-1.5 w-1.5 rounded-full transition-all ${
         item.active
-          ? isPinnedMode
-            ? 'bg-white'
-            : 'bg-[var(--sidebar-item-active-foreground)]'
+          ? 'bg-[var(--sidebar-item-active-foreground)]'
           : 'bg-[var(--sidebar-dot-background)] group-hover/nav:bg-[var(--sidebar-dot-hover-background)]'
       }`}
     />
@@ -235,9 +231,7 @@ export function SidebarNavItem({
           <span
             className={`app-chrome-muted-text truncate leading-snug mt-0.5 ${
               item.active
-                ? isPinnedMode
-                  ? 'text-white/85'
-                  : 'text-white/85'
+                ? 'text-[var(--sidebar-item-active-muted)]'
                 : 'text-[var(--sidebar-muted-foreground)]'
             }`}
           >
@@ -314,7 +308,7 @@ export function SidebarNavItem({
             e.stopPropagation();
             togglePin(itemPinId);
           }}
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded-md opacity-0 group-hover/pin:opacity-100 text-[var(--sidebar-icon-foreground)] hover:text-amber-400 hover:bg-white/15 transition-all z-10 cursor-pointer"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded-md opacity-0 group-hover/pin:opacity-100 text-[var(--sidebar-icon-foreground)] hover:text-amber-400 hover:bg-[var(--sidebar-item-hover-background)] transition-all z-10 cursor-pointer"
         >
           <PinOff size={12} />
         </button>
@@ -331,8 +325,8 @@ export function SidebarNavItem({
           className={[
             'absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded-md transition-all z-10 cursor-pointer',
             isPinned
-              ? 'opacity-0 group-hover/nav:opacity-100 text-amber-400 hover:text-amber-300 hover:bg-white/10'
-              : 'opacity-0 group-hover/nav:opacity-100 text-[var(--sidebar-icon-foreground)] hover:text-amber-400 hover:bg-white/10',
+              ? 'opacity-0 group-hover/nav:opacity-100 text-amber-400 hover:text-amber-300 hover:bg-[var(--sidebar-item-hover-background)]'
+              : 'opacity-0 group-hover/nav:opacity-100 text-[var(--sidebar-icon-foreground)] hover:text-amber-400 hover:bg-[var(--sidebar-item-hover-background)]',
           ].join(' ')}
         >
           {isPinned ? <PinOff size={11} /> : <Pin size={11} />}
