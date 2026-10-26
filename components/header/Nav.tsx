@@ -26,7 +26,7 @@ export type NavItem = {
 
 function NavBadge({ value }: { value: string | number }) {
   return (
-    <span className="ml-1.5 inline-flex items-center rounded-full bg-zinc-100 dark:bg-zinc-800 px-1.5 py-px text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 leading-none">
+    <span className="ml-1.5 inline-flex items-center rounded-full bg-header-nav-badge px-1.5 py-px text-[10px] font-semibold text-header-nav-badge-foreground leading-none">
       {value}
     </span>
   );
@@ -45,20 +45,20 @@ function L2Item({
   const inner = (
     <span className="flex items-center gap-2.5 w-full">
       {Icon && (
-        <span className="shrink-0 text-zinc-500 dark:text-zinc-400 group-hover/item:text-zinc-900 dark:group-hover/item:text-zinc-100 transition-colors">
+        <span className="shrink-0 text-header-nav-dropdown-muted group-hover/item:text-header-nav-dropdown-foreground transition-colors">
           <Icon size={15} strokeWidth={1.75} />
         </span>
       )}
       <span className="flex flex-col flex-1 min-w-0 text-left">
-          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200 leading-snug flex items-center gap-1">
+          <span className="app-chrome-text text-header-nav-dropdown-foreground leading-snug flex items-center gap-1">
           {item.label}
           {item.badge !== undefined && <NavBadge value={item.badge} />}
         </span>
         {item.description && (
-          <span className="text-xs text-zinc-400 dark:text-zinc-500 leading-snug mt-0.5 truncate">{item.description}</span>
+          <span className="app-chrome-muted-text text-header-nav-dropdown-muted leading-snug mt-0.5 truncate">{item.description}</span>
         )}
       </span>
-      {hasChildren && <ChevronRight size={12} className="shrink-0 text-zinc-300 ml-auto" />}
+      {hasChildren && <ChevronRight size={12} className="shrink-0 text-header-nav-dropdown-muted ml-auto" />}
     </span>
   );
 
@@ -66,13 +66,14 @@ function L2Item({
     "group/item relative flex items-center w-full px-3 py-2 rounded-md transition-colors duration-100",
     item.disabled
       ? "cursor-not-allowed opacity-40 pointer-events-none"
-      : "cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800",
+      : "cursor-pointer hover:bg-header-nav-dropdown-hover",
   ].join(" ");
 
   if (hasChildren) {
     return (
       <div className="relative group/l2">
         <button
+          data-component-id={`erp.nav.item-${item.label}`}
           type="button"
           className={baseClass}
           onKeyDown={(e) => {
@@ -84,19 +85,18 @@ function L2Item({
           disabled={item.disabled}
           role="menuitem"
           tabIndex={0}
-          {...(item.componentId ? { "data-component-id": item.componentId } : {})}
-        >
+          >
           {inner}
         </button>
 
         {/* Level 3 */}
         <div
-          className="absolute left-full top-0 -ml-1 hidden group-hover/l2:block bg-white dark:bg-zinc-900 rounded-xl shadow-xl ring-1 ring-black/[0.06] dark:ring-white/[0.08] z-30 min-w-[11rem] p-1"
+          className="absolute left-full top-0 -ml-1 hidden group-hover/l2:block bg-header-nav-dropdown rounded-xl shadow-xl ring-1 ring-header-nav-dropdown-border z-30 min-w-[11rem] p-1"
           role="menu"
         >
           {item.children!.map((g, gi) => (
             <React.Fragment key={`${g.href ?? "#"}-${gi}`}>
-              {g.divider && <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" role="separator" />}
+              {g.divider && <div className="my-1 border-t border-header-nav-dropdown-border" role="separator" />}
               <L2Item item={g} onNavigate={onNavigate} />
             </React.Fragment>
           ))}
@@ -118,8 +118,7 @@ function L2Item({
           onNavigate(item.href);
         }
       }}
-      {...(item.componentId ? { "data-component-id": item.componentId } : {})}
-    >
+      >
       {inner}
     </a>
   );
@@ -150,12 +149,13 @@ export default function Nav({
           return (
             <div key={key} className="relative group/l1">
               <button
+                data-component-id={`erp.nav.group-${n.label}`}
                 type="button"
                 className={[
-                  "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150",
+                  "app-chrome-text inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 transition-colors duration-150",
                   n.disabled
                     ? "cursor-not-allowed opacity-40"
-                    : "text-zinc-700 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer",
+                    : "text-header-nav-foreground hover:text-header-nav-hover-foreground hover:bg-header-nav-hover cursor-pointer",
                 ].join(" ")}
                 aria-haspopup="menu"
                 disabled={n.disabled}
@@ -165,14 +165,13 @@ export default function Nav({
                     (e.currentTarget.parentElement?.querySelector("[role='menuitem']") as HTMLElement | null)?.focus();
                   }
                 }}
-                {...(n.componentId ? { "data-component-id": n.componentId } : {})}
-              >
-                {Icon && <Icon size={14} strokeWidth={1.75} className="text-zinc-400 dark:text-zinc-500" />}
+                >
+                {Icon && <Icon size={14} strokeWidth={1.75} className="text-header-muted-foreground" />}
                 {n.label}
                 {n.badge !== undefined && <NavBadge value={n.badge} />}
                 <ChevronDown
                   size={12}
-                  className="text-zinc-400 dark:text-zinc-500 transition-transform duration-150 group-hover/l1:rotate-180"
+                  className="text-header-muted-foreground transition-transform duration-150 group-hover/l1:rotate-180"
                 />
               </button>
 
@@ -182,10 +181,10 @@ export default function Nav({
                 role="menu"
                 aria-label={`${n.label} submenu`}
               >
-                <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl ring-1 ring-black/[0.06] dark:ring-white/[0.08] min-w-[12rem] p-1">
+                <div className="bg-header-nav-dropdown rounded-xl shadow-xl ring-1 ring-header-nav-dropdown-border min-w-[12rem] p-1">
                   {n.children.map((c, ci) => (
                     <React.Fragment key={`${c.href ?? "#"}-${ci}`}>
-                      {c.divider && <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" role="separator" />}
+                      {c.divider && <div className="my-1 border-t border-header-nav-dropdown-border" role="separator" />}
                       <L2Item item={c} onNavigate={onNavigate} />
                     </React.Fragment>
                   ))}
@@ -207,14 +206,13 @@ export default function Nav({
               }
             }}
             className={[
-              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150",
+              "app-chrome-text inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 transition-colors duration-150",
               n.disabled
                 ? "cursor-not-allowed opacity-40"
-                : "text-zinc-700 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800",
+                : "text-header-nav-foreground hover:text-header-nav-hover-foreground hover:bg-header-nav-hover",
             ].join(" ")}
-            {...(n.componentId ? { "data-component-id": n.componentId } : {})}
-          >
-            {Icon && <Icon size={14} strokeWidth={1.75} className="text-zinc-400 dark:text-zinc-500" />}
+            >
+            {Icon && <Icon size={14} strokeWidth={1.75} className="text-header-muted-foreground" />}
             {n.label}
             {n.badge !== undefined && <NavBadge value={n.badge} />}
           </a>
