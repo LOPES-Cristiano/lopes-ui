@@ -29,29 +29,29 @@ const CATEGORIES = [
     href: "/showcase/forms",
     icon: FormInput,
     title: "Formulários",
-    description: "TextField, DateField, OTPInput, RichTextEditor, LoginForm e mais.",
-    count: 6,
+    description: "TextField, SelectField, DatePickerField, ZodForm, RichTextEditor e mais.",
+    count: 14,
   },
   {
     href: "/showcase/display",
     icon: Layers,
     title: "Display",
-    description: "Avatar, Badge, Card, Carousel, StatCard, ServiceStatus e mais.",
-    count: 7,
+    description: "Avatar, Badge, StatusBadge, DetailLayout, Card, EmojiPicker e mais.",
+    count: 10,
   },
   {
     href: "/showcase/actions",
     icon: Zap,
     title: "Ações & Feedback",
-    description: "Button, Alert, Toast, ConfirmDialog, Drawer, EmptyState e mais.",
-    count: 8,
+    description: "Button, Modal, FormModal, FormDrawer, CameraCapture, Toast e mais.",
+    count: 13,
   },
   {
     href: "/showcase/data",
     icon: BarChart2,
     title: "Dados & Tabelas",
-    description: "DataTable, KanbanBoard, InboxList, ActivityFeed, TreeView e mais.",
-    count: 7,
+    description: "DataTable, Spreadsheet, TransferList, KanbanBoard, TreeView e mais.",
+    count: 9,
   },
   {
     href: "/showcase/communication",
@@ -71,8 +71,8 @@ const CATEGORIES = [
     href: "/showcase/animation",
     icon: Play,
     title: "Animação & Conteúdo",
-    description: "TextRotate, CodeBlock, Stepper, Timeline.",
-    count: 4,
+    description: "CodeEditor, CodeBlock, TextRotate, Stepper, Timeline.",
+    count: 5,
   },
 ] as const;
 
@@ -90,7 +90,7 @@ export default function Home() {
             Componentes prontos para produção
           </h1>
           <p className="text-base text-zinc-500 dark:text-zinc-400 leading-relaxed mb-8 max-w-lg">
-            Biblioteca React + Next.js com Tailwind CSS. Acessível, tipada e customizável. Mais de 50 componentes em 7 categorias.
+            Biblioteca React + Next.js com Tailwind CSS. Acessível, tipada e customizável. Mais de 70 componentes, primitivos Radix, utilitários e hooks em 7 categorias.
           </p>
           <div className="flex flex-wrap gap-3">
             <a
