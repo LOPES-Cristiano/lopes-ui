@@ -1369,7 +1369,7 @@ const [open, setOpen] = useState(false);
           </DemoCard>
 
           <DemoCard id="empty-state-sizes" title="Tamanhos">
-            <div className="grid grid-cols-3 divide-x divide-zinc-100 dark:divide-zinc-800">
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-zinc-100 dark:divide-zinc-800">
               {(["sm", "md", "lg"] as const).map((s) => (
                 <EmptyState key={s} preset="search" size={s} />
               ))}
