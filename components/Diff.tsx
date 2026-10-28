@@ -183,7 +183,10 @@ export default function Diff({
             ? `inset(0 ${100 - pos}% 0 0)`
             : `inset(0 0 ${100 - pos}% 0)`,
         }}
-        className="absolute inset-0 h-full w-full"
+        className={cn(
+          "absolute inset-0 h-full w-full will-change-[clip-path]",
+          !dragging && "transition-[clip-path] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]"
+        )}
       >
         {renderDiffLayer(before, beforeAlt)}
       </div>
@@ -213,7 +216,8 @@ export default function Diff({
             : { top: `${pos}%` }
         }
         className={cn(
-          "pointer-events-none absolute z-20 flex items-center justify-center bg-white shadow-[0_0_8px_rgba(0,0,0,0.45)]",
+          "pointer-events-none absolute z-20 flex items-center justify-center bg-white shadow-[0_0_8px_rgba(0,0,0,0.45)] will-change-[left,top]",
+          !dragging && "transition-[left,top] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
           isHorizontal
             ? "inset-y-0 w-0.5 -translate-x-1/2"
             : "inset-x-0 h-0.5 -translate-y-1/2"
