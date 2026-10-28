@@ -285,11 +285,15 @@ function Panel({
         id={panelId}
         role="region"
         aria-labelledby={headingId}
+        aria-hidden={!open}
         hidden={!open && !shouldMountContent}
-        className="grid transition-[grid-template-rows] duration-200 ease-in-out"
+        className={twMerge(
+          "grid transition-[grid-template-rows,opacity] duration-280 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          open ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
         style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
       >
-        <div className="overflow-hidden">
+        <div className="min-h-0 overflow-hidden">
           {shouldMountContent && (
             <div
               className={twMerge(
@@ -505,10 +509,13 @@ export function MinimizavelGroup({
         {subtitle && <span className="text-[11px] text-slate-400 font-normal">{subtitle}</span>}
       </button>
       <div
-        className="grid transition-[grid-template-rows] duration-200 ease-in-out"
+        className={twMerge(
+          "grid transition-[grid-template-rows,opacity] duration-280 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
         style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
       >
-        <div className="overflow-hidden">
+        <div className="min-h-0 overflow-hidden">
           <div className={twMerge("pt-1", contentClassName)}>{children}</div>
         </div>
       </div>
