@@ -4,6 +4,7 @@ import React, { useId, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Check } from "lucide-react";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
+import { useAccessControl } from "../useAccessControl";
 
 export type CheckboxOption = {
   value: string;
@@ -12,6 +13,8 @@ export type CheckboxOption = {
   disabled?: boolean;
   /** Icon rendered inside card/button variants */
   icon?: React.ReactNode;
+  componentId?: string;
+  hideIfDenied?: boolean;
 };
 
 export type CheckboxGroupProps = Omit<FieldWrapperProps, "children"> & {
@@ -21,6 +24,7 @@ export type CheckboxGroupProps = Omit<FieldWrapperProps, "children"> & {
   value?: string[];
   defaultValue?: string[];
   onChange?: (values: string[]) => void;
+  disabled?: boolean;
   /** If true, multiple options can be selected simultaneously */
   multiple?: boolean;
   /** Visual shape of the checkbox indicator (default variant only) */
@@ -37,6 +41,8 @@ export type CheckboxGroupProps = Omit<FieldWrapperProps, "children"> & {
   /** Number of columns for the card variant grid */
   columns?: 1 | 2 | 3 | 4;
   componentId?: string;
+  /** If true, hides the component when access is denied instead of disabling it */
+  hideIfDenied?: boolean;
 };
 
 // ── Size tokens  ─────────────────────────────────────────────────────────────
@@ -119,6 +125,7 @@ export default function CheckboxGroup({
   value: controlledValue,
   defaultValue,
   onChange,
+  disabled = false,
   multiple = true,
   shape = "square",
   direction = "vertical",
@@ -126,12 +133,25 @@ export default function CheckboxGroup({
   variant = "default",
   columns = 2,
   componentId,
+  hideIfDenied = false,
 }: CheckboxGroupProps) {
   const groupId = useId();
   const [internalValue, setInternalValue] = useState<string[]>(defaultValue ?? []);
   const selected = controlledValue ?? internalValue;
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+  const groupDisabled = Boolean(disabled || !hasPermission);
+
+  if (!hasPermission && hideIfDenied) return null;
+
+  const visibleOptions = options.filter((opt) => {
+    const optAllowed = !opt.componentId || canAccess(opt.componentId);
+    if (!optAllowed && opt.hideIfDenied) return false;
+    return true;
+  });
 
   const toggle = (val: string) => {
+    if (groupDisabled) return;
     let next: string[];
     if (multiple) {
       next = selected.includes(val)
@@ -157,10 +177,12 @@ export default function CheckboxGroup({
         <div
           role={multiple ? "group" : "radiogroup"}
           className={twMerge("grid gap-3", CARD_COLS[columns])}
-          >
-          {options.map((opt) => {
+        >
+          {visibleOptions.map((opt) => {
             const checked = selected.includes(opt.value);
             const optId = `${groupId}-${opt.value}`;
+            const optAllowed = !opt.componentId || canAccess(opt.componentId);
+            const isOptDisabled = Boolean(groupDisabled || opt.disabled || !optAllowed);
             return (
               <label
                 key={opt.value}
@@ -171,7 +193,7 @@ export default function CheckboxGroup({
                   checked
                     ? "border-indigo-600 bg-indigo-50/50 shadow-sm dark:bg-indigo-950/40"
                     : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600 dark:hover:bg-zinc-800",
-                  opt.disabled && "cursor-not-allowed opacity-50 pointer-events-none",
+                  isOptDisabled && "cursor-not-allowed opacity-50 pointer-events-none",
                 )}
               >
                 <input
@@ -180,12 +202,11 @@ export default function CheckboxGroup({
                   name={name ?? groupId}
                   value={opt.value}
                   checked={checked}
-                  disabled={opt.disabled}
-                  onChange={() => toggle(opt.value)}
+                  disabled={isOptDisabled}
+                  onChange={() => !isOptDisabled && toggle(opt.value)}
                   className="peer sr-only"
-                  data-component-id={componentId ? `${componentId}.${opt.value}` : undefined}
+                  data-component-id={opt.componentId ?? (componentId ? `${componentId}.${opt.value}` : undefined)}
                 />
-                {/* Top row: icon + indicator */}
                 <div className="flex items-start justify-between gap-2">
                   {opt.icon ? (
                     <div className={twMerge(
@@ -200,7 +221,6 @@ export default function CheckboxGroup({
                     <Indicator checked={checked} shape={multiple ? "square" : "circle"} size={size} multiple={multiple} />
                   </div>
                 </div>
-                {/* Text */}
                 <div className="flex flex-col gap-0.5 min-w-0">
                   <span className={twMerge(sz.text, "font-semibold leading-snug", checked ? "text-indigo-900 dark:text-indigo-300" : "text-zinc-800 dark:text-zinc-100")}>
                     {opt.label}
@@ -230,10 +250,12 @@ export default function CheckboxGroup({
         <div
           role={multiple ? "group" : "radiogroup"}
           className="flex flex-wrap gap-2"
-          >
-          {options.map((opt) => {
+        >
+          {visibleOptions.map((opt) => {
             const checked = selected.includes(opt.value);
             const optId = `${groupId}-${opt.value}`;
+            const optAllowed = !opt.componentId || canAccess(opt.componentId);
+            const isOptDisabled = Boolean(groupDisabled || opt.disabled || !optAllowed);
             return (
               <label
                 key={opt.value}
@@ -244,7 +266,7 @@ export default function CheckboxGroup({
                   checked
                     ? "bg-primary border-primary text-primary-foreground shadow-sm"
                     : "bg-surface border-border text-surface-foreground hover:border-border-strong hover:bg-surface-hover",
-                  opt.disabled && "cursor-not-allowed opacity-50 pointer-events-none",
+                  isOptDisabled && "cursor-not-allowed opacity-50 pointer-events-none",
                 )}
               >
                 <input
@@ -253,10 +275,10 @@ export default function CheckboxGroup({
                   name={name ?? groupId}
                   value={opt.value}
                   checked={checked}
-                  disabled={opt.disabled}
-                  onChange={() => toggle(opt.value)}
+                  disabled={isOptDisabled}
+                  onChange={() => !isOptDisabled && toggle(opt.value)}
                   className="peer sr-only"
-                  data-component-id={componentId ? `${componentId}.${opt.value}` : undefined}
+                  data-component-id={opt.componentId ?? (componentId ? `${componentId}.${opt.value}` : undefined)}
                 />
                 {opt.icon && (
                   <span className={twMerge("shrink-0", checked ? "text-primary-foreground" : "text-zinc-400")}>
@@ -290,10 +312,12 @@ export default function CheckboxGroup({
           "flex",
           direction === "horizontal" ? "flex-row flex-wrap gap-x-5 gap-y-2.5" : "flex-col gap-2.5",
         )}
-        >
-        {options.map((opt) => {
+      >
+        {visibleOptions.map((opt) => {
           const checked = selected.includes(opt.value);
           const optId = `${groupId}-${opt.value}`;
+          const optAllowed = !opt.componentId || canAccess(opt.componentId);
+          const isOptDisabled = Boolean(groupDisabled || opt.disabled || !optAllowed);
 
           return (
             <label
@@ -302,7 +326,7 @@ export default function CheckboxGroup({
               className={twMerge(
                 "group/cb flex cursor-pointer select-none",
                 sz.gap,
-                opt.disabled && "cursor-not-allowed opacity-50",
+                isOptDisabled && "cursor-not-allowed opacity-50",
               )}
             >
               <input
@@ -311,10 +335,10 @@ export default function CheckboxGroup({
                 name={name ?? groupId}
                 value={opt.value}
                 checked={checked}
-                disabled={opt.disabled}
-                onChange={() => toggle(opt.value)}
+                disabled={isOptDisabled}
+                onChange={() => !isOptDisabled && toggle(opt.value)}
                 className="peer sr-only"
-                data-component-id={componentId ? `${componentId}.${opt.value}` : undefined}
+                data-component-id={opt.componentId ?? (componentId ? `${componentId}.${opt.value}` : undefined)}
               />
               <span className="mt-px">
                 <Indicator checked={checked} shape={shape} size={size} multiple={multiple} />
