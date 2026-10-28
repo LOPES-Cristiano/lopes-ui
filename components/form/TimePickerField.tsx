@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Clock } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
+import { useAccessControl } from "../useAccessControl";
 
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
@@ -22,6 +23,8 @@ export type TimePickerFieldProps = Omit<FieldWrapperProps, "children" | "id"> & 
   size?: "sm" | "md" | "lg";
   componentId?: string;
   stepMinutes?: number;
+  /** If true, hides the component when access is denied instead of disabling it */
+  hideIfDenied?: boolean;
 };
 
 export default function TimePickerField({
@@ -45,12 +48,16 @@ export default function TimePickerField({
   placeholder = "--:--",
   componentId,
   stepMinutes = 5,
+  hideIfDenied = false,
 }: TimePickerFieldProps) {
   const autoId = useId();
   const id = idProp ?? autoId;
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+  const effectiveDisabled = Boolean(disabled || !hasPermission);
   const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({
     position: "fixed",
     visibility: "hidden",
@@ -131,13 +138,13 @@ export default function TimePickerField({
   }, []);
 
   const handleOpen = () => {
-    if (disabled || readOnly) return;
+    if (effectiveDisabled || readOnly) return;
     updatePosition();
     setOpen(true);
   };
 
   const handleToggle = () => {
-    if (disabled || readOnly) return;
+    if (effectiveDisabled || readOnly) return;
     if (!open) {
       updatePosition();
       setOpen(true);
@@ -223,6 +230,8 @@ export default function TimePickerField({
     return list;
   }, [stepMinutes]);
 
+  if (!hasPermission && hideIfDenied) return null;
+
   return (
     <FieldWrapper
       id={id}
@@ -240,7 +249,7 @@ export default function TimePickerField({
         <div className="relative flex items-center">
           <input data-component-id={componentId ? `${componentId}.input` : "erp.timepicker.input"} id={id} name={name ?? `timepicker_off_${id}`} type="text" value={typedValue}
             placeholder={placeholder}
-            disabled={disabled}
+            disabled={effectiveDisabled}
             readOnly={readOnly}
             autoComplete="off"
             onChange={handleInputChange}
@@ -251,7 +260,7 @@ export default function TimePickerField({
               error
                 ? "border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
                 : "border-zinc-300 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-zinc-700 dark:focus:border-primary",
-              (disabled || readOnly) && "cursor-not-allowed opacity-60",
+              (effectiveDisabled || readOnly) && "cursor-not-allowed opacity-60",
             )}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
@@ -259,7 +268,7 @@ export default function TimePickerField({
           <button
             data-component-id={componentId ? `${componentId}.toggle` : "erp.timepicker.toggle"}
             type="button"
-            disabled={disabled || readOnly}
+            disabled={effectiveDisabled || readOnly}
             onClick={handleToggle}
             className="absolute right-2.5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             aria-label="Abrir seletor de horário"
@@ -275,9 +284,7 @@ export default function TimePickerField({
             style={panelStyle}
             className="pointer-events-auto flex flex-col rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md p-2 shadow-xl z-[99999] select-none text-zinc-800 dark:text-zinc-200 animate-in fade-in zoom-in-95 duration-100"
           >
-            {/* Colunas de Hora e Minuto - Fontes maiores e aproveitamento total */}
             <div className="grid grid-cols-2 gap-1.5 h-48 max-h-48 min-h-0">
-              {/* Coluna Horas */}
               <div className="flex flex-col h-full min-h-0 bg-zinc-50 dark:bg-zinc-950/60 rounded-lg p-1">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 text-center py-1 shrink-0 border-b border-zinc-200/40 dark:border-zinc-800/40">
                   Hora
@@ -304,7 +311,6 @@ export default function TimePickerField({
                 </div>
               </div>
 
-              {/* Coluna Minutos */}
               <div className="flex flex-col h-full min-h-0 bg-zinc-50 dark:bg-zinc-950/60 rounded-lg p-1">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 text-center py-1 shrink-0 border-b border-zinc-200/40 dark:border-zinc-800/40">
                   Min
@@ -332,7 +338,6 @@ export default function TimePickerField({
               </div>
             </div>
 
-            {/* Rodapé Limpo: Limpar na esquerda, Agora e OK na direita */}
             <div className="mt-2 pt-1.5 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between px-0.5">
               <button
                 data-component-id={componentId ? `${componentId}.clear` : "erp.timepicker.clear"}
