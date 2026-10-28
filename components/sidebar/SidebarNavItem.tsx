@@ -20,28 +20,28 @@ function SidebarBadge({
     if (active) {
       switch (variant) {
         case 'success':
-          return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25';
+          return 'bg-emerald-100 text-emerald-800 border border-emerald-300/80 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-500/40';
         case 'warning':
-          return 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/25';
+          return 'bg-amber-100 text-amber-800 border border-amber-300/80 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-500/40';
         case 'danger':
-          return 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/25';
+          return 'bg-rose-100 text-rose-800 border border-rose-300/80 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-500/40';
         case 'info':
-          return 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/25';
+          return 'bg-blue-100 text-blue-800 border border-blue-300/80 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-500/40';
         default:
-          return 'bg-zinc-200/80 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300';
+          return 'bg-zinc-900/10 text-[var(--sidebar-item-active-foreground)] border border-zinc-500/20 dark:bg-white/15 dark:border-white/20';
       }
     }
     switch (variant) {
       case 'success':
-        return 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        return 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-500/25 dark:border-emerald-500/30';
       case 'warning':
-        return 'bg-amber-500/20 text-amber-300 border border-amber-500/30';
+        return 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-500/25 dark:border-amber-500/30';
       case 'danger':
-        return 'bg-rose-500/20 text-rose-300 border border-rose-500/30';
+        return 'bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border border-rose-500/25 dark:border-rose-500/30';
       case 'info':
-        return 'bg-blue-500/20 text-blue-300 border border-blue-500/30';
+        return 'bg-blue-500/15 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border border-blue-500/25 dark:border-blue-500/30';
       default:
-        return 'bg-[var(--sidebar-item-hover-background)] text-[var(--sidebar-foreground)] border border-[var(--sidebar-border)]';
+        return 'bg-zinc-500/10 text-zinc-700 dark:bg-white/10 dark:text-zinc-300 border border-[var(--sidebar-border)]';
     }
   };
 
