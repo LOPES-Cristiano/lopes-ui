@@ -21,9 +21,9 @@ const VARIANT_CLS: Record<ItemVariant, string> = {
 };
 
 const SIZE_CLS: Record<ItemSize, string> = {
-  sm: "px-3.5 py-2.5 gap-3",
-  md: "px-4 py-3.5 gap-3.5",
-  lg: "px-5 py-4 gap-4",
+  sm: "px-3 sm:px-3.5 py-2.5 gap-2.5 sm:gap-3",
+  md: "px-3.5 sm:px-4 py-3 sm:py-3.5 gap-3 sm:gap-3.5",
+  lg: "px-4 sm:px-5 py-3.5 sm:py-4 gap-3.5 sm:gap-4",
 };
 
 export function Item({
@@ -40,7 +40,7 @@ export function Item({
     <Comp
       data-slot="item"
       className={cn(
-        "flex items-center gap-3.5 text-sm transition-colors first:rounded-t-[inherit] last:rounded-b-[inherit]",
+        "flex flex-wrap sm:flex-nowrap items-center gap-3.5 text-sm transition-colors first:rounded-t-[inherit] last:rounded-b-[inherit]",
         VARIANT_CLS[variant],
         SIZE_CLS[size],
         (interactive || props.onClick) &&
@@ -102,7 +102,7 @@ export function ItemContent({
   return (
     <div
       data-slot="item-content"
-      className={cn("flex min-w-0 flex-1 flex-col gap-1", className)}
+      className={cn("flex min-w-[140px] flex-1 flex-col gap-1", className)}
       {...props}
     >
       {children}
@@ -153,7 +153,7 @@ export function ItemActions({
   return (
     <div
       data-slot="item-actions"
-      className={cn("ml-auto flex shrink-0 items-center gap-3 pl-2", className)}
+      className={cn("ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3 pl-1 sm:pl-2", className)}
       {...props}
     >
       {children}
