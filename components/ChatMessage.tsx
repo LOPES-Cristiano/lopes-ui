@@ -154,7 +154,7 @@ export default function ChatMessage({
       }
 
       {/* Column: name + bubble + reactions */}
-      <div className={twMerge("flex flex-col gap-1 max-w-[75%]", isMine ? "items-end" : "items-start")}>
+      <div className={twMerge("flex flex-col gap-1 max-w-[85%] sm:max-w-[75%] min-w-0", isMine ? "items-end" : "items-start")}>
 
         {/* Sender name — others only, first in group */}
         {!isMine && showAvatar && senderName && (
@@ -189,7 +189,7 @@ export default function ChatMessage({
 
           {/* Attachment */}
           {type === "attachment" && attachment && (
-            <div className="flex items-center gap-3 px-3.5 py-2.5 min-w-[210px]">
+            <div className="flex items-center gap-3 px-3.5 py-2.5 min-w-[160px] sm:min-w-[210px] max-w-full">
               <div className={twMerge(
                 "flex items-center justify-center w-9 h-9 rounded-xl shrink-0",
                 isMine ? "bg-indigo-500" : "bg-zinc-100 dark:bg-zinc-700"
@@ -210,7 +210,7 @@ export default function ChatMessage({
 
           {/* Audio */}
           {type === "audio" && (
-            <div className="flex items-center gap-2.5 px-3 py-2.5 min-w-[200px]">
+            <div className="flex items-center gap-2.5 px-3 py-2.5 min-w-[160px] sm:min-w-[200px] max-w-full">
               <button aria-label="Reproduzir áudio" className={twMerge(
                 "flex items-center justify-center w-8 h-8 rounded-full shrink-0 transition-colors",
                 isMine ? "bg-indigo-500 hover:bg-indigo-400" : "bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600"
