@@ -4,6 +4,7 @@ import * as React from 'react';
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { z } from 'zod';
 import { cn } from '@/utils/cn';
+import { useAccessControl } from '../useAccessControl';
 
 // Deep equality check with support for Date, Array, primitives and nested objects
 function isDeepEqual(obj1: unknown, obj2: unknown): boolean {
@@ -34,6 +35,20 @@ function isDeepEqual(obj1: unknown, obj2: unknown): boolean {
   return true;
 }
 
+// Helper to get nested path (e.g. "endereco.logradouro" or "telefones.0.numero")
+function getNestedValue(obj: unknown, path: string): unknown {
+  if (!obj || typeof obj !== 'object') return undefined;
+  if (!path.includes('.')) {
+    return (obj as Record<string, unknown>)[path];
+  }
+  return path.split('.').reduce<unknown>((acc, key) => {
+    if (acc && typeof acc === 'object') {
+      return (acc as Record<string, unknown>)[key];
+    }
+    return undefined;
+  }, obj);
+}
+
 // Helper to set nested path (e.g. "endereco.logradouro" or "telefones.0.numero")
 function setNestedValue<T extends Record<string, unknown>>(obj: Partial<T>, path: string, value: unknown): Partial<T> {
   const keys = path.split('.');
@@ -61,6 +76,7 @@ export interface FormContextValue<T extends Record<string, unknown> = Record<str
   touched: Partial<Record<keyof T | string, boolean>>;
   isSubmitting: boolean;
   isDirty: boolean;
+  componentIdPrefix?: string;
   setValue: <K extends keyof T>(field: K | string, value: unknown) => void;
   setValues: (values: Partial<T> | ((prev: Partial<T>) => Partial<T>)) => void;
   setTouched: <K extends keyof T>(field: K | string, isTouched?: boolean) => void;
@@ -81,6 +97,123 @@ export function useFormContext<T extends Record<string, unknown> = Record<string
   return context as unknown as FormContextValue<T>;
 }
 
+export interface ZodFormFieldRenderProps<V = unknown> {
+  name: string;
+  value: V;
+  error?: string;
+  touched?: boolean;
+  componentId?: string;
+  disabled?: boolean;
+  onChange: (valueOrEvent: unknown) => void;
+  onBlur: () => void;
+}
+
+export interface ZodFormFieldProps<T extends Record<string, unknown> = Record<string, unknown>> {
+  /** Field path in the Zod schema (supports dot notation, e.g. "endereco.cidade") */
+  name: keyof T | string;
+  /** Validate automatically on blur (default: true) */
+  validateOnBlur?: boolean;
+  /** Optional explicit componentId (otherwise derived from ZodForm's componentIdPrefix + name) */
+  componentId?: string;
+  /** If true, hides the field when access is denied instead of disabling it */
+  hideIfDenied?: boolean;
+  /** Either a render function or a single form field ReactElement to auto-bind */
+  children:
+    | ((field: ZodFormFieldRenderProps) => React.ReactNode)
+    | React.ReactElement<Record<string, unknown>>;
+}
+
+export function ZodFormField<T extends Record<string, unknown> = Record<string, unknown>>({
+  name,
+  validateOnBlur = true,
+  componentId: explicitComponentId,
+  hideIfDenied = false,
+  children,
+}: ZodFormFieldProps<T>) {
+  const { values, errors, touched, componentIdPrefix, setValue, setTouched, validateField } = useFormContext<T>();
+  const { canAccess } = useAccessControl();
+  const fieldName = String(name);
+  const rawValue = getNestedValue(values, fieldName);
+  const error = errors[fieldName];
+  const isTouched = Boolean(touched[fieldName]);
+
+  const resolvedComponentId =
+    explicitComponentId ?? (componentIdPrefix ? `${componentIdPrefix}.${fieldName}` : undefined);
+  const hasPermission = !resolvedComponentId || canAccess(resolvedComponentId);
+
+  const handleChange = useCallback(
+    (valueOrEvent: unknown) => {
+      if (!hasPermission) return;
+      if (
+        valueOrEvent &&
+        typeof valueOrEvent === 'object' &&
+        'target' in valueOrEvent &&
+        valueOrEvent.target &&
+        typeof valueOrEvent.target === 'object'
+      ) {
+        const target = valueOrEvent.target as HTMLInputElement;
+        const nextVal = target.type === 'checkbox' ? target.checked : target.value;
+        setValue(fieldName, nextVal);
+        return;
+      }
+      setValue(fieldName, valueOrEvent);
+    },
+    [fieldName, hasPermission, setValue],
+  );
+
+  const handleBlur = useCallback(() => {
+    setTouched(fieldName, true);
+    if (validateOnBlur) {
+      validateField(fieldName);
+    }
+  }, [fieldName, setTouched, validateField, validateOnBlur]);
+
+  if (!hasPermission && hideIfDenied) return null;
+
+  if (typeof children === 'function') {
+    return (
+      <>
+        {children({
+          name: fieldName,
+          value: rawValue,
+          error,
+          touched: isTouched,
+          componentId: resolvedComponentId,
+          disabled: !hasPermission ? true : undefined,
+          onChange: handleChange,
+          onBlur: handleBlur,
+        })}
+      </>
+    );
+  }
+
+  if (React.isValidElement(children)) {
+    const childProps = children.props as Record<string, unknown>;
+    return React.cloneElement(children, {
+      name: childProps.name ?? fieldName,
+      componentId: childProps.componentId ?? resolvedComponentId,
+      hideIfDenied: childProps.hideIfDenied ?? hideIfDenied,
+      disabled: Boolean(childProps.disabled || !hasPermission),
+      value: childProps.value !== undefined ? childProps.value : (rawValue ?? ''),
+      error: childProps.error !== undefined ? childProps.error : error,
+      onChange: (...args: unknown[]) => {
+        handleChange(args[0]);
+        if (typeof childProps.onChange === 'function') {
+          (childProps.onChange as (...a: unknown[]) => void)(...args);
+        }
+      },
+      onBlur: (...args: unknown[]) => {
+        handleBlur();
+        if (typeof childProps.onBlur === 'function') {
+          (childProps.onBlur as (...a: unknown[]) => void)(...args);
+        }
+      },
+    });
+  }
+
+  return <>{children}</>;
+}
+
 export interface ZodFormProps<T extends Record<string, unknown>> {
   schema: z.ZodType<T>;
   defaultValues?: Partial<T>;
@@ -91,6 +224,12 @@ export interface ZodFormProps<T extends Record<string, unknown>> {
   children: React.ReactNode | ((context: FormContextValue<T>) => React.ReactNode);
   className?: string;
   id?: string;
+  /** Optional RBAC prefix automatically combined with each ZodFormField name (e.g. "erp.clientes.form" -> "erp.clientes.form.cpf") */
+  componentIdPrefix?: string;
+  /** Access-control identifier for the whole form */
+  componentId?: string;
+  /** If true, hides the entire form when access is denied */
+  hideIfDenied?: boolean;
   focusFirstError?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
 }
@@ -105,10 +244,16 @@ export function ZodForm<T extends Record<string, unknown>>({
   children,
   className,
   id,
+  componentIdPrefix,
+  componentId,
+  hideIfDenied = false,
   focusFirstError = true,
   onDirtyChange,
 }: ZodFormProps<T>) {
   const formRef = useRef<HTMLFormElement>(null);
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+
   const [initialValues, setInitialValues] = useState<Partial<T>>(defaultValues);
   const [values, setValuesState] = useState<Partial<T>>(defaultValues);
   // FORM-01: Initialize errors state with serverErrors if provided
@@ -236,8 +381,11 @@ export function ZodForm<T extends Record<string, unknown>>({
     return true;
   }, [schema, values, setError]);
 
+  if (!hasPermission && hideIfDenied) return null;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hasPermission) return;
     setIsSubmitting(true);
 
     const result = schema.safeParse(values);
@@ -298,6 +446,7 @@ export function ZodForm<T extends Record<string, unknown>>({
     touched,
     isSubmitting,
     isDirty,
+    componentIdPrefix: componentIdPrefix ?? componentId,
     setValue,
     setValues,
     setTouched,
@@ -313,8 +462,9 @@ export function ZodForm<T extends Record<string, unknown>>({
       <form
         ref={formRef}
         id={id}
+        data-component-id={componentId}
         onSubmit={handleSubmit}
-        className={cn('space-y-4', className)}
+        className={cn('space-y-4', !hasPermission && 'opacity-60 pointer-events-none', className)}
         noValidate
       >
         {typeof children === 'function' ? children(contextValue) : children}
