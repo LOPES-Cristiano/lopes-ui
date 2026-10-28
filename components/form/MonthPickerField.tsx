@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
+import { useAccessControl } from "../useAccessControl";
 
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
@@ -39,6 +40,8 @@ export type MonthPickerFieldProps = Omit<FieldWrapperProps, "children" | "id"> &
   className?: string;
   size?: "sm" | "md" | "lg";
   componentId?: string;
+  /** If true, hides the component when access is denied instead of disabling it */
+  hideIfDenied?: boolean;
 };
 
 export default function MonthPickerField({
@@ -63,12 +66,16 @@ export default function MonthPickerField({
   size = "sm",
   placeholder = "Selecione o mês",
   componentId,
+  hideIfDenied = false,
 }: MonthPickerFieldProps) {
   const autoId = useId();
   const id = idProp ?? autoId;
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+  const effectiveDisabled = Boolean(disabled || !hasPermission);
 
   const currentValue = value !== undefined ? value : defaultValue;
   const parsed = useMemo(() => parseYearMonth(currentValue), [currentValue]);
@@ -169,7 +176,7 @@ export default function MonthPickerField({
   }, [open, updatePosition]);
 
   const handleToggle = () => {
-    if (disabled || readOnly) return;
+    if (effectiveDisabled || readOnly) return;
     if (!open) {
       if (parsed?.year) setViewYear(parsed.year);
       updatePosition();
@@ -180,7 +187,7 @@ export default function MonthPickerField({
   };
 
   const handleSelectMonth = (monthIdx: number) => {
-    if (readOnly || disabled) return;
+    if (readOnly || effectiveDisabled) return;
     const mm = String(monthIdx + 1).padStart(2, "0");
     const formatted = `${viewYear}-${mm}`;
     onChange?.(formatted);
@@ -188,7 +195,7 @@ export default function MonthPickerField({
   };
 
   const handleThisMonth = () => {
-    if (readOnly || disabled) return;
+    if (readOnly || effectiveDisabled) return;
     const mm = String(currentMonthIdx + 1).padStart(2, "0");
     const formatted = `${currentYear}-${mm}`;
     setViewYear(currentYear);
@@ -197,10 +204,12 @@ export default function MonthPickerField({
   };
 
   const handleClear = () => {
-    if (readOnly || disabled) return;
+    if (readOnly || effectiveDisabled) return;
     onChange?.("");
     setOpen(false);
   };
+
+  if (!hasPermission && hideIfDenied) return null;
 
   return (
     <FieldWrapper
@@ -221,16 +230,16 @@ export default function MonthPickerField({
           id={id}
           type="button"
           onClick={handleToggle}
-          disabled={disabled || readOnly}
+          disabled={effectiveDisabled || readOnly}
           className={twMerge(
             "flex w-full items-center justify-between gap-2 rounded-lg border bg-card text-foreground transition-all duration-150 text-left outline-none cursor-pointer",
             size === "sm" ? "h-8 text-xs px-2.5" : size === "lg" ? "h-12 text-base px-4" : "h-10 text-sm px-3",
             error
               ? "border-destructive focus:ring-2 focus:ring-destructive/20"
               : "border-border hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20",
-            (disabled || readOnly) && "cursor-not-allowed opacity-60 bg-muted/30"
+            (effectiveDisabled || readOnly) && "cursor-not-allowed opacity-60 bg-muted/30"
           )}
-          >
+        >
           <div className="flex items-center gap-2 min-w-0 flex-1 truncate">
             <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
             <span className={twMerge("truncate font-medium", !displayString && "text-muted-foreground font-normal")}>
