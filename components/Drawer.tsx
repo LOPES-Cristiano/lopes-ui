@@ -103,6 +103,30 @@ export default function Drawer({
   const [dragOffsetY, setDragOffsetY] = useState(0);
   const [customWidth, setCustomWidth] = useState<number | null>(null);
   const dragStartY = useRef<number | null>(null);
+  const [rendered, setRendered] = useState(open);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setRendered(true);
+      let raf2 = 0;
+      const raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => {
+          setVisible(true);
+        });
+      });
+      return () => {
+        cancelAnimationFrame(raf1);
+        cancelAnimationFrame(raf2);
+      };
+    } else {
+      setVisible(false);
+      const timer = setTimeout(() => {
+        setRendered(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   useBodyScrollLock(open);
 
@@ -220,7 +244,9 @@ export default function Drawer({
     window.addEventListener("pointerup", onUp);
   };
 
-  if (!mounted || (!open && !keepMounted)) return null;
+  if (!mounted || (!open && !rendered && !keepMounted)) return null;
+
+  const isShown = open && visible;
 
   return createPortal(
     <>
@@ -229,8 +255,8 @@ export default function Drawer({
         aria-hidden="true"
         onClick={closeOnBackdrop ? onClose : undefined}
         className={cn(
-          "fixed inset-0 z-[6000] bg-black/55 backdrop-blur-xs transition-opacity duration-300",
-          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+          "fixed inset-0 z-[6000] bg-black/55 backdrop-blur-xs transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          isShown ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
         )}
       />
 
@@ -243,20 +269,20 @@ export default function Drawer({
         aria-labelledby={title ? "drawer-title" : undefined}
         style={{
           ...(customWidth && isHorizontal ? { width: `${customWidth}px` } : {}),
-          ...(dragOffsetY !== 0 ? { transform: `translateY(${dragOffsetY}px)` } : {}),
+          ...(dragOffsetY !== 0 ? { transform: `translate3d(0, ${dragOffsetY}px, 0)` } : {}),
         }}
         className={cn(
-          "fixed z-[6010] flex flex-col overflow-hidden border border-border bg-card outline-none",
+          "fixed z-[6010] flex flex-col overflow-hidden border border-border bg-card outline-none will-change-transform",
           "shadow-2xl",
           "dark:shadow-black/60",
           side === "bottom" && "rounded-t-2xl",
           side === "top" && "rounded-b-2xl",
-          open ? "" : "pointer-events-none opacity-0",
+          isShown ? "" : "pointer-events-none opacity-0",
           isHorizontal ? "max-h-screen" : "max-w-screen",
           panelPosition[side],
           !customWidth && sizeClass,
-          dragOffsetY === 0 && "transition-[transform,opacity,box-shadow] duration-300 ease-out",
-          open ? "translate-x-0 translate-y-0 opacity-100 pointer-events-auto" : translateClosed[side],
+          dragOffsetY === 0 && "transition-[transform,opacity,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          isShown ? "translate-x-0 translate-y-0 opacity-100 pointer-events-auto" : translateClosed[side],
           className,
         )}
       >
@@ -286,7 +312,7 @@ export default function Drawer({
 
         {/* Header */}
         {(title || description) && (
-          <div className="shrink-0 border-b border-border bg-[var(--surface)]/95 px-5 py-4">
+          <div className="shrink-0 border-b border-border bg-[var(--surface)]/95 px-4 sm:px-5 py-3.5 sm:py-4">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 {title && (
@@ -317,13 +343,13 @@ export default function Drawer({
         )}
 
         {/* Content */}
-        <div className="min-w-0 flex-1 overflow-y-auto bg-[var(--surface)] px-5 py-5">
+        <div className="min-w-0 flex-1 overflow-y-auto bg-[var(--surface)] px-4 sm:px-5 py-4 sm:py-5">
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
-          <div className="min-w-0 shrink-0 border-t border-border bg-[var(--surface)]/95 px-5 py-4">
+          <div className="min-w-0 shrink-0 border-t border-border bg-[var(--surface)]/95 px-4 sm:px-5 py-3.5 sm:py-4">
             {footer}
           </div>
         )}
