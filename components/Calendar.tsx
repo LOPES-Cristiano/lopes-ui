@@ -134,9 +134,9 @@ const EVENT_CHIP_COLORS: Record<string, string> = {
 };
 
 const SIZE = {
-  sm: { cell: "h-8 w-8 text-xs", header: "text-xs", dayLabel: "text-[10px]", chip: "text-[9px]" },
-  md: { cell: "h-9 w-9 text-sm", header: "text-sm", dayLabel: "text-[11px]", chip: "text-[10px]" },
-  lg: { cell: "h-11 w-11 text-base", header: "text-base", dayLabel: "text-xs", chip: "text-xs" },
+  sm: { cell: "h-7 w-7 sm:h-8 sm:w-8 text-xs", header: "text-xs", dayLabel: "text-[10px]", chip: "text-[9px]" },
+  md: { cell: "h-8 w-8 sm:h-9 sm:w-9 text-xs sm:text-sm", header: "text-xs sm:text-sm", dayLabel: "text-[10px] sm:text-[11px]", chip: "text-[9px] sm:text-[10px]" },
+  lg: { cell: "h-9 w-9 sm:h-11 sm:w-11 text-sm sm:text-base", header: "text-sm sm:text-base", dayLabel: "text-[11px] sm:text-xs", chip: "text-[10px] sm:text-xs" },
 };
 
 function buildMonthRows(year: number, month: number, firstDayOfWeek: 0 | 1) {
@@ -484,7 +484,7 @@ export default function Calendar({
       ref={rootRef}
       data-component-id={componentId}
       className={twMerge(
-        fillWidth ? "flex flex-col sm:flex-row gap-4 w-full select-none" : "inline-flex flex-col sm:flex-row gap-4 select-none",
+        fillWidth ? "flex flex-col sm:flex-row gap-4 w-full select-none" : "inline-flex flex-col sm:flex-row gap-4 max-w-full select-none",
         className
       )}
     >
@@ -532,7 +532,7 @@ export default function Calendar({
                 aria-expanded={monthOpen}
                 className={twMerge(
                   "flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white px-3 py-1.5 text-left font-semibold text-zinc-800 outline-none transition-colors hover:border-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-600 cursor-pointer",
-                  compact ? "w-[126px]" : "w-[152px]",
+                  compact ? "w-[110px] sm:w-[126px]" : "w-[116px] sm:w-[152px]",
                   eff.header,
                 )}
               >
@@ -579,7 +579,7 @@ export default function Calendar({
                 aria-expanded={yearOpen}
                 className={twMerge(
                   "flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white px-3 py-1.5 text-left font-semibold text-zinc-800 outline-none transition-colors hover:border-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-600 cursor-pointer",
-                  compact ? "w-[80px]" : "w-[96px]",
+                  compact ? "w-[74px] sm:w-[80px]" : "w-[80px] sm:w-[96px]",
                   eff.header,
                 )}
               >
