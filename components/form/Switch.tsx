@@ -3,6 +3,7 @@
 import React, { useId } from "react";
 import { twMerge } from "tailwind-merge";
 import { HelpCircle, AlertCircle } from "lucide-react";
+import { useAccessControl } from "../useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -35,6 +36,8 @@ export type SwitchProps = {
   className?: string;
   /** Access-control identifier — emitted as data-component-id */
   componentId?: string;
+  /** If true, hides the component when access is denied instead of disabling it */
+  hideIfDenied?: boolean;
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -85,17 +88,23 @@ export default function Switch({
   width,
   className,
   componentId,
+  hideIfDenied = false,
 }: SwitchProps) {
   const autoId = useId();
   const id = idProp ?? autoId;
   const s = SIZE[size];
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+  const effectiveDisabled = Boolean(disabled || !hasPermission);
 
   // Controlled vs uncontrolled
   const [internalChecked, setInternalChecked] = React.useState(defaultChecked ?? false);
   const isChecked = checked !== undefined ? checked : internalChecked;
 
+  if (!hasPermission && hideIfDenied) return null;
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (disabled) return;
+    if (effectiveDisabled) return;
     const next = e.target.checked;
     if (checked === undefined) setInternalChecked(next);
     onChange?.(next);
@@ -107,7 +116,7 @@ export default function Switch({
       htmlFor={id}
       className={twMerge(
         "relative shrink-0 inline-flex cursor-pointer",
-        disabled && "cursor-not-allowed opacity-50",
+        effectiveDisabled && "cursor-not-allowed opacity-50",
       )}
     >
       <input
@@ -118,7 +127,7 @@ export default function Switch({
         aria-checked={isChecked}
         checked={isChecked}
         onChange={handleChange}
-        disabled={disabled}
+        disabled={effectiveDisabled}
         required={required}
         aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
         className="peer sr-only"
@@ -157,7 +166,7 @@ export default function Switch({
       htmlFor={id}
       className={twMerge(
         "flex flex-col cursor-pointer select-none leading-snug",
-        disabled && "cursor-not-allowed opacity-50",
+        effectiveDisabled && "cursor-not-allowed opacity-50",
       )}
     >
       <span className={twMerge("font-medium text-surface-foreground", s.text)}>{inlineLabel}</span>
@@ -175,7 +184,7 @@ export default function Switch({
         className={twMerge(
           "block text-sm font-medium leading-none select-none",
           error ? "text-danger" : "text-surface-foreground",
-          disabled && "opacity-50",
+          effectiveDisabled && "opacity-50",
         )}
       >
         {label}
