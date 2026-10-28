@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Search, ExternalLink, X, type LucideIcon } from "lucide-react";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,8 @@ export type AppItem = {
   /** Opens link in new tab (default true when href is set) */
   external?: boolean;
   componentId?: string;
+  /** If false, disables the app card instead of hiding it when access is denied (default: true) */
+  hideIfDenied?: boolean;
 };
 
 export type AppLauncherProps = {
@@ -72,6 +75,8 @@ export type AppLauncherProps = {
   onClose?: () => void;
   className?: string;
   componentId?: string;
+  /** If true, hides the launcher when access is denied (default: true) */
+  hideIfDenied?: boolean;
 };
 
 // ── Color palettes ────────────────────────────────────────────────────────────
@@ -298,9 +303,29 @@ export function AppLauncher({
   onClose,
   className,
   componentId,
+  hideIfDenied = true,
 }: AppLauncherProps) {
   const [query, setQuery] = useState("");
-  const showSearch = searchable ?? apps.length > 6;
+  const { canAccess } = useAccessControl();
+  const hasRootPermission = !componentId || canAccess(componentId);
+
+  const permittedApps = useMemo(() => {
+    return apps
+      .filter((app) => {
+        const allowed = !app.componentId || canAccess(app.componentId);
+        if (!allowed && app.hideIfDenied !== false) return false;
+        return true;
+      })
+      .map((app) => {
+        const allowed = !app.componentId || canAccess(app.componentId);
+        return {
+          ...app,
+          disabled: Boolean(app.disabled || !allowed),
+        };
+      });
+  }, [apps, canAccess]);
+
+  const showSearch = searchable ?? permittedApps.length > 6;
 
   const isModalMode = Boolean(modal || open !== undefined);
   const isModalOpen = isModalMode && Boolean(open);
@@ -325,14 +350,14 @@ export function AppLauncher({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return apps;
-    return apps.filter(
+    if (!q) return permittedApps;
+    return permittedApps.filter(
       (a) =>
         a.label.toLowerCase().includes(q) ||
         a.description?.toLowerCase().includes(q) ||
         a.category?.toLowerCase().includes(q),
     );
-  }, [apps, query]);
+  }, [permittedApps, query]);
 
   const groupMap = useMemo(() => {
     if (!grouped) return null;
@@ -345,10 +370,12 @@ export function AppLauncher({
     return map;
   }, [filtered, grouped]);
 
+  if (!hasRootPermission && hideIfDenied) return null;
+
   const launcherContent = (
     <div
       data-component-id={!isModalMode ? (componentId || undefined) : undefined}
-      className={twMerge("flex flex-col gap-5", className)}
+      className={twMerge("flex flex-col gap-5", !hasRootPermission && "opacity-50 pointer-events-none", className)}
     >
       {/* Header */}
       {(title || showSearch || isModalMode) && (
@@ -388,7 +415,11 @@ export function AppLauncher({
         <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
           <Search size={28} className="text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            Nenhum aplicativo encontrado para <strong>&ldquo;{query}&rdquo;</strong>
+            {query ? (
+              <>Nenhum aplicativo encontrado para <strong>&ldquo;{query}&rdquo;</strong></>
+            ) : (
+              "Nenhum aplicativo disponível."
+            )}
           </p>
         </div>
       )}
