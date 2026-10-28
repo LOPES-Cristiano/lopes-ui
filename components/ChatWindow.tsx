@@ -156,7 +156,7 @@ export default function ChatWindow({
       className={twMerge(
         "flex flex-col bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden",
         "shadow-2xl shadow-zinc-900/10",
-        "w-80 transition-all duration-200",
+        "w-80 max-w-full transition-all duration-200",
         minimized
           ? "h-auto"
           : windowState === "chat"
