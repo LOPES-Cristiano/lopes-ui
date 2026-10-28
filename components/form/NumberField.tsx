@@ -28,7 +28,7 @@ export type NumberFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   max?: number;
   /** Increment / decrement step */
   step?: number | string;
-  /** Fallback if field is left empty on blur. Defaults to '0' (or min if min > 0). Pass false to allow empty on blur. */
+  /** Fallback if field is left empty on blur. Defaults to false (allows empty on blur). Pass a number/string (e.g. 0) to auto-fill on blur. */
   defaultOnBlur?: number | string | false;
 
   // ── Appearance ────────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ export default function NumberField({
   id: idProp, name, placeholder,
   value, defaultValue, onChange, onValueChange, onBlur, onFocus,
   disabled, readOnly, autoFocus, autoComplete,
-  min, max, step = "any", defaultOnBlur,
+  min, max, step = "any", defaultOnBlur = false,
   size = "md", variant = "default",
   leftIcon, rightIcon, prefix, suffix,
   inputClassName, componentId,
@@ -66,24 +66,30 @@ export default function NumberField({
   const autoId = useId();
   const id = idProp ?? autoId;
   const s = SIZE[size];
+  const isControlled = value !== undefined;
 
-  const displayValue = React.useMemo(() => {
-    if (value === null || value === undefined) return '';
-    if (typeof value === 'number' && Number.isNaN(value)) return '';
-    if (value === 'NaN') return '';
-    return value;
-  }, [value]);
+  const normalizeNumDisplay = React.useCallback((v: number | string | null | undefined): string => {
+    if (v === null || v === undefined) return '';
+    if (typeof v === 'number' && Number.isNaN(v)) return '';
+    if (v === 'NaN') return '';
+    return String(v);
+  }, []);
+
+  const displayValue = React.useMemo(
+    () => normalizeNumDisplay(value),
+    [normalizeNumDisplay, value]
+  );
 
   const [localText, setLocalText] = React.useState<string>(() =>
-    displayValue === '' ? '' : String(displayValue)
+    normalizeNumDisplay(isControlled ? value : defaultValue)
   );
   const [isFocused, setIsFocused] = React.useState(false);
 
   React.useEffect(() => {
-    if (!isFocused) {
-      setLocalText(displayValue === '' ? '' : String(displayValue));
+    if (isControlled && !isFocused) {
+      setLocalText(displayValue);
     }
-  }, [displayValue, isFocused]);
+  }, [displayValue, isControlled, isFocused]);
 
   const inputCls = twMerge(
     "flex-1 min-w-0 bg-transparent outline-none border-0 ring-0 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500",
@@ -107,7 +113,9 @@ export default function NumberField({
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsFocused(true);
-    setLocalText(displayValue === '' ? '' : String(displayValue));
+    if (isControlled) {
+      setLocalText(displayValue);
+    }
     try {
       e.target.select();
     } catch {}
@@ -121,6 +129,7 @@ export default function NumberField({
       const fallback = defaultOnBlur !== undefined
         ? String(defaultOnBlur)
         : (min !== undefined && min > 0 ? String(min) : '0');
+      setLocalText(fallback);
       e.target.value = fallback;
 
       const fallbackNum = Number(fallback.replace(',', '.'));
@@ -201,7 +210,7 @@ export default function NumberField({
         )}
         <input
           id={id} name={name} type="text" inputMode="decimal" placeholder={placeholder}
-          value={isFocused ? localText : displayValue} defaultValue={defaultValue}
+          value={isFocused || !isControlled ? localText : displayValue}
           onChange={handleChange} onBlur={handleBlur} onFocus={handleFocus}
           disabled={disabled} readOnly={readOnly} autoFocus={autoFocus}
           autoComplete={autoComplete ?? "off"}
