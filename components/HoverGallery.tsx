@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/utils/cn";
 import { useAccessControl } from "./useAccessControl";
 
@@ -61,14 +61,12 @@ export default function HoverGallery({
   const currentIndex = Math.max(0, Math.min(normalized.length - 1, activeIndex));
   const currentImg = normalized[currentIndex];
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (normalized.length <= 1) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const relX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const idx = Math.min(
-      normalized.length - 1,
-      Math.floor(relX * normalized.length)
-    );
+    if (rect.width <= 0) return;
+    const relX = Math.max(0, Math.min(0.9999, (e.clientX - rect.left) / rect.width));
+    const idx = Math.floor(relX * normalized.length);
     if (idx !== activeIndex) {
       setActiveIndex(idx);
     }
@@ -77,8 +75,8 @@ export default function HoverGallery({
   return (
     <div
       {...(componentId ? { "data-component-id": componentId } : {})}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => {
+      onPointerMove={handlePointerMove}
+      onPointerLeave={() => {
         if (resetOnLeave) setActiveIndex(defaultIndex);
       }}
       onClick={() => onClick?.(currentIndex)}
@@ -92,15 +90,15 @@ export default function HoverGallery({
     >
       {/* Top Indicator Bars */}
       {showIndicators && normalized.length > 1 && (
-        <div className="pointer-events-none absolute top-2 inset-x-2 z-20 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        <div className="pointer-events-none absolute top-2.5 inset-x-2.5 z-20 flex gap-1.5 opacity-80 transition-opacity duration-200 group-hover:opacity-100">
           {normalized.map((_, idx) => (
             <span
               key={idx}
               className={cn(
-                "h-1 flex-1 rounded-full transition-colors duration-150",
+                "h-1 flex-1 rounded-full transition-all duration-200 ease-out",
                 idx === currentIndex
-                  ? "bg-white shadow-xs"
-                  : "bg-white/40 backdrop-blur-xs"
+                  ? "bg-white shadow-xs scale-y-125"
+                  : "bg-white/35 backdrop-blur-xs"
               )}
             />
           ))}
@@ -108,24 +106,29 @@ export default function HoverGallery({
       )}
 
       {/* Images Stack */}
-      {normalized.map((item, idx) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={item.src + idx}
-          src={item.src}
-          alt={item.alt ?? `Imagem ${idx + 1}`}
-          draggable={false}
-          className={cn(
-            "absolute inset-0 h-full w-full object-cover transition-opacity duration-200",
-            idx === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-          )}
-        />
-      ))}
+      {normalized.map((item, idx) => {
+        const isCurrent = idx === currentIndex;
+        return (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={item.src + idx}
+            src={item.src}
+            alt={item.alt ?? `Imagem ${idx + 1}`}
+            draggable={false}
+            className={cn(
+              "absolute inset-0 h-full w-full object-cover will-change-[opacity,transform] transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              isCurrent
+                ? "opacity-100 scale-100 z-10"
+                : "opacity-0 scale-[1.03] z-0 pointer-events-none"
+            )}
+          />
+        );
+      })}
 
       {/* Optional caption for current image */}
       {currentImg?.label && (
-        <div className="pointer-events-none absolute bottom-2 left-2 right-2 z-20 flex justify-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-          <span className="rounded-md bg-black/65 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-xs">
+        <div className="pointer-events-none absolute bottom-2.5 left-2.5 right-2.5 z-20 flex justify-center opacity-0 translate-y-1 transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0">
+          <span className="rounded-lg bg-black/70 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-xs shadow-sm">
             {currentImg.label}
           </span>
         </div>
@@ -157,20 +160,23 @@ export function Hover3DCard({
   hideIfDenied = true,
   className,
   children,
+  onPointerMove,
+  onPointerLeave,
+  style,
   ...props
 }: Hover3DCardProps) {
   const { canAccess } = useAccessControl();
   const hasPermission = !componentId || canAccess(componentId);
 
   const cardRef = useRef<HTMLDivElement>(null);
-  const [transformStyle, setTransformStyle] = useState<string>(
-    "perspective(900px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)"
-  );
-  const [glarePos, setGlarePos] = useState<{ x: number; y: number; active: boolean }>({
-    x: 50,
-    y: 50,
-    active: false,
-  });
+  const glareRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
   if (!hasPermission && hideIfDenied) {
     return null;
@@ -178,42 +184,71 @@ export function Hover3DCard({
 
   const effectiveDisabled = Boolean(disabled || !hasPermission);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    onPointerMove?.(e);
     if (effectiveDisabled || !cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const pctX = x / rect.width;
-    const pctY = y / rect.height;
 
-    const rotateY = (pctX - 0.5) * 2 * maxTilt;
-    const rotateX = (0.5 - pctY) * 2 * maxTilt;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
 
-    setTransformStyle(
-      `perspective(900px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(${scale}, ${scale}, 1)`
-    );
-    setGlarePos({ x: pctX * 100, y: pctY * 100, active: true });
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+    }
+
+    rafRef.current = requestAnimationFrame(() => {
+      const el = cardRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const pctX = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      const pctY = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+
+      const rotateY = (pctX - 0.5) * 2 * maxTilt;
+      const rotateX = (0.5 - pctY) * 2 * maxTilt;
+
+      el.style.transition = "transform 70ms linear";
+      el.style.transform = `perspective(900px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(${scale}, ${scale}, 1)`;
+
+      const glareEl = glareRef.current;
+      if (glareEl) {
+        glareEl.style.opacity = "1";
+        glareEl.style.background = `radial-gradient(circle at ${(pctX * 100).toFixed(1)}% ${(pctY * 100).toFixed(1)}%, rgba(255,255,255,0.22), transparent 60%)`;
+      }
+    });
   };
 
-  const handleMouseLeave = () => {
-    setTransformStyle(
-      "perspective(900px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)"
-    );
-    setGlarePos((prev) => ({ ...prev, active: false }));
+  const handlePointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
+    onPointerLeave?.(e);
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    const el = cardRef.current;
+    if (el) {
+      el.style.transition = "transform 420ms cubic-bezier(0.22, 1, 0.36, 1)";
+      el.style.transform =
+        "perspective(900px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
+    }
+    const glareEl = glareRef.current;
+    if (glareEl) {
+      glareEl.style.opacity = "0";
+    }
   };
 
   return (
     <div
       ref={cardRef}
       {...(componentId ? { "data-component-id": componentId } : {})}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
       style={{
-        transform: transformStyle,
+        transform: "perspective(900px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)",
         transformStyle: "preserve-3d",
+        ...style,
       }}
       className={cn(
-        "relative overflow-hidden rounded-2xl transition-transform duration-200 ease-out will-change-transform",
+        "relative overflow-hidden rounded-2xl will-change-transform",
         className
       )}
       {...props}
@@ -221,12 +256,10 @@ export function Hover3DCard({
       {children}
       {glare && !effectiveDisabled && (
         <div
+          ref={glareRef}
           aria-hidden="true"
-          style={{
-            background: `radial-gradient(circle at ${glarePos.x}% ${glarePos.y}%, rgba(255,255,255,0.22), transparent 60%)`,
-            opacity: glarePos.active ? 1 : 0,
-          }}
-          className="pointer-events-none absolute inset-0 z-20 transition-opacity duration-200"
+          style={{ opacity: 0 }}
+          className="pointer-events-none absolute inset-0 z-20 transition-opacity duration-300 ease-out"
         />
       )}
     </div>
