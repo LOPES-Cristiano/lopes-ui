@@ -134,6 +134,8 @@ function MenuItem({
           data-component-id={item.componentId ?? (item.id ? `erp.context-menu.${item.id}` : 'erp.context-menu.item')}
           ref={btnRef}
           type="button"
+          role="menuitem"
+          aria-expanded={subVisible}
           className={itemCls}
           tabIndex={item.disabled ? -1 : 0}
           onFocus={revealSub}
@@ -173,7 +175,12 @@ function MenuItem({
       tabIndex={item.disabled ? -1 : 0}
       className={itemCls}
       onClick={handleClick}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleClick(e as unknown as React.MouseEvent); }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick(e as unknown as React.MouseEvent);
+        }
+      }}
       >
       {inner}
     </button>
@@ -188,18 +195,18 @@ function MenuPanel({
   onSelect,
   onClose,
   header,
+  panelRef,
 }: {
   items: ContextMenuItem[];
   pos: Pos;
   onSelect?: (item: ContextMenuItem) => void;
   onClose: () => void;
   header?: React.ReactNode;
+  panelRef: React.RefObject<HTMLDivElement | null>;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-
   // Focus trap + keyboard nav
   useEffect(() => {
-    const el = ref.current;
+    const el = panelRef.current;
     if (!el) return;
     const focusable = () =>
       Array.from(el.querySelectorAll<HTMLElement>("[role='menuitem']:not([disabled])"));
@@ -210,20 +217,21 @@ function MenuPanel({
       const idx = items.indexOf(document.activeElement as HTMLElement);
       if (e.key === "ArrowDown") { e.preventDefault(); items[(idx + 1) % items.length]?.focus(); }
       if (e.key === "ArrowUp")   { e.preventDefault(); items[(idx - 1 + items.length) % items.length]?.focus(); }
-      if (e.key === "Escape")    { e.preventDefault(); onClose(); }
+      if (e.key === "Escape")    { e.preventDefault(); e.stopPropagation(); onClose(); }
       if (e.key === "Tab")       { e.preventDefault(); onClose(); }
     }
     el.addEventListener("keydown", onKey);
     return () => el.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, panelRef]);
 
   return (
     <div
-      ref={ref}
+      ref={panelRef}
       role="menu"
+      data-floating-open="true"
       aria-label="Context menu"
       style={{ top: pos.y, left: pos.x, minWidth: MENU_W }}
-      className="fixed z-[9999] rounded-xl bg-white dark:bg-zinc-900 p-1 shadow-xl ring-1 ring-black/[0.06] dark:ring-white/[0.08] focus:outline-none"
+      className="pointer-events-auto fixed z-[9999] rounded-xl bg-white dark:bg-zinc-900 p-1 shadow-xl ring-1 ring-black/[0.06] dark:ring-white/[0.08] focus:outline-none"
       onContextMenu={(e) => e.preventDefault()}
     >
       {header && (
@@ -253,6 +261,7 @@ export default function ContextMenu({
   header,
 }: ContextMenuProps) {
   const [pos, setPos] = useState<Pos | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   const close = useCallback(() => setPos(null), []);
 
@@ -274,20 +283,33 @@ export default function ContextMenu({
     open(e.clientX, e.clientY);
   }
 
-  // Close on outside click / scroll / resize
+  // Close on outside click / Escape / scroll / resize
   useEffect(() => {
     if (!pos) return;
-    function dismiss(e: MouseEvent | KeyboardEvent | Event) {
-      if (e instanceof KeyboardEvent && e.key !== "Escape") return;
+    function handleMouseDown(e: MouseEvent) {
+      if (panelRef.current?.contains(e.target as Node)) return;
       close();
     }
-    document.addEventListener("mousedown", dismiss);
-    document.addEventListener("scroll",    dismiss, true);
-    document.addEventListener("resize",    dismiss);
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        close();
+      }
+    }
+    function handleScroll(e: Event) {
+      if (e.target instanceof Node && panelRef.current?.contains(e.target)) return;
+      close();
+    }
+    document.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("keydown",   handleKeyDown);
+    document.addEventListener("scroll",    handleScroll, true);
+    window.addEventListener("resize",      close);
     return () => {
-      document.removeEventListener("mousedown", dismiss);
-      document.removeEventListener("scroll",    dismiss, true);
-      document.removeEventListener("resize",    dismiss);
+      document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("keydown",   handleKeyDown);
+      document.removeEventListener("scroll",    handleScroll, true);
+      window.removeEventListener("resize",      close);
     };
   }, [pos, close]);
 
@@ -302,7 +324,7 @@ export default function ContextMenu({
       </div>
       {pos && typeof document !== "undefined" &&
         createPortal(
-          <MenuPanel items={items} pos={pos} onSelect={onSelect} onClose={close} header={header} />,
+          <MenuPanel panelRef={panelRef} items={items} pos={pos} onSelect={onSelect} onClose={close} header={header} />,
           document.body,
         )
       }
