@@ -2,10 +2,10 @@
 
 import React, {
   createContext, useContext,
-  useState, useCallback, useEffect,
+  useState, useCallback, useEffect, useMemo, useRef,
 } from "react";
 import {
-  ChevronRight, File, Folder, FolderOpen, GripVertical,
+  ChevronRight, File, Folder, FolderOpen, GripVertical, Minus,
   type LucideIcon,
 } from "lucide-react";
 
@@ -28,6 +28,10 @@ export type TreeViewProps = {
   size?: "sm" | "md";
   /** "none" hides checkboxes and click-to-select; "single" | "multiple" enable it */
   selectionMode?: "none" | "single" | "multiple";
+  /** Cascade selection to children and show indeterminate state on parent nodes when selectionMode="multiple" */
+  cascadeSelection?: boolean;
+  /** Filter and highlight tree nodes matching this search query */
+  searchQuery?: string;
   /** Controlled selected keys */
   selectedKeys?: Set<string>;
   defaultSelectedKeys?: Set<string>;
@@ -47,8 +51,10 @@ type DropPos = "before" | "after" | "inside";
 type TreeCtx = {
   size: "sm" | "md";
   selectionMode: NonNullable<TreeViewProps["selectionMode"]>;
+  cascadeSelection: boolean;
+  searchQuery: string;
   selectedIds: Set<string>;
-  toggleSelect: (id: string) => void;
+  toggleSelect: (node: TreeNode) => void;
   expandedIds: Set<string>;
   toggleExpand: (id: string) => void;
   showLines: boolean;
@@ -64,7 +70,63 @@ type TreeCtx = {
 
 const TreeContext = createContext<TreeCtx>({} as TreeCtx);
 
-// ── DnD helpers ───────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function normalizeSearch(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function collectDescendantIds(node: TreeNode): string[] {
+  const ids: string[] = [node.id];
+  for (const child of node.children ?? []) {
+    ids.push(...collectDescendantIds(child));
+  }
+  return ids;
+}
+
+function getNodeCheckState(
+  node: TreeNode,
+  selectedIds: Set<string>,
+  cascade: boolean
+): "checked" | "unchecked" | "indeterminate" {
+  if (!cascade || !node.children || node.children.length === 0) {
+    return selectedIds.has(node.id) ? "checked" : "unchecked";
+  }
+  const allDescendants = collectDescendantIds(node).filter((id) => id !== node.id);
+  const selectedCount = allDescendants.filter((id) => selectedIds.has(id)).length;
+  if (selectedCount === 0) return selectedIds.has(node.id) ? "checked" : "unchecked";
+  if (selectedCount === allDescendants.length) return "checked";
+  return "indeterminate";
+}
+
+function filterTreeByQuery(nodes: TreeNode[], normQuery: string): { filtered: TreeNode[]; expandedMatches: Set<string> } {
+  const expandedMatches = new Set<string>();
+  if (!normQuery) return { filtered: nodes, expandedMatches };
+
+  function walk(list: TreeNode[]): TreeNode[] {
+    const out: TreeNode[] = [];
+    for (const node of list) {
+      const selfMatches = normalizeSearch(node.label).includes(normQuery);
+      const filteredChildren = node.children ? walk(node.children) : [];
+      if (selfMatches || filteredChildren.length > 0) {
+        if (filteredChildren.length > 0) {
+          expandedMatches.add(node.id);
+        }
+        out.push({
+          ...node,
+          children: filteredChildren.length > 0 ? filteredChildren : node.children,
+        });
+      }
+    }
+    return out;
+  }
+
+  return { filtered: walk(nodes), expandedMatches };
+}
 
 function findSubtree(items: TreeNode[], id: string): TreeNode | null {
   for (const n of items) {
@@ -122,7 +184,7 @@ function moveNode(items: TreeNode[], dragId: string, targetId: string, pos: Drop
 
 function TreeItem({ node }: { node: TreeNode }) {
   const {
-    size, selectionMode, selectedIds, toggleSelect,
+    size, selectionMode, cascadeSelection, selectedIds, toggleSelect,
     expandedIds, toggleExpand, showLines, draggable,
     dragId, setDragId, dropOver, dropPos, setDrop,
     onInternalMove, rootItems,
@@ -130,7 +192,9 @@ function TreeItem({ node }: { node: TreeNode }) {
 
   const hasChildren = !!node.children?.length;
   const isExpanded = expandedIds.has(node.id);
-  const isSelected = selectedIds.has(node.id);
+  const checkState = getNodeCheckState(node, selectedIds, cascadeSelection);
+  const isSelected = checkState === "checked";
+  const isIndeterminate = checkState === "indeterminate";
   const isRowSelected = isSelected && selectionMode !== "none";
   const Icon = node.icon ?? (hasChildren ? (isExpanded ? FolderOpen : Folder) : File);
 
@@ -179,7 +243,7 @@ function TreeItem({ node }: { node: TreeNode }) {
   const handleDragOver = (e: React.DragEvent) => {
     if (!draggable || !dragId || dragId === node.id) return;
     const dragged = findSubtree(rootItems, dragId);
-    if (dragged && containsId(dragged, node.id)) return; // prevent drop onto own descendant
+    if (dragged && containsId(dragged, node.id)) return;
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = "move";
@@ -202,6 +266,26 @@ function TreeItem({ node }: { node: TreeNode }) {
     setDragId(null);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      if (selectionMode !== "none") {
+        toggleSelect(node);
+      } else if (hasChildren) {
+        toggleExpand(node.id);
+      }
+    } else if (e.key === "ArrowRight" && hasChildren && !isExpanded) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleExpand(node.id);
+    } else if (e.key === "ArrowLeft" && hasChildren && isExpanded) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleExpand(node.id);
+    }
+  };
+
   return (
     <div className={isDragging ? "opacity-40" : ""}>
 
@@ -213,10 +297,14 @@ function TreeItem({ node }: { node: TreeNode }) {
       {/* ── Row ── */}
       <div
         role="treeitem"
+        tabIndex={0}
+        data-tree-item="true"
+        data-node-id={node.id}
         aria-selected={isSelected}
         aria-expanded={hasChildren ? isExpanded : undefined}
+        onKeyDown={handleKeyDown}
         className={[
-          "group/ti relative flex items-center gap-1.5 rounded-md cursor-pointer select-none transition-colors duration-100",
+          "group/ti relative flex items-center gap-1.5 rounded-md cursor-pointer select-none transition-colors duration-100 outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
           pad,
           isRowSelected
             ? "bg-primary text-primary-foreground"
@@ -225,7 +313,10 @@ function TreeItem({ node }: { node: TreeNode }) {
             ? "ring-2 ring-inset ring-blue-400 bg-blue-50 dark:bg-blue-950/30 text-zinc-700 dark:text-zinc-300"
             : "",
         ].join(" ")}
-        onClick={() => selectionMode !== "none" && toggleSelect(node.id)}
+        onClick={() => {
+          if (selectionMode !== "none") toggleSelect(node);
+          else if (hasChildren) toggleExpand(node.id);
+        }}
         draggable={draggable}
         onDragStart={draggable ? handleDragStart : undefined}
         onDragEnd={draggable ? handleDragEnd : undefined}
@@ -263,17 +354,19 @@ function TreeItem({ node }: { node: TreeNode }) {
             className={[
               "shrink-0 flex items-center justify-center rounded border transition-all",
               checkCls,
-              isSelected
+              isSelected || isIndeterminate
                 ? "bg-primary-foreground border-primary-foreground text-primary"
                 : "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900",
             ].join(" ")}
-            onClick={(e) => { e.stopPropagation(); toggleSelect(node.id); }}
+            onClick={(e) => { e.stopPropagation(); toggleSelect(node); }}
           >
-            {isSelected && (
+            {isSelected ? (
               <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
                 <path d="M1.5 4L3.3 6L6.5 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            )}
+            ) : isIndeterminate ? (
+              <Minus size={8} strokeWidth={3} />
+            ) : null}
           </span>
         )}
 
@@ -313,11 +406,13 @@ function TreeItem({ node }: { node: TreeNode }) {
           style={{ gridTemplateRows: isExpanded ? "1fr" : "0fr" }}
         >
           <div className="overflow-hidden">
-            <div className={`pt-px ${childIndent}`}>
-              {node.children!.map((child) => (
-                <TreeItem key={child.id} node={child} />
-              ))}
-            </div>
+            {isExpanded && (
+              <div className={`pt-px ${childIndent}`} role="group">
+                {node.children!.map((child) => (
+                  <TreeItem key={child.id} node={child} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -331,6 +426,8 @@ export default function TreeView({
   items: propItems,
   size = "sm",
   selectionMode = "none",
+  cascadeSelection = true,
+  searchQuery = "",
   selectedKeys,
   defaultSelectedKeys,
   onSelectionChange,
@@ -339,7 +436,8 @@ export default function TreeView({
   onMove,
   className = "",
 }: TreeViewProps) {
-  // Expand state — initialised from defaultExpanded flags
+  const treeRef = useRef<HTMLDivElement>(null);
+
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     const ids = new Set<string>();
     const init = (nodes: TreeNode[]) => {
@@ -366,20 +464,32 @@ export default function TreeView({
   );
   const selectedIds = selectedKeys ?? internalSelected;
 
-  const toggleSelect = useCallback((id: string) => {
+  const toggleSelect = useCallback((node: TreeNode) => {
     const updated = (prev: Set<string>): Set<string> => {
       const next = new Set(prev);
       if (selectionMode === "single") {
         next.clear();
-        if (!prev.has(id)) next.add(id);
+        if (!prev.has(node.id)) next.add(node.id);
       } else {
-        if (next.has(id)) next.delete(id); else next.add(id);
+        if (cascadeSelection && node.children && node.children.length > 0) {
+          const allIds = collectDescendantIds(node);
+          const state = getNodeCheckState(node, prev, true);
+          if (state === "checked") {
+            allIds.forEach((cid) => next.delete(cid));
+          } else {
+            allIds.forEach((cid) => next.add(cid));
+          }
+        } else {
+          if (next.has(node.id)) next.delete(node.id);
+          else next.add(node.id);
+        }
       }
       return next;
     };
-    if (selectedKeys === undefined) setInternalSelected(updated);
-    onSelectionChange?.(updated(selectedIds));
-  }, [selectionMode, selectedKeys, selectedIds, onSelectionChange]);
+    const nextSet = updated(selectedIds);
+    if (selectedKeys === undefined) setInternalSelected(nextSet);
+    onSelectionChange?.(nextSet);
+  }, [selectionMode, cascadeSelection, selectedKeys, selectedIds, onSelectionChange]);
 
   // DnD state
   const [dragId, setDragId] = useState<string | null>(null);
@@ -402,14 +512,55 @@ export default function TreeView({
     onMove?.(dId, tId, pos);
   }, [onMove]);
 
-  const displayItems = isDraggable ? internalItems : propItems;
+  const rawItems = isDraggable ? internalItems : propItems;
+  const normQuery = normalizeSearch(searchQuery);
+  const { filtered: displayItems, expandedMatches } = useMemo(
+    () => filterTreeByQuery(rawItems, normQuery),
+    [rawItems, normQuery]
+  );
+
+  const effectiveExpandedIds = useMemo(() => {
+    if (!normQuery) return expandedIds;
+    return new Set([...expandedIds, ...expandedMatches]);
+  }, [expandedIds, expandedMatches, normQuery]);
+
+  // WAI-ARIA ArrowUp/ArrowDown/Home/End across visible tree items
+  const handleTreeKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
+    const container = treeRef.current;
+    if (!container) return;
+    const items = Array.from(container.querySelectorAll<HTMLElement>('[data-tree-item="true"]'));
+    const idx = items.indexOf(document.activeElement as HTMLElement);
+    if (items.length === 0) return;
+
+    e.preventDefault();
+    if (e.key === "ArrowDown") {
+      items[(idx + 1) % items.length]?.focus();
+    } else if (e.key === "ArrowUp") {
+      items[(idx - 1 + items.length) % items.length]?.focus();
+    } else if (e.key === "Home") {
+      items[0]?.focus();
+    } else if (e.key === "End") {
+      items[items.length - 1]?.focus();
+    }
+  };
 
   const ctxValue: TreeCtx = {
-    size, selectionMode, selectedIds, toggleSelect,
-    expandedIds, toggleExpand, showLines,
+    size,
+    selectionMode,
+    cascadeSelection,
+    searchQuery: normQuery,
+    selectedIds,
+    toggleSelect,
+    expandedIds: effectiveExpandedIds,
+    toggleExpand,
+    showLines,
     draggable: isDraggable,
-    dragId, setDragId,
-    dropOver, dropPos, setDrop,
+    dragId,
+    setDragId,
+    dropOver,
+    dropPos,
+    setDrop,
     onInternalMove: handleInternalMove,
     rootItems: displayItems,
   };
@@ -417,6 +568,8 @@ export default function TreeView({
   return (
     <TreeContext.Provider value={ctxValue}>
       <div
+        ref={treeRef}
+        onKeyDown={handleTreeKeyDown}
         className={`select-none ${className}`}
         role="tree"
         aria-label="Tree view"
