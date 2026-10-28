@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
   Search,
   ArrowLeft,
@@ -11,10 +11,7 @@ import {
   Users,
   CheckCircle2,
   XCircle,
-  Plus,
-  Minus,
   RefreshCw,
-  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import Button from "./Button";
@@ -27,6 +24,7 @@ export interface TransferListItem<T = any> {
   id: string | number;
   title: string;
   subtitle?: string;
+  group?: string;
   avatarUrl?: string;
   avatarInitials?: string;
   tag?: string;
@@ -80,6 +78,13 @@ function getInitials(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
+function normalizeText(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 export default function TransferList<T = any>({
   sourceItems,
   targetItems,
@@ -109,27 +114,32 @@ export default function TransferList<T = any>({
   const [searchSource, setSearchSource] = useState("");
   const [searchTarget, setSearchTarget] = useState("");
 
-  // Filtered Source
+  const lastSourceIdx = useRef<number | null>(null);
+  const lastTargetIdx = useRef<number | null>(null);
+
+  // Filtered Source (accent-insensitive)
   const filteredSource = useMemo(() => {
     if (!searchSource.trim()) return sourceItems;
-    const q = searchSource.toLowerCase();
+    const q = normalizeText(searchSource);
     return sourceItems.filter(
       (item) =>
-        item.title.toLowerCase().includes(q) ||
-        (item.subtitle && item.subtitle.toLowerCase().includes(q)) ||
-        (item.tag && item.tag.toLowerCase().includes(q))
+        normalizeText(item.title).includes(q) ||
+        (item.subtitle && normalizeText(item.subtitle).includes(q)) ||
+        (item.tag && normalizeText(item.tag).includes(q)) ||
+        (item.group && normalizeText(item.group).includes(q))
     );
   }, [sourceItems, searchSource]);
 
-  // Filtered Target
+  // Filtered Target (accent-insensitive)
   const filteredTarget = useMemo(() => {
     if (!searchTarget.trim()) return targetItems;
-    const q = searchTarget.toLowerCase();
+    const q = normalizeText(searchTarget);
     return targetItems.filter(
       (item) =>
-        item.title.toLowerCase().includes(q) ||
-        (item.subtitle && item.subtitle.toLowerCase().includes(q)) ||
-        (item.tag && item.tag.toLowerCase().includes(q))
+        normalizeText(item.title).includes(q) ||
+        (item.subtitle && normalizeText(item.subtitle).includes(q)) ||
+        (item.tag && normalizeText(item.tag).includes(q)) ||
+        (item.group && normalizeText(item.group).includes(q))
     );
   }, [targetItems, searchTarget]);
 
@@ -144,7 +154,7 @@ export default function TransferList<T = any>({
     if (allSourceSelected) {
       setSelectedSource(new Set());
     } else {
-      setSelectedSource(new Set(filteredSource.map((i) => i.id)));
+      setSelectedSource(new Set(filteredSource.filter((i) => !i.disabled).map((i) => i.id)));
     }
   };
 
@@ -152,24 +162,44 @@ export default function TransferList<T = any>({
     if (allTargetSelected) {
       setSelectedTarget(new Set());
     } else {
-      setSelectedTarget(new Set(filteredTarget.map((i) => i.id)));
+      setSelectedTarget(new Set(filteredTarget.filter((i) => !i.disabled).map((i) => i.id)));
     }
   };
 
-  const toggleItemSource = (id: string | number) => {
+  const toggleItemSource = (id: string | number, index?: number, shiftKey?: boolean) => {
     setSelectedSource((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (shiftKey && index !== undefined && lastSourceIdx.current !== null) {
+        const start = Math.min(lastSourceIdx.current, index);
+        const end = Math.max(lastSourceIdx.current, index);
+        for (let i = start; i <= end; i++) {
+          const item = filteredSource[i];
+          if (item && !item.disabled) next.add(item.id);
+        }
+      } else {
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+      }
+      if (index !== undefined) lastSourceIdx.current = index;
       return next;
     });
   };
 
-  const toggleItemTarget = (id: string | number) => {
+  const toggleItemTarget = (id: string | number, index?: number, shiftKey?: boolean) => {
     setSelectedTarget((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (shiftKey && index !== undefined && lastTargetIdx.current !== null) {
+        const start = Math.min(lastTargetIdx.current, index);
+        const end = Math.max(lastTargetIdx.current, index);
+        for (let i = start; i <= end; i++) {
+          const item = filteredTarget[i];
+          if (item && !item.disabled) next.add(item.id);
+        }
+      } else {
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+      }
+      if (index !== undefined) lastTargetIdx.current = index;
       return next;
     });
   };
@@ -198,36 +228,50 @@ export default function TransferList<T = any>({
   };
 
   const handleAddSingle = (item: TransferListItem<T>) => {
+    if (item.disabled) return;
     const nextTarget = targetItems.filter((i) => i.id !== item.id);
     const nextSource = [...sourceItems, item];
+    setSelectedTarget((prev) => {
+      const next = new Set(prev);
+      next.delete(item.id);
+      return next;
+    });
     onAdd?.([item]);
     onChange?.(nextSource, nextTarget);
   };
 
   const handleRemoveSingle = (item: TransferListItem<T>) => {
+    if (item.disabled) return;
     const nextSource = sourceItems.filter((i) => i.id !== item.id);
     const nextTarget = [...targetItems, item];
+    setSelectedSource((prev) => {
+      const next = new Set(prev);
+      next.delete(item.id);
+      return next;
+    });
     onRemove?.([item]);
     onChange?.(nextSource, nextTarget);
   };
 
   const handleAddAll = () => {
     if (filteredTarget.length === 0) return;
-    const nextSource = [...sourceItems, ...filteredTarget];
-    const targetIds = new Set(filteredTarget.map((i) => i.id));
+    const movable = filteredTarget.filter((i) => !i.disabled);
+    const nextSource = [...sourceItems, ...movable];
+    const targetIds = new Set(movable.map((i) => i.id));
     const nextTarget = targetItems.filter((i) => !targetIds.has(i.id));
     setSelectedTarget(new Set());
-    onAdd?.(filteredTarget);
+    onAdd?.(movable);
     onChange?.(nextSource, nextTarget);
   };
 
   const handleRemoveAll = () => {
     if (filteredSource.length === 0) return;
-    const nextTarget = [...targetItems, ...filteredSource];
-    const sourceIds = new Set(filteredSource.map((i) => i.id));
+    const movable = filteredSource.filter((i) => !i.disabled);
+    const nextTarget = [...targetItems, ...movable];
+    const sourceIds = new Set(movable.map((i) => i.id));
     const nextSource = sourceItems.filter((i) => !sourceIds.has(i.id));
     setSelectedSource(new Set());
-    onRemove?.(filteredSource);
+    onRemove?.(movable);
     onChange?.(nextSource, nextTarget);
   };
 
@@ -300,14 +344,17 @@ export default function TransferList<T = any>({
               <p className="font-medium">{sourceEmptyText}</p>
             </div>
           ) : (
-            filteredSource.map((item) => {
+            filteredSource.map((item, idx) => {
               const isChecked = selectedSource.has(item.id);
               return (
                 <div
                   key={item.id}
-                  onClick={() => toggleItemSource(item.id)}
+                  onClick={(e) => !item.disabled && toggleItemSource(item.id, idx, e.shiftKey)}
+                  onDoubleClick={() => handleRemoveSingle(item)}
+                  title="Duplo-clique para remover"
                   className={cn(
                     "group flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer select-none",
+                    item.disabled && "opacity-45 cursor-not-allowed",
                     isChecked
                       ? "bg-emerald-500/10 border-emerald-500/30 text-foreground"
                       : "bg-background hover:bg-muted/40 border-border/60"
@@ -318,7 +365,8 @@ export default function TransferList<T = any>({
                       data-component-id={componentId ? `${componentId}.source.item-checkbox` : undefined}
                       type="checkbox"
                       checked={isChecked}
-                      onChange={() => toggleItemSource(item.id)}
+                      disabled={item.disabled}
+                      onChange={() => toggleItemSource(item.id, idx)}
                       onClick={(e) => e.stopPropagation()}
                       className="h-3.5 w-3.5 rounded border-input text-emerald-600 focus:ring-emerald-500/20 shrink-0 cursor-pointer"
                     />
@@ -467,14 +515,17 @@ export default function TransferList<T = any>({
               <p className="font-medium">{targetEmptyText}</p>
             </div>
           ) : (
-            filteredTarget.map((item) => {
+            filteredTarget.map((item, idx) => {
               const isChecked = selectedTarget.has(item.id);
               return (
                 <div
                   key={item.id}
-                  onClick={() => toggleItemTarget(item.id)}
+                  onClick={(e) => !item.disabled && toggleItemTarget(item.id, idx, e.shiftKey)}
+                  onDoubleClick={() => handleAddSingle(item)}
+                  title="Duplo-clique para vincular"
                   className={cn(
                     "group flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer select-none",
+                    item.disabled && "opacity-45 cursor-not-allowed",
                     isChecked
                       ? "bg-primary/10 border-primary/30 text-foreground"
                       : "bg-background hover:bg-muted/40 border-border/60"
@@ -485,7 +536,8 @@ export default function TransferList<T = any>({
                       data-component-id={componentId ? `${componentId}.target.item-checkbox` : undefined}
                       type="checkbox"
                       checked={isChecked}
-                      onChange={() => toggleItemTarget(item.id)}
+                      disabled={item.disabled}
+                      onChange={() => toggleItemTarget(item.id, idx)}
                       onClick={(e) => e.stopPropagation()}
                       className="h-3.5 w-3.5 rounded border-input text-primary focus:ring-primary/20 shrink-0 cursor-pointer"
                     />
