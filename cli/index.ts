@@ -9,28 +9,21 @@ import { execSync } from "child_process";
 const cwd = process.cwd();
 
 /**
- * Peer deps that are NOT react/react-dom/next (those are always present in a
- * Next.js project). We only install the ones the consumer is likely missing.
+ * Core peer deps required by the main `lopes-ui` entry (excluding react/react-dom/next).
  */
-const EXTRA_PEERS: Record<string, string> = {
+const CORE_PEERS: Record<string, string> = {
   "lucide-react": "^1.29.0",
   "motion": "^12.40.0",
-  "shiki": "^4.4.2",
   "zod": "^4.4.3",
-  "react-hot-toast": "^2.6.0",
-  "class-variance-authority": "^0.7.1",
-  "clsx": "^2.1.1",
-  "tailwind-merge": "^3.6.0",
+};
+
+const SPREADSHEET_PEERS: Record<string, string> = {
   "@tanstack/react-table": "^8.21.3",
   "@tanstack/react-virtual": "^3.14.15",
-  "@radix-ui/react-alert-dialog": "^1.1.23",
-  "@radix-ui/react-dialog": "^1.1.23",
-  "@radix-ui/react-dropdown-menu": "^2.1.24",
-  "@radix-ui/react-popover": "^1.1.23",
-  "@radix-ui/react-select": "^2.3.7",
-  "@radix-ui/react-slot": "^1.3.3",
-  "@radix-ui/react-switch": "^1.3.7",
-  "@radix-ui/react-tooltip": "^1.2.16",
+};
+
+const CODE_PEERS: Record<string, string> = {
+  "shiki": "^4.4.2",
 };
 
 const TIPTAP_PEERS: Record<string, string> = {
@@ -75,7 +68,7 @@ function info(msg: string) {
 function detectPM(): "pnpm" | "yarn" | "bun" | "npm" {
   if (fs.existsSync(path.join(cwd, "pnpm-lock.yaml"))) return "pnpm";
   if (fs.existsSync(path.join(cwd, "yarn.lock"))) return "yarn";
-  if (fs.existsSync(path.join(cwd, "bun.lockb"))) return "bun";
+  if (fs.existsSync(path.join(cwd, "bun.lockb")) || fs.existsSync(path.join(cwd, "bun.lock"))) return "bun";
   return "npm";
 }
 
@@ -118,9 +111,28 @@ function readConsumerPkg(): Record<string, Record<string, string>> {
   }
 }
 
+function installPeerGroup(
+  label: string,
+  group: Record<string, string>,
+  installed: Record<string, string>,
+  pm: ReturnType<typeof detectPM>,
+) {
+  const missing = Object.entries(group)
+    .filter(([name]) => !installed[name])
+    .map(([name, ver]) => `${name}@${ver}`);
+
+  if (missing.length > 0) {
+    log(`Installing ${label}: ${missing.length > 6 ? `${missing.length} packages` : missing.join(", ")}`);
+    execSync(installCmd(pm, missing), { cwd, stdio: "inherit" });
+    success(`${label} installed.`);
+  } else {
+    info(`${label} already present.`);
+  }
+}
+
 // ── Commands ─────────────────────────────────────────────────────────────────
 
-function runInit(options: { tiptap: boolean }) {
+function runInit(options: { tiptap: boolean; spreadsheet: boolean; code: boolean }) {
   console.log("\n  lopes-ui — init\n");
 
   const consumerPkg = readConsumerPkg();
@@ -131,61 +143,56 @@ function runInit(options: { tiptap: boolean }) {
   const pm = detectPM();
 
   // ── Step 1: core peer deps ──────────────────────────────────────────────
-  const coreMissing = Object.entries(EXTRA_PEERS)
-    .filter(([name]) => !installed[name])
-    .map(([name, ver]) => `${name}@${ver}`);
+  installPeerGroup("Core peer dependencies", CORE_PEERS, installed, pm);
 
-  if (coreMissing.length > 0) {
-    log(`Installing: ${coreMissing.join(", ")}`);
-    execSync(installCmd(pm, coreMissing), { cwd, stdio: "inherit" });
-    success("Core peer dependencies installed.");
-  } else {
-    info("Core peer dependencies already present.");
+  // ── Step 2: optional peer groups ────────────────────────────────────────
+  if (options.spreadsheet) {
+    installPeerGroup("Spreadsheet dependencies (TanStack)", SPREADSHEET_PEERS, installed, pm);
   }
-
-  // ── Step 2: tiptap peer deps (optional) ────────────────────────────────
+  if (options.code) {
+    installPeerGroup("CodeBlock dependencies (Shiki)", CODE_PEERS, installed, pm);
+  }
   if (options.tiptap) {
-    const tiptapMissing = Object.entries(TIPTAP_PEERS)
-      .filter(([name]) => !installed[name])
-      .map(([name, ver]) => `${name}@${ver}`);
-
-    if (tiptapMissing.length > 0) {
-      log(`Installing Tiptap extensions: ${tiptapMissing.length} packages`);
-      execSync(installCmd(pm, tiptapMissing), { cwd, stdio: "inherit" });
-      success("Tiptap peer dependencies installed.");
-    } else {
-      info("Tiptap peer dependencies already present.");
-    }
+    installPeerGroup("RichTextEditor dependencies (Tiptap)", TIPTAP_PEERS, installed, pm);
   }
 
   // ── Step 3: patch globals.css ──────────────────────────────────────────
   const cssFile = findGlobalsCss();
+  const stylesImport = '@import "lopes-ui/styles.css";';
 
   if (!cssFile) {
-    log("globals.css not found. Add this line to your CSS file manually:");
+    log("globals.css not found. Add these lines to your CSS file manually right after `@import \"tailwindcss\";`:");
+    log(`  ${stylesImport}`);
     log('  @source "./node_modules/lopes-ui/dist";');
   } else {
-    const content = fs.readFileSync(cssFile, "utf8");
+    let content = fs.readFileSync(cssFile, "utf8");
+    const sourceDirective = buildSourceDirective(cssFile);
+    const hasStylesImport = content.includes("lopes-ui/styles.css");
+    const hasSource = content.includes("@source") && content.includes("lopes-ui");
 
-    if (content.includes("lopes-ui")) {
+    if (hasStylesImport && hasSource) {
       info(`globals.css already configured (${path.relative(cwd, cssFile)}).`);
     } else {
-      const directive = buildSourceDirective(cssFile);
-      // Insert right after `@import "tailwindcss"` when present
-      const importMatch = content.match(/^@import\s+["']tailwindcss["'];?/m);
-      const updated = importMatch
-        ? content.replace(importMatch[0], `${importMatch[0]}\n${directive}`)
-        : `${directive}\n${content}`;
+      const additions: string[] = [];
+      if (!hasStylesImport) additions.push(stylesImport);
+      if (!hasSource) additions.push(sourceDirective);
 
-      fs.writeFileSync(cssFile, updated, "utf8");
+      const importMatch = content.match(/^@import\s+["']tailwindcss["'];?/m);
+      content = importMatch
+        ? content.replace(importMatch[0], `${importMatch[0]}\n${additions.join("\n")}`)
+        : `${additions.join("\n")}\n${content}`;
+
+      fs.writeFileSync(cssFile, content, "utf8");
       success(`Patched ${path.relative(cwd, cssFile)}`);
-      log(`  Added: ${directive}`);
+      for (const line of additions) log(`  Added: ${line}`);
     }
   }
 
   console.log("\n  Done! You can now import from lopes-ui:\n");
-  console.log('  import { Button, DataTable, toast } from "lopes-ui";');
-  console.log('  import { useAsyncButton } from "lopes-ui/hooks";\n');
+  console.log('  import { Button, DataTable, toast, ThemeProvider, ThemeScript } from "lopes-ui";');
+  console.log('  import { Dialog, Tooltip, Popover } from "lopes-ui/primitives";');
+  console.log('  import { useAsyncButton } from "lopes-ui/hooks";');
+  console.log('  import { formatCurrency } from "lopes-ui/utils";\n');
 }
 
 function printHelp() {
@@ -193,12 +200,18 @@ function printHelp() {
   lopes-ui CLI
 
   Usage:
-    npx lopes-ui init          Set up lopes-ui in this project
-    npx lopes-ui init --tiptap Also install RichTextEditor (Tiptap) dependencies
+    npx lopes-ui init                Set up lopes-ui core + CSS tokens in this project
+    npx lopes-ui init --tiptap       Also install RichTextEditor (lopes-ui/rich-text) dependencies
+    npx lopes-ui init --spreadsheet  Also install Spreadsheet (lopes-ui/spreadsheet) dependencies
+    npx lopes-ui init --code         Also install CodeBlock (lopes-ui/code-block) dependencies
+    npx lopes-ui init --all          Install all optional peer dependencies
 
   Options:
-    --tiptap    Install Tiptap peer dependencies (needed for RichTextEditor)
-    --help      Show this help message
+    --tiptap       Install Tiptap peer dependencies (for lopes-ui/rich-text)
+    --spreadsheet  Install TanStack peer dependencies (for lopes-ui/spreadsheet)
+    --code         Install Shiki peer dependency (for lopes-ui/code-block)
+    --all          Install all optional peer dependencies
+    --help         Show this help message
 `);
 }
 
@@ -214,7 +227,12 @@ if (!command || command === "--help" || command === "-h" || flags.has("--help") 
 }
 
 if (command === "init") {
-  runInit({ tiptap: flags.has("--tiptap") });
+  const all = flags.has("--all");
+  runInit({
+    tiptap: all || flags.has("--tiptap"),
+    spreadsheet: all || flags.has("--spreadsheet"),
+    code: all || flags.has("--code"),
+  });
 } else {
   console.error(`  Unknown command: ${command}`);
   printHelp();
