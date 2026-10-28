@@ -182,7 +182,7 @@ export default function SmartObject({
       <div className={clsx("h-1.5 w-full", sc.bar)} />
 
       {/* Header body */}
-      <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-3">
+      <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-3 px-4 sm:px-5 pt-4 pb-3">
         <div className="flex items-center gap-3 min-w-0">
           {/* Kind icon */}
           <div className="shrink-0 w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
@@ -218,7 +218,7 @@ export default function SmartObject({
 
       {/* Fields */}
       {fields.length > 0 && (
-        <div className="mx-5 mb-3 rounded-xl border border-zinc-100 dark:border-zinc-800 overflow-hidden">
+        <div className="mx-4 sm:mx-5 mb-3 rounded-xl border border-zinc-100 dark:border-zinc-800 overflow-x-auto">
           <table className="w-full text-sm">
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {fields.map((f, i) => (
@@ -244,7 +244,7 @@ export default function SmartObject({
       )}
 
       {/* Footer: holder + updated + actions */}
-      <div className="flex items-center justify-between gap-3 px-5 pb-4 flex-wrap">
+      <div className="flex items-center justify-between gap-3 px-4 sm:px-5 pb-4 flex-wrap">
         <div className="flex flex-col gap-0.5">
           {holder && (
             <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
