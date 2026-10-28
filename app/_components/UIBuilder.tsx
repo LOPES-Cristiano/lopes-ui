@@ -176,7 +176,7 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
         type: "page_header",
         title: "Cabeçalho de Página",
         props: {
-          title: "Painel de Vendas - Biglar Móveis",
+          title: "Painel de Vendas - Lopes Corp",
           subtitle: "Acompanhamento consolidado de vendas, dormitórios, estofados e pedidos das lojas de RO e AM.",
           badge: "Varejo de Móveis",
           badgeTone: "success",
@@ -265,7 +265,7 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
             { id: "f5", type: "text", label: "Telefone / WhatsApp", placeholder: "(69) 99999-0000", span: 1, required: true },
             { id: "f6", type: "date", label: "Data de Agendamento da Entrega", span: 1, required: true },
             { id: "f7", type: "textarea", label: "Observações da Montagem & Referência", placeholder: "Ex: Entregar após as 14h, condomínio com elevador de carga...", span: 4, required: false },
-            { id: "f8", type: "switch", label: "Incluir Serviço de Montagem Especializada Gratuita", helperText: "Equipe técnica Biglar Móveis credenciada", span: 2, defaultValue: true },
+            { id: "f8", type: "switch", label: "Incluir Serviço de Montagem Especializada Gratuita", helperText: "Equipe técnica Lopes Corp credenciada", span: 2, defaultValue: true },
             { id: "f9", type: "switch", label: "Emitir Notificação via WhatsApp para o Cliente", helperText: "Rastreio em tempo real pela BR-364 / BR-319", span: 2, defaultValue: true },
           ],
         },
@@ -329,7 +329,7 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
   {
     id: "auditoria_historico",
     name: "Auditoria Fiscal SEFAZ RO/AM & Logs",
-    desc: "Trilha de emissão de NF-e, autorização SEFAZ Rondônia / Amazonas e status do ERP Biglar Móveis.",
+    desc: "Trilha de emissão de NF-e, autorização SEFAZ Rondônia / Amazonas e status do ERP Lopes Corp.",
     icon: Clock,
     blocks: [
       {
@@ -338,7 +338,7 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
         title: "Cabeçalho de Página",
         props: {
           title: "Auditoria de Segurança & Trilha Fiscal",
-          subtitle: "Logs detalhados de compliance, emissão de NF-e e integridade dos microsserviços do ERP Biglar Móveis.",
+          subtitle: "Logs detalhados de compliance, emissão de NF-e e integridade dos microsserviços do ERP Lopes Corp.",
           badge: "SEFAZ RO / AM Online",
           badgeTone: "success",
           primaryAction: "Exportar Log CSV",
@@ -483,7 +483,7 @@ export default function UIBuilder() {
           props: {
             title: "Nova Página Customizada",
             subtitle: "Descrição e contexto operacional da funcionalidade.",
-            badge: "Biglar Móveis",
+            badge: "Lopes Corp",
             badgeTone: "primary",
             primaryAction: "Salvar Alterações",
             secondaryAction: "Cancelar",
@@ -698,7 +698,7 @@ export default function UIBuilder() {
           type,
           title: "Estrutura Hierárquica (TreeView)",
           props: {
-            rootLabel: "Matriz Biglar Móveis & Eletro (Porto Velho)",
+            rootLabel: "Matriz Lopes Corp (Matriz)",
             child1: "Lojas Rondônia (Porto Velho, Ji-Paraná, Ariquemes, Cacoal)",
             child2: "Lojas Amazonas (Manaus Centro, Flores, Manauara)",
             child3: "Centro de Distribuição Principal (CD Porto Velho)",
@@ -794,7 +794,7 @@ export default function UIBuilder() {
           props: {
             language: "json",
             filename: "payload.json",
-            code: '{\n  "empresa": "Biglar Móveis",\n  "estado": "RO",\n  "status": "success",\n  "transacaoId": "TRX-89412",\n  "valor": 14850.00\n}',
+            code: '{\n  "empresa": "Lopes Corp",\n  "estado": "RO",\n  "status": "success",\n  "transacaoId": "TRX-89412",\n  "valor": 14850.00\n}',
           },
         };
         break;
@@ -1166,7 +1166,7 @@ export default function UIBuilder() {
             <tbody className="divide-y divide-border">
               <tr className="hover:bg-muted/20 transition-colors">
                 <td className="px-6 py-4 font-mono font-medium">#PED-8942</td>
-                <td className="px-6 py-4 font-medium text-foreground">Biglar Móveis - Loja Porto Velho Centro</td>
+                <td className="px-6 py-4 font-medium text-foreground">Lopes Corp - Loja Porto Velho Centro</td>
                 <td className="px-6 py-4 text-muted-foreground">24/08/2026</td>
                 <td className="px-6 py-4 font-semibold text-foreground">R$ 14.850,00</td>
                 <td className="px-6 py-4">
@@ -1178,7 +1178,7 @@ export default function UIBuilder() {
               </tr>
               <tr className="hover:bg-muted/20 transition-colors">
                 <td className="px-6 py-4 font-mono font-medium">#PED-8941</td>
-                <td className="px-6 py-4 font-medium text-foreground">Biglar Móveis - Filial Ji-Paraná</td>
+                <td className="px-6 py-4 font-medium text-foreground">Lopes Corp - Filial Ji-Paraná</td>
                 <td className="px-6 py-4 text-muted-foreground">24/08/2026</td>
                 <td className="px-6 py-4 font-semibold text-foreground">R$ 8.240,00</td>
                 <td className="px-6 py-4">
@@ -1460,11 +1460,11 @@ ${blocksCode}
               <h1 className="text-sm font-bold text-foreground leading-tight flex items-center gap-2">
                 UI Builder & Prototyper
                 <span className="text-[10px] font-mono px-2 py-0.5 bg-primary/10 text-primary rounded-full font-semibold">
-                  Biglar DS
+                  Lopes UI
                 </span>
               </h1>
               <p className="text-[10px] text-muted-foreground">
-                {blocks.length} blocos ativos no canvas • Biglar Móveis (RO/AM)
+                {blocks.length} blocos ativos no canvas • Lopes UI
               </p>
             </div>
           </div>
@@ -1958,7 +1958,7 @@ ${blocksCode}
                               <tbody className="divide-y divide-border">
                                 <tr className="hover:bg-muted/20 transition-colors">
                                   <td className="px-6 py-4 font-mono font-medium">#PED-8942</td>
-                                  <td className="px-6 py-4 font-medium text-foreground">Biglar Móveis - Loja Porto Velho Centro</td>
+                                  <td className="px-6 py-4 font-medium text-foreground">Lopes Corp - Loja Porto Velho Centro</td>
                                   <td className="px-6 py-4 text-muted-foreground">24/08/2026</td>
                                   <td className="px-6 py-4 font-semibold text-foreground">R$ 14.850,00</td>
                                   <td className="px-6 py-4">
@@ -1970,7 +1970,7 @@ ${blocksCode}
                                 </tr>
                                 <tr className="hover:bg-muted/20 transition-colors">
                                   <td className="px-6 py-4 font-mono font-medium">#PED-8941</td>
-                                  <td className="px-6 py-4 font-medium text-foreground">Biglar Móveis - Filial Ji-Paraná</td>
+                                  <td className="px-6 py-4 font-medium text-foreground">Lopes Corp - Filial Ji-Paraná</td>
                                   <td className="px-6 py-4 text-muted-foreground">24/08/2026</td>
                                   <td className="px-6 py-4 font-semibold text-foreground">R$ 8.240,00</td>
                                   <td className="px-6 py-4">
@@ -2180,7 +2180,7 @@ ${blocksCode}
                             items={[
                               {
                                 id: "root",
-                                label: p.rootLabel || "Matriz Biglar Móveis",
+                                label: p.rootLabel || "Matriz Lopes Corp",
                                 children: [
                                   { id: "c1", label: p.child1 || "Lojas Rondônia" },
                                   { id: "c2", label: p.child2 || "Lojas Amazonas" },
@@ -2408,7 +2408,7 @@ ${blocksCode}
                           <option value="warning">Warning (Amarelo)</option>
                           <option value="info">Info (Azul)</option>
                           <option value="danger">Danger (Vermelho)</option>
-                          <option value="primary">Primary (Azul Biglar)</option>
+                          <option value="primary">Primary (Azul Lopes UI)</option>
                           <option value="violet">Violet (Roxo)</option>
                         </select>
                       </div>
@@ -3371,7 +3371,7 @@ ${blocksCode}
         size="md"
       >
         <FormModalHeader
-          title="Modal Canônico Biglar Móveis"
+          title="Modal Canônico Lopes Corp"
           subtitle="Exemplo de diálogo com acessibilidade e Radix UI integrado"
         />
         <FormModalBody>
