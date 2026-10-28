@@ -463,7 +463,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
             )}
           >
             {/* Área Direita: Busca Global + Filtros Inline + ToolbarSlot + Colunas */}
-            <div className="flex flex-nowrap sm:flex-wrap items-center gap-2 justify-start md:justify-end flex-1 w-full">
+            <div className="flex flex-wrap items-center gap-2 justify-start md:justify-end flex-1 w-full">
               {/* Input de Busca Global Padrão */}
               {globalSearch && (
                 <div className="relative min-w-0 flex-1 sm:w-60 md:w-64 sm:flex-initial">
@@ -505,7 +505,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                       return (
                         <div
                           key={field.key}
-                          className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/40 text-xs font-medium shrink-0"
+                          className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/40 text-xs font-medium shrink-0 max-w-full overflow-x-auto no-scrollbar"
                         >
                           {field.options.map((opt) => {
                             const isSelected =
