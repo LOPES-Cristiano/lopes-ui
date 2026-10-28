@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { ChevronDown, Pin, PinOff } from 'lucide-react';
 import type { SidebarNavItem as SidebarNavItemType } from './Sidebar.types';
 import { useSidebar } from './SidebarContext';
@@ -305,17 +306,14 @@ export function SidebarNavItem({
   const submenuContentId = `nav-submenu-${item.id ?? item.label.replace(/\s+/g, '-').toLowerCase()}`;
 
   const row =
-    item.href ? (
-      <a
-        href={item.disabled ? undefined : item.href}
+    item.href && !item.disabled ? (
+      <Link
+        href={item.href}
+        prefetch={false}
         className={rowBase}
         aria-label={item.label}
         {...(hasChildren ? { 'aria-expanded': subOpen, 'aria-controls': submenuContentId } : {})}
         onClick={(e) => {
-          if (item.disabled) {
-            e.preventDefault();
-            return;
-          }
           if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
             return;
           }
@@ -325,7 +323,7 @@ export function SidebarNavItem({
         {...cid}
       >
         {rowContent}
-      </a>
+      </Link>
     ) : (
       <button
         data-component-id={item.componentId ?? `erp.sidebar.item-${item.label}`}
