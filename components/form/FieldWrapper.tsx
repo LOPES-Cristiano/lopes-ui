@@ -10,11 +10,15 @@ export type FieldWrapperProps = {
   label?: string;
   /** Render label on the left, horizontally aligned with the input */
   labelInline?: boolean;
+  /** Layout orientation (shadcn/ui Field pattern). Overrides labelInline when provided. */
+  orientation?: "vertical" | "horizontal" | "responsive";
   /** Tailwind width class for the inline label column (default: "w-28") */
   labelWidth?: string;
   required?: boolean;
   /** Message shown on hover of the ? icon next to the label */
   tooltip?: string;
+  /** Optional node rendered on the right side of the label row (e.g. character counter or action link) */
+  labelAction?: React.ReactNode;
   /** Validation error — shown in red, replaces helpText */
   error?: string;
   /** Subtle helper text below the field */
@@ -68,7 +72,11 @@ function FieldTooltip({ message }: { message: string }) {
 
   return (
     <>
-      <button data-component-id="erp.field-wrapper.help-tooltip" ref={triggerRef} type="button" aria-label="Mostrar ajuda"
+      <button
+        data-component-id="erp.field-wrapper.help-tooltip"
+        ref={triggerRef}
+        type="button"
+        aria-label="Mostrar ajuda"
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}
@@ -94,13 +102,66 @@ function FieldTooltip({ message }: { message: string }) {
 
 export { FieldTooltip };
 
+export type FieldSetProps = React.FieldsetHTMLAttributes<HTMLFieldSetElement>;
+
+export function FieldSet({ className, children, ...props }: FieldSetProps) {
+  return (
+    <fieldset
+      data-slot="field-set"
+      className={cn(
+        "block m-0 min-w-0 space-y-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-900/40 p-5",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </fieldset>
+  );
+}
+
+export type FieldLegendProps = React.HTMLAttributes<HTMLLegendElement> & {
+  variant?: "legend" | "label";
+};
+
+export function FieldLegend({ className, variant = "legend", children, ...props }: FieldLegendProps) {
+  return (
+    <legend
+      data-slot="field-legend"
+      className={cn(
+        "float-left w-full p-0 mb-1 font-semibold text-zinc-900 dark:text-zinc-100 after:block after:clear-both",
+        variant === "legend" ? "text-base" : "text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </legend>
+  );
+}
+
+export type FieldGroupProps = React.HTMLAttributes<HTMLDivElement>;
+
+export function FieldGroup({ className, children, ...props }: FieldGroupProps) {
+  return (
+    <div
+      data-slot="field-group"
+      className={cn("clear-both flex flex-col gap-4", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default function FieldWrapper({
   id,
   label,
   labelInline = false,
+  orientation,
   labelWidth = "w-28",
   required,
   tooltip,
+  labelAction,
   error,
   helpText,
   hint,
@@ -108,12 +169,16 @@ export default function FieldWrapper({
   children,
   className,
 }: FieldWrapperProps) {
+  const effectiveOrientation = orientation ?? (labelInline ? "horizontal" : "vertical");
+  const isHorizontal = effectiveOrientation === "horizontal";
+  const isResponsive = effectiveOrientation === "responsive";
+
   const resolvedHelpText = helpText ?? hint;
   const cleanLabel =
-    typeof label === 'string'
-      ? label.replace(/\s*\*+\s*$/, '')
+    typeof label === "string"
+      ? label.replace(/\s*\*+\s*$/, "")
       : label;
-  const isRequired = required || (typeof label === 'string' && /\*\s*$/.test(label));
+  const isRequired = required || (typeof label === "string" && /\*\s*$/.test(label));
 
   const labelNode = label ? (
     <label
@@ -121,7 +186,8 @@ export default function FieldWrapper({
       className={cn(
         "inline-flex select-none items-center text-sm font-medium leading-none",
         error ? "text-red-600 dark:text-red-400" : "text-foreground/80",
-        labelInline && cn("shrink-0 pt-[9px]", labelWidth),
+        isHorizontal && cn("shrink-0 pt-[9px]", labelWidth),
+        isResponsive && cn("sm:shrink-0 sm:pt-[9px]", `sm:${labelWidth}`),
       )}
     >
       <span>{cleanLabel}</span>
@@ -155,16 +221,33 @@ export default function FieldWrapper({
     </p>
   ) : null;
 
-  if (labelInline) {
+  if (isHorizontal || isResponsive) {
     return (
       <div className={cn("flex flex-col gap-1", width, className)}>
-        <div className="flex items-start gap-3">
+        <div
+          className={cn(
+            "flex gap-3",
+            isResponsive ? "flex-col sm:flex-row sm:items-start" : "items-start",
+          )}
+        >
           {labelNode}
-          <div className="min-w-0 flex-1">{children}</div>
+          <div className="min-w-0 flex-1">
+            {children}
+            {labelAction && (
+              <div className="mt-1 flex justify-end text-xs text-muted-foreground">
+                {labelAction}
+              </div>
+            )}
+          </div>
         </div>
         {subline && (
           <div className="flex">
-            <div className={cn("shrink-0", labelWidth)} />
+            <div
+              className={cn(
+                "shrink-0",
+                isHorizontal ? labelWidth : cn("hidden sm:block", labelWidth),
+              )}
+            />
             <div className="min-w-0 flex-1">{subline}</div>
           </div>
         )}
@@ -174,7 +257,14 @@ export default function FieldWrapper({
 
   return (
     <div className={cn("flex flex-col gap-1.5", width, className)}>
-      {labelNode}
+      {(labelNode || labelAction) && (
+        <div className="flex items-center justify-between gap-2">
+          {labelNode ?? <span />}
+          {labelAction && (
+            <div className="text-xs text-muted-foreground">{labelAction}</div>
+          )}
+        </div>
+      )}
       {children}
       {subline}
     </div>
