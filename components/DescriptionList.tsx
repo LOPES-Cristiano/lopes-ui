@@ -3,7 +3,7 @@
 import React from "react";
 import { cn } from "@/utils/cn";
 import { CopyButton } from "./Snippet";
-import { useAccessControl, type AccessControlProps } from "./useAccessControl";
+import { useAccessControl } from "./useAccessControl";
 
 export interface DescriptionItem {
   key?: string;
@@ -17,7 +17,9 @@ export interface DescriptionItem {
   span?: 1 | 2 | 3;
 }
 
-export interface DescriptionListProps extends React.HTMLAttributes<HTMLDListElement>, AccessControlProps {
+export interface DescriptionListProps extends React.HTMLAttributes<HTMLDListElement> {
+  componentId?: string;
+  hideIfDenied?: boolean;
   /** Lista de pares chave/valor */
   items: DescriptionItem[];
   /** Título opcional no topo */
@@ -61,25 +63,14 @@ export default function DescriptionList({
   striped = false,
   size = "md",
   className,
-  permission,
-  role,
-  permissions,
-  roles,
-  requireAll,
-  onUnauthorized,
-  fallback = null,
+  componentId,
+  hideIfDenied = true,
   ...props
 }: DescriptionListProps) {
-  const access = useAccessControl({
-    permission,
-    role,
-    permissions,
-    roles,
-    requireAll,
-    onUnauthorized,
-  });
+  const { canAccess } = useAccessControl();
+  const hasAccess = componentId ? canAccess(componentId) : true;
 
-  if (!access.allowed) return <>{fallback}</>;
+  if (!hasAccess && hideIfDenied) return null;
 
   const padClasses = {
     sm: "px-3.5 py-2 text-xs",
