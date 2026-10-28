@@ -6,26 +6,11 @@ import {
   MoreVertical,
   GripVertical,
   Calendar,
-  CheckSquare,
-  Paperclip,
-  MessageSquare,
   Clock,
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  Edit2,
-  Trash2,
-  SlidersHorizontal,
   Flame,
   ArrowUp,
   Minus,
   ArrowDown,
-  Columns,
-  Play,
-  Pause,
-  Square,
-  Lock,
-  CheckCircle2,
 } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
@@ -167,6 +152,8 @@ export type KanbanBoardProps = {
   activeTimerStatus?: "RODANDO" | "PAUSADO" | null;
   currentUserId?: string;
   showColumnActions?: boolean;
+  emptyColumnLabel?: string;
+  addCardLabel?: string;
   className?: string;
 };
 
@@ -304,9 +291,9 @@ export function AssigneesStack({ assignees }: { assignees: KanbanAssignee[] }) {
 function KanbanCardItem({
   card,
   columnId,
-  columnTipo,
   column,
   onDragStart,
+  onDragEnd,
   isDragging,
   onCardClick,
   renderCard,
@@ -316,6 +303,7 @@ function KanbanCardItem({
   columnTipo?: string;
   column: KanbanColumn;
   onDragStart: (colId: string, cardId: string) => void;
+  onDragEnd: () => void;
   isDragging: boolean;
   onCardClick?: (card: KanbanCard, columnId: string) => void;
   renderCard?: (card: KanbanCard, column: KanbanColumn) => React.ReactNode;
@@ -332,6 +320,7 @@ function KanbanCardItem({
           }
           onDragStart(columnId, card.id);
         }}
+        onDragEnd={onDragEnd}
         className={twMerge(
           "transition-all duration-150 cursor-pointer select-none",
           isDragging && "opacity-40 scale-95 ring-2 ring-blue-500 shadow-xl rounded-lg"
@@ -353,6 +342,7 @@ function KanbanCardItem({
     <div
       draggable
       onDragStart={() => onDragStart(columnId, card.id)}
+      onDragEnd={onDragEnd}
       onClick={() => onCardClick?.(card, columnId)}
       className={twMerge(
         "group relative rounded-lg bg-white dark:bg-zinc-900",
@@ -376,7 +366,7 @@ function KanbanCardItem({
               className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/60 shadow-2xs"
             >
               <Calendar className="w-2.5 h-2.5 text-indigo-500" />
-              <span>SEMANA {card.semanaAno}/{card.ano || new Date().getFullYear()}</span>
+              <span>SEMANA {card.semanaAno}{card.ano ? `/${card.ano}` : ""}</span>
             </span>
           )}
         </div>
@@ -432,6 +422,8 @@ export default function KanbanBoard({
   onMoveCard,
   renderCard,
   renderColumnHeader,
+  emptyColumnLabel = "Nenhum item nesta etapa",
+  addCardLabel = "Adicionar item",
   className,
 }: KanbanBoardProps) {
   const [columns, setColumns] = useState<KanbanColumn[]>(initialColumns);
@@ -448,6 +440,12 @@ export default function KanbanBoard({
     setDraggingId(cardId);
   }, []);
 
+  const handleDragEnd = useCallback(() => {
+    dragRef.current = null;
+    setDraggingId(null);
+    setDragOverColId(null);
+  }, []);
+
   const handleDrop = useCallback(
     (targetColId: string) => {
       if (!dragRef.current) return;
@@ -455,6 +453,12 @@ export default function KanbanBoard({
       dragRef.current = null;
       setDraggingId(null);
       setDragOverColId(null);
+
+      // Evita mover o cartão para o final da própria coluna se solto na mesma coluna
+      if (sourceColId === targetColId) return;
+
+      const targetCol = columns.find((col) => col.id === targetColId);
+      if (!targetCol) return;
 
       let draggedCard: KanbanCard | undefined;
       const updated = columns.map((col) => {
@@ -471,6 +475,7 @@ export default function KanbanBoard({
 
       if (!draggedCard) return;
 
+      const insertionIndex = targetCol.cards.length;
       const finalCols = updated.map((col) => {
         if (col.id !== targetColId) return col;
         return { ...col, cards: [...col.cards, draggedCard!] };
@@ -478,7 +483,7 @@ export default function KanbanBoard({
 
       setColumns(finalCols);
       onChange?.(finalCols);
-      onMoveCard?.(cardId, sourceColId, targetColId, 0);
+      onMoveCard?.(cardId, sourceColId, targetColId, insertionIndex);
     },
     [columns, onChange, onMoveCard],
   );
@@ -556,7 +561,8 @@ export default function KanbanBoard({
                             type="button"
                             onClick={() => onAddCard(column.id)}
                             className="p-1 rounded-lg hover:bg-zinc-200/60 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
-                            title="Adicionar item"
+                            title={addCardLabel}
+                            aria-label={addCardLabel}
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
@@ -564,6 +570,7 @@ export default function KanbanBoard({
                         <button
                           data-component-id={`erp.kanban.col-menu-${column.id}`}
                           type="button"
+                          aria-label="Opções da coluna"
                           className="p-1 rounded-lg hover:bg-zinc-200/60 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                         >
                           <MoreVertical className="w-3.5 h-3.5" />
@@ -584,7 +591,7 @@ export default function KanbanBoard({
               <div className="flex flex-col gap-2.5 flex-1 min-h-0 overflow-y-auto pr-1">
                 {column.cards.length === 0 ? (
                   <div className="flex flex-col items-center justify-center flex-1 py-8 text-center text-xs text-zinc-400 dark:text-zinc-600">
-                    <span>Nenhum pedido nesta etapa</span>
+                    <span>{emptyColumnLabel}</span>
                   </div>
                 ) : (
                   column.cards.map((card) => (
@@ -595,6 +602,7 @@ export default function KanbanBoard({
                       columnTipo={column.tipo}
                       column={column}
                       onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
                       isDragging={draggingId === card.id}
                       onCardClick={onCardClick}
                       renderCard={renderCard}
@@ -612,7 +620,7 @@ export default function KanbanBoard({
                   className="shrink-0 mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 py-2 text-xs font-medium text-zinc-500 hover:border-zinc-300 hover:bg-zinc-100/80 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Adicionar pedido</span>
+                  <span>{addCardLabel}</span>
                 </button>
               )}
             </div>
