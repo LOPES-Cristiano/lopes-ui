@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import {
   Bell,
@@ -48,6 +47,8 @@ export type NotificationBellProps = {
   notifications?: NotificationItem[];
   loading?: boolean;
   footer?: React.ReactNode;
+  viewAllHref?: string;
+  onViewAll?: () => void;
   onMarkRead?: (id: string) => void;
   onMarkAllRead?: () => void;
   onDismiss?: (id: string) => void;
@@ -56,7 +57,14 @@ export type NotificationBellProps = {
   componentId?: string;
 };
 
-// ── Date helpers ──────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function getInitials(text: string): string {
+  const parts = text.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
 
 function toDate(ts: Date | string): Date {
   return ts instanceof Date ? ts : new Date(ts);
@@ -151,8 +159,13 @@ function NotificationRow({
   onDismiss?: (id: string) => void;
   onNotificationClick?: (n: NotificationItem) => void;
 }) {
+  const [imgError, setImgError] = useState(false);
   const cfg = TYPE_CONFIG[item.type ?? 'default'];
   const Icon = item.icon ?? cfg.icon;
+
+  useEffect(() => {
+    setImgError(false);
+  }, [item.avatar]);
 
   const handleClick = () => {
     if (!item.read) onMarkRead?.(item.id);
@@ -177,17 +190,19 @@ function NotificationRow({
       <div className="mt-0.5 shrink-0">
         {item.avatar || item.avatarFallback ? (
           <div className="h-9 w-9 rounded-full overflow-hidden bg-header-profile-avatar flex items-center justify-center shrink-0">
-            {item.avatar ? (
-              <Image
+            {item.avatar && !imgError ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 src={item.avatar}
                 alt=""
                 width={36}
                 height={36}
+                onError={() => setImgError(true)}
                 className="h-full w-full object-cover"
               />
             ) : (
               <span className="text-xs font-semibold text-header-profile-avatar-foreground">
-                {item.avatarFallback}
+                {item.avatarFallback || getInitials(item.title)}
               </span>
             )}
           </div>
@@ -297,8 +312,12 @@ function NotificationRow({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function NotificationBell({
+export function NotificationBell({
   notifications = [],
+  loading = false,
+  footer,
+  viewAllHref,
+  onViewAll,
   onMarkRead,
   onMarkAllRead,
   onDismiss,
@@ -346,6 +365,36 @@ export default function NotificationBell({
     };
   }, [open]);
 
+  const footerContent =
+    footer !== undefined ? (
+      footer
+    ) : viewAllHref ? (
+      <a
+        href={viewAllHref}
+        onClick={() => {
+          onViewAll?.();
+          setOpen(false);
+        }}
+        className="text-xs font-semibold text-header-command-panel-active-foreground hover:underline flex items-center gap-1 py-1"
+      >
+        <span>Ver todas as notificações</span>
+        <ExternalLink size={12} />
+      </a>
+    ) : onViewAll ? (
+      <button
+        data-component-id="erp.notification.view-all"
+        type="button"
+        onClick={() => {
+          onViewAll();
+          setOpen(false);
+        }}
+        className="text-xs font-semibold text-header-command-panel-active-foreground hover:underline flex items-center gap-1 py-1 cursor-pointer"
+      >
+        <span>Ver todas as notificações</span>
+        <ExternalLink size={12} />
+      </button>
+    ) : null;
+
   return (
     <>
       {/* Bell trigger */}
@@ -391,14 +440,14 @@ export default function NotificationBell({
                 <span className="text-sm font-semibold text-header-command-panel-foreground">
                   Notificações
                 </span>
-                {unreadCount > 0 && (
+                {!loading && unreadCount > 0 && (
                   <span className="inline-flex items-center justify-center h-5 min-w-5 rounded-full bg-header-command-panel-active px-1.5 text-[11px] font-semibold text-header-command-panel-active-foreground">
                     {unreadCount}
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-1">
-                {unreadCount > 0 && onMarkAllRead && (
+                {!loading && unreadCount > 0 && onMarkAllRead && (
                   <button
                     data-component-id="erp.notification.mark-all-read"
                     type="button"
@@ -423,7 +472,26 @@ export default function NotificationBell({
 
             {/* Notification list */}
             <div className="overflow-y-auto max-h-[min(30rem,70dvh)] divide-y divide-header-command-panel-border">
-              {notifications.length === 0 ? (
+              {loading ? (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  aria-busy="true"
+                  className="divide-y divide-header-command-panel-border"
+                >
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="flex items-start gap-3 px-5 py-3.5 animate-pulse">
+                      <div className="h-9 w-9 rounded-full bg-header-command-panel-hover shrink-0 mt-0.5" />
+                      <div className="flex-1 space-y-2 py-0.5">
+                        <div className="h-3.5 w-3/4 rounded bg-header-command-panel-hover" />
+                        <div className="h-3 w-full rounded bg-header-command-panel-hover opacity-70" />
+                        <div className="h-2.5 w-20 rounded bg-header-command-panel-hover opacity-50" />
+                      </div>
+                    </div>
+                  ))}
+                  <span className="sr-only">Carregando notificações...</span>
+                </div>
+              ) : notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
                   <div className="h-12 w-12 rounded-full bg-header-command-panel-hover flex items-center justify-center">
                     <Bell size={22} className="text-header-command-panel-muted" />
@@ -461,19 +529,16 @@ export default function NotificationBell({
             </div>
 
             {/* Panel footer */}
-            <div className="border-t border-header-command-panel-border p-2 bg-header-command-panel shrink-0 flex items-center justify-center">
-              <a
-                href="/notificacoes"
-                onClick={() => setOpen(false)}
-                className="text-xs font-semibold text-header-command-panel-active-foreground hover:underline flex items-center gap-1 py-1"
-              >
-                <span>Ver todas as notificações</span>
-                <ExternalLink size={12} />
-              </a>
-            </div>
+            {footerContent && (
+              <div className="border-t border-header-command-panel-border p-2 bg-header-command-panel shrink-0 flex items-center justify-center">
+                {footerContent}
+              </div>
+            )}
           </div>,
           document.body
         )}
     </>
   );
 }
+
+export default NotificationBell;
