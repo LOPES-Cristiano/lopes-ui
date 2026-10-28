@@ -397,7 +397,7 @@ export default function TransferList<T = any>({
                         handleRemoveSingle(item);
                       }}
                       title="Remover para lista de disponíveis"
-                      className="p-1 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      className="p-1 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity cursor-pointer"
                     >
                       <ArrowRight size={13} />
                     </button>
@@ -410,7 +410,7 @@ export default function TransferList<T = any>({
       </div>
 
       {/* ── Center: Action Toolbar ── */}
-      <div className="flex md:flex-col items-center justify-center gap-2 p-3 bg-muted/30 border-y md:border-y-0 md:border-x border-border shrink-0">
+      <div className="flex flex-wrap md:flex-col items-center justify-center gap-2 p-2.5 sm:p-3 bg-muted/30 border-y md:border-y-0 md:border-x border-border shrink-0">
         <Button
           componentId={componentId ? `${componentId}.add-selected` : undefined}
           variant="primary"
@@ -421,7 +421,7 @@ export default function TransferList<T = any>({
           leftIcon={<ArrowLeft size={14} />}
           className="shadow-xs text-xs px-2.5"
         >
-          <span className="hidden md:inline">Adicionar</span>
+          <span>Adicionar</span>
           {selectedTarget.size > 0 && ` (${selectedTarget.size})`}
         </Button>
 
@@ -435,7 +435,7 @@ export default function TransferList<T = any>({
           rightIcon={<ArrowRight size={14} />}
           className="shadow-xs text-xs px-2.5 text-destructive hover:bg-destructive/10 border-destructive/20"
         >
-          <span className="hidden md:inline">Remover</span>
+          <span>Remover</span>
           {selectedSource.size > 0 && ` (${selectedSource.size})`}
         </Button>
 
@@ -568,7 +568,7 @@ export default function TransferList<T = any>({
                         handleAddSingle(item);
                       }}
                       title="Adicionar aos itens vinculados"
-                      className="p-1 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      className="p-1 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity cursor-pointer"
                     >
                       <ArrowLeft size={13} />
                     </button>
