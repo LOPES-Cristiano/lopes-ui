@@ -243,12 +243,12 @@ export default function Carousel({
         <div
           ref={trackRef}
           className={twMerge(
-            "flex transition-transform duration-500 ease-in-out",
+            "flex will-change-transform transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
             isVert ? "flex-col h-full" : "flex-row",
           )}
           style={{
             gap: `${gap}px`,
-            transform: isVert ? `translateY(${offset})` : `translateX(${offset})`,
+            transform: isVert ? `translate3d(0, ${offset}, 0)` : `translate3d(${offset}, 0, 0)`,
             cursor: dragging ? "grabbing" : "grab",
           }}
           aria-live="polite"
