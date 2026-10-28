@@ -213,8 +213,8 @@ export default function ToggleGroup({
         data-slot="toggle-group"
         data-component-id={componentId}
         className={cn(
-          "inline-flex items-center gap-1",
-          variant === "pills" && "rounded-full bg-zinc-100 dark:bg-zinc-800/80 p-1",
+          "inline-flex flex-wrap items-center gap-1 max-w-full",
+          variant === "pills" && "rounded-2xl sm:rounded-full bg-zinc-100 dark:bg-zinc-800/80 p-1",
           className,
         )}
       >
