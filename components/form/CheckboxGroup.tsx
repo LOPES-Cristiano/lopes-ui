@@ -242,7 +242,7 @@ export default function CheckboxGroup({
                   "group/cb inline-flex items-center gap-1.5 cursor-pointer select-none font-medium border-2 transition-all duration-150",
                   BTN_SIZE[size],
                   checked
-                    ? "bg-primary border-primary text-white shadow-sm"
+                    ? "bg-primary border-primary text-primary-foreground shadow-sm"
                     : "bg-surface border-border text-surface-foreground hover:border-border-strong hover:bg-surface-hover",
                   opt.disabled && "cursor-not-allowed opacity-50 pointer-events-none",
                 )}
@@ -259,13 +259,13 @@ export default function CheckboxGroup({
                   data-component-id={componentId ? `${componentId}.${opt.value}` : undefined}
                 />
                 {opt.icon && (
-                  <span className={twMerge("shrink-0", checked ? "text-white" : "text-zinc-400")}>
+                  <span className={twMerge("shrink-0", checked ? "text-primary-foreground" : "text-zinc-400")}>
                     {opt.icon}
                   </span>
                 )}
                 {opt.label}
                 {checked && multiple && (
-                  <span className="ml-0.5 flex items-center justify-center w-3.5 h-3.5 rounded-full bg-white/30">
+                  <span className="ml-0.5 flex items-center justify-center w-3.5 h-3.5 rounded-full bg-primary-foreground/20 text-primary-foreground">
                     <Check size={8} strokeWidth={3} />
                   </span>
                 )}
