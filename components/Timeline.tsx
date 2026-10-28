@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { twMerge } from "tailwind-merge";
-import { type LucideIcon } from "lucide-react";
+import { ChevronDown, Loader2, type LucideIcon } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -15,6 +15,7 @@ export type TimelineColor =
   | "info";
 
 export type TimelineLayout = "left" | "right" | "alternate";
+export type TimelineOrientation = "vertical" | "horizontal";
 export type TimelineSize   = "sm" | "md" | "lg";
 export type ConnectorStyle = "solid" | "dashed" | "dotted";
 
@@ -32,11 +33,18 @@ export type TimelineItem = {
   color?: TimelineColor;
   /** Optional badge/tag label */
   badge?: string;
+  /** Show pulsing indicator or loading spinner for in-progress events */
+  status?: "completed" | "current" | "loading";
+  /** Allow collapsing/expanding the description */
+  collapsible?: boolean;
+  /** Initial expanded state when collapsible=true (default: true) */
+  defaultExpanded?: boolean;
 };
 
 export type TimelineProps = {
   items: TimelineItem[];
   layout?: TimelineLayout;
+  orientation?: TimelineOrientation;
   size?: TimelineSize;
   connectorStyle?: ConnectorStyle;
   className?: string;
@@ -95,9 +103,9 @@ type SizeTokens = {
 };
 
 const SIZE_MAP: Record<TimelineSize, SizeTokens> = {
-  sm: { dot: "w-6 h-6",  icon: 12, title: "text-sm",  body: "text-xs",  date: "text-[11px]", badge: "text-[10px] px-1.5 py-0.5", gap: "gap-3"  },
-  md: { dot: "w-8 h-8",  icon: 14, title: "text-sm",  body: "text-sm",  date: "text-xs",     badge: "text-xs px-2 py-0.5",        gap: "gap-4"  },
-  lg: { dot: "w-10 h-10", icon: 18, title: "text-base", body: "text-sm", date: "text-sm",    badge: "text-xs px-2.5 py-1",         gap: "gap-5"  },
+  sm: { dot: "w-6 h-6",  icon: 12, title: "text-sm",   body: "text-xs",  date: "text-[11px]", badge: "text-[10px] px-1.5 py-0.5", gap: "gap-3" },
+  md: { dot: "w-8 h-8",  icon: 14, title: "text-sm",   body: "text-sm",  date: "text-xs",     badge: "text-xs px-2 py-0.5",        gap: "gap-4" },
+  lg: { dot: "w-10 h-10", icon: 18, title: "text-base", body: "text-sm", date: "text-sm",     badge: "text-xs px-2.5 py-1",        gap: "gap-5" },
 };
 
 // ── Dot ───────────────────────────────────────────────────────────────────────
@@ -109,7 +117,7 @@ function Dot({
   item: TimelineItem;
   size: TimelineSize;
 }) {
-  const color  = item.color ?? "default";
+  const color  = item.color ?? (item.status === "current" || item.status === "loading" ? "primary" : "default");
   const c      = COLOR_MAP[color];
   const s      = SIZE_MAP[size];
   const Icon   = item.icon;
@@ -117,14 +125,21 @@ function Dot({
   return (
     <div
       className={twMerge(
-        "shrink-0 flex items-center justify-center rounded-full z-10",
+        "relative shrink-0 flex items-center justify-center rounded-full z-10",
         "ring-4 border-2",
         s.dot, c.dot, c.ring,
-        Icon ? "text-white" : "",
+        (Icon || item.status === "loading") ? "text-white" : "",
       )}
       aria-hidden="true"
     >
-      {Icon && <Icon size={s.icon} />}
+      {item.status === "current" && (
+        <span className={twMerge("absolute inset-0 rounded-full animate-ping opacity-30", c.dot)} />
+      )}
+      {item.status === "loading" ? (
+        <Loader2 size={s.icon} className="animate-spin" />
+      ) : Icon ? (
+        <Icon size={s.icon} />
+      ) : null}
     </div>
   );
 }
@@ -143,6 +158,7 @@ function EventCard({
   const s = SIZE_MAP[size];
   const color = item.color ?? "default";
   const c = COLOR_MAP[color];
+  const [expanded, setExpanded] = useState(item.defaultExpanded ?? true);
 
   return (
     <div
@@ -152,8 +168,15 @@ function EventCard({
       )}
     >
       <div className="flex flex-col gap-0.5 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-sm px-4 py-3 max-w-sm w-full">
-        <div className={twMerge("flex items-center gap-2", align === "right" ? "flex-row-reverse" : "")}>
-          <p className={twMerge("font-semibold text-zinc-800 dark:text-zinc-200", s.title)}>
+        <div
+          onClick={item.collapsible ? () => setExpanded((v) => !v) : undefined}
+          className={twMerge(
+            "flex items-center gap-2",
+            align === "right" ? "flex-row-reverse" : "",
+            item.collapsible && "cursor-pointer select-none",
+          )}
+        >
+          <p className={twMerge("font-semibold text-zinc-800 dark:text-zinc-200 flex-1", s.title)}>
             {item.title}
           </p>
           {item.badge && (
@@ -161,8 +184,14 @@ function EventCard({
               {item.badge}
             </span>
           )}
+          {item.collapsible && (
+            <ChevronDown
+              size={14}
+              className={twMerge("text-zinc-400 transition-transform", !expanded && "-rotate-90")}
+            />
+          )}
         </div>
-        {item.description && (
+        {item.description && (!item.collapsible || expanded) && (
           <div className={twMerge("text-zinc-500 dark:text-zinc-400 mt-0.5", s.body)}>
             {item.description}
           </div>
@@ -183,10 +212,17 @@ function SimpleCard({ item, size }: { item: TimelineItem; size: TimelineSize }) 
   const s = SIZE_MAP[size];
   const color = item.color ?? "default";
   const c = COLOR_MAP[color];
+  const [expanded, setExpanded] = useState(item.defaultExpanded ?? true);
 
   return (
     <div className="flex flex-col gap-0.5">
-      <div className="flex items-center gap-2">
+      <div
+        onClick={item.collapsible ? () => setExpanded((v) => !v) : undefined}
+        className={twMerge(
+          "flex items-center gap-2",
+          item.collapsible && "cursor-pointer select-none"
+        )}
+      >
         <p className={twMerge("font-semibold text-zinc-800 dark:text-zinc-200", s.title)}>
           {item.title}
         </p>
@@ -195,8 +231,14 @@ function SimpleCard({ item, size }: { item: TimelineItem; size: TimelineSize }) 
             {item.badge}
           </span>
         )}
+        {item.collapsible && (
+          <ChevronDown
+            size={14}
+            className={twMerge("text-zinc-400 transition-transform", !expanded && "-rotate-90")}
+          />
+        )}
       </div>
-      {item.description && (
+      {item.description && (!item.collapsible || expanded) && (
         <div className={twMerge("text-zinc-500 dark:text-zinc-400", s.body)}>{item.description}</div>
       )}
       {item.date && (
@@ -211,6 +253,7 @@ function SimpleCard({ item, size }: { item: TimelineItem; size: TimelineSize }) 
 export default function Timeline({
   items,
   layout = "left",
+  orientation = "vertical",
   size = "md",
   connectorStyle = "solid",
   className,
@@ -219,13 +262,48 @@ export default function Timeline({
   const s = SIZE_MAP[size];
   const connCls = CONNECTOR_STYLE[connectorStyle];
 
+  // ── Horizontal orientation ─────────────────────────────────────────────────
+  if (orientation === "horizontal") {
+    return (
+      <div
+        {...(componentId ? { "data-component-id": componentId } : {})}
+        role="list"
+        className={twMerge("flex items-start overflow-x-auto pb-2", className)}
+      >
+        {items.map((item, i) => {
+          const isLast = i === items.length - 1;
+          return (
+            <div key={item.id ?? i} role="listitem" className="flex flex-1 min-w-[180px] flex-col">
+              <div className="flex items-center">
+                <Dot item={item} size={size} />
+                {!isLast && (
+                  <div
+                    className={twMerge(
+                      "flex-1 h-0 border-t-2 border-zinc-200 dark:border-zinc-700 mx-2",
+                      connCls
+                    )}
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
+              <div className="mt-3 pr-4">
+                <SimpleCard item={item} size={size} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   // ── Alternate layout ───────────────────────────────────────────────────────
   if (layout === "alternate") {
     return (
       <div
+        {...(componentId ? { "data-component-id": componentId } : {})}
         role="list"
         className={twMerge("relative isolate", className)}
-        >
+      >
         {/* center line */}
         <div
           className={twMerge(
@@ -268,9 +346,10 @@ export default function Timeline({
 
   return (
     <div
+      {...(componentId ? { "data-component-id": componentId } : {})}
       role="list"
       className={twMerge("relative isolate", className)}
-      >
+    >
       <div className={twMerge("flex flex-col", s.gap)}>
         {items.map((item, i) => {
           const isLast = i === items.length - 1;
