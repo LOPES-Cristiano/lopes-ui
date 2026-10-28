@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { useShell } from '../ShellContext';
 import { useAccessControl } from '../useAccessControl';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { filterNavGroups } from '@/utils/filterNavItems';
 
 import type {
@@ -139,11 +140,12 @@ export function Sidebar({
   const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
 
   useEffect(() => {
+    if (isIsolated || controlledCollapsed !== undefined) return;
     try {
       const stored = localStorage.getItem('shell_sidebar_collapsed');
       if (stored !== null) setInternalCollapsed(stored === 'true');
     } catch {}
-  }, []);
+  }, [isIsolated, controlledCollapsed]);
 
   // Register sidebar with shell context cleanly
   useLayoutEffect(() => {
@@ -185,6 +187,19 @@ export function Sidebar({
     if (shell) shell.setMobileSidebarOpen(false);
     else onMobileOpenChange?.(false);
   }, [shell, onMobileOpenChange]);
+
+  useBodyScrollLock(Boolean(isMobileOpen));
+
+  useEffect(() => {
+    if (!isMobileOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeMobile();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileOpen, closeMobile]);
 
   // Combined navigation handler (navigates + closes mobile drawer + resets hover)
   const handleNavigate = useCallback(
@@ -285,6 +300,7 @@ export function Sidebar({
 
       {/* Sidebar panel */}
       <aside
+        data-lopes-sidebar=""
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onFocusCapture={(e) => {
