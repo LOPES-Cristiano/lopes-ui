@@ -131,6 +131,7 @@ function TreeItem({ node }: { node: TreeNode }) {
   const hasChildren = !!node.children?.length;
   const isExpanded = expandedIds.has(node.id);
   const isSelected = selectedIds.has(node.id);
+  const isRowSelected = isSelected && selectionMode !== "none";
   const Icon = node.icon ?? (hasChildren ? (isExpanded ? FolderOpen : Folder) : File);
 
   const isDragging = dragId === node.id;
@@ -146,11 +147,13 @@ function TreeItem({ node }: { node: TreeNode }) {
     ? (size === "sm" ? "border-l border-zinc-200 dark:border-zinc-700 ml-[1.3125rem] pl-0.5" : "border-l border-zinc-200 dark:border-zinc-700 ml-[1.5625rem] pl-0.5")
     : (size === "sm" ? "ml-[1.3125rem]" : "ml-[1.5625rem]");
 
-  const iconColorCls = node.icon
-    ? (isSelected && selectionMode !== "none" ? "text-white" : "text-zinc-500")
-    : hasChildren
-    ? (isSelected && selectionMode !== "none" ? "text-white" : "text-amber-400")
-    : (isSelected && selectionMode !== "none" ? "text-white" : "text-blue-400");
+  const iconColorCls = isRowSelected
+    ? "text-primary-foreground"
+    : node.icon
+      ? "text-zinc-500"
+      : hasChildren
+        ? "text-amber-400"
+        : "text-blue-400";
 
   // ── handlers ──────────────────────────────────────────────────────────────
 
@@ -215,8 +218,8 @@ function TreeItem({ node }: { node: TreeNode }) {
         className={[
           "group/ti relative flex items-center gap-1.5 rounded-md cursor-pointer select-none transition-colors duration-100",
           pad,
-          isSelected && selectionMode !== "none"
-            ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
+          isRowSelected
+            ? "bg-primary text-primary-foreground"
             : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300",
           isDropTarget && dropPos === "inside"
             ? "ring-2 ring-inset ring-blue-400 bg-blue-50 dark:bg-blue-950/30 text-zinc-700 dark:text-zinc-300"
@@ -241,7 +244,11 @@ function TreeItem({ node }: { node: TreeNode }) {
         <span
           className={[
             "shrink-0 flex items-center justify-center transition-transform duration-150",
-            hasChildren ? "text-zinc-400 cursor-pointer" : "opacity-0 pointer-events-none",
+            hasChildren
+              ? isRowSelected
+                ? "text-primary-foreground/80 cursor-pointer"
+                : "text-zinc-400 cursor-pointer"
+              : "opacity-0 pointer-events-none",
             isExpanded ? "rotate-90" : "",
           ].join(" ")}
           style={{ width: chevSz, height: chevSz }}
@@ -256,7 +263,9 @@ function TreeItem({ node }: { node: TreeNode }) {
             className={[
               "shrink-0 flex items-center justify-center rounded border transition-all",
               checkCls,
-              isSelected ? "bg-zinc-900 dark:bg-zinc-100 border-zinc-900 dark:border-zinc-100 text-white dark:text-zinc-900" : "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900",
+              isSelected
+                ? "bg-primary-foreground border-primary-foreground text-primary"
+                : "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900",
             ].join(" ")}
             onClick={(e) => { e.stopPropagation(); toggleSelect(node.id); }}
           >
@@ -283,8 +292,8 @@ function TreeItem({ node }: { node: TreeNode }) {
           <span className={[
             "shrink-0 rounded-full px-1.5 py-px leading-none font-semibold",
             size === "sm" ? "text-[9px]" : "text-[10px]",
-            isSelected && selectionMode !== "none"
-              ? "bg-white/20 text-white"
+            isRowSelected
+              ? "bg-primary-foreground/20 text-primary-foreground"
               : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400",
           ].join(" ")}>
             {node.badge}
