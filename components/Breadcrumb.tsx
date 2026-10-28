@@ -72,9 +72,9 @@ function BreadcrumbLink({
   const Icon = item.icon;
 
   const content = (
-    <span className="flex items-center gap-1.5">
+    <span className="flex items-center gap-1.5 min-w-0">
       {Icon && <Icon className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={1.75} />}
-      {!homeOnly && <span>{item.label}</span>}
+      {!homeOnly && <span className="truncate max-w-[140px] sm:max-w-[240px]">{item.label}</span>}
     </span>
   );
 
@@ -225,7 +225,7 @@ export default function Breadcrumb({
         className,
       )}
     >
-      <ol className="flex min-w-0 max-w-full flex-nowrap items-center overflow-hidden whitespace-nowrap text-sm">
+      <ol className="flex min-w-0 max-w-full flex-nowrap items-center overflow-x-auto no-scrollbar whitespace-nowrap text-xs sm:text-sm py-0.5">
         {visibleItems.map((item, index) => {
           const isCurrent = index === visibleItems.length - 1;
           const isFirst = index === 0;
