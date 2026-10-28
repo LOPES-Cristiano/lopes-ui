@@ -5,9 +5,11 @@ import { Check, Pipette } from "lucide-react";
 import { cn } from "@/utils/cn";
 import FieldWrapper from "./FieldWrapper";
 import { CopyButton } from "../Snippet";
-import { useAccessControl, type AccessControlProps } from "../useAccessControl";
+import { useAccessControl } from "../useAccessControl";
 
-export interface ColorPickerFieldProps extends AccessControlProps {
+export interface ColorPickerFieldProps {
+  componentId?: string;
+  hideIfDenied?: boolean;
   /** Rótulo do campo */
   label?: string;
   /** Cor selecionada em formato HEX (controlado) */
@@ -60,29 +62,18 @@ export default function ColorPickerField({
   disabled: propDisabled,
   showCopy = true,
   className,
-  permission,
-  role,
-  permissions,
-  roles,
-  requireAll,
-  onUnauthorized,
-  fallback = null,
+  componentId,
+  hideIfDenied = false,
 }: ColorPickerFieldProps) {
   const id = useId();
   const [internalColor, setInternalColor] = useState(defaultValue);
 
-  const access = useAccessControl({
-    permission,
-    role,
-    permissions,
-    roles,
-    requireAll,
-    onUnauthorized,
-  });
+  const { canAccess } = useAccessControl();
+  const hasAccess = componentId ? canAccess(componentId) : true;
 
-  if (!access.allowed && access.behavior === "hide") return <>{fallback}</>;
+  if (!hasAccess && hideIfDenied) return null;
 
-  const disabled = propDisabled || (!access.allowed && access.behavior === "disable");
+  const disabled = propDisabled || !hasAccess;
   const currentColor = controlledValue ?? internalColor;
 
   const handleSelect = (next: string) => {
