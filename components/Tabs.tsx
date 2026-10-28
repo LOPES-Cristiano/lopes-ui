@@ -42,15 +42,15 @@ export type TabsProps = TabsPrimitiveRootProps & {
 
 const LIST_VARIANT_CLS: Record<TabsVariant, string> = {
   pills:
-    "w-fit self-start rounded-xl bg-zinc-100 dark:bg-zinc-800/80 p-1 gap-1 text-zinc-500 dark:text-zinc-400",
+    "w-fit max-w-full overflow-x-auto no-scrollbar self-start rounded-xl bg-zinc-100 dark:bg-zinc-800/80 p-1 gap-1 text-zinc-500 dark:text-zinc-400",
   underline:
-    "w-full justify-start h-auto rounded-none border-b border-zinc-200 dark:border-zinc-800 bg-transparent p-0 gap-6 text-zinc-500 dark:text-zinc-400",
+    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-none border-b border-zinc-200 dark:border-zinc-800 bg-transparent p-0 gap-4 sm:gap-6 text-zinc-500 dark:text-zinc-400",
   bordered:
-    "w-full justify-start h-auto rounded-none border-b border-zinc-200 dark:border-zinc-800 bg-transparent p-0 gap-2 text-zinc-500 dark:text-zinc-400",
+    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-none border-b border-zinc-200 dark:border-zinc-800 bg-transparent p-0 gap-1.5 sm:gap-2 text-zinc-500 dark:text-zinc-400",
   enclosed:
-    "w-full justify-start h-auto rounded-t-xl border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/50 p-1.5 gap-1.5 text-zinc-500 dark:text-zinc-400",
+    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-t-xl border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/50 p-1.5 gap-1.5 text-zinc-500 dark:text-zinc-400",
   lifted:
-    "w-full justify-start h-auto rounded-none border-b border-zinc-200 dark:border-zinc-800 bg-transparent px-1 pt-1 pb-0 gap-1.5 text-zinc-500 dark:text-zinc-400",
+    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-none border-b border-zinc-200 dark:border-zinc-800 bg-transparent px-1 pt-1 pb-0 gap-1.5 text-zinc-500 dark:text-zinc-400",
 };
 
 const TRIGGER_VARIANT_CLS: Record<TabsVariant, string> = {
@@ -163,7 +163,7 @@ export default function Tabs({
       hideIfDenied={hideIfDenied}
       className={cn(
         isVertical
-          ? "flex items-start gap-4"
+          ? "flex flex-col sm:flex-row items-stretch sm:items-start gap-3 sm:gap-4"
           : position === "bottom"
             ? "flex flex-col-reverse"
             : "flex flex-col",
@@ -175,7 +175,7 @@ export default function Tabs({
         className={cn(
           LIST_VARIANT_CLS[variant],
           isVertical
-            ? "flex h-auto flex-col items-stretch justify-start shrink-0"
+            ? "flex h-auto w-full sm:w-auto flex-row sm:flex-col items-center sm:items-stretch justify-start shrink-0 overflow-x-auto no-scrollbar"
             : fullWidth
               ? "flex w-full"
               : "inline-flex",
