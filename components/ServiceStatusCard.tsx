@@ -171,12 +171,12 @@ export default function ServiceStatusCard({
     <div
       className={twMerge(
         "flex flex-col gap-4 rounded-2xl border border-zinc-100 dark:border-zinc-800",
-        "bg-white dark:bg-zinc-900 p-5",
+        "bg-white dark:bg-zinc-900 p-4 sm:p-5",
         className,
       )}
       >
       {/* Header row */}
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-2.5 sm:gap-3">
         <div className="flex items-center gap-3 min-w-0">
           {Icon && (
             <div className="h-9 w-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 text-zinc-500 dark:text-zinc-400">
