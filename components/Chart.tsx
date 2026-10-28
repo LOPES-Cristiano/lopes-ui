@@ -2,7 +2,7 @@
 
 import React, { useId, useMemo, useState } from "react";
 import { cn } from "@/utils/cn";
-import { useAccessControl, type AccessControlProps } from "./useAccessControl";
+import { useAccessControl } from "./useAccessControl";
 
 export type ChartColor = "indigo" | "emerald" | "amber" | "rose" | "sky" | "violet" | "zinc";
 
@@ -17,7 +17,11 @@ export interface ChartDataPoint {
   [key: string]: string | number;
 }
 
-export interface ChartProps extends AccessControlProps {
+export interface ChartProps {
+  /** Identificador de controle de acesso RBAC */
+  componentId?: string;
+  /** Oculta quando acesso for negado (default: true) */
+  hideIfDenied?: boolean;
   /** Tipo de gráfico */
   type?: "bar" | "area" | "line" | "donut";
   /** Dados do gráfico */
@@ -124,25 +128,14 @@ export default function Chart({
   centerSublabel,
   bordered = true,
   className,
-  permission,
-  role,
-  permissions,
-  roles,
-  requireAll,
-  onUnauthorized,
-  fallback = null,
+  componentId,
+  hideIfDenied = true,
 }: ChartProps) {
   const uid = useId().replace(/:/g, "");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  const access = useAccessControl({
-    permission,
-    role,
-    permissions,
-    roles,
-    requireAll,
-    onUnauthorized,
-  });
+  const { canAccess } = useAccessControl();
+  const hasAccess = componentId ? canAccess(componentId) : true;
 
   const resolvedSeries: Required<ChartSeries>[] = useMemo(() => {
     if (series && series.length > 0) {
@@ -179,15 +172,15 @@ export default function Chart({
     return max <= 0 ? 100 : Math.ceil(max * 1.1);
   }, [data, resolvedSeries, stacked, type]);
 
-  if (!access.allowed) {
-    return <>{fallback}</>;
+  if (!hasAccess && hideIfDenied) {
+    return null;
   }
 
   return (
     <div
       className={cn(
-        "flex flex-col",
-        bordered && "rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5",
+        "flex flex-col min-w-0",
+        bordered && "rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 sm:p-5",
         className
       )}
     >
@@ -288,8 +281,8 @@ function BarChartBody({
       {showGrid && (
         <div className="absolute inset-0 bottom-6 flex flex-col justify-between pointer-events-none">
           {ticks.map((t) => (
-            <div key={t} className="flex items-center gap-2 w-full">
-              <span className="w-12 text-right text-[10px] font-mono text-zinc-400 dark:text-zinc-500 shrink-0">
+            <div key={t} className="flex items-center gap-1.5 sm:gap-2 w-full">
+              <span className="w-11 sm:w-14 text-right text-[9px] sm:text-[10px] font-mono text-zinc-400 dark:text-zinc-500 shrink-0 truncate">
                 {valueFormatter(Math.round(maxValue * t))}
               </span>
               <div className="flex-1 border-b border-dashed border-zinc-200/80 dark:border-zinc-800" />
@@ -301,22 +294,34 @@ function BarChartBody({
       {/* Bars container */}
       <div
         className={cn(
-          "relative h-full flex items-end justify-between gap-2 pb-6 pt-2",
-          showGrid ? "pl-14" : "pl-0"
+          "relative h-full flex items-end justify-between gap-1 sm:gap-2 pb-6 pt-2",
+          showGrid ? "pl-12 sm:pl-16" : "pl-0"
         )}
       >
         {data.map((item, i) => {
           const isHovered = hoveredIndex === i;
+          const isFirst = i === 0;
+          const isLast = i === data.length - 1;
           return (
             <div
               key={item.label + i}
-              className="relative flex-1 h-full flex flex-col justify-end items-center group cursor-pointer"
+              className="relative flex-1 min-w-0 h-full flex flex-col justify-end items-center group cursor-pointer"
               onMouseEnter={() => setHoveredIndex(i)}
               onMouseLeave={() => setHoveredIndex(null)}
+              onClick={() => setHoveredIndex(isHovered ? null : i)}
             >
               {/* Hover Tooltip */}
               {isHovered && (
-                <div className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full z-20 pointer-events-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 shadow-lg min-w-[130px] whitespace-nowrap">
+                <div
+                  className={cn(
+                    "absolute -top-2 -translate-y-full z-20 pointer-events-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 sm:px-3 py-2 shadow-lg min-w-[120px] sm:min-w-[130px] whitespace-nowrap",
+                    isFirst
+                      ? "left-0 translate-x-0 sm:left-1/2 sm:-translate-x-1/2"
+                      : isLast
+                        ? "right-0 translate-x-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2"
+                        : "left-1/2 -translate-x-1/2"
+                  )}
+                >
                   <p className="text-[11px] font-semibold text-zinc-900 dark:text-zinc-100 mb-1 border-b border-zinc-100 dark:border-zinc-800 pb-1">
                     {item.label}
                   </p>
@@ -383,7 +388,7 @@ function BarChartBody({
               </div>
 
               {/* X-axis label */}
-              <span className="absolute bottom-0 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-full">
+              <span className="absolute bottom-0 text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-full px-0.5">
                 {item.label}
               </span>
             </div>
@@ -525,15 +530,27 @@ function AreaLineChartBody({
         <div className="absolute inset-0 flex">
           {data.map((item, i) => {
             const isHovered = hoveredIndex === i;
+            const isFirst = i === 0;
+            const isLast = i === data.length - 1;
             return (
               <div
                 key={item.label + i}
-                className="relative flex-1 h-full"
+                className="relative flex-1 h-full cursor-pointer"
                 onMouseEnter={() => setHoveredIndex(i)}
                 onMouseLeave={() => setHoveredIndex(null)}
+                onClick={() => setHoveredIndex(isHovered ? null : i)}
               >
                 {isHovered && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20 pointer-events-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 shadow-lg min-w-[135px] whitespace-nowrap">
+                  <div
+                    className={cn(
+                      "absolute top-0 z-20 pointer-events-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 sm:px-3 py-2 shadow-lg min-w-[125px] sm:min-w-[135px] whitespace-nowrap",
+                      isFirst
+                        ? "left-0 translate-x-0 sm:left-1/2 sm:-translate-x-1/2"
+                        : isLast
+                          ? "right-0 translate-x-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2"
+                          : "left-1/2 -translate-x-1/2"
+                    )}
+                  >
                     <p className="text-[11px] font-semibold text-zinc-900 dark:text-zinc-100 mb-1 border-b border-zinc-100 dark:border-zinc-800 pb-1">
                       {item.label}
                     </p>
@@ -563,9 +580,9 @@ function AreaLineChartBody({
       </div>
 
       {/* X-axis labels */}
-      <div className="flex items-center justify-between pt-1.5 px-2">
+      <div className="flex items-center justify-between gap-1 pt-1.5 px-1 sm:px-2">
         {data.map((d, i) => (
-          <span key={d.label + i} className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+          <span key={d.label + i} className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-[44px] sm:max-w-none">
             {d.label}
           </span>
         ))}
