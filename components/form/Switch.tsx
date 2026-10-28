@@ -141,7 +141,8 @@ export default function Switch({
         {/* Thumb */}
         <span
           className={twMerge(
-            "ml-0.5 rounded-full bg-white shadow transition-transform duration-200 ease-in-out",
+            "ml-0.5 rounded-full shadow transition-transform duration-200 ease-in-out",
+            isChecked && color === "indigo" ? "bg-primary-foreground" : "bg-white",
             s.thumb,
             isChecked ? s.translate : "translate-x-0",
           )}
