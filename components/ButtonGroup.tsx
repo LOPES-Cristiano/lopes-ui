@@ -24,7 +24,7 @@ export function ButtonGroup({
       data-slot="button-group"
       data-orientation={orientation}
       className={cn(
-        "inline-flex",
+        "inline-flex max-w-full overflow-x-auto no-scrollbar",
         isVertical ? "flex-col items-stretch" : "flex-row items-stretch",
         !attached && "gap-1.5",
         attached &&
