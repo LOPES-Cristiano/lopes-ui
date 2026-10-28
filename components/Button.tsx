@@ -1,10 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Slot } from '@radix-ui/react-slot';
 import { Loader } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import ConfirmDialog, { type ConfirmDialogVariant } from './ConfirmDialog';
 import { useAccessControl } from './useAccessControl';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './primitives/tooltip';
 
 // ── Confirm type (same API as the old ActionButton) ───────────────────────────
 
@@ -21,6 +28,8 @@ export type ButtonProps = {
   componentId?: string;
   /** Se false, o botão é renderizado desabilitado ao invés de oculto quando o usuário não tiver permissão. Default: true */
   hideIfDenied?: boolean;
+  /** Render the button as its child element via Radix Slot */
+  asChild?: boolean;
   leftIcon?: React.ReactNode;
   leading?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -46,11 +55,17 @@ export type ButtonProps = {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   loading?: boolean;
+  /** Optional text displayed next to the spinner while loading */
+  loadingText?: string;
   /** Pill shape — rounded-full */
   pill?: boolean;
   /** Icon-only mode — equal square padding, no min-w */
   square?: boolean;
-  /** Hover tooltip */
+  /** Button geometry preset (daisyUI btn-circle / btn-square support) */
+  shape?: 'default' | 'circle' | 'square';
+  /** Extra horizontal width preset (daisyUI btn-wide support) */
+  wide?: boolean;
+  /** Hover/focus tooltip rendered via Portal (never clipped by overflow-hidden) */
   tooltip?: string;
   /** Hover tooltip position (default: 'top') */
   tooltipPosition?:
@@ -116,22 +131,37 @@ const loaderSizeClasses = {
   lg: 'w-6 h-6',
 };
 
-const tooltipPositionClasses: Record<string, string> = {
-  top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
-  'top-left': 'bottom-full left-0 mb-2',
-  'top-right': 'bottom-full right-0 mb-2',
-  bottom: 'top-full left-1/2 -translate-x-1/2 mt-2',
-  'bottom-left': 'top-full left-0 mt-2',
-  'bottom-right': 'top-full right-0 mt-2',
-  left: 'right-full top-1/2 -translate-y-1/2 mr-2',
-  right: 'left-full top-1/2 -translate-y-1/2 ml-2',
-};
+function mapTooltipPlacement(pos: NonNullable<ButtonProps['tooltipPosition']>): {
+  side: 'top' | 'bottom' | 'left' | 'right';
+  align: 'start' | 'center' | 'end';
+} {
+  switch (pos) {
+    case 'top-left':
+      return { side: 'top', align: 'start' };
+    case 'top-right':
+      return { side: 'top', align: 'end' };
+    case 'bottom':
+      return { side: 'bottom', align: 'center' };
+    case 'bottom-left':
+      return { side: 'bottom', align: 'start' };
+    case 'bottom-right':
+      return { side: 'bottom', align: 'end' };
+    case 'left':
+      return { side: 'left', align: 'center' };
+    case 'right':
+      return { side: 'right', align: 'center' };
+    case 'top':
+    default:
+      return { side: 'top', align: 'center' };
+  }
+}
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
     componentId,
+    asChild = false,
     leftIcon,
     leading,
     rightIcon,
@@ -143,8 +173,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     size = 'md',
     className,
     loading = false,
+    loadingText,
     pill = false,
     square = false,
+    shape = 'default',
+    wide = false,
     tooltip,
     tooltipPosition = 'top',
     confirm,
@@ -169,7 +202,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   const iconRight = rightIcon ?? trailing;
   const isFull = fullWidth || full;
 
-  const resolvedSizeClass = square
+  const isIconBox = square || shape === 'square' || shape === 'circle';
+  const isCircleOrPill = pill || shape === 'circle';
+
+  const resolvedSizeClass = isIconBox
     ? squareSizeClasses[size]
     : isLink
       ? linkSizeClasses[size]
@@ -200,30 +236,36 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       children.trim().toLowerCase() === tooltip.trim().toLowerCase()
   );
 
-  const btn = (
-    <button
+  const Comp = asChild ? Slot : 'button';
+
+  const coreBtn = (
+    <Comp
       ref={ref}
       {...props}
       {...(componentId ? { 'data-component-id': componentId } : {})}
       onClick={handleClick}
       disabled={isDisabled}
+      aria-busy={loading || undefined}
       className={cn(
         'transition-colors duration-150 whitespace-nowrap',
         'inline-flex items-center justify-center',
         !isLink && 'shadow-sm shadow-zinc-900/10',
-        pill ? 'rounded-full' : 'rounded-md',
+        isCircleOrPill ? 'rounded-full' : 'rounded-md',
+        wide && !isIconBox && 'min-w-[180px] px-8',
         'active:not-disabled:translate-y-[2px]',
         isDisabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer',
         isFull && 'w-full',
-        tooltip && !isRedundantTooltip && 'group relative',
         variantClasses[variant],
         resolvedSizeClass,
         className
       )}
     >
-      {loading ? (
-        <span className="flex items-center justify-center flex-1">
-          <Loader className={cn('animate-spin', loaderSizeClasses[size])} />
+      {asChild ? (
+        children
+      ) : loading ? (
+        <span className="inline-flex items-center justify-center gap-2 flex-1">
+          <Loader className={cn('animate-spin shrink-0', loaderSizeClasses[size])} />
+          {loadingText && <span className="leading-none">{loadingText}</span>}
         </span>
       ) : (
         <>
@@ -240,18 +282,24 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
           )}
         </>
       )}
-      {tooltip && !isRedundantTooltip && (
-        <span
-          className={cn(
-            'hidden sm:block pointer-events-none absolute w-max max-w-[280px] text-left leading-normal rounded-md bg-zinc-900 dark:bg-zinc-800 text-white text-xs px-2.5 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-[100] shadow-xl border border-zinc-700/50',
-            tooltipPositionClasses[tooltipPosition] ?? tooltipPositionClasses.top
-          )}
-        >
-          {tooltip}
-        </span>
-      )}
-    </button>
+    </Comp>
   );
+
+  const placement = mapTooltipPlacement(tooltipPosition);
+
+  const btn =
+    tooltip && !isRedundantTooltip ? (
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>{coreBtn}</TooltipTrigger>
+          <TooltipContent side={placement.side} align={placement.align} className="max-w-[280px]">
+            {tooltip}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ) : (
+      coreBtn
+    );
 
   if (!confirm) return btn;
 
