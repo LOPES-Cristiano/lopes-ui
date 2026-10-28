@@ -210,11 +210,9 @@ export default function SpeedDial({
         role="menu"
         aria-hidden={!isOpen}
         className={cn(
-          "absolute flex gap-2.5 transition-all duration-200",
+          "absolute flex gap-2.5",
           DIRECTION_CONTAINER_CLS[direction],
-          isOpen
-            ? "pointer-events-auto opacity-100 scale-100"
-            : "pointer-events-none opacity-0 scale-90"
+          isOpen ? "pointer-events-auto" : "pointer-events-none"
         )}
       >
         {visibleActions.map((action, idx) => {
@@ -224,13 +222,27 @@ export default function SpeedDial({
           const isVertical = direction === "up" || direction === "down";
           const labelLeft = position.endsWith("right") || direction === "up" || direction === "down";
 
+          const closedOffsetCls =
+            direction === "up"
+              ? "translate-y-3 scale-75 opacity-0"
+              : direction === "down"
+                ? "-translate-y-3 scale-75 opacity-0"
+                : direction === "left"
+                  ? "translate-x-3 scale-75 opacity-0"
+                  : "-translate-x-3 scale-75 opacity-0";
+
           return (
             <div
               key={action.id}
               style={{
-                transitionDelay: isOpen ? `${idx * 25}ms` : "0ms",
+                transitionDelay: isOpen
+                  ? `${idx * 35}ms`
+                  : `${(visibleActions.length - 1 - idx) * 20}ms`,
               }}
-              className="group relative flex items-center"
+              className={cn(
+                "group relative flex items-center will-change-[transform,opacity] transition-[transform,opacity] duration-250 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                isOpen ? "translate-x-0 translate-y-0 scale-100 opacity-100" : closedOffsetCls
+              )}
             >
               {/* Action Label / Tooltip */}
               {action.label && (
