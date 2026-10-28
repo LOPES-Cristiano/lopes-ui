@@ -304,34 +304,39 @@ export default function Timeline({
         role="list"
         className={twMerge("relative isolate", className)}
       >
-        {/* center line */}
+        {/* center line (left-aligned on mobile, centered on sm+) */}
         <div
           className={twMerge(
-            "absolute inset-y-0 left-1/2 -translate-x-1/2 w-0 border-l-2 border-zinc-200 dark:border-zinc-700",
+            "absolute inset-y-0 left-4 sm:left-1/2 -translate-x-1/2 w-0 border-l-2 border-zinc-200 dark:border-zinc-700",
             connCls,
           )}
           aria-hidden="true"
         />
 
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6 sm:gap-8">
           {items.map((item, i) => {
             const isLeft = i % 2 === 0;
 
             return (
               <div key={item.id ?? i} role="listitem" className="relative flex items-center">
-                {/* Left side */}
-                <div className="flex-1 pr-6 flex justify-end">
+                {/* Left side (desktop only) */}
+                <div className="hidden sm:flex flex-1 pr-6 justify-end">
                   {isLeft ? null : <EventCard item={item} size={size} align="right" />}
                 </div>
 
                 {/* Center dot */}
-                <div className="shrink-0 z-10">
+                <div className="shrink-0 z-10 w-8 sm:w-auto flex justify-center">
                   <Dot item={item} size={size} />
                 </div>
 
-                {/* Right side */}
-                <div className="flex-1 pl-6">
-                  {isLeft ? <EventCard item={item} size={size} align="left" /> : null}
+                {/* Right side (always visible on mobile, alternating on sm+) */}
+                <div className="flex-1 pl-3 sm:pl-6 min-w-0">
+                  <div className="sm:hidden">
+                    <EventCard item={item} size={size} align="left" />
+                  </div>
+                  <div className="hidden sm:block">
+                    {isLeft ? <EventCard item={item} size={size} align="left" /> : null}
+                  </div>
                 </div>
               </div>
             );
