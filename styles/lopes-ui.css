@@ -978,3 +978,23 @@ input::-webkit-search-results-decoration {
   color: rgba(248, 248, 242, 0.2);
   user-select: none;
 }
+
+
+/* ── Marquee infinite ticker ─────────────────────────────────────────────── */
+@keyframes lopes-marquee-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-100% - var(--marquee-gap, 1rem))); }
+}
+
+@keyframes lopes-marquee-y {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(-100% - var(--marquee-gap, 1rem))); }
+}
+
+.animate-lopes-marquee-x {
+  animation: lopes-marquee-x var(--marquee-duration, 30s) linear infinite;
+}
+
+.animate-lopes-marquee-y {
+  animation: lopes-marquee-y var(--marquee-duration, 30s) linear infinite;
+}
