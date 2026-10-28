@@ -12,11 +12,11 @@ export function SectionHeader({ label, title, description }: { label: string; ti
 
 export function DemoCard({ id, title, children }: { id?: string; title: string; children: React.ReactNode }) {
   return (
-    <div id={id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden mb-4">
-      <div className="border-b border-zinc-100 dark:border-zinc-800 px-4 py-2.5">
-        <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500">{title}</span>
+    <div id={id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 mb-4">
+      <div className="rounded-t-xl border-b border-zinc-100 dark:border-zinc-800 px-4 py-2.5 bg-zinc-50/40 dark:bg-zinc-900/50">
+        <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{title}</span>
       </div>
-      <div className="p-4 sm:p-6">{children}</div>
+      <div className="p-5 sm:p-6">{children}</div>
     </div>
   );
 }
