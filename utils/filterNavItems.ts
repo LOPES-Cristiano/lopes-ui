@@ -4,18 +4,29 @@
  * Rules:
  * - Items without `componentId` always pass (opt-in model).
  * - Items with `componentId` are shown only if `canAccess(componentId)` returns true.
+ * - Supports BOTH pure standalone separator items (`{ divider: true }`) AND
+ *   actionable navigation items decorated with `divider: true` (top/bottom visual border).
  * - If a parent's `componentId` fails, the entire subtree is hidden.
  * - If a parent passes (or has no `componentId`) but all its children are filtered
- *   out AND it has no direct `href`, the parent is also hidden (empty container).
- * - Orphaned leading/trailing/consecutive dividers are cleaned up automatically.
+ *   out AND it has no direct `href`/`onClick`, the parent is also hidden (empty container).
+ * - Orphaned leading/trailing/consecutive *pure* dividers are cleaned up automatically.
  */
 
 type FilterableItem<T> = T & {
   componentId?: string;
+  label?: string;
   href?: string;
+  onClick?: unknown;
   divider?: boolean;
   children?: T[];
 };
+
+function isPureDivider<T extends object>(item: FilterableItem<T>): boolean {
+  if (!item.divider) return false;
+  const hasLabel = typeof item.label === "string" && item.label.trim().length > 0;
+  const hasTarget = Boolean(item.href || item.onClick || (item.children && item.children.length > 0));
+  return !hasLabel && !hasTarget;
+}
 
 export function filterNavItems<T extends object>(
   items: FilterableItem<T>[],
@@ -24,32 +35,31 @@ export function filterNavItems<T extends object>(
   const result: FilterableItem<T>[] = [];
 
   for (const item of items) {
-    // Always keep dividers for now; cleaned up below.
-    if (item.divider) {
+    // Always enforce RBAC first — even on items decorated with `divider: true`.
+    if (item.componentId && !canAccess(item.componentId)) continue;
+
+    if (isPureDivider(item)) {
       result.push(item);
       continue;
     }
 
-    // If item has a componentId and access is denied, skip it (and its subtree).
-    if (item.componentId && !canAccess(item.componentId)) continue;
-
     if (item.children?.length) {
       const filteredChildren = filterNavItems(item.children as FilterableItem<T>[], canAccess);
       // Empty container with no direct navigation target → hide.
-      if (filteredChildren.length === 0 && !item.href) continue;
+      if (filteredChildren.length === 0 && !item.href && !item.onClick) continue;
       result.push({ ...item, children: filteredChildren } as FilterableItem<T>);
     } else {
       result.push(item);
     }
   }
 
-  // Remove orphaned dividers (leading, trailing, consecutive).
+  // Remove orphaned *pure* dividers (leading, trailing, consecutive) without ever deleting real nav items.
   return result.filter((item, i, arr) => {
-    if (!item.divider) return true;
+    if (!isPureDivider(item)) return true;
     const prev = arr[i - 1];
     const next = arr[i + 1];
-    if (!prev || !next) return false;       // leading or trailing
-    if (prev.divider) return false;         // consecutive
+    if (!prev || !next) return false;
+    if (isPureDivider(prev)) return false;
     return true;
   });
 }
