@@ -114,7 +114,7 @@ export function DataTableFilterDialog<T = Record<string, unknown>>({
             data-component-id="erp.data-table.apply-filter-dialog"
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-white hover:bg-primary/90 transition-colors cursor-pointer shadow-xs"
+            className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer shadow-xs"
           >
             Aplicar
           </button>
