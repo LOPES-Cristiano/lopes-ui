@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/Toast";
-import SiteHeader from "@/components/SiteHeader";
+import SiteHeader from "@/app/_components/SiteHeader";
+import AppSidebar from "@/app/_components/AppSidebar";
 import { ShellProvider } from "@/components/ShellContext";
-import { ThemeProvider } from "@/components/ThemeContext";
+import { ThemeProvider, ThemeScript } from "@/components/ThemeContext";
 import { cookies } from "next/headers";
-import AppSidebar from "@/components/AppSidebar";
 
 export const metadata: Metadata = {
   title: "Lopes UI",
-  description: "Espaço para testar e experimentar componentes",
+  description: "Biblioteca corporativa de componentes React, Next.js e Tailwind CSS v4",
 };
 
 export default async function RootLayout({
@@ -23,13 +23,9 @@ export default async function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme')||((window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){}})();`,
-          }}
-        />
+        <ThemeScript />
       </head>
-      <body className="min-h-full w-full flex flex-col bg-[--background]">
+      <body className="min-h-full w-full flex flex-col bg-background text-foreground">
         <ThemeProvider>
           <Toaster position="top-right" />
           <ShellProvider defaultCollapsed={sidebarCollapsed} defaultHasSidebar>
@@ -48,4 +44,3 @@ export default async function RootLayout({
     </html>
   );
 }
-
