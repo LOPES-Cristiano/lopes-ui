@@ -302,35 +302,35 @@ import NumberField from "@/components/form/NumberField";
             <DemoCard id="select-fields" title="SelectField & NativeSelect">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <SelectField
-                  label="Filial de Atendimento"
-                  placeholder="Selecionar filial..."
+                  label="Região de Implantação"
+                  placeholder="Selecionar região..."
                   clearable
                   defaultValue="pvh"
                   options={[
-                    { value: "pvh", label: "Porto Velho — Centro (RO)" },
-                    { value: "jpr", label: "Ji-Paraná — Matriz (RO)" },
-                    { value: "ari", label: "Ariquemes (RO)" },
-                    { value: "mao", label: "Manaus — Cidade Nova (AM)" },
-                    { value: "hta", label: "Humaitá (AM)" },
+                    { value: "pvh", label: "São Paulo — sa-east-1" },
+                    { value: "jpr", label: "N. Virginia — us-east-1" },
+                    { value: "ari", label: "Oregon — us-west-2" },
+                    { value: "mao", label: "Dublin — eu-west-1" },
+                    { value: "hta", label: "Frankfurt — eu-central-1" },
                   ]}
                 />
                 <SelectField
-                  label="Departamento de Produtos"
+                  label="Categoria de Módulo"
                   variant="filled"
                   placeholder="Selecionar setor..."
                   options={[
-                    { value: "moveis", label: "Móveis & Roupeiros" },
-                    { value: "estofados", label: "Estofados & Salas" },
-                    { value: "colchoes", label: "Colchões & Box" },
-                    { value: "eletro", label: "Eletrodomésticos & Linha Branca" },
+                    { value: "auth", label: "Autenticação & Identidade" },
+                    { value: "ui", label: "Design System & UI" },
+                    { value: "logs", label: "Observabilidade & Logs" },
+                    { value: "webhooks", label: "Integrações & Webhooks" },
                   ]}
                 />
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">NativeSelect (compacto com ícone)</label>
                   <NativeSelect icon={<Package size={14} />} defaultValue="entrega">
-                    <option value="entrega">Entrega e Montagem Domiciliar</option>
-                    <option value="retirada">Retirada no Depósito Regional</option>
-                    <option value="transferencia">Transferência entre Filiais (RO/AM)</option>
+                    <option value="entrega">Deploy Contínuo (CI/CD)</option>
+                    <option value="retirada">Execução Manual sob Demanda</option>
+                    <option value="transferencia">Replicação Multi-Região</option>
                   </NativeSelect>
                 </div>
                 <SelectField
@@ -339,7 +339,7 @@ import NumberField from "@/components/form/NumberField";
                   error="Selecione uma tabela de preço válida"
                   options={[
                     { value: "varejo", label: "Tabela Varejo Padrão" },
-                    { value: "promocional", label: "Campanha Conforto para o seu Lar" },
+                    { value: "promocional", label: "Plano Enterprise Anual" },
                   ]}
                 />
               </div>
@@ -358,7 +358,7 @@ import NumberField from "@/components/form/NumberField";
                   helpText="Seletor de mês e ano (YYYY-MM)"
                 />
                 <TimePickerField
-                  label="Horário de Montagem"
+                  label="Janela de Deploy"
                   defaultValue="14:30"
                   stepMinutes={15}
                   helpText="Intervalos de 15 minutos"
@@ -370,8 +370,8 @@ import NumberField from "@/components/form/NumberField";
               <div className="flex flex-wrap gap-6 items-start">
                 <Checkbox
                   defaultChecked
-                  label="Incluir serviço de montagem especializada"
-                  description="Equipe própria BigLar Móveis & Eletro para móveis e roupeiros"
+                  label="Habilitar autenticação em dois fatores (2FA)"
+                  description="Exige token TOTP ou chave de segurança WebAuthn no login"
                 />
                 <Checkbox
                   indeterminate
@@ -394,7 +394,7 @@ import NumberField from "@/components/form/NumberField";
                   filial: z.string().min(1, "Selecione a filial de origem"),
                   preco: z.number().min(10, "O valor mínimo é R$ 10,00"),
                 })}
-                defaultValues={{ produto: "Sofá Retrátil 3 Lugares", filial: "pvh", preco: 2499.9 }}
+                defaultValues={{ produto: "Plano Enterprise Cloud", filial: "pvh", preco: 2499.9 }}
                 onSubmit={(vals) => {
                   toast.success(`Produto "${vals.produto}" validado para a filial ${vals.filial.toUpperCase()}!`);
                 }}
@@ -403,21 +403,21 @@ import NumberField from "@/components/form/NumberField";
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <TextField
-                        label="Produto (Móveis / Eletro)"
+                        label="Plano / Assinatura"
                         required
                         value={(values.produto as string) ?? ""}
                         onChange={(e) => setValue("produto", e.target.value)}
                         error={errors.produto}
                       />
                       <SelectField
-                        label="Filial (RO / AM)"
+                        label="Região Principal"
                         required
                         value={(values.filial as string) ?? ""}
                         onChange={(v) => setValue("filial", v)}
                         error={errors.filial}
                         options={[
-                          { value: "pvh", label: "Porto Velho (RO) - (69)" },
-                          { value: "mao", label: "Manaus (AM) - (92)" },
+                          { value: "pvh", label: "São Paulo (sa-east-1)" },
+                          { value: "mao", label: "N. Virginia (us-east-1)" },
                         ]}
                       />
                       <NumberField
