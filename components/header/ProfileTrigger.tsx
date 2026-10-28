@@ -15,11 +15,15 @@ export type ProfileTriggerProps = {
   /** Substitui completamente o trigger padrão */
   trigger?: React.ReactNode;
   /** URL da imagem de avatar */
+  avatarUrl?: string | null;
+  /** URL da imagem de avatar */
   avatar?: string;
-  /** URL da foto de perfil */
+  /** @deprecated Prefira `avatarUrl`. Mantido por compatibilidade. */
   fotoUrl?: string | null;
   /** ID do usuário */
   usuarioId?: string | number | null;
+  /** Callback opcional para resolver dinamicamente a URL do avatar a partir do ID do usuário */
+  resolveAvatarUrl?: (userId: string) => string | null | Promise<string | null>;
   /** Iniciais exibidas quando não há imagem (ex: "CL") */
   initials?: string;
   /** Nome exibido ao lado do avatar */
@@ -44,12 +48,14 @@ export type ProfileTriggerProps = {
   avatarClassName?: string;
 };
 
-export default function ProfileTrigger({
+export function ProfileTrigger({
   children,
   trigger,
+  avatarUrl,
   avatar,
   fotoUrl,
   usuarioId,
+  resolveAvatarUrl,
   initials,
   name,
   subtitle,
@@ -64,22 +70,75 @@ export default function ProfileTrigger({
   avatarClassName = '',
 }: ProfileTriggerProps) {
   const [open, setOpen] = useState(false);
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
+  const [imgFailed, setImgFailed] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
   const cfg = sizeConfig[size];
   const shapeClass = shape === 'circle' ? 'rounded-full' : 'rounded-lg';
-  const isUuid = typeof usuarioId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(usuarioId);
-  const imgSrc =
-    fotoUrl || avatar || (isUuid ? `/api/cadastro/usuarios/${usuarioId}/foto` : null);
+
+  const directSrc = avatarUrl || fotoUrl || avatar || null;
 
   useEffect(() => {
+    let cancelled = false;
+    if (directSrc || usuarioId == null || !resolveAvatarUrl) {
+      setResolvedSrc(null);
+      return;
+    }
+    const userIdStr = String(usuarioId).trim();
+    if (!userIdStr) {
+      setResolvedSrc(null);
+      return;
+    }
+    try {
+      const result = resolveAvatarUrl(userIdStr);
+      if (typeof result === 'string' || result === null) {
+        setResolvedSrc(result || null);
+      } else if (result && typeof result.then === 'function') {
+        result
+          .then((url) => {
+            if (!cancelled) setResolvedSrc(url || null);
+          })
+          .catch(() => {
+            if (!cancelled) setResolvedSrc(null);
+          });
+      }
+    } catch {
+      if (!cancelled) setResolvedSrc(null);
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [directSrc, usuarioId, resolveAvatarUrl]);
+
+  const imgSrc = directSrc || resolvedSrc;
+
+  useEffect(() => {
+    setImgFailed(false);
+  }, [imgSrc]);
+
+  useEffect(() => {
+    if (!open) return;
     function onDoc(e: MouseEvent) {
       if (!ref.current) return;
       if (ref.current.contains(e.target as Node)) return;
       setOpen(false);
     }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    }
     document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, []);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const showImg = Boolean(imgSrc && !imgFailed);
 
   const defaultTrigger = (
     <span className={`inline-flex items-center ${cfg.gap}`}>
@@ -89,23 +148,19 @@ export default function ProfileTrigger({
           avatarClassName || 'ring-2 ring-white/40 md:ring-slate-300 md:dark:ring-zinc-600'
         }`}
       >
-        {imgSrc ? (
+        {showImg && imgSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imgSrc}
             alt={name ?? 'avatar'}
             className="h-full w-full object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              if (e.currentTarget.nextElementSibling) {
-                (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
-              }
-            }}
+            onError={() => setImgFailed(true)}
           />
-        ) : null}
-        <span style={{ display: imgSrc ? 'none' : 'flex' }}>
-          {initials || (name ? name.slice(0, 2).toUpperCase() : <User size={cfg.icon} />)}
-        </span>
+        ) : (
+          <span className="flex items-center justify-center">
+            {initials || (name ? name.slice(0, 2).toUpperCase() : <User size={cfg.icon} />)}
+          </span>
+        )}
       </span>
 
       {/* Nome e Subtítulo (Filial) */}
@@ -131,7 +186,7 @@ export default function ProfileTrigger({
       {showChevron && (
         <ChevronDown
           size={15}
-          className={`${chevronClassName || 'text-white md:text-slate-500 md:dark:text-slate-400'} transition-transform duration-200 ml-0.5 ${open ? 'rotate-180' : 'rotate-0'}`}
+          className={`${chevronClassName || 'text-header-profile-trigger-foreground'} transition-transform duration-200 ml-0.5 ${open ? 'rotate-180' : 'rotate-0'}`}
         />
       )}
     </span>
@@ -141,8 +196,9 @@ export default function ProfileTrigger({
     <div
       className="relative"
       ref={ref}
-      >
+    >
       <button
+        ref={buttonRef}
         data-component-id={componentId ? `${componentId}.trigger` : 'erp.header.profile-trigger'}
         type="button"
         aria-label={ariaLabel}
@@ -157,6 +213,8 @@ export default function ProfileTrigger({
       {/* Dropdown panel — sempre no DOM para permitir transição CSS */}
       <div
         role="menu"
+        aria-hidden={!open}
+        inert={!open}
         onClick={() => setOpen(false)}
         className={[
           'absolute mt-2 overflow-hidden bg-header-profile-menu text-header-profile-menu-foreground ring-1 ring-header-profile-menu-border z-50',
@@ -166,8 +224,8 @@ export default function ProfileTrigger({
           align === 'right' ? 'right-0' : 'left-0',
           'transition-all duration-150 ease-out origin-top-right',
           open
-            ? 'opacity-100 scale-100 pointer-events-auto'
-            : 'opacity-0 scale-95 pointer-events-none',
+            ? 'visible opacity-100 scale-100 pointer-events-auto'
+            : 'invisible opacity-0 scale-95 pointer-events-none',
         ].join(' ')}
       >
         {children}
@@ -175,3 +233,5 @@ export default function ProfileTrigger({
     </div>
   );
 }
+
+export default ProfileTrigger;
