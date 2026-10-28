@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Camera, RefreshCw, X } from 'lucide-react';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import Button from './Button';
 import toast from './Toast';
 
@@ -29,19 +30,33 @@ export function CameraCaptureModal({
   facingMode = 'user',
   componentId = 'erp.camera-capture-modal',
 }: CameraCaptureModalProps) {
+  const titleId = useId();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const openRef = useRef(open);
+  openRef.current = open;
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [iniciando, setIniciando] = useState(false);
   const [erroCamera, setErroCamera] = useState<string | null>(null);
 
+  useBodyScrollLock(open);
+
+  const stopActiveStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setStream(null);
+  }, []);
+
   // Inicializa o stream quando o modal abre
   useEffect(() => {
     if (!open) {
-      if (stream) {
-        stream.getTracks().forEach((t) => t.stop());
-        setStream(null);
-      }
+      stopActiveStream();
       setErroCamera(null);
       return;
     }
@@ -49,6 +64,7 @@ export function CameraCaptureModal({
     let ativo = true;
 
     async function iniciarCamera() {
+      stopActiveStream();
       setIniciando(true);
       setErroCamera(null);
       try {
@@ -66,6 +82,7 @@ export function CameraCaptureModal({
           return;
         }
 
+        streamRef.current = mediaStream;
         setStream(mediaStream);
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
@@ -88,11 +105,9 @@ export function CameraCaptureModal({
 
     return () => {
       ativo = false;
-      if (stream) {
-        stream.getTracks().forEach((t) => t.stop());
-      }
+      stopActiveStream();
     };
-  }, [open, facingMode, idealWidth, idealHeight]);
+  }, [open, facingMode, idealWidth, idealHeight, stopActiveStream]);
 
   // Vincula o stream ao elemento de vídeo quando disponível
   useEffect(() => {
@@ -147,6 +162,9 @@ export function CameraCaptureModal({
 
   return createPortal(
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in duration-200"
       onClick={onClose}
     >
@@ -164,7 +182,7 @@ export function CameraCaptureModal({
               <Camera size={18} />
             </div>
             <div>
-              <h3 className="font-bold text-sm sm:text-base text-foreground tracking-tight">
+              <h3 id={titleId} className="font-bold text-sm sm:text-base text-foreground tracking-tight">
                 {title}
               </h3>
               <p className="text-xs text-muted-foreground">{description}</p>
@@ -193,17 +211,31 @@ export function CameraCaptureModal({
                 variant="secondary"
                 size="sm"
                 onClick={() => {
+                  stopActiveStream();
                   setErroCamera(null);
                   setIniciando(true);
                   void navigator.mediaDevices
                     ?.getUserMedia({
                       video: { facingMode, width: { ideal: idealWidth }, height: { ideal: idealHeight } },
+                      audio: false,
                     })
                     .then((s) => {
+                      if (!openRef.current) {
+                        s.getTracks().forEach((t) => t.stop());
+                        return;
+                      }
+                      streamRef.current = s;
                       setStream(s);
                       setIniciando(false);
                     })
-                    .catch(() => setIniciando(false));
+                    .catch((err: any) => {
+                      const msg =
+                        err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError'
+                          ? 'Acesso à câmera não autorizado. Habilite a permissão no navegador.'
+                          : 'Não foi possível inicializar a câmera. Verifique se outro app a está utilizando.';
+                      setErroCamera(msg);
+                      setIniciando(false);
+                    });
                 }}
                 leftIcon={<RefreshCw size={13} className={iniciando ? 'animate-spin' : ''} />}
               >
