@@ -391,7 +391,7 @@ export default function EmojiPicker({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 8, scale: 0.96 }}
       transition={{ duration: 0.16, ease: 'easeOut' }}
-      className={`w-80 sm:w-96 rounded-2xl border border-slate-200/90 dark:border-zinc-700/90 bg-white/98 dark:bg-zinc-900/98 backdrop-blur-xl text-slate-900 dark:text-zinc-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.45)] overflow-hidden flex flex-col z-50 select-none ${className}`}
+      className={`w-80 sm:w-96 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-slate-200/90 dark:border-zinc-700/90 bg-white/98 dark:bg-zinc-900/98 backdrop-blur-xl text-slate-900 dark:text-zinc-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.45)] overflow-hidden flex flex-col z-50 select-none ${className}`}
       onClick={(e) => e.stopPropagation()}
       >
       {/* Header com busca e fechar */}
@@ -505,7 +505,7 @@ export default function EmojiPicker({
               <span>{filteredEmojis?.length ?? 0} encontrados</span>
             </div>
             {filteredEmojis && filteredEmojis.length > 0 ? (
-              <div className="grid grid-cols-8 sm:grid-cols-8 gap-1">
+              <div className="grid grid-cols-7 sm:grid-cols-8 gap-1">
                 {filteredEmojis.map((item) => (
                   <button
                     data-component-id={componentId ? `${componentId}.emoji-search-item` : undefined}
@@ -532,7 +532,7 @@ export default function EmojiPicker({
                 <div className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
                   <Clock size={12} /> Usados Recentemente
                 </div>
-                <div className="grid grid-cols-8 sm:grid-cols-8 gap-1">
+                <div className="grid grid-cols-7 sm:grid-cols-8 gap-1">
                   {recentEmojis.map((char) => (
                     <button
                       data-component-id={componentId ? `${componentId}.emoji-recent-item` : undefined}
@@ -555,7 +555,7 @@ export default function EmojiPicker({
                 <div className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
                   <cat.icon size={12} /> {cat.label}
                 </div>
-                <div className="grid grid-cols-8 sm:grid-cols-8 gap-1">
+                <div className="grid grid-cols-7 sm:grid-cols-8 gap-1">
                   {cat.emojis.map((item) => (
                     <button
                       data-component-id={componentId ? `${componentId}.emoji-item` : undefined}
