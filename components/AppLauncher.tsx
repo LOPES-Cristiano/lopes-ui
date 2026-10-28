@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
-import { Search, ExternalLink, type LucideIcon } from "lucide-react";
+import { Search, ExternalLink, X, type LucideIcon } from "lucide-react";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -60,6 +62,14 @@ export type AppLauncherProps = {
   showDescription?: boolean;
   /** Title shown above the launcher */
   title?: string;
+  /** Render inside a modal dialog when `modal` is true or `open` is provided */
+  modal?: boolean;
+  /** Controlled open state for modal mode */
+  open?: boolean;
+  /** Called when modal open state changes */
+  onOpenChange?: (open: boolean) => void;
+  /** Alias callback when modal closes */
+  onClose?: () => void;
   className?: string;
   componentId?: string;
 };
@@ -93,7 +103,7 @@ const COLOR_ICON: Record<string, string> = {
 };
 
 const BADGE_COLOR: Record<AppBadgeColor, string> = {
-  primary: "bg-primary text-white",
+  primary: "bg-primary text-primary-foreground",
   zinc: "bg-zinc-700 text-white dark:bg-zinc-200 dark:text-zinc-900",
   blue: "bg-blue-600 text-white",
   indigo: "bg-indigo-600 text-white",
@@ -179,7 +189,7 @@ function AppCard({
           ? "opacity-50 cursor-not-allowed pointer-events-none"
           : "cursor-pointer hover:border-border-strong hover:bg-surface-hover hover:shadow-md hover:shadow-zinc-900/5 dark:hover:shadow-black/20 hover:-translate-y-0.5 active:translate-y-0 active:shadow-none",
       )}
-      >
+    >
       {/* Badge */}
       {app.badge && (
         <span
@@ -215,6 +225,7 @@ function AppCard({
   if (app.href && !app.disabled) {
     return (
       <a
+        data-component-id={app.componentId || undefined}
         href={app.href}
         target={app.external !== false ? "_blank" : undefined}
         rel="noopener noreferrer"
@@ -228,6 +239,7 @@ function AppCard({
 
   return (
     <div
+      data-component-id={app.componentId || undefined}
       className="group/card"
       role={app.onClick ? "button" : undefined}
       tabIndex={app.onClick && !app.disabled ? 0 : undefined}
@@ -272,7 +284,7 @@ function AppGrid({
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function AppLauncher({
+export function AppLauncher({
   apps,
   searchable,
   grouped = false,
@@ -280,11 +292,36 @@ export default function AppLauncher({
   size = "md",
   showDescription = false,
   title,
+  modal = false,
+  open,
+  onOpenChange,
+  onClose,
   className,
   componentId,
 }: AppLauncherProps) {
   const [query, setQuery] = useState("");
   const showSearch = searchable ?? apps.length > 6;
+
+  const isModalMode = Boolean(modal || open !== undefined);
+  const isModalOpen = isModalMode && Boolean(open);
+
+  useBodyScrollLock(isModalOpen);
+
+  const handleClose = useCallback(() => {
+    onOpenChange?.(false);
+    onClose?.();
+  }, [onOpenChange, onClose]);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isModalOpen, handleClose]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -308,12 +345,13 @@ export default function AppLauncher({
     return map;
   }, [filtered, grouped]);
 
-  return (
+  const launcherContent = (
     <div
+      data-component-id={!isModalMode ? (componentId || undefined) : undefined}
       className={twMerge("flex flex-col gap-5", className)}
-      >
+    >
       {/* Header */}
-      {(title || showSearch) && (
+      {(title || showSearch || isModalMode) && (
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           {title && (
             <h2 className="text-base font-semibold text-surface-foreground shrink-0">{title}</h2>
@@ -330,6 +368,17 @@ export default function AppLauncher({
                 className="w-full rounded-lg border border-input-border bg-input pl-8 pr-3 py-2 text-sm text-input-foreground placeholder-input-placeholder focus:outline-none focus:border-ring transition-colors"
               />
             </div>
+          )}
+          {isModalMode && (
+            <button
+              data-component-id="erp.app-launcher.close"
+              type="button"
+              aria-label="Fechar"
+              onClick={handleClose}
+              className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-hover hover:text-surface-foreground transition-colors cursor-pointer"
+            >
+              <X size={16} />
+            </button>
           )}
         </div>
       )}
@@ -360,4 +409,31 @@ export default function AppLauncher({
       }
     </div>
   );
+
+  if (isModalMode) {
+    if (!isModalOpen || typeof document === "undefined") return null;
+    return createPortal(
+      <div
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) handleClose();
+        }}
+      >
+        <div
+          data-component-id={componentId || undefined}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title || "Aplicativos"}
+          className="w-full max-w-3xl max-h-[85dvh] overflow-y-auto rounded-2xl border border-border bg-surface p-6 text-surface-foreground shadow-2xl"
+        >
+          {launcherContent}
+        </div>
+      </div>,
+      document.body,
+    );
+  }
+
+  return launcherContent;
 }
+
+export default AppLauncher;
