@@ -68,23 +68,28 @@ export function formatShortName(name?: string | null): string {
 export const formatarNomeCurto = formatShortName;
 
 /**
- * Capitaliza a primeira letra de cada palavra (Title Case)
+ * Capitaliza a primeira letra de cada palavra (Title Case) preservando acentuação Unicode (pt-BR).
  */
 export function capitalize(text?: string | null): string {
   if (!text) return '';
   return text
     .replace(/_/g, ' ')
-    .toLowerCase()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+    .toLocaleLowerCase('pt-BR')
+    .replace(/(^|[\s-])(\p{L})/gu, (_, sep: string, letter: string) => `${sep}${letter.toLocaleUpperCase('pt-BR')}`);
 }
 
 /**
- * Converte string para número ou null se vazia/inválida
+ * Converte string para número ou null se vazia/apenas espaços/inválida
  */
 export function toNullableNumber(value: string | number | null | undefined): number | null {
-  if (value === undefined || value === null || value === '') return null;
-  const num = Number(value);
-  return Number.isFinite(num) ? num : null;
+  if (value === undefined || value === null) return null;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') return null;
+    const num = Number(trimmed);
+    return Number.isFinite(num) ? num : null;
+  }
+  return Number.isFinite(value) ? value : null;
 }
 
 /**
@@ -94,8 +99,8 @@ export function getErrorMessage(error: unknown, fallback = 'Ocorreu um erro ines
   if (!error) return fallback;
   if (typeof error === 'string') return error;
   if (error instanceof Error) return error.message;
-  if (typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string') {
-    return (error as any).message;
+  if (typeof error === 'object' && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
+    return (error as { message: string }).message;
   }
   return fallback;
 }
