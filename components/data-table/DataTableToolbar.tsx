@@ -4,6 +4,9 @@ import Controllable from '../Controllable';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   ChevronDown,
   ChevronsDown,
   Filter,
@@ -29,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../primitives/select';
-import type { DataTableBulkAction, FilterField } from './DataTable.types';
+import type { DataTableBulkAction, FilterField, SortDir } from './DataTable.types';
 
 export function DataTableToolbar<T = Record<string, unknown>>({
   title,
@@ -66,6 +69,11 @@ export function DataTableToolbar<T = Record<string, unknown>>({
   onClearSelection,
   onActionError,
   onClose,
+  hasSortableColumns,
+  onOpenMobileSort,
+  sortKey,
+  sortDir,
+  activeSortLabel,
 }: {
   title?: React.ReactNode;
   description?: React.ReactNode;
@@ -118,6 +126,11 @@ export function DataTableToolbar<T = Record<string, unknown>>({
   onClearSelection: () => void;
   onActionError?: (error: unknown, actionName?: string) => void;
   onClose?: () => void;
+  hasSortableColumns?: boolean;
+  onOpenMobileSort?: () => void;
+  sortKey?: string | null;
+  sortDir?: SortDir;
+  activeSortLabel?: string | null;
 }) {
   const [runningBulkIdx, setRunningBulkIdx] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -300,6 +313,32 @@ export function DataTableToolbar<T = Record<string, unknown>>({
               </button>
             )}
 
+            {/* Botão de Ordenação Mobile no Header */}
+            {hasSortableColumns && onOpenMobileSort && (
+              <button
+                data-component-id="erp.data-table.header-mobile-sort"
+                type="button"
+                onClick={onOpenMobileSort}
+                aria-haspopup="dialog"
+                aria-label={activeSortLabel ? `Ordenado por ${activeSortLabel}` : 'Ordenar'}
+                className={twMerge(
+                  'md:hidden shrink-0 inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs',
+                  sortKey
+                    ? 'border-primary/50 bg-primary/10 text-primary'
+                    : 'border-border/80 bg-surface text-foreground hover:bg-muted/30'
+                )}
+              >
+                {sortKey && sortDir === 'asc' ? (
+                  <ArrowUp size={13} className="text-primary" />
+                ) : sortKey && sortDir === 'desc' ? (
+                  <ArrowDown size={13} className="text-primary" />
+                ) : (
+                  <ArrowUpDown size={13} className="text-muted-foreground" />
+                )}
+                <span className="max-w-24 truncate">{activeSortLabel ?? 'Ordenar'}</span>
+              </button>
+            )}
+
             {/* Botão de Colunas no Header */}
             {columnToggle && (
               <button
@@ -409,9 +448,20 @@ export function DataTableToolbar<T = Record<string, unknown>>({
         (globalSearch ||
           (filterFields && filterFields.length > 0) ||
           columnToggle ||
+          Boolean(hasSortableColumns && onOpenMobileSort) ||
           toolbarLeftSlot ||
           toolbarSlot) && (
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 py-0.5">
+          <div
+            className={twMerge(
+              'flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 py-0.5',
+              !globalSearch &&
+                !(filterFields && filterFields.length > 0) &&
+                !columnToggle &&
+                !toolbarLeftSlot &&
+                !toolbarSlot &&
+                'md:hidden'
+            )}
+          >
             {/* Área Direita: Busca Global + Filtros Inline + ToolbarSlot + Colunas */}
             <div className="flex flex-nowrap sm:flex-wrap items-center gap-2 justify-start md:justify-end flex-1 w-full">
               {/* Input de Busca Global Padrão */}
@@ -678,6 +728,31 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                       {activeFilterCount}
                     </span>
                   )}
+                </button>
+              )}
+
+              {hasSortableColumns && onOpenMobileSort && (
+                <button
+                  data-component-id="erp.data-table.mobile-sort"
+                  type="button"
+                  onClick={onOpenMobileSort}
+                  aria-haspopup="dialog"
+                  aria-label={activeSortLabel ? `Ordenado por ${activeSortLabel}` : 'Ordenar'}
+                  className={twMerge(
+                    'md:hidden shrink-0 inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs',
+                    sortKey
+                      ? 'border-primary/50 bg-primary/10 text-primary'
+                      : 'border-border/80 bg-surface text-foreground hover:bg-muted/30'
+                  )}
+                >
+                  {sortKey && sortDir === 'asc' ? (
+                    <ArrowUp size={13} className="text-primary" />
+                  ) : sortKey && sortDir === 'desc' ? (
+                    <ArrowDown size={13} className="text-primary" />
+                  ) : (
+                    <ArrowUpDown size={13} className="text-muted-foreground" />
+                  )}
+                  <span className="max-w-24 truncate">{activeSortLabel ?? 'Ordenar'}</span>
                 </button>
               )}
 
