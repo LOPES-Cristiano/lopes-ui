@@ -151,7 +151,7 @@ export default function OTPInput({
 
   return (
     <div
-      className={twMerge("flex items-center gap-2", className)}
+      className={twMerge("flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-full", className)}
       data-component-id={componentId}
     >
       {Array.from({ length }).map((_, idx) => {
@@ -177,7 +177,7 @@ export default function OTPInput({
               onPaste={handlePaste}
               onFocus={handleFocus}
               className={twMerge(
-                "w-11 h-12 text-center text-lg font-semibold rounded-lg border outline-none transition-all",
+                "w-9 h-10 sm:w-11 sm:h-12 text-center text-base sm:text-lg font-semibold rounded-lg border outline-none transition-all",
                 "bg-white dark:bg-zinc-900",
                 "text-zinc-900 dark:text-zinc-100",
                 "caret-transparent",
