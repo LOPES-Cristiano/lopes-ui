@@ -47,10 +47,10 @@ const SIZE_MAP: Record<
   DockSize,
   { container: string; btn: string; icon: number; label: string }
 > = {
-  xs: { container: "px-2 py-1.5 gap-1", btn: "px-2.5 pt-1.5 pb-2", icon: 16, label: "text-[10px]" },
-  sm: { container: "px-2.5 py-1.5 gap-1.5", btn: "px-3 pt-1.5 pb-2.5", icon: 18, label: "text-[11px]" },
-  md: { container: "px-3.5 py-2 gap-2", btn: "px-4 pt-2 pb-3", icon: 20, label: "text-xs" },
-  lg: { container: "px-4 py-2.5 gap-2.5", btn: "px-4.5 pt-2.5 pb-3.5", icon: 24, label: "text-xs" },
+  xs: { container: "px-1.5 sm:px-2 py-1.5 gap-0.5 sm:gap-1", btn: "px-2 sm:px-2.5 pt-1.5 pb-2", icon: 16, label: "text-[10px]" },
+  sm: { container: "px-2 sm:px-2.5 py-1.5 gap-1 sm:gap-1.5", btn: "px-2.5 sm:px-3 pt-1.5 pb-2.5", icon: 18, label: "text-[10px] sm:text-[11px]" },
+  md: { container: "px-2.5 sm:px-3.5 py-1.5 sm:py-2 gap-1 sm:gap-2", btn: "px-2.5 sm:px-4 pt-1.5 sm:pt-2 pb-2.5 sm:pb-3", icon: 20, label: "text-[10px] sm:text-xs" },
+  lg: { container: "px-3 sm:px-4 py-2 sm:py-2.5 gap-1.5 sm:gap-2.5", btn: "px-3 sm:px-4.5 pt-2 sm:pt-2.5 pb-3 sm:pb-3.5", icon: 24, label: "text-[11px] sm:text-xs" },
 };
 
 function renderDockIcon(icon: LucideIcon | React.ReactNode, size: number) {
@@ -113,7 +113,7 @@ export default function Dock({
       aria-label="Dock navigation"
       {...(componentId ? { "data-component-id": componentId } : {})}
       onMouseLeave={() => setHoveredIdx(null)}
-      className={cn("flex items-center", positionCls, surfaceCls, s.container, className)}
+      className={cn("flex max-w-full overflow-x-auto no-scrollbar items-center", positionCls, surfaceCls, s.container, className)}
     >
       {visibleItems.map((item, idx) => {
         const isAllowed = hasRootPermission && (!item.componentId || canAccess(item.componentId));
@@ -125,9 +125,9 @@ export default function Dock({
         if (magnify && hoveredIdx !== null && !isDisabled) {
           const distance = Math.abs(hoveredIdx - idx);
           if (distance === 0) {
-            scaleStyle = { transform: "scale(1.16) translateY(-3px)" };
+            scaleStyle = { transform: "translate3d(0, -4px, 0) scale3d(1.16, 1.16, 1)" };
           } else if (distance === 1) {
-            scaleStyle = { transform: "scale(1.06) translateY(-1px)" };
+            scaleStyle = { transform: "translate3d(0, -1.5px, 0) scale3d(1.06, 1.06, 1)" };
           }
         }
 
@@ -150,7 +150,7 @@ export default function Dock({
             }}
             style={scaleStyle}
             className={cn(
-              "group relative flex flex-col items-center justify-center rounded-xl transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+              "group relative flex flex-col items-center justify-center rounded-xl origin-bottom will-change-transform transition-[transform,background-color,color] duration-250 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
               s.btn,
               isActive
                 ? "bg-indigo-50/90 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-300 font-semibold"
