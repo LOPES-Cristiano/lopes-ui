@@ -50,6 +50,20 @@ export type ToastFn = {
 const DEFAULT_DURATION = 4_000;
 let toastLimit = 5;
 let activeToastIds: string[] = [];
+const toastTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+function clearToastTimer(id?: string) {
+  if (id) {
+    const existing = toastTimers.get(id);
+    if (existing !== undefined) {
+      clearTimeout(existing);
+      toastTimers.delete(id);
+    }
+  } else {
+    toastTimers.forEach((timer) => clearTimeout(timer));
+    toastTimers.clear();
+  }
+}
 
 const warningIcon = (
   <span className="flex h-5 w-5 shrink-0 items-center justify-center text-amber-500">
@@ -94,7 +108,7 @@ function withAction(message: React.ReactNode, action?: ToastOptions["action"], i
         onClick={(e) => {
           e.stopPropagation();
           action.onClick();
-          if (id) hotToast.dismiss(id);
+          if (id) dismissToast(id);
         }}
         className="shrink-0 text-xs font-semibold text-indigo-600 transition-colors hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 cursor-pointer"
       >
@@ -125,16 +139,21 @@ function rememberToast(id: string) {
 
   while (activeToastIds.length > toastLimit) {
     const staleId = activeToastIds.shift();
-    if (staleId) hotToast.dismiss(staleId);
+    if (staleId) {
+      clearToastTimer(staleId);
+      hotToast.dismiss(staleId);
+    }
   }
 }
 
 function dismissToast(id?: string) {
+  clearToastTimer(id);
   activeToastIds = id ? activeToastIds.filter((toastId) => toastId !== id) : [];
   hotToast.dismiss(id);
 }
 
 function removeToast(id?: string) {
+  clearToastTimer(id);
   activeToastIds = id ? activeToastIds.filter((toastId) => toastId !== id) : [];
   hotToast.remove(id);
 }
@@ -171,12 +190,17 @@ function show(
       break;
   }
 
+  clearToastTimer(toastId);
+
   // Garantia absoluta de auto-dismiss: caso eventos de hover ou touch em mobile segurem o timer do react-hot-toast,
   // força a remoção após a duração configurada (padrão 4000ms ou opts.duration)
   if (type !== "loading" && hotOptions.duration && hotOptions.duration !== Infinity) {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      toastTimers.delete(toastId);
+      activeToastIds = activeToastIds.filter((id) => id !== toastId);
       hotToast.dismiss(toastId);
     }, hotOptions.duration);
+    toastTimers.set(toastId, timer);
   }
 
   return rememberAndReturn(toastId);
@@ -258,7 +282,7 @@ export function Toaster({
       position={activePosition}
       reverseOrder={isTop}
       gutter={8}
-      containerClassName="biglar-hot-toaster"
+      containerClassName="lopes-ui-toaster"
       containerStyle={{
         top: isTop ? (isMobile ? 16 : 56) : "auto",
         bottom: !isTop ? (isMobile ? 24 : 32) : "auto",
@@ -267,7 +291,7 @@ export function Toaster({
       }}
       toastOptions={{
         duration: DEFAULT_DURATION,
-        className: "biglar-hot-toast",
+        className: "lopes-ui-toast",
         style: {
           background: "var(--background)",
           color: "var(--foreground)",
@@ -293,7 +317,7 @@ export function Toaster({
     >
       {(t) => (
         <motion.div
-          onClick={() => hotToast.dismiss(t.id)}
+          onClick={() => dismissToast(t.id)}
           initial={{
             opacity: 0,
             y: isTop ? -26 : 26,
