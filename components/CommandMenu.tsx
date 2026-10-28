@@ -536,7 +536,7 @@ export default function CommandMenu({
         open &&
         createPortal(
           <div
-            className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[15vh]"
+            className="fixed inset-0 z-50 flex items-start justify-center px-3 sm:px-4 pt-[6vh] sm:pt-[14vh]"
             role="dialog"
             aria-modal="true"
             aria-label="Menu de comandos"
@@ -605,7 +605,7 @@ export default function CommandMenu({
               </div>
 
               {/* ── Results list ───────────────────────────────────────────── */}
-              <div ref={listRef} className="max-h-80 overflow-y-auto py-2 overscroll-contain">
+              <div ref={listRef} className="max-h-[55dvh] sm:max-h-80 overflow-y-auto py-2 overscroll-contain">
                 {filtered.length === 0 ? (
                   <p className="px-4 py-10 text-center text-sm text-header-command-panel-muted">
                     Nenhum resultado encontrado.
