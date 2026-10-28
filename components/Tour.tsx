@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Sparkles, X } from "lucide-react";
 import { cn } from "@/utils/cn";
-import { useAccessControl, type AccessControlProps } from "./useAccessControl";
+import { useAccessControl } from "./useAccessControl";
 
 export interface TourStep {
   id?: string;
@@ -17,7 +17,9 @@ export interface TourStep {
   media?: React.ReactNode;
 }
 
-export interface TourProps extends AccessControlProps {
+export interface TourProps {
+  componentId?: string;
+  hideIfDenied?: boolean;
   /** Lista de passos do tour */
   steps: TourStep[];
   /** Passo inicial (default: 0) */
@@ -48,27 +50,16 @@ export default function Tour({
   open = true,
   finishLabel = "Concluir tour",
   className,
-  permission,
-  role,
-  permissions,
-  roles,
-  requireAll,
-  onUnauthorized,
-  fallback = null,
+  componentId,
+  hideIfDenied = true,
 }: TourProps) {
   const [internalStep, setInternalStep] = useState(defaultStep);
   const [dismissed, setDismissed] = useState(false);
 
-  const access = useAccessControl({
-    permission,
-    role,
-    permissions,
-    roles,
-    requireAll,
-    onUnauthorized,
-  });
+  const { canAccess } = useAccessControl();
+  const hasAccess = componentId ? canAccess(componentId) : true;
 
-  if (!access.allowed) return <>{fallback}</>;
+  if (!hasAccess && hideIfDenied) return null;
   if (!open || dismissed || steps.length === 0) return null;
 
   const activeIdx = Math.min(steps.length - 1, Math.max(0, controlledStep ?? internalStep));
