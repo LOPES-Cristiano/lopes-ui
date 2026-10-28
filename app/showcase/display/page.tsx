@@ -24,6 +24,7 @@ import Indicator from "@/components/Indicator";
 import Stack from "@/components/Stack";
 import Mask from "@/components/Mask";
 import { BrowserMockup, WindowMockup, PhoneMockup, CodeMockup } from "@/components/Mockup";
+import BentoGrid, { BentoCard } from "@/components/BentoGrid";
 import CodeBlock from "@/components/CodeBlock";
 import toast from "@/components/Toast";
 import { TrendingUp, Star, ShoppingCart, Users, Package, ArrowRight, MoreHorizontal, Globe, Cpu, Layers, MapPin, Phone, Truck, Bell } from "lucide-react";
@@ -122,6 +123,10 @@ const DEMO_INCIDENTS: ServiceIncident[] = [
 ];
 
 export default function Page() {
+  const [countdownPaused, setCountdownPaused] = useState(false);
+  const [countdownBaseSec, setCountdownBaseSec] = useState(2 * 86400 + 14 * 3600 + 28 * 60 + 45);
+  const [manualDigit, setManualDigit] = useState(42);
+
   return (
     <main className="flex-1 min-w-0 overflow-x-hidden bg-zinc-50 dark:bg-zinc-950">
       <div className="px-4 sm:px-6 lg:px-10 pt-10 sm:pt-14 pb-20">
@@ -1057,7 +1062,7 @@ import { Star } from "lucide-react";
                   <Progress label="Sincronizando Índices..." indeterminate tone="info" size="sm" />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/40 p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/40 p-4 sm:p-6">
                   <div className="flex flex-col items-center justify-center gap-2.5 text-center">
                     <RadialProgress value={84} tone="success" size="lg" />
                     <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Uptime (84%)</span>
@@ -1197,18 +1202,108 @@ import { Star } from "lucide-react";
             <SectionHeader
               label="Temporizador"
               title="Countdown"
-              description="Contador regressivo animado com rolagem vertical por dígito (odômetro), ideal para lançamentos de releases, janelas de manutenção e SLAs."
+              description="Contador regressivo animado com rolagem vertical por dígito (odômetro GPU translate3d), ideal para lançamentos de releases, janelas de manutenção e SLAs."
             />
 
-            <DemoCard id="countdown-demo" title="Contagem Regressiva para Próximo Release">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-6">
-                  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Variante Boxed (Odômetro · Tone Primary)</span>
-                  <Countdown targetDate={relDate(3)} size="lg" variant="boxed" tone="primary" />
+            <DemoCard id="countdown-demo" title="Contagem Regressiva Interativa (Odômetro em Tempo Real)">
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/60 px-4 py-3">
+                  <div className="flex items-center gap-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                    <span className={`inline-block size-2 rounded-full ${countdownPaused ? "bg-amber-500" : "bg-emerald-500 animate-pulse"}`} />
+                    <span>{countdownPaused ? "Temporizador pausado" : "Rolagem de odômetro ativa (1 tick/seg)"}</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant={countdownPaused ? "primary" : "outline"}
+                      onClick={() => setCountdownPaused((p) => !p)}
+                    >
+                      {countdownPaused ? "Retomar" : "Pausar"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setCountdownBaseSec((s) => Math.max(10, s - 15))}
+                    >
+                      -15s
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setCountdownBaseSec((s) => s + 15)}
+                    >
+                      +15s
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setCountdownPaused(false);
+                        setCountdownBaseSec(2 * 86400 + 14 * 3600 + 28 * 60 + 45);
+                      }}
+                    >
+                      Resetar
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-6">
-                  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Variante Cards (Alto Contraste)</span>
-                  <Countdown targetDate={relDate(1)} showDays={false} size="lg" variant="cards" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-6">
+                    <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Variante Boxed (Odômetro · Tone Primary)</span>
+                    <Countdown
+                      seconds={countdownBaseSec}
+                      paused={countdownPaused}
+                      size="lg"
+                      variant="boxed"
+                      tone="primary"
+                    />
+                  </div>
+                  <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-6">
+                    <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Variante Cards (Alto Contraste · Horas/Min/Seg)</span>
+                    <Countdown
+                      seconds={countdownBaseSec % 86400}
+                      paused={countdownPaused}
+                      showDays={false}
+                      size="lg"
+                      variant="cards"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                  <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 p-4">
+                    <span className="text-[11px] font-medium text-zinc-400">Variante Inline (SLA)</span>
+                    <Countdown
+                      seconds={countdownBaseSec % 3600}
+                      paused={countdownPaused}
+                      showDays={false}
+                      showHours={false}
+                      size="md"
+                      variant="inline"
+                      tone="success"
+                    />
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 p-4">
+                    <span className="text-[11px] font-medium text-zinc-400">Variante Compact (Relógio Digital)</span>
+                    <Countdown
+                      seconds={countdownBaseSec % 86400}
+                      paused={countdownPaused}
+                      showDays={false}
+                      size="md"
+                      variant="compact"
+                      tone="warning"
+                    />
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 p-4">
+                    <span className="text-[11px] font-medium text-zinc-400">Dígito Controlado (`value={manualDigit}`)</span>
+                    <div className="flex items-center gap-3">
+                      <Button size="sm" variant="outline" onClick={() => setManualDigit((d) => (d <= 0 ? 99 : d - 1))}>-1</Button>
+                      <Countdown value={manualDigit} size="lg" tone="primary" />
+                      <Button size="sm" variant="outline" onClick={() => setManualDigit((d) => (d >= 99 ? 0 : d + 1))}>+1</Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </DemoCard>
@@ -1405,6 +1500,64 @@ import { Star } from "lucide-react";
                 />
               </div>
             </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── BentoGrid & BentoCard ─────────────────────────────────── */}
+          <section id="bento-grid" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Layout Assimétrico"
+              title="BentoGrid & BentoCard"
+              description="Grade estilo Bento Box responsiva com suporte a múltiplos tamanhos de coluna/linha (colSpan, rowSpan), ícones, badges, cabeçalhos gráficos e links de chamada para ação (CTA)."
+            />
+
+            <DemoCard id="bento-grid-demo" title="Bento Grid de Recursos da Plataforma">
+              <BentoGrid columns={3}>
+                <BentoCard
+                  colSpan={2}
+                  featured
+                  icon={Layers}
+                  badge={<Badge label="Arquitetura Modular" variant="primary" size="xs" />}
+                  title="Mais de 80 Componentes Prontos para Produção"
+                  description="Construídos sobre Radix UI e Tailwind CSS v4 com suporte nativo a temas Light/Dark, validação Zod e árvore de pacotes otimizada (tree-shakeable)."
+                  cta="Explorar Templates"
+                  href="/templates"
+                />
+                <BentoCard
+                  icon={Cpu}
+                  badge={<Badge label="Zero Config" variant="success" size="xs" />}
+                  title="CLI Inteligente"
+                  description="Configure dependências peer e variáveis de tema em segundos com npx lopes-ui init."
+                  cta="Ver documentação"
+                  href="/#install"
+                />
+                <BentoCard
+                  icon={Globe}
+                  title="Acessibilidade WCAG AA"
+                  description="Navegação completa por teclado, foco gerenciado e atributos ARIA em todos os componentes interativos."
+                />
+                <BentoCard
+                  colSpan={2}
+                  icon={TrendingUp}
+                  badge={<Badge label="RBAC" variant="info" size="xs" />}
+                  title="Controle de Acesso Integrado (useAccessControl)"
+                  description="Condicione a visibilidade ou habilitação de qualquer botão, campo ou painel diretamente via props declarativas permission e role."
+                  cta="Testar Simulador RBAC"
+                  href="/templates#settings"
+                />
+              </BentoGrid>
+            </DemoCard>
+
+            <PropsTable
+              rows={[
+                ["columns", "2 | 3 | 4", "3", "Número de colunas do BentoGrid em telas desktop"],
+                ["colSpan", "1 | 2 | 3", "1", "Quantidade de colunas ocupadas pelo BentoCard"],
+                ["rowSpan", "1 | 2", "1", "Quantidade de linhas ocupadas pelo BentoCard"],
+                ["featured", "boolean", "false", "Aplica gradiente e borda em destaque indigo"],
+                ["cta", "string", "—", "Texto do link ou botão de ação no rodapé do card"],
+              ]}
+            />
           </section>
 
           <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
