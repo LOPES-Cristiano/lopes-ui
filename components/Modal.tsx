@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 /**
  * Pilha global de callbacks de fechamento dos modais abertos.
@@ -63,7 +64,7 @@ export function registerModal(onClose: () => void) {
   const modalId = `modal_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
   if (typeof window !== 'undefined' && modalStack.length === 0) {
-    window.addEventListener('keydown', handleGlobalEsc, true);
+    window.addEventListener('keydown', handleGlobalEsc, false);
   }
 
   modalStack.push({ id: modalId, onClose });
@@ -83,7 +84,7 @@ export function unregisterModal(onClose: () => void) {
   }
   notifyModalListeners();
   if (modalStack.length === 0 && typeof window !== 'undefined') {
-    window.removeEventListener('keydown', handleGlobalEsc, true);
+    window.removeEventListener('keydown', handleGlobalEsc, false);
   }
 }
 
@@ -102,12 +103,18 @@ export function useEscKey(onEsc: () => void, active: boolean = true) {
 }
 
 function handleGlobalEsc(e: KeyboardEvent) {
-  if (e.key === 'Escape' && modalStack.length > 0) {
-    e.stopImmediatePropagation();
-    e.preventDefault();
-    const top = modalStack[modalStack.length - 1];
-    top.onClose();
+  if (e.key !== 'Escape' || modalStack.length === 0) return;
+  if (
+    e.defaultPrevented ||
+    (typeof document !== 'undefined' &&
+      document.querySelector('[data-floating-open="true"], [data-radix-popper-content-wrapper]'))
+  ) {
+    return;
   }
+  e.stopImmediatePropagation();
+  e.preventDefault();
+  const top = modalStack[modalStack.length - 1];
+  top.onClose();
 }
 
 export interface ModalProps {
@@ -197,9 +204,13 @@ export default function Modal({
   componentId,
   zIndex,
 }: ModalProps) {
-  const isActuallyOpen = isOpen !== undefined ? isOpen : (open ?? true);
+  const resolvedOpen = Boolean(isOpen !== undefined ? isOpen : (open ?? true));
+  const isActuallyOpen = resolvedOpen;
+  const titleId = React.useId();
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  useBodyScrollLock(resolvedOpen);
 
   const onCloseRef = React.useRef(onClose);
   useEffect(() => {
@@ -324,12 +335,10 @@ export default function Modal({
             ? 'calc(100% - 1.5rem)'
             : (cfg?.maxHeight ?? '90vh');
 
-  const paddingStyle = noPadding
+  const paddingClass = noPadding
     ? 'p-0'
     : padding !== undefined
-      ? typeof padding === 'number'
-        ? `p-[${padding}px]`
-        : `p-[${padding}]`
+      ? undefined
       : 'p-4 sm:p-6';
 
   const modalRoot = shellContainer || (typeof document !== 'undefined' ? document.body : null);
@@ -339,6 +348,7 @@ export default function Modal({
     <div
       role="dialog"
       aria-modal="true"
+      aria-labelledby={title ? titleId : undefined}
       style={zIndex ? { zIndex } : undefined}
       className={cn(
         shellContainer
@@ -402,6 +412,7 @@ export default function Modal({
             <div className="min-w-0 pr-4">
               {title && (
                 <div
+                  id={titleId}
                   className={cn(
                     'text-base sm:text-lg font-semibold text-foreground leading-tight break-words',
                     headerClassName && 'text-inherit'
@@ -451,7 +462,14 @@ export default function Modal({
         )}
 
         {/* Body */}
-        <div className={cn('flex-1 overflow-y-auto min-h-0', paddingStyle, bodyClassName)}>
+        <div
+          style={{
+            ...(!noPadding && padding !== undefined
+              ? { padding: typeof padding === 'number' ? `${padding}px` : padding }
+              : {}),
+          }}
+          className={cn('flex-1 overflow-y-auto min-h-0', paddingClass, bodyClassName)}
+        >
           {children}
         </div>
 
