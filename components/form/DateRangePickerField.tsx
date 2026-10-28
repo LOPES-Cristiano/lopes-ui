@@ -287,7 +287,7 @@ export default function DateRangePickerField({
             ref={panelRef}
             data-floating-open="true"
             style={panelStyle}
-            className="pointer-events-auto inline-flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xl"
+            className="pointer-events-auto inline-flex flex-col max-w-[calc(100vw-24px)] max-h-[calc(100dvh-24px)] overflow-y-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xl"
           >
             <Calendar
               size="sm"
