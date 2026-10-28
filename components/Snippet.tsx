@@ -3,9 +3,11 @@
 import React, { useState } from "react";
 import { Check, Copy, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/utils/cn";
-import { useAccessControl, type AccessControlProps } from "./useAccessControl";
+import { useAccessControl } from "./useAccessControl";
 
-export interface CopyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, AccessControlProps {
+export interface CopyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  componentId?: string;
+  hideIfDenied?: boolean;
   /** Valor textual a ser copiado para a área de transferência */
   value: string;
   /** Rótulo opcional ao lado do ícone */
@@ -29,29 +31,18 @@ export function CopyButton({
   onCopied,
   className,
   disabled,
-  permission,
-  role,
-  permissions,
-  roles,
-  requireAll,
-  onUnauthorized,
-  fallback = null,
+  componentId,
+  hideIfDenied = true,
   ...props
 }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
-  const access = useAccessControl({
-    permission,
-    role,
-    permissions,
-    roles,
-    requireAll,
-    onUnauthorized,
-  });
+  const { canAccess } = useAccessControl();
+  const hasAccess = componentId ? canAccess(componentId) : true;
 
-  if (!access.allowed && access.behavior === "hide") return <>{fallback}</>;
+  if (!hasAccess && hideIfDenied) return null;
 
-  const isDisabled = disabled || (!access.allowed && access.behavior === "disable");
+  const isDisabled = disabled || !hasAccess;
 
   const handleCopy = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -100,7 +91,9 @@ export function CopyButton({
   );
 }
 
-export interface SnippetProps extends React.HTMLAttributes<HTMLDivElement>, AccessControlProps {
+export interface SnippetProps extends React.HTMLAttributes<HTMLDivElement> {
+  componentId?: string;
+  hideIfDenied?: boolean;
   /** Comando, chave de API ou código a ser exibido e copiado */
   code: string | string[];
   /** Símbolo de prefixo (ex: "$", ">", "#"). Passe false para ocultar */
@@ -126,27 +119,16 @@ export default function Snippet({
   hideCopyButton = false,
   onCopyCode,
   className,
-  permission,
-  role,
-  permissions,
-  roles,
-  requireAll,
-  onUnauthorized,
-  fallback = null,
+  componentId,
+  hideIfDenied = true,
   ...props
 }: SnippetProps) {
   const [revealed, setRevealed] = useState(!maskSecret);
 
-  const access = useAccessControl({
-    permission,
-    role,
-    permissions,
-    roles,
-    requireAll,
-    onUnauthorized,
-  });
+  const { canAccess } = useAccessControl();
+  const hasAccess = componentId ? canAccess(componentId) : true;
 
-  if (!access.allowed) return <>{fallback}</>;
+  if (!hasAccess && hideIfDenied) return null;
 
   const lines = Array.isArray(code) ? code : [code];
   const fullText = lines.join("\n");
