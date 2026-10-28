@@ -31,7 +31,7 @@ function ModalAndFormModalDemo() {
 
   const tabs = [
     { id: "geral", label: "Dados Gerais", description: "Identificação e categoria" },
-    { id: "estoque", label: "Preços & Filiais", description: "Praças RO e AM", badge: 2 },
+    { id: "estoque", label: "Planos & Limites", description: "Cotas e regiões", badge: 2 },
   ];
 
   return (
@@ -57,7 +57,7 @@ function ModalAndFormModalDemo() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         size={modalSize}
-        title="Detalhes da Entrega Regional"
+        title="Detalhes da Implantação"
         description={`Visualizando em tamanho "${modalSize}" com pilha global de ESC`}
         footer={
           <div className="flex justify-end gap-2">
@@ -69,20 +69,20 @@ function ModalAndFormModalDemo() {
               size="sm"
               onClick={() => {
                 setModalOpen(false);
-                toast.success("Romaneio confirmado!");
+                toast.success("Implantação confirmada!");
               }}
             >
-              Confirmar Romaneio
+              Confirmar Implantação
             </Button>
           </div>
         }
       >
         <div className="space-y-3 text-sm text-zinc-600 dark:text-zinc-400">
           <p>
-            Unidade: <strong>BigLar Móveis &amp; Eletro — Filial Ji-Paraná (RO)</strong>
+            Ambiente: <strong>Lopes Cloud — Cluster us-east-1 (Produção)</strong>
           </p>
           <p>
-            Itens programados: Guarda-Roupa Casal 6 Portas e Colchão Ortopédico Queen.
+            Serviços incluídos: API Gateway, Worker de Filas e Painel de Telemetria.
           </p>
         </div>
       </Modal>
@@ -91,10 +91,10 @@ function ModalAndFormModalDemo() {
         open={formModalOpen}
         onClose={() => setFormModalOpen(false)}
         title="Cadastro de Produto"
-        subtitle="Conforto e qualidade para o seu lar"
+        subtitle="Configuração padronizada do catálogo de serviços"
         code="PROD-8042"
         badge={<StatusBadge tone="success" label="Ativo" />}
-        avatar={{ initials: "BL" }}
+        avatar={{ initials: "LP" }}
         isEditing
         tabs={tabs}
         activeTab={activeTab}
@@ -109,19 +109,19 @@ function ModalAndFormModalDemo() {
         {activeTab === "geral" ? (
           <div className="space-y-4">
             <FormSectionHeader
-              title="Identificação do Móvel / Eletrodoméstico"
-              description="Preencha os dados principais para exibição no catálogo das lojas de RO e AM."
+              title="Identificação do Serviço / Recurso"
+              description="Preencha os dados principais para exibição no catálogo da plataforma."
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <TextField label="Descrição Comercial" defaultValue="Sofá Retrátil e Reclinável 3 Lugares" required />
+              <TextField label="Descrição Comercial" defaultValue="Licença Enterprise Multi-Workspace" required />
               <SelectField
                 label="Setor"
-                defaultValue="estofados"
+                defaultValue="saas"
                 options={[
-                  { value: "moveis", label: "Móveis & Roupeiros" },
-                  { value: "estofados", label: "Estofados & Salas" },
-                  { value: "colchoes", label: "Colchões" },
-                  { value: "eletro", label: "Eletrodomésticos" },
+                  { value: "cloud", label: "Infraestrutura & Cloud" },
+                  { value: "saas", label: "Plataforma & SaaS" },
+                  { value: "sec", label: "Segurança & Auditoria" },
+                  { value: "data", label: "Dados & Analytics" },
                 ]}
               />
             </div>
@@ -129,12 +129,12 @@ function ModalAndFormModalDemo() {
         ) : (
           <div className="space-y-4">
             <FormSectionHeader
-              title="Precificação Regional"
-              description="Valores praticados nas filiais de Rondônia (69) e Amazonas (92)."
+              title="Precificação por Plano"
+              description="Valores mensais e anuais praticados nos planos comerciais."
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <NumberField label="Preço Varejo (RO)" prefix="R$" value={2890} />
-              <NumberField label="Preço Varejo (AM)" prefix="R$" value={2950} />
+              <NumberField label="Plano Mensal" prefix="R$" value={2890} />
+              <NumberField label="Plano Anual" prefix="R$" value={2950} />
             </div>
           </div>
         )}
@@ -159,13 +159,13 @@ function FormDrawerAndCameraDemo() {
       <FormDrawer
         open={formDrawerOpen}
         onClose={() => setFormDrawerOpen(false)}
-        title="Agendar Montagem"
-        description="Ordem de Serviço #OS-6912 · Porto Velho (RO)"
+        title="Agendar Manutenção"
+        description="Ordem de Serviço #OS-6912 · Ambiente de Produção"
         summary={
           <div className="flex items-center justify-between text-xs">
             <div>
               <p className="font-bold text-zinc-900 dark:text-zinc-100">Cliente: Marcos Oliveira</p>
-              <p className="text-zinc-500">Contato: (69) 99214-8800 · Cozinha Modulável 5 Peças</p>
+              <p className="text-zinc-500">Contato: (11) 99214-8800 · Atualização de Cluster v2.4</p>
             </div>
             <StatusBadge tone="info" label="Agendado" />
           </div>
@@ -180,7 +180,7 @@ function FormDrawerAndCameraDemo() {
               size="sm"
               onClick={() => {
                 setFormDrawerOpen(false);
-                toast.success("Montagem agendada!");
+                toast.success("Manutenção agendada!");
               }}
             >
               Salvar Agendamento
@@ -188,7 +188,7 @@ function FormDrawerAndCameraDemo() {
           </div>
         }
       >
-        <TextField label="Montador Responsável" defaultValue="Carlos Eduardo (Equipe RO)" />
+        <TextField label="Engenheiro Responsável" defaultValue="Carlos Eduardo (SRE)" />
         <TextField label="Observações de Acesso" placeholder="Ponto de referência da residência..." />
       </FormDrawer>
 
@@ -196,7 +196,7 @@ function FormDrawerAndCameraDemo() {
         open={cameraOpen}
         onClose={() => setCameraOpen(false)}
         title="Capturar Comprovante de Entrega"
-        description="Posicione o canhoto assinado ou foto do móvel montado no quadro central"
+        description="Posicione o documento ou crachá de identificação no quadro central"
         onCapture={(file) => {
           toast.success(`Foto capturada: ${file.name}`);
           setCameraOpen(false);
