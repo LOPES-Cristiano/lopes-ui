@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type LucideIcon, ChevronRight, LogOut, Settings, User, Briefcase, Building2 } from "lucide-react";
@@ -8,9 +8,14 @@ import { type LucideIcon, ChevronRight, LogOut, Settings, User, Briefcase, Build
 // ─── ProfileMenuHeader ────────────────────────────────────────────────────────
 
 export type ProfileMenuHeaderProps = {
+  /** URL da imagem de avatar */
+  avatarUrl?: string | null;
   avatar?: string;
+  /** @deprecated Prefira `avatarUrl`. Mantido por compatibilidade. */
   fotoUrl?: string | null;
   usuarioId?: string | number | null;
+  /** Callback opcional para resolver dinamicamente a URL do avatar a partir do ID do usuário */
+  resolveAvatarUrl?: (userId: string) => string | null | Promise<string | null>;
   initials?: string;
   name?: string;
   login?: string;
@@ -20,9 +25,11 @@ export type ProfileMenuHeaderProps = {
 };
 
 export function ProfileMenuHeader({
+  avatarUrl,
   avatar,
   fotoUrl,
   usuarioId,
+  resolveAvatarUrl,
   initials,
   name,
   login,
@@ -30,30 +37,67 @@ export function ProfileMenuHeader({
   departamentoNome,
   cargoNome,
 }: ProfileMenuHeaderProps) {
-  const isUuid = typeof usuarioId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(usuarioId);
-  const imgSrc = fotoUrl || avatar || (isUuid ? `/api/cadastro/usuarios/${usuarioId}/foto` : null);
+  const directSrc = avatarUrl || fotoUrl || avatar || null;
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
+  const [imgFailed, setImgFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (directSrc || usuarioId == null || !resolveAvatarUrl) {
+      setResolvedSrc(null);
+      return;
+    }
+    const userIdStr = String(usuarioId).trim();
+    if (!userIdStr) {
+      setResolvedSrc(null);
+      return;
+    }
+    try {
+      const result = resolveAvatarUrl(userIdStr);
+      if (typeof result === "string" || result === null) {
+        setResolvedSrc(result || null);
+      } else if (result && typeof result.then === "function") {
+        result
+          .then((url) => {
+            if (!cancelled) setResolvedSrc(url || null);
+          })
+          .catch(() => {
+            if (!cancelled) setResolvedSrc(null);
+          });
+      }
+    } catch {
+      if (!cancelled) setResolvedSrc(null);
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [directSrc, usuarioId, resolveAvatarUrl]);
+
+  const imgSrc = directSrc || resolvedSrc;
+
+  useEffect(() => {
+    setImgFailed(false);
+  }, [imgSrc]);
+
+  const showImg = Boolean(imgSrc && !imgFailed);
 
   return (
     <div className="flex flex-col gap-2.5 px-4 py-3.5 border-b border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/80 dark:bg-zinc-800/40">
       <div className="flex items-center gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-sm font-bold text-white ring-2 ring-slate-200 dark:ring-zinc-600 shadow-sm">
-          {imgSrc ? (
+          {showImg && imgSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={imgSrc}
-              alt={name ?? 'avatar'}
+              alt={name ?? "avatar"}
               className="h-full w-full object-cover"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                if (e.currentTarget.nextElementSibling) {
-                  (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
-                }
-              }}
+              onError={() => setImgFailed(true)}
             />
-          ) : null}
-          <span style={{ display: imgSrc ? 'none' : 'flex' }}>
-            {initials || (name ? name.slice(0, 2).toUpperCase() : <User size={18} />)}
-          </span>
+          ) : (
+            <span className="flex items-center justify-center">
+              {initials || (name ? name.slice(0, 2).toUpperCase() : <User size={18} />)}
+            </span>
+          )}
         </span>
 
         <div className="min-w-0 flex-1">
@@ -62,9 +106,11 @@ export function ProfileMenuHeader({
               {name}
             </p>
           )}
-          <p className="mt-0.5 truncate text-xs font-medium leading-tight text-zinc-500 dark:text-zinc-400">
-            {login ? `@${login}` : email}
-          </p>
+          {(login || email) && (
+            <p className="mt-0.5 truncate text-xs font-medium leading-tight text-zinc-500 dark:text-zinc-400">
+              {login ? `@${login}` : email}
+            </p>
+          )}
         </div>
       </div>
 
@@ -182,7 +228,7 @@ export function ProfileMenuItem({
         className={base}
         role="menuitem"
         onClick={disabled ? (e) => e.preventDefault() : onClick}
-        >
+      >
         {inner}
       </Link>
     );
@@ -212,31 +258,142 @@ export function ProfileMenuSectionTitle({ children }: { children: React.ReactNod
   );
 }
 
-// ─── ProfileActions (default) ─────────────────────────────────────────────────
+// ─── ProfileActions ───────────────────────────────────────────────────────────
 
-export default function ProfileActions() {
+export type ProfileActionsProps = ProfileMenuHeaderProps & {
+  /** Lista customizada de itens do menu */
+  items?: ProfileMenuItemProps[];
+  /** Conteúdo livre renderizado antes da ação de sair */
+  children?: React.ReactNode;
+  /** Href do item Perfil (padrão: "/profile" quando `items` não é informado) */
+  profileHref?: string | null;
+  onProfileClick?: () => void;
+  showProfile?: boolean;
+  /** Href do item Configurações (padrão: "/settings" quando `items` não é informado) */
+  settingsHref?: string | null;
+  onSettingsClick?: () => void;
+  showSettings?: boolean;
+  /** Callback ou rota de saída */
+  onLogout?: () => void;
+  logoutHref?: string;
+  logoutLabel?: string;
+  showLogout?: boolean;
+  /** Controla exibição do cabeçalho do perfil (padrão: true quando dados do usuário são informados) */
+  showHeader?: boolean;
+  className?: string;
+};
+
+export function ProfileActions({
+  avatarUrl,
+  avatar,
+  fotoUrl,
+  usuarioId,
+  resolveAvatarUrl,
+  initials,
+  name,
+  login,
+  email,
+  departamentoNome,
+  cargoNome,
+  items,
+  children,
+  profileHref = "/profile",
+  onProfileClick,
+  showProfile = true,
+  settingsHref = "/settings",
+  onSettingsClick,
+  showSettings = true,
+  onLogout,
+  logoutHref = "/logout",
+  logoutLabel = "Sair",
+  showLogout = true,
+  showHeader,
+  className,
+}: ProfileActionsProps = {}) {
   const router = useRouter();
 
+  const hasUserInfo = Boolean(
+    name ||
+      email ||
+      login ||
+      initials ||
+      avatarUrl ||
+      fotoUrl ||
+      avatar ||
+      (usuarioId != null && resolveAvatarUrl) ||
+      departamentoNome ||
+      cargoNome
+  );
+  const shouldRenderHeader = showHeader ?? hasUserInfo;
+
+  const defaultItems: ProfileMenuItemProps[] = [];
+  if (!items) {
+    if (showProfile && (profileHref || onProfileClick)) {
+      defaultItems.push({
+        icon: User,
+        label: "Perfil",
+        description: "Ver e editar perfil",
+        href: onProfileClick && !profileHref ? undefined : (profileHref ?? undefined),
+        onClick: onProfileClick,
+      });
+    }
+    if (showSettings && (settingsHref || onSettingsClick)) {
+      defaultItems.push({
+        icon: Settings,
+        label: "Configurações",
+        shortcut: "⌘,",
+        href: onSettingsClick && !settingsHref ? undefined : (settingsHref ?? undefined),
+        onClick: onSettingsClick,
+      });
+    }
+  }
+
+  const effectiveItems = items ?? defaultItems;
+  const hasBodyContent = effectiveItems.length > 0 || Boolean(children);
+
   return (
-    <div>
-      <ProfileMenuHeader
-        initials="CL"
-        name="Cristiano Lopes"
-        email="cristiano@Lopes.com"
-      />
-      <div className="py-1">
-        <ProfileMenuItem icon={User} label="Perfil" description="Ver e editar perfil" href="/profile" />
-        <ProfileMenuItem icon={Settings} label="Configurações" shortcut="⌘," href="/settings" />
-      </div>
-      <ProfileMenuDivider />
-      <div className="py-1">
-        <ProfileMenuItem
-          icon={LogOut}
-          label="Sair"
-          danger
-          onClick={() => router.push("/logout")}
+    <div className={className}>
+      {shouldRenderHeader && (
+        <ProfileMenuHeader
+          avatarUrl={avatarUrl}
+          avatar={avatar}
+          fotoUrl={fotoUrl}
+          usuarioId={usuarioId}
+          resolveAvatarUrl={resolveAvatarUrl}
+          initials={initials}
+          name={name}
+          login={login}
+          email={email}
+          departamentoNome={departamentoNome}
+          cargoNome={cargoNome}
         />
-      </div>
+      )}
+
+      {effectiveItems.length > 0 && (
+        <div className="py-1">
+          {effectiveItems.map((item, idx) => (
+            <ProfileMenuItem key={item.componentId ?? `${item.label}-${idx}`} {...item} />
+          ))}
+        </div>
+      )}
+
+      {children}
+
+      {showLogout && (
+        <>
+          {hasBodyContent && <ProfileMenuDivider />}
+          <div className="py-1">
+            <ProfileMenuItem
+              icon={LogOut}
+              label={logoutLabel}
+              danger
+              onClick={onLogout ?? (() => router.push(logoutHref))}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
+
+export default ProfileActions;
