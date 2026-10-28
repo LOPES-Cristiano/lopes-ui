@@ -47,11 +47,20 @@ export default function SpreadsheetMultiSelect({ options, value, onChange, compo
       if (btnRef.current?.contains(t) || panelRef.current?.contains(t)) return;
       setOpen(false);
     };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setOpen(false);
+        btnRef.current?.focus();
+      }
+    };
     const reposition = () => setOpen(false);
     document.addEventListener('mousedown', close);
+    window.addEventListener('keydown', onKeyDown);
     window.addEventListener('resize', reposition);
     return () => {
       document.removeEventListener('mousedown', close);
+      window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('resize', reposition);
     };
   }, [open]);
@@ -84,6 +93,7 @@ export default function SpreadsheetMultiSelect({ options, value, onChange, compo
         ref={btnRef}
         type="button"
         data-component-id={componentId}
+        aria-expanded={open}
         onClick={toggleOpen}
         title={selected.size ? Array.from(selected).join(', ') : 'Filtrar por lista'}
         className={twMerge(
@@ -102,6 +112,7 @@ export default function SpreadsheetMultiSelect({ options, value, onChange, compo
         createPortal(
           <div
             ref={panelRef}
+            data-floating-open="true"
             className="fixed z-[1000] rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-2xl flex flex-col"
             style={{ left: pos.left, top: pos.top, width: pos.width, maxHeight: 340 }}
           >
@@ -145,7 +156,7 @@ export default function SpreadsheetMultiSelect({ options, value, onChange, compo
                     <span
                       className={twMerge(
                         'h-3.5 w-3.5 shrink-0 rounded border flex items-center justify-center',
-                        checked ? 'bg-primary border-primary text-white' : 'border-zinc-300 dark:border-zinc-600'
+                        checked ? 'border-primary bg-primary text-primary-foreground' : 'border-zinc-300 dark:border-zinc-600'
                       )}
                     >
                       {checked && <Check size={10} strokeWidth={3} />}
