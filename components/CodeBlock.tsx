@@ -57,16 +57,16 @@ function HeaderMeta({ filename, language }: { filename?: string; language?: stri
   const langLabel = LANG_LABEL[lang]?.trim() ?? lang.toUpperCase();
 
   return (
-    <div className="flex items-center gap-2 text-xs">
-      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-zinc-800/80 text-zinc-400">
+    <div className="flex items-center gap-2 text-xs min-w-0">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-zinc-800/80 text-zinc-400">
         {isTerminal ? <Terminal size={12} /> : <FileCode2 size={12} />}
       </span>
       {filename ? (
-        <span className="font-mono font-medium text-zinc-200">
+        <span className="font-mono font-medium text-zinc-200 truncate">
           {isTerminal && filename === "terminal" ? "terminal" : filename}
         </span>
       ) : null}
-      <span className="rounded border border-zinc-700/70 bg-zinc-800/70 px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
+      <span className="shrink-0 rounded border border-zinc-700/70 bg-zinc-800/70 px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
         {langLabel}
       </span>
     </div>
