@@ -305,14 +305,9 @@ export function Sidebar({
         onMouseLeave={handleMouseLeave}
         onFocusCapture={(e) => {
           const target = e.target as HTMLElement | null;
-          if (target && typeof target.matches === 'function') {
-            try {
-              if (!target.matches(':focus-visible') && target.tagName !== 'INPUT') {
-                return;
-              }
-            } catch {}
+          if (target && target.tagName === 'INPUT') {
+            handleMouseEnter();
           }
-          handleMouseEnter();
         }}
         onBlurCapture={(e) => {
           const related = e.relatedTarget as Node | null;
