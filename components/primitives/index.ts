@@ -1,6 +1,7 @@
 export * from './button';
 export * from './badge';
 export * from './input';
+export * from './textarea';
 export * from './skeleton';
 export * from './dialog';
 export * from './alert-dialog';
@@ -11,3 +12,7 @@ export * from './tooltip';
 export * from './switch';
 export * from './dropdown-menu';
 export * from './select';
+export * from './tabs';
+export * from './hover-card';
+export * from './separator';
+export * from './scroll-area';
