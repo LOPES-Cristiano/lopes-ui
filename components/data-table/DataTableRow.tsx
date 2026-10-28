@@ -91,6 +91,7 @@ export function DataTableRow<T = Record<string, unknown>>({
   checkboxClassName,
   onActionError,
   hasExpandable = false,
+  expandColumnWidth,
   isExpanded = false,
   onToggleExpand,
   expandedContent,
@@ -116,6 +117,7 @@ export function DataTableRow<T = Record<string, unknown>>({
   checkboxClassName?: string;
   onActionError?: (error: unknown, actionName?: string) => void;
   hasExpandable?: boolean;
+  expandColumnWidth?: string | number;
   isExpanded?: boolean;
   onToggleExpand?: (key: string | number, row: T) => void;
   expandedContent?: React.ReactNode;
@@ -242,7 +244,8 @@ export function DataTableRow<T = Record<string, unknown>>({
         {/* Expansão / Accordion */}
         {hasExpandable && (
           <td
-            className={twMerge('w-10 text-center align-middle', rowPaddingCls)}
+            style={expandColumnWidth !== undefined ? { width: expandColumnWidth, minWidth: expandColumnWidth } : undefined}
+            className={twMerge(expandColumnWidth === undefined && 'w-10', 'text-center align-middle', rowPaddingCls)}
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -252,7 +255,7 @@ export function DataTableRow<T = Record<string, unknown>>({
               className={twMerge(
                 'inline-flex items-center justify-center h-6 w-6 rounded-md border transition-all duration-200 cursor-pointer',
                 isExpanded
-                  ? 'bg-primary text-white border-primary shadow-xs'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                   : 'bg-muted/30 border-border/80 text-muted-foreground hover:bg-muted/80 hover:text-foreground'
               )}
               title={isExpanded ? 'Recolher detalhes' : 'Expandir detalhes'}
