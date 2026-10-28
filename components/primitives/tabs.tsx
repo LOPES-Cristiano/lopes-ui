@@ -124,7 +124,7 @@ const TabsList = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEl
         data-slot="tabs-list"
         onKeyDown={handleKeyDown}
         className={cn(
-          'inline-flex h-10 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800/80 p-1 text-zinc-500 dark:text-zinc-400',
+          'inline-flex max-w-full overflow-x-auto no-scrollbar h-auto min-h-10 items-center justify-start sm:justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800/80 p-1 text-zinc-500 dark:text-zinc-400',
           className
         )}
         {...props}
