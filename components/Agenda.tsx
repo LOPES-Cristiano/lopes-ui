@@ -257,7 +257,7 @@ export default function Agenda({
           </div>
 
           {/* Events */}
-          <div className="space-y-1.5 ml-10">
+          <div className="space-y-1.5 ml-0 sm:ml-10">
             {dayEvents.map((ev) => {
               const color = ev.color ?? "default";
               const Icon = ev.icon;
