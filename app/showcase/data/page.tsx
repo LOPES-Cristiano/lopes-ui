@@ -12,6 +12,8 @@ import TreeView from "@/components/TreeView";
 import Badge from "@/components/Badge";
 import Spreadsheet, { type SpreadsheetColumn } from "@/components/spreadsheet";
 import TransferList, { type TransferListItem } from "@/components/TransferList";
+import Chart from "@/components/Chart";
+import DescriptionList from "@/components/DescriptionList";
 
 import Button from "@/components/Button";
 import toast from "@/components/Toast";
@@ -875,8 +877,130 @@ export default function Page() {
             />
 
             <DemoCard id="transfer-list-demo" title="Escopos e Permissões Vinculadas">
-              <div className="p-4">
-                <TransferListDemo />
+              <TransferListDemo />
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Chart (Bar, Area, Line, Donut) ───────────────────────── */}
+          <section id="charts" className="space-y-10 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Visualização Analítica"
+              title="Chart (Bar, Area, Line & Donut)"
+              description="Gráficos vetoriais responsivos sem dependências externas pesadas, com suporte a múltiplas séries, barras empilhadas (stacked), tooltips interativos no hover, legendas e formatadores customizados."
+            />
+
+            <DemoCard id="chart-area-bar" title="Gráfico de Área (Multi-série) e Gráfico de Barras Empilhadas">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Chart
+                  type="area"
+                  title="Receita Mensal vs. Meta (R$ mil)"
+                  subtitle="Comparativo do primeiro semestre"
+                  height={230}
+                  data={[
+                    { label: "Jan", receita: 420, meta: 380 },
+                    { label: "Fev", receita: 480, meta: 420 },
+                    { label: "Mar", receita: 510, meta: 460 },
+                    { label: "Abr", receita: 590, meta: 500 },
+                    { label: "Mai", receita: 640, meta: 550 },
+                    { label: "Jun", receita: 720, meta: 600 },
+                  ]}
+                  series={[
+                    { key: "receita", label: "Receita Realizada", color: "indigo" },
+                    { key: "meta", label: "Meta", color: "emerald" },
+                  ]}
+                  valueFormatter={(v) => `R$ ${v}k`}
+                />
+
+                <Chart
+                  type="bar"
+                  stacked
+                  title="Demandas por Squad (Sprint)"
+                  subtitle="Entregas concluídas vs. em revisão"
+                  height={230}
+                  data={[
+                    { label: "Core", concluidas: 28, revisao: 6 },
+                    { label: "Pagamentos", concluidas: 34, revisao: 8 },
+                    { label: "Mobile", concluidas: 22, revisao: 5 },
+                    { label: "Cloud", concluidas: 41, revisao: 4 },
+                    { label: "Analytics", concluidas: 30, revisao: 7 },
+                  ]}
+                  series={[
+                    { key: "concluidas", label: "Concluídas", color: "indigo" },
+                    { key: "revisao", label: "Em Revisão", color: "amber" },
+                  ]}
+                />
+              </div>
+            </DemoCard>
+
+            <DemoCard id="chart-donut" title="Gráfico Donut Interativo com Rótulo Central">
+              <Chart
+                type="donut"
+                bordered={false}
+                title="Distribuição de Tráfego por Plataforma"
+                subtitle="Passe o mouse sobre os segmentos ou itens da legenda para inspecionar"
+                height={200}
+                data={[
+                  { label: "Aplicação Web Desktop", value: 540, color: "indigo" },
+                  { label: "App Mobile iOS / Android", value: 320, color: "emerald" },
+                  { label: "Integrações via API Pública", value: 180, color: "amber" },
+                  { label: "Webhooks & Parceiros", value: 90, color: "sky" },
+                ]}
+                centerLabel="1.130 req/s"
+                centerSublabel="Throughput Total"
+                valueFormatter={(v) => `${v} req/s`}
+              />
+            </DemoCard>
+
+            <PropsTable
+              rows={[
+                ["type", "'bar' | 'area' | 'line' | 'donut'", "'bar'", "Tipo de visualização do gráfico"],
+                ["data", "ChartDataPoint[]", "—", "Vetor de objetos com 'label' e chaves numéricas"],
+                ["series", "ChartSeries[]", "auto", "Definição das séries (key, label, color)"],
+                ["stacked", "boolean", "false", "Empilha barras quando type='bar'"],
+                ["valueFormatter", "(v: number) => string", "toLocaleString", "Formata os valores nos eixos e tooltips"],
+                ["centerLabel", "string", "total", "Texto principal no centro do gráfico Donut"],
+              ]}
+            />
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── DescriptionList ──────────────────────────────────────── */}
+          <section id="description-list" className="space-y-10 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Metadados & Detalhes"
+              title="DescriptionList"
+              description="Lista estruturada de pares chave/valor (horizontal, grid ou empilhada) com suporte integrado a cópia rápida (copyValue), linhas zebradas e badges."
+            />
+
+            <DemoCard id="description-list-demo" title="Layouts Horizontal e Grid com Cópia Rápida">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <DescriptionList
+                  title="Detalhes do Cluster de Produção"
+                  subtitle="Região SA-East (São Paulo)"
+                  striped
+                  items={[
+                    { label: "Cluster ID", value: "cls_prod_98a7f6b5", copyValue: "cls_prod_98a7f6b5" },
+                    { label: "Versão do Runtime", value: "Node.js 22.4 LTS" },
+                    { label: "Status Operacional", value: <Badge variant="success" size="xs" label="Operacional (99,99%)" /> },
+                    { label: "Endpoint Primário", value: "https://api.lopes-ui.dev", copyValue: "https://api.lopes-ui.dev" },
+                  ]}
+                />
+
+                <DescriptionList
+                  title="Resumo de Faturamento Corporativo"
+                  subtitle="Layout em Grade (layout='grid')"
+                  layout="grid"
+                  columns={2}
+                  items={[
+                    { label: "Razão Social", value: "Lopes Tecnologia S.A." },
+                    { label: "CNPJ", value: "12.345.678/0001-90", copyValue: "12.345.678/0001-90" },
+                    { label: "Plano Ativo", value: "Enterprise Unlimited" },
+                    { label: "Próxima Renovação", value: "01/01/2027" },
+                  ]}
+                />
               </div>
             </DemoCard>
           </section>
