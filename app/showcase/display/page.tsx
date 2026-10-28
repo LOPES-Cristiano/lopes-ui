@@ -7,15 +7,26 @@ import Calendar, { type CalendarEvent } from "@/components/Calendar";
 import Agenda, { type AgendaEvent } from "@/components/Agenda";
 import Card, { CardHeader, CardBody, CardFooter } from "@/components/Card";
 import Carousel from "@/components/Carousel";
-import StatCard, { type SparkPoint } from "@/components/StatCard";
+import StatCard, { StatGroup, type SparkPoint } from "@/components/StatCard";
 import ServiceStatusCard, { UptimeBar, type UptimeDay, type ServiceIncident } from "@/components/ServiceStatusCard";
 import PingIndicator from "@/components/PingIndicator";
 import StatusBadge from "@/components/StatusBadge";
 import { DetailHeader, DetailGrid, DetailPanel, InfoField, MetricField, DetailTabs } from "@/components/DetailLayout";
 import EmojiPicker from "@/components/EmojiPicker";
+import Progress, { RadialProgress } from "@/components/Progress";
+import HoverCard from "@/components/HoverCard";
+import { Item, ItemGroup, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from "@/components/Item";
+import AspectRatio from "@/components/AspectRatio";
+import Countdown from "@/components/Countdown";
+import Diff from "@/components/Diff";
+import HoverGallery, { Hover3DCard } from "@/components/HoverGallery";
+import Indicator from "@/components/Indicator";
+import Stack from "@/components/Stack";
+import Mask from "@/components/Mask";
+import { BrowserMockup, WindowMockup, PhoneMockup, CodeMockup } from "@/components/Mockup";
 import CodeBlock from "@/components/CodeBlock";
 import toast from "@/components/Toast";
-import { TrendingUp, Star, ShoppingCart, Users, Package, ArrowRight, MoreHorizontal, Globe, Cpu, Layers } from "lucide-react";
+import { TrendingUp, Star, ShoppingCart, Users, Package, ArrowRight, MoreHorizontal, Globe, Cpu, Layers, MapPin, Phone, Truck, Bell } from "lucide-react";
 import Button from "@/components/Button";
 import { SectionHeader, DemoCard, PropsTable } from "@/app/showcase/_shared";
 
@@ -1017,11 +1028,380 @@ import { Star } from "lucide-react";
               description="Seletor de emojis categorizado com busca em português, reações rápidas e histórico de uso recente."
             />
 
-            <DemoCard id="emoji-picker-demo" title="Seletor interativo">
+            <DemoCard id=" emoji-picker-demo" title="Seletor interativo">
               <div className="p-6 flex justify-center">
                 <EmojiPicker
                   autoFocus={false}
                   onSelectEmoji={(emoji) => toast(`Emoji selecionado: ${emoji}`)}
+                />
+              </div>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Progress & RadialProgress ─────────────────────────────── */}
+          <section id="progress" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Progresso"
+              title="Progress & RadialProgress"
+              description="Barras de progresso lineares (determinadas, indeterminadas e listradas) e indicadores circulares (RadialProgress) com espessura e diâmetro customizáveis."
+            />
+
+            <DemoCard id="progress-demo" title="Barras Lineares e Progresso Circular (RadialProgress)">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div className="space-y-5">
+                  <Progress label="Cobertura de Testes Unitários" value={84} showValue tone="success" />
+                  <Progress label="Migração de Componentes v2" value={68} showValue tone="primary" striped />
+                  <Progress label="Uso de Cota de Armazenamento" value={91} showValue tone="warning" />
+                  <Progress label="Sincronizando Índices..." indeterminate tone="info" size="sm" />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/40 p-6">
+                  <div className="flex flex-col items-center justify-center gap-2.5 text-center">
+                    <RadialProgress value={84} tone="success" size="lg" />
+                    <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Uptime (84%)</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center gap-2.5 text-center">
+                    <RadialProgress value={72} tone="primary" size="lg" />
+                    <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Cache Hit (72%)</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center gap-2.5 text-center">
+                    <RadialProgress value={95} tone="warning" size="lg" />
+                    <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">SLA Global</span>
+                  </div>
+                </div>
+              </div>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── HoverCard ─────────────────────────────────────────────── */}
+          <section id="hover-card" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Preview Contextual"
+              title="HoverCard"
+              description="Cartão flutuante ativado ao passar o mouse (hover) com delay inteligente para pré-visualizar fichas de usuários, repositórios ou serviços sem sair da tela."
+            />
+
+            <DemoCard id="hover-card-demo" title="Passe o mouse sobre os gatilhos abaixo para inspecionar">
+              <div className="flex flex-wrap items-center gap-4">
+                <HoverCard
+                  trigger={
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/50 px-4 py-2.5 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/30 transition-colors cursor-pointer"
+                    >
+                      <Globe size={16} />
+                      <span>@lopes-ui/core — Design System</span>
+                    </button>
+                  }
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">Lopes UI — Core Package</span>
+                      <StatusBadge tone="success" size="xs" label="Estável" />
+                    </div>
+                    <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                      Biblioteca de componentes React com acessibilidade WAI-ARIA, suporte a temas e RBAC nativo.
+                    </p>
+                    <div className="flex items-center gap-4 pt-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                      <span className="inline-flex items-center gap-1"><Layers size={12} /> 75+ Componentes</span>
+                      <span className="inline-flex items-center gap-1"><Cpu size={12} /> TypeScript Strict</span>
+                    </div>
+                  </div>
+                </HoverCard>
+
+                <HoverCard
+                  trigger={
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/50 px-4 py-2.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/30 transition-colors cursor-pointer"
+                    >
+                      <Globe size={16} />
+                      <span>Cluster sa-east-1 — Produção</span>
+                    </button>
+                  }
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">Gateway de Produção Sul</span>
+                      <StatusBadge tone="info" size="xs" label="Multi-AZ" />
+                    </div>
+                    <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                      Balanceamento automático com replicação síncrona e monitoramento de latência em tempo real.
+                    </p>
+                    <div className="flex items-center gap-4 pt-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                      <span className="inline-flex items-center gap-1"><TrendingUp size={12} /> SLA 99,99%</span>
+                    </div>
+                  </div>
+                </HoverCard>
+              </div>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Item & ItemGroup ──────────────────────────────────────── */}
+          <section id="item-list" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Listas Estruturadas"
+              title="Item & ItemGroup"
+              description="Primitivos de linha de lista (ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions) para listagens de recursos, integrações e configurações."
+            />
+
+            <DemoCard id="item-list-demo" title="Módulos e Integrações Ativas">
+              <ItemGroup className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 divide-y divide-zinc-100 dark:divide-zinc-800">
+                <Item interactive>
+                  <ItemMedia variant="icon"><Package size={18} /></ItemMedia>
+                  <ItemContent>
+                    <ItemTitle>
+                      <span>Autenticação OAuth 2.0 & SSO Corporativo</span>
+                      <Badge variant="success" size="sm" label="Ativo" />
+                    </ItemTitle>
+                    <ItemDescription>
+                      Tokens JWT com rotação automática · MFA habilitado para todos os administradores
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <span className="text-xs font-mono font-semibold text-zinc-500 dark:text-zinc-400">v2.4.0</span>
+                    <Button size="sm" variant="outline" onClick={() => toast("Configurações abertas")}>Configurar</Button>
+                  </ItemActions>
+                </Item>
+
+                <Item interactive>
+                  <ItemMedia variant="icon"><Layers size={18} /></ItemMedia>
+                  <ItemContent>
+                    <ItemTitle>
+                      <span>Motor de Webhooks & Eventos Assíncronos</span>
+                      <Badge variant="info" size="sm" label="Novo" />
+                    </ItemTitle>
+                    <ItemDescription>
+                      Fila com retentativa exponencial · Assinatura HMAC-SHA256 · Logs de entrega em tempo real
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <span className="text-xs font-mono font-semibold text-zinc-500 dark:text-zinc-400">v1.8.2</span>
+                    <Button size="sm" variant="outline" onClick={() => toast("Logs de webhook abertos")}>Inspecionar</Button>
+                  </ItemActions>
+                </Item>
+              </ItemGroup>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Countdown ─────────────────────────────────────────────── */}
+          <section id="countdown" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Temporizador"
+              title="Countdown"
+              description="Contador regressivo animado com rolagem vertical por dígito (odômetro), ideal para lançamentos de releases, janelas de manutenção e SLAs."
+            />
+
+            <DemoCard id="countdown-demo" title="Contagem Regressiva para Próximo Release">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-6">
+                  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Variante Boxed (Odômetro · Tone Primary)</span>
+                  <Countdown targetDate={relDate(3)} size="lg" variant="boxed" tone="primary" />
+                </div>
+                <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-6">
+                  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Variante Cards (Alto Contraste)</span>
+                  <Countdown targetDate={relDate(1)} showDays={false} size="lg" variant="cards" />
+                </div>
+              </div>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Diff (Before / After) ─────────────────────────────────── */}
+          <section id="diff" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Comparador Visual"
+              title="Diff (Antes & Depois)"
+              description="Comparador interativo com barra deslizante (drag/touch/teclado) para contrastar temas claro/escuro, antes/depois de layouts ou revisões visuais."
+            />
+
+            <DemoCard id="diff-demo" title="Arraste o divisor central para comparar os temas">
+              <Diff
+                aspectClassName="h-64 sm:h-72"
+                beforeLabel="Tema Claro (Light Mode)"
+                afterLabel="Tema Escuro (Dark Mode)"
+                before={
+                  <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-amber-100 via-orange-50 to-amber-200 text-amber-950 p-6 text-center">
+                    <span className="text-xs font-bold uppercase tracking-widest text-amber-700">Lopes UI · Light Theme</span>
+                    <h4 className="mt-2 text-2xl font-black">Superfície Clara de Alto Contraste</h4>
+                    <p className="mt-1 text-sm text-amber-800">Tokens otimizados para legibilidade em ambientes iluminados</p>
+                  </div>
+                }
+                after={
+                  <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-zinc-900 via-indigo-950 to-zinc-950 text-white p-6 text-center">
+                    <span className="text-xs font-bold uppercase tracking-widest text-indigo-300">Lopes UI · Dark Theme</span>
+                    <h4 className="mt-2 text-2xl font-black">Superfície Escura Zinc-950</h4>
+                    <p className="mt-1 text-sm text-zinc-300">Conforto visual prolongado para operação contínua</p>
+                  </div>
+                }
+              />
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── HoverGallery & Hover3DCard ────────────────────────────── */}
+          <section id="hover-gallery" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Vitrine Interativa"
+              title="HoverGallery & Hover3DCard"
+              description="Galeria interativa que alterna slides conforme o movimento horizontal do cursor (HoverGallery) e cartão com perspectiva 3D e reflexo de luz (Hover3DCard)."
+            />
+
+            <DemoCard id="hover-gallery-demo" title="Mova o mouse horizontalmente sobre a galeria e teste a inclinação 3D">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+                <div className="flex flex-col gap-2.5">
+                  <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">HoverGallery (4 painéis ao mover o cursor)</p>
+                  <HoverGallery
+                    aspectClassName="aspect-video"
+                    images={[
+                      {
+                        src: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='360'><rect width='100%' height='100%' fill='%23064e3b'/><text x='50%' y='45%' fill='%236ee7b7' font-family='sans-serif' font-size='14' text-anchor='middle'>SLIDE 1 / 4 · VISÃO GERAL</text><text x='50%' y='58%' fill='white' font-family='sans-serif' font-weight='bold' font-size='20' text-anchor='middle'>Dashboard Analítico em Tempo Real</text></svg>",
+                        label: "Visão Geral",
+                      },
+                      {
+                        src: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='360'><rect width='100%' height='100%' fill='%231e1b4b'/><text x='50%' y='45%' fill='%23a5b4fc' font-family='sans-serif' font-size='14' text-anchor='middle'>SLIDE 2 / 4 · COMPONENTES</text><text x='50%' y='58%' fill='white' font-family='sans-serif' font-weight='bold' font-size='20' text-anchor='middle'>DataTables, Forms & Command Palette</text></svg>",
+                        label: "Componentes",
+                      },
+                      {
+                        src: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='360'><rect width='100%' height='100%' fill='%23451a03'/><text x='50%' y='45%' fill='%23fcd34d' font-family='sans-serif' font-size='14' text-anchor='middle'>SLIDE 3 / 4 · SEGURANÇA</text><text x='50%' y='58%' fill='white' font-family='sans-serif' font-weight='bold' font-size='20' text-anchor='middle'>Controle de Acesso RBAC Integrado</text></svg>",
+                        label: "Segurança RBAC",
+                      },
+                      {
+                        src: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='360'><rect width='100%' height='100%' fill='%2318181b'/><text x='50%' y='45%' fill='%23d4d4d8' font-family='sans-serif' font-size='14' text-anchor='middle'>SLIDE 4 / 4 · PERFORMANCE</text><text x='50%' y='58%' fill='white' font-family='sans-serif' font-weight='bold' font-size='20' text-anchor='middle'>Tree-Shakeable ESM & CJS Bundles</text></svg>",
+                        label: "Performance",
+                      },
+                    ]}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2.5">
+                  <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Hover3DCard (Inclinação 3D com reflexo glare)</p>
+                  <Hover3DCard className="flex-1 flex flex-col justify-between p-6 bg-gradient-to-br from-zinc-900 via-zinc-900 to-indigo-950 text-white border border-zinc-800">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="primary" solid label="Lopes UI Enterprise" />
+                      <span className="font-mono text-xs text-zinc-400">v2.0 LTS</span>
+                    </div>
+                    <div className="my-4 space-y-2">
+                      <p className="text-xl font-bold tracking-tight">Design System Corporativo</p>
+                      <p className="text-xs leading-relaxed text-zinc-300">
+                        Componentes acessíveis, tipagem estrita em TypeScript, suporte completo a Dark Mode e controle de permissões RBAC.
+                      </p>
+                    </div>
+                    <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs font-mono text-indigo-300">
+                      <span>LICENÇA ENTERPRISE</span>
+                      <span>•••• 2026</span>
+                    </div>
+                  </Hover3DCard>
+                </div>
+              </div>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Indicator, Stack, Mask & AspectRatio ──────────────────── */}
+          <section id="indicator-stack-mask" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Utilitários Visuais"
+              title="Indicator, Stack, Mask & AspectRatio"
+              description="Posicionamento de badges nos 9 cantos (Indicator), empilhamento 3D de notificações/cartões (Stack), máscaras geométricas (Mask) e proporção fixa (AspectRatio)."
+            />
+
+            <DemoCard id="indicator-stack-mask-demo" title="Exemplos Combinados">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+                <div className="flex flex-col justify-between gap-4 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-5">
+                  <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">Indicator (Badge de Canto + Ping)</p>
+                  <div className="flex flex-wrap items-center justify-center gap-6 py-4">
+                    <Indicator badge="12" tone="danger" ping>
+                      <Button variant="outline" size="sm" leftIcon={<Bell size={15} />}>Alertas Ativos</Button>
+                    </Indicator>
+                    <Indicator badge="NOVO" tone="primary" position="top-end">
+                      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 text-xs font-semibold text-zinc-800 dark:text-zinc-200 shadow-2xs">
+                        Módulo Analytics
+                      </div>
+                    </Indicator>
+                  </div>
+                </div>
+
+                <div className="flex flex-col justify-between gap-4 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-5">
+                  <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">Stack (Pilha 3D — passe o mouse)</p>
+                  <div className="py-1">
+                    <Stack fanOnHover>
+                      <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3.5 shadow-sm">
+                        <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">1. Deploy #409 Concluído</p>
+                        <p className="text-xs text-zinc-500 mt-0.5">Ambiente de produção atualizado sem downtime</p>
+                      </div>
+                      <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3.5 shadow-sm">
+                        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400">2. Backup Automático</p>
+                        <p className="text-xs text-zinc-500 mt-0.5">Snapshot diário salvo no cluster primário</p>
+                      </div>
+                      <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3.5 shadow-sm">
+                        <p className="text-xs font-bold text-amber-600 dark:text-amber-400">3. Auditoria de Segurança</p>
+                        <p className="text-xs text-zinc-500 mt-0.5">Verificação de certificados TLS concluída</p>
+                      </div>
+                    </Stack>
+                  </div>
+                </div>
+
+                <div className="flex flex-col justify-between gap-4 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-5">
+                  <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">Mask (Formas Geométricas)</p>
+                  <div className="flex flex-wrap items-center justify-center gap-3 py-4">
+                    {(["squircle", "hexagon", "diamond", "star", "heart"] as const).map((shape) => (
+                      <Mask key={shape} shape={shape} className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-emerald-500 flex items-center justify-center text-[10px] font-bold text-white uppercase shadow-xs">
+                        {shape.slice(0, 3)}
+                      </Mask>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Mockups (Browser, Phone, Code) ────────────────────────── */}
+          <section id="mockups" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Molduras de Apresentação"
+              title="BrowserMockup, PhoneMockup & CodeMockup"
+              description="Molduras de navegador web, smartphone e terminal CLI para pré-visualização de portais, aplicações e diagnósticos."
+            />
+
+            <DemoCard id="mockups-demo" title="BrowserMockup & CodeMockup">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+                <BrowserMockup url="https://app.lopes-ui.dev/dashboard">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Lopes UI Platform</span>
+                      <Badge variant="primary" size="sm" label="v2.0" />
+                    </div>
+                    <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                      Painel de Controle Unificado
+                    </h4>
+                    <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                      Monitore métricas de serviços, gerencie permissões RBAC e configure fluxos de trabalho em uma única interface.
+                    </p>
+                  </div>
+                </BrowserMockup>
+
+                <CodeMockup
+                  title="lopes-ui-cli"
+                  lines={[
+                    { prefix: "$", text: "npx lopes-ui doctor --check" },
+                    { prefix: ">", text: "Verificando tokens de tema e dependências...", tone: "info" },
+                    { prefix: "✓", text: "Tailwind CSS v4 + Design Tokens: OK", tone: "success" },
+                    { prefix: "✓", text: "Pacote ESM/CJS e declarações TypeScript: OK", tone: "success" },
+                  ]}
                 />
               </div>
             </DemoCard>
