@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { twMerge } from "tailwind-merge";
-import { Check, ChevronRight, X, type LucideIcon } from "lucide-react";
+import { Check, ChevronRight, Loader2, X, type LucideIcon } from "lucide-react";
+import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type StepStatus = "upcoming" | "current" | "completed" | "error";
+export type StepStatus = "upcoming" | "current" | "completed" | "error" | "loading";
 export type StepperOrientation = "horizontal" | "vertical";
 export type StepperVariant = "default" | "outlined" | "minimal" | "subtle";
 export type StepperSize = "sm" | "md" | "lg";
@@ -26,6 +27,10 @@ export type StepItem = {
   content?: React.ReactNode;
   /** Disable interaction */
   disabled?: boolean;
+  /** Access-control identifier for this step */
+  componentId?: string;
+  /** If true, hides the step when access is denied instead of disabling it (default: false) */
+  hideIfDenied?: boolean;
 };
 
 export type StepperProps = {
@@ -43,6 +48,7 @@ export type StepperProps = {
   connector?: boolean;
   className?: string;
   componentId?: string;
+  hideIfDenied?: boolean;
 };
 
 // ── Style maps ────────────────────────────────────────────────────────────────
@@ -64,6 +70,13 @@ const STATUS_COLORS: Record<StepStatus, StepColors> = {
     description: "text-zinc-400 dark:text-zinc-500",
   },
   current: {
+    circle:      "bg-indigo-500 border-indigo-500 ring-4 ring-indigo-100 dark:ring-indigo-900/50",
+    circleText:  "text-white",
+    connector:   "bg-zinc-200 dark:bg-zinc-700",
+    title:       "text-zinc-900 dark:text-zinc-50 font-semibold",
+    description: "text-zinc-500 dark:text-zinc-400",
+  },
+  loading: {
     circle:      "bg-indigo-500 border-indigo-500 ring-4 ring-indigo-100 dark:ring-indigo-900/50",
     circleText:  "text-white",
     connector:   "bg-zinc-200 dark:bg-zinc-700",
@@ -132,14 +145,16 @@ function StepCircle({
     s.circle, s.text, c.circleText,
     variant === "outlined" ? "bg-transparent" : c.circle,
     variant === "outlined" && status === "completed" ? "border-indigo-500 text-indigo-500" : "",
-    variant === "outlined" && status === "current"   ? "border-indigo-500 text-indigo-500" : "",
+    variant === "outlined" && (status === "current" || status === "loading") ? "border-indigo-500 text-indigo-500" : "",
     variant === "outlined" && status === "error"     ? "border-red-500 text-red-500" : "",
     variant === "outlined" && status === "upcoming"  ? "border-zinc-300 text-zinc-400" : "",
   );
 
   return (
     <div className={circleCls} aria-hidden="true">
-      {Icon ? (
+      {status === "loading" ? (
+        <Loader2 size={s.icon} className="animate-spin" />
+      ) : Icon ? (
         <Icon size={s.icon} />
       ) : status === "completed" ? (
         <Check size={s.icon} strokeWidth={2.5} />
@@ -160,7 +175,7 @@ function Connector({
   size,
 }: {
   orientation: StepperOrientation;
-  status: StepStatus; // status of the preceding step
+  status: StepStatus;
   size: StepperSize;
 }) {
   const s = SIZE_MAP[size];
@@ -180,7 +195,7 @@ function Connector({
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function Stepper({
-  steps,
+  steps: rawSteps,
   activeStep = 0,
   onStepClick,
   orientation = "horizontal",
@@ -190,9 +205,56 @@ export default function Stepper({
   connector = true,
   className,
   componentId,
+  hideIfDenied = true,
 }: StepperProps) {
   const s = SIZE_MAP[size];
   const isHorizontal = orientation === "horizontal";
+  const { canAccess } = useAccessControl();
+  const hasRootPermission = !componentId || canAccess(componentId);
+
+  const steps = useMemo(() => {
+    return rawSteps
+      .filter((step) => {
+        const allowed = !step.componentId || canAccess(step.componentId);
+        if (!allowed && step.hideIfDenied) return false;
+        return true;
+      })
+      .map((step) => {
+        const allowed = !step.componentId || canAccess(step.componentId);
+        return {
+          ...step,
+          disabled: Boolean(step.disabled || !allowed),
+        };
+      });
+  }, [rawSteps, canAccess]);
+
+  if (!hasRootPermission && hideIfDenied) return null;
+
+  const handleStepKeyDown = (e: React.KeyboardEvent<HTMLElement>, index: number) => {
+    if (!onStepClick) return;
+    const prevKey = isHorizontal ? "ArrowLeft" : "ArrowUp";
+    const nextKey = isHorizontal ? "ArrowRight" : "ArrowDown";
+    if (e.key === prevKey) {
+      e.preventDefault();
+      for (let i = index - 1; i >= 0; i--) {
+        if (!steps[i]?.disabled) {
+          onStepClick(i);
+          break;
+        }
+      }
+    } else if (e.key === nextKey) {
+      e.preventDefault();
+      for (let i = index + 1; i < steps.length; i++) {
+        if (!steps[i]?.disabled) {
+          onStepClick(i);
+          break;
+        }
+      }
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (!steps[index]?.disabled) onStepClick(index);
+    }
+  };
 
   // ── SUBTLE / COMPACT INLINE VARIANT (Ideal for headers & drawers) ──
   if (variant === "subtle") {
@@ -203,12 +265,13 @@ export default function Stepper({
         data-component-id={componentId}
         className={twMerge(
           "flex items-center w-full overflow-x-auto no-scrollbar select-none",
+          !hasRootPermission && "opacity-50 pointer-events-none",
           className
         )}
       >
         {steps.map((step, i) => {
           const status = resolveStatus(step, i, activeStep);
-          const isCurrent = i === activeStep;
+          const isCurrent = i === activeStep || status === "loading";
           const isCompleted = status === "completed";
           const isError = status === "error";
           const isLast = i === steps.length - 1;
@@ -220,12 +283,15 @@ export default function Stepper({
               <button
                 type="button"
                 role="tab"
+                data-component-id={step.componentId ?? (componentId ? `${componentId}.step-${i}` : undefined)}
                 aria-selected={isCurrent}
                 disabled={!canClick}
                 onClick={canClick ? () => onStepClick?.(i) : undefined}
+                onKeyDown={canClick ? (e) => handleStepKeyDown(e, i) : undefined}
                 className={twMerge(
-                  "group relative flex-1 min-w-fit inline-flex items-center justify-between gap-2.5 px-4 py-2.5 text-xs font-semibold transition-all whitespace-nowrap border-b-2 -mb-px",
+                  "group relative flex-1 min-w-fit inline-flex items-center justify-between gap-2.5 px-4 py-2.5 text-xs font-semibold transition-all whitespace-nowrap border-b-2 -mb-px outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
                   canClick ? "cursor-pointer" : "cursor-default",
+                  step.disabled && "opacity-40 cursor-not-allowed",
                   isCurrent
                     ? "border-indigo-600 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-950/30 font-bold"
                     : isError
@@ -248,7 +314,9 @@ export default function Stepper({
                         : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700"
                     )}
                   >
-                    {Icon ? (
+                    {status === "loading" ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : Icon ? (
                       <Icon size={12} />
                     ) : isCompleted ? (
                       <Check size={12} strokeWidth={2.5} />
@@ -301,6 +369,7 @@ export default function Stepper({
 
   const wrapCls = twMerge(
     isHorizontal ? "flex items-start w-full py-1" : "flex flex-col py-1",
+    !hasRootPermission && "opacity-50 pointer-events-none",
     className,
   );
 
@@ -310,12 +379,12 @@ export default function Stepper({
       aria-label="Passos"
       data-component-id={componentId}
       className={wrapCls}
-      >
+    >
       {steps.map((step, i) => {
         const status   = resolveStatus(step, i, activeStep);
         const colors   = STATUS_COLORS[status];
         const isLast   = i === steps.length - 1;
-        const isClick  = clickable && !step.disabled && (status === "completed" || onStepClick);
+        const isClick  = Boolean(clickable && !step.disabled && (status === "completed" || onStepClick));
 
         // ── Horizontal layout ────────────────────────────────────────────────
         if (isHorizontal) {
@@ -323,12 +392,17 @@ export default function Stepper({
             <React.Fragment key={i}>
               <div
                 role="listitem"
-                aria-current={status === "current" ? "step" : undefined}
+                data-component-id={step.componentId ?? (componentId ? `${componentId}.step-${i}` : undefined)}
+                tabIndex={isClick ? 0 : undefined}
+                aria-current={status === "current" || status === "loading" ? "step" : undefined}
+                aria-disabled={step.disabled || undefined}
                 className={twMerge(
-                  "flex flex-col items-center gap-1 sm:gap-2 flex-1 min-w-0 text-center",
+                  "flex flex-col items-center gap-1 sm:gap-2 flex-1 min-w-0 text-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
                   isClick && "cursor-pointer",
+                  step.disabled && "opacity-45 cursor-not-allowed",
                 )}
                 onClick={isClick ? () => onStepClick?.(i) : undefined}
+                onKeyDown={isClick ? (e) => handleStepKeyDown(e, i) : undefined}
               >
                 <StepCircle step={step} index={i} status={status} size={size} variant={variant} />
                 <div className="text-center w-full min-w-0 px-0.5">
@@ -354,13 +428,24 @@ export default function Stepper({
 
         // ── Vertical layout ──────────────────────────────────────────────────
         return (
-          <div key={i} role="listitem" className="flex gap-3">
+          <div
+            key={i}
+            role="listitem"
+            data-component-id={step.componentId ?? (componentId ? `${componentId}.step-${i}` : undefined)}
+            className="flex gap-3"
+          >
             {/* Left: circle + connector */}
             <div className="flex flex-col items-center">
               <div
-                aria-current={status === "current" ? "step" : undefined}
-                className={twMerge(isClick && "cursor-pointer")}
+                tabIndex={isClick ? 0 : undefined}
+                aria-current={status === "current" || status === "loading" ? "step" : undefined}
+                className={twMerge(
+                  "rounded-full outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
+                  isClick && "cursor-pointer",
+                  step.disabled && "opacity-45 cursor-not-allowed",
+                )}
                 onClick={isClick ? () => onStepClick?.(i) : undefined}
+                onKeyDown={isClick ? (e) => handleStepKeyDown(e, i) : undefined}
               >
                 <StepCircle step={step} index={i} status={status} size={size} variant={variant} />
               </div>
@@ -384,7 +469,7 @@ export default function Stepper({
                   </p>
                 )}
               </div>
-              {step.content && (status === "current" || status === "completed") && (
+              {step.content && (status === "current" || status === "loading" || status === "completed") && (
                 <div className="mt-3">{step.content}</div>
               )}
             </div>
