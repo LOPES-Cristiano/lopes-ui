@@ -19,73 +19,123 @@ import {
   Navigation,
   Play,
   LogOut,
+  Sparkles,
+  Wrench,
+  LayoutDashboard,
+  Briefcase,
+  Headphones,
+  Settings,
+  ShoppingBag,
 } from "lucide-react";
 
 const SITE_NAV: NavItem[] = [
   { label: "Home", href: "/", icon: Home },
   {
+    label: "Templates",
+    icon: Sparkles,
+    children: [
+      {
+        label: "Dashboard Executivo",
+        href: "/templates#dashboard",
+        icon: LayoutDashboard,
+        description: "KPIs, gráficos de área/rosca, DataTable e feed ao vivo.",
+      },
+      {
+        label: "CRM & Pipeline",
+        href: "/templates#crm",
+        icon: Briefcase,
+        description: "Funil Kanban drag-and-drop e Drawer de nova oportunidade.",
+      },
+      {
+        label: "Central Helpdesk",
+        href: "/templates#helpdesk",
+        icon: Headphones,
+        description: "InboxList, ChatWindow, EmailComposer e ficha 360°.",
+      },
+      {
+        label: "Configurações & RBAC",
+        href: "/templates#settings",
+        icon: Settings,
+        description: "Simulador RBAC ao vivo, API Keys, 2FA e preferências.",
+      },
+      {
+        label: "Vitrine & Checkout",
+        href: "/templates#catalog",
+        icon: ShoppingBag,
+        description: "Catálogo com HoverGallery, Countdown e Checkout Stepper.",
+      },
+    ],
+  },
+  {
     label: "Componentes",
     icon: Layers,
     children: [
       {
-        label: "Formulários",
+        label: "Formulários & Inputs",
         href: "/showcase/forms",
         icon: FormInput,
-        description: "TextField, SelectField, DatePickerField, ZodForm…",
+        description: "TextField, SelectField, DateRangePicker, ColorPicker, TagInput, ZodForm…",
       },
       {
-        label: "Display",
+        label: "Display & Vitrine",
         href: "/showcase/display",
         icon: Layers,
-        description: "Avatar, Badge, StatusBadge, Card, Carousel…",
+        description: "Avatar, Badge, Card, BentoGrid, Progress, HoverCard, Countdown…",
       },
       {
         label: "Ações & Feedback",
         href: "/showcase/actions",
         icon: Zap,
-        description: "Button, Modal, FormModal, Drawer, Alert, Toast…",
+        description: "Button, ButtonGroup, ToggleGroup, SpeedDial, Modal, FormDrawer, Toast…",
       },
       {
-        label: "Dados & Tabelas",
+        label: "Dados, Tabelas & Gráficos",
         href: "/showcase/data",
         icon: BarChart2,
-        description: "DataTable, Spreadsheet, KanbanBoard, TreeView…",
+        description: "Chart, DataTable, Spreadsheet, DescriptionList, KanbanBoard, TreeView…",
       },
       {
         label: "Comunicação",
         href: "/showcase/communication",
         icon: MessageCircle,
-        description: "ChatWindow, EmailComposer, NotificationBell…",
+        description: "ChatWindow, EmailComposer, NotificationBell, SmartObject…",
       },
       {
         label: "Navegação & Layout",
         href: "/showcase/navigation",
         icon: Navigation,
-        description: "Sidebar, Header, Breadcrumb, CommandMenu…",
+        description: "Tabs, Pagination, Dock, Sidebar, Header, Breadcrumb, CommandMenu…",
       },
       {
-        label: "Animação & Conteúdo",
+        label: "Animação, Código & Tour",
         href: "/showcase/animation",
         icon: Play,
-        description: "CodeBlock, CodeEditor, TextRotate, Stepper, Timeline…",
+        description: "CodeBlock, Snippet, Marquee, Tour, CodeEditor, TextRotate, Stepper…",
       },
     ],
   },
+  { label: "UI Builder", href: "/ui-builder", icon: Wrench },
 ];
 
 const SITE_COMMANDS: CommandItem[] = [
-  // Páginas
-  { id: "nav-home",   label: "Home",               icon: Home,          href: "/",                        group: "Páginas" },
-  // Componentes
-  { id: "sc-forms",   label: "Formulários",         icon: FormInput,     href: "/showcase/forms",          group: "Componentes", keywords: ["form", "input", "login", "otp", "select", "datepicker", "zod"] },
-  { id: "sc-display", label: "Display",             icon: Layers,        href: "/showcase/display",        group: "Componentes", keywords: ["avatar", "badge", "statusbadge", "detail", "emoji", "card", "carousel"] },
-  { id: "sc-actions", label: "Ações & Feedback",    icon: Zap,           href: "/showcase/actions",        group: "Componentes", keywords: ["button", "alert", "toast", "drawer", "modal", "formmodal", "camera"] },
-  { id: "sc-data",    label: "Dados & Tabelas",     icon: BarChart2,     href: "/showcase/data",           group: "Componentes", keywords: ["datatable", "spreadsheet", "transferlist", "kanban", "treeview", "table"] },
-  { id: "sc-comm",    label: "Comunicação",         icon: MessageCircle, href: "/showcase/communication", group: "Componentes", keywords: ["chat", "email", "notification"] },
-  { id: "sc-nav",     label: "Navegação & Layout",  icon: Navigation,    href: "/showcase/navigation",    group: "Componentes", keywords: ["sidebar", "breadcrumb", "accordion", "command"] },
-  { id: "sc-anim",    label: "Animação & Conteúdo", icon: Play,          href: "/showcase/animation",     group: "Componentes", keywords: ["text-rotate", "stepper", "timeline", "codeblock", "codeeditor"] },
+  // Páginas & Templates
+  { id: "nav-home", label: "Home", icon: Home, href: "/", group: "Páginas & Templates" },
+  { id: "tpl-dash", label: "Template: Dashboard Executivo", icon: LayoutDashboard, href: "/templates#dashboard", group: "Páginas & Templates", keywords: ["template", "dashboard", "analytics", "kpi", "chart"] },
+  { id: "tpl-crm", label: "Template: CRM & Pipeline Comercial", icon: Briefcase, href: "/templates#crm", group: "Páginas & Templates", keywords: ["template", "crm", "kanban", "pipeline", "vendas"] },
+  { id: "tpl-help", label: "Template: Central Helpdesk Omnichannel", icon: Headphones, href: "/templates#helpdesk", group: "Páginas & Templates", keywords: ["template", "helpdesk", "chat", "inbox", "suporte"] },
+  { id: "tpl-set", label: "Template: Configurações & Simulador RBAC", icon: Settings, href: "/templates#settings", group: "Páginas & Templates", keywords: ["template", "settings", "rbac", "permissões", "api"] },
+  { id: "tpl-cat", label: "Template: Vitrine & Checkout B2B", icon: ShoppingBag, href: "/templates#catalog", group: "Páginas & Templates", keywords: ["template", "catalogo", "ecommerce", "checkout"] },
+  { id: "nav-builder", label: "UI Builder Visual", icon: Wrench, href: "/ui-builder", group: "Páginas & Templates", keywords: ["builder", "editor", "gerador"] },
+  // Categorias de Componentes
+  { id: "sc-forms", label: "Formulários & Inputs", icon: FormInput, href: "/showcase/forms", group: "Categorias", keywords: ["form", "input", "login", "otp", "select", "datepicker", "zod", "colorpicker", "taginput", "slider", "radiogroup"] },
+  { id: "sc-display", label: "Display & Vitrine", icon: Layers, href: "/showcase/display", group: "Categorias", keywords: ["avatar", "badge", "statusbadge", "bento", "card", "carousel", "countdown", "diff", "hovercard", "mockup"] },
+  { id: "sc-actions", label: "Ações & Feedback", icon: Zap, href: "/showcase/actions", group: "Categorias", keywords: ["button", "buttongroup", "togglegroup", "speeddial", "swap", "loading", "alert", "toast", "drawer", "modal"] },
+  { id: "sc-data", label: "Dados, Tabelas & Gráficos", icon: BarChart2, href: "/showcase/data", group: "Categorias", keywords: ["chart", "grafico", "datatable", "spreadsheet", "descriptionlist", "transferlist", "kanban", "treeview", "table"] },
+  { id: "sc-comm", label: "Comunicação", icon: MessageCircle, href: "/showcase/communication", group: "Categorias", keywords: ["chat", "email", "notification", "smartobject"] },
+  { id: "sc-nav", label: "Navegação & Layout", icon: Navigation, href: "/showcase/navigation", group: "Categorias", keywords: ["tabs", "pagination", "dock", "sidebar", "breadcrumb", "accordion", "command", "kbd"] },
+  { id: "sc-anim", label: "Animação, Código & Tour", icon: Play, href: "/showcase/animation", group: "Categorias", keywords: ["text-rotate", "stepper", "timeline", "codeblock", "codeeditor", "marquee", "snippet", "copybutton", "tour"] },
   // Ações
-  { id: "act-logout", label: "Sair",                icon: LogOut,        onSelect: () => {},               group: "Ações", keywords: ["logout", "sair", "exit"] },
+  { id: "act-logout", label: "Sair", icon: LogOut, onSelect: () => {}, group: "Ações", keywords: ["logout", "sair", "exit"] },
 ];
 
 // Stable ISO anchor to avoid SSR/CSR hydration mismatches (per docs/contributing.md)
@@ -97,9 +147,9 @@ export default function SiteHeader() {
       id: "n1",
       type: "success",
       title: "Deploy concluído",
-      description: "Versão 1.2.0 publicada em produção sem erros.",
+      description: "Versão 1.3.0 publicada em produção sem erros.",
       timestamp: new Date(REF_TIME - 5 * 60_000),
-      reference: { label: "ver-1.2.0", href: "#" },
+      reference: { label: "ver-1.3.0", href: "#" },
     },
     {
       id: "n2",
