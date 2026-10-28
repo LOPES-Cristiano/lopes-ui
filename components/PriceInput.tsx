@@ -71,15 +71,20 @@ export default function PriceInput({
 
   // Display string from controlled value
   const displayValue =
-    value == null || value === 0
+    value === null || value === undefined
       ? ""
       : centsToDisplay(Math.round(value * 100), locale);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (readOnly || !onChange) return;
-      const cents = inputToCents(e.target.value);
-      onChange(cents === 0 ? null : cents / 100);
+      const raw = e.target.value;
+      if (!raw.replace(/\D/g, "")) {
+        onChange(null);
+        return;
+      }
+      const cents = inputToCents(raw);
+      onChange(cents === 0 ? (raw.trim() === "0" ? 0 : null) : cents / 100);
     },
     [onChange, readOnly],
   );
