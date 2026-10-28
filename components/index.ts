@@ -1,4 +1,10 @@
 // ─── Top-level components ────────────────────────────────────────────────────
+// Note: Heavy optional widgets live in dedicated subpath exports so core
+// consumers don't need Tiptap, TanStack, or Shiki installed:
+//   - RichTextEditor, EmailComposer -> "lopes-ui/rich-text"
+//   - Spreadsheet    -> "lopes-ui/spreadsheet"
+//   - CodeBlock      -> "lopes-ui/code-block"
+//   - Radix/CVA      -> "lopes-ui/primitives"
 
 export { default as Accordion } from "./Accordion";
 export * from "./Accordion";
@@ -14,9 +20,6 @@ export * from "./Alert";
 
 export { default as AppLauncher } from "./AppLauncher";
 export * from "./AppLauncher";
-
-export { default as AppSidebar } from "./AppSidebar";
-export * from "./AppSidebar";
 
 export { default as Avatar } from "./Avatar";
 export * from "./Avatar";
@@ -54,9 +57,6 @@ export * from "./ChatMessage";
 export { default as ChatWindow } from "./ChatWindow";
 export * from "./ChatWindow";
 
-export { default as CodeBlock } from "./CodeBlock";
-export * from "./CodeBlock";
-
 export { default as CodeEditor } from "./CodeEditor";
 export * from "./CodeEditor";
 
@@ -76,9 +76,6 @@ export * from "./DetailLayout";
 
 export { default as Drawer } from "./Drawer";
 export * from "./Drawer";
-
-export { default as EmailComposer } from "./EmailComposer";
-export * from "./EmailComposer";
 
 export { default as EmojiPicker } from "./EmojiPicker";
 export * from "./EmojiPicker";
@@ -147,9 +144,6 @@ export * from "./PullToRefresh";
 export { default as QuickActions } from "./QuickActions";
 export * from "./QuickActions";
 
-export { default as RichTextEditor } from "./RichTextEditor";
-export * from "./RichTextEditor";
-
 export { default as ServiceStatusCard } from "./ServiceStatusCard";
 export * from "./ServiceStatusCard";
 
@@ -162,17 +156,11 @@ export * from "./ShortcutHint";
 export { default as Sidebar } from "./Sidebar";
 export * from "./Sidebar";
 
-export { default as SiteHeader } from "./SiteHeader";
-export * from "./SiteHeader";
-
 export { default as SmartObject } from "./SmartObject";
 export * from "./SmartObject";
 
 export { default as SplitPane } from "./SplitPane";
 export * from "./SplitPane";
-
-export { default as Spreadsheet } from "./spreadsheet";
-export * from "./spreadsheet";
 
 export { default as StatCard } from "./StatCard";
 export * from "./StatCard";
@@ -209,9 +197,6 @@ export * from "./TransferList";
 
 export { default as TreeView } from "./TreeView";
 export * from "./TreeView";
-
-export { default as UIBuilder } from "./UIBuilder";
-export * from "./UIBuilder";
 
 // ─── Access Control / RBAC ───────────────────────────────────────────────────
 
