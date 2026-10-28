@@ -179,7 +179,11 @@ export default function DatePickerField({
     }
 
     function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        setOpen(false);
+      }
     }
 
     document.addEventListener("mousedown", handleOutsideClick);
@@ -240,7 +244,6 @@ export default function DatePickerField({
             data-lpignore="true"
             data-bwignore="true"
             data-form-type="other"
-            role="presentation"
             onChange={handleInputChange}
             className={twMerge(
               "flex w-full items-center gap-2 border bg-white dark:bg-zinc-900 pr-9 text-left outline-none transition-all duration-150",
@@ -272,8 +275,9 @@ export default function DatePickerField({
         {open && panelStyle.left !== undefined && typeof document !== "undefined" && createPortal(
           <div
             ref={panelRef}
+            data-floating-open="true"
             style={panelStyle}
-            className="inline-flex w-fit flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-2.5 shadow-[0_22px_50px_rgba(15,23,42,0.18)]"
+            className="pointer-events-auto inline-flex w-fit flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-2.5 shadow-[0_22px_50px_rgba(15,23,42,0.18)]"
           >
             <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-[var(--border)] pb-2">
               <p className="text-sm font-semibold text-[var(--surface-foreground)]">Selecionar data</p>
