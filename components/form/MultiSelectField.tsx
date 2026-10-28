@@ -5,8 +5,9 @@ import { createPortal } from 'react-dom';
 import { twMerge } from 'tailwind-merge';
 import { ChevronDown, X, Search } from 'lucide-react';
 import FieldWrapper, { type FieldWrapperProps } from './FieldWrapper';
+import { useAccessControl } from '../useAccessControl';
 
-export type MultiSelectOption = { value: string; label: string };
+export type MultiSelectOption = { value: string; label: string; componentId?: string };
 
 export type MultiSelectFieldProps = Omit<FieldWrapperProps, 'children' | 'id'> & {
   id?: string;
@@ -27,6 +28,8 @@ export type MultiSelectFieldProps = Omit<FieldWrapperProps, 'children' | 'id'> &
   searchable?: boolean;
   clearable?: boolean;
   componentId?: string;
+  /** If true, hides the component when access is denied instead of disabling it */
+  hideIfDenied?: boolean;
   /** Ícone opcional no gatilho do botão (ex: <Building className="w-3.5 h-3.5" />) */
   icon?: React.ReactNode;
   /** Rótulo da opção de selecionar todas (padrão: "Selecionar tudo") */
@@ -51,14 +54,24 @@ const INPUT = {
   lg: { text: 'text-base', py: 'py-2', minH: 'min-h-[46px]' },
 } as const;
 
+function normalizeText(str: string): string {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
 export default function MultiSelectField({
   label,
   labelInline,
+  orientation,
   labelWidth,
   required,
   tooltip,
+  labelAction,
   error,
   helpText,
+  hint,
   width,
   className,
   id: idProp,
@@ -75,6 +88,7 @@ export default function MultiSelectField({
   searchable = true,
   clearable = true,
   componentId,
+  hideIfDenied = false,
   icon,
   selectAllLabel = 'Selecionar tudo',
   allSelectedText,
@@ -85,12 +99,17 @@ export default function MultiSelectField({
   const id = idProp ?? autoId;
   const s = INPUT[size];
   const cs = CHIP[size];
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+  const effectiveDisabled = Boolean(disabled || !hasPermission);
 
   const [internalValue, setInternalValue] = useState<string[]>(defaultValue);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [highlighted, setHighlighted] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({
     position: 'fixed',
@@ -137,9 +156,51 @@ export default function MultiSelectField({
     set(selected.filter((v) => v !== val));
   };
 
+  const normSearch = normalizeText(search.trim());
   const filtered = options.filter((o) =>
-    o.label.toLowerCase().includes(search.toLowerCase())
+    !normSearch || normalizeText(o.label).includes(normSearch)
   );
+
+  useEffect(() => {
+    if (highlighted >= 0 && listRef.current) {
+      const el = listRef.current.children[highlighted] as HTMLElement | undefined;
+      el?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [highlighted]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+    if (!open && (e.key === 'Enter' || e.key === 'ArrowDown' || e.key === ' ')) {
+      e.preventDefault();
+      setOpen(true);
+      setHighlighted(0);
+      return;
+    }
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setHighlighted((prev) => Math.min(prev + 1, filtered.length - 1));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setHighlighted((prev) => Math.max(prev - 1, 0));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (highlighted >= 0 && filtered[highlighted]) {
+          toggleOption(filtered[highlighted].value);
+        }
+        break;
+      case 'Escape':
+        if (open) {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(false);
+          setSearch('');
+        }
+        break;
+    }
+  };
 
   const updateDropdownPosition = useCallback(() => {
     const container = containerRef.current;
@@ -191,7 +252,6 @@ export default function MultiSelectField({
     };
   }, [open, updateDropdownPosition]);
 
-  // Habilitar rolagem via mouse wheel e gestos mesmo dentro de modais
   useEffect(() => {
     if (!open) return;
     const el = dropdownRef.current;
@@ -273,7 +333,7 @@ export default function MultiSelectField({
 
   // Rótulo do botão no modo button/compact
   const getButtonLabel = () => {
-    if (isAllSelected || (options.length > 0 && selected.length === options.length)) {
+    if (isAllSelected || (options.length > 0 && selected.length === options.length) || (emptyMeansAll && selected.length === 0)) {
       return allSelectedText || 'Todas as Opções';
     }
     if (selected.length === 0) {
@@ -291,6 +351,8 @@ export default function MultiSelectField({
   // ── Renderização do Gatilho ──────────────────────────────────────────────
   const isButtonMode = variant === 'button' || variant === 'compact';
 
+  if (!hasPermission && hideIfDenied) return null;
+
   const renderTrigger = () => {
     if (isButtonMode) {
       return (
@@ -298,14 +360,15 @@ export default function MultiSelectField({
           id={id}
           data-component-id={componentId ? `${componentId}.toggle` : "erp.multiselect.toggle"}
           type="button"
-          disabled={disabled}
-          onClick={() => setOpen((o) => !o)}
+          disabled={effectiveDisabled}
+          onClick={() => !effectiveDisabled && setOpen((o) => !o)}
+          onKeyDown={handleKeyDown}
           className={twMerge(
             'flex items-center gap-2 h-8 px-2.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors border border-zinc-200 dark:border-zinc-700 cursor-pointer shadow-2xs select-none',
-            disabled && 'opacity-50 pointer-events-none cursor-not-allowed',
+            effectiveDisabled && 'opacity-50 pointer-events-none cursor-not-allowed',
             className
           )}
-          >
+        >
           {icon}
           <span className="max-w-[200px] truncate">{getButtonLabel()}</span>
           <ChevronDown
@@ -330,16 +393,17 @@ export default function MultiSelectField({
         : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 shadow-2xs',
       open && 'border-zinc-900 ring-2 ring-zinc-900/10 dark:border-zinc-100 dark:ring-zinc-100/10',
       error && 'border-rose-500 ring-rose-500/10',
-      disabled && 'opacity-50 pointer-events-none bg-zinc-100 dark:bg-zinc-800'
+      effectiveDisabled && 'opacity-50 pointer-events-none bg-zinc-100 dark:bg-zinc-800'
     );
 
     return (
       <div
         id={id}
-        tabIndex={disabled ? -1 : 0}
+        tabIndex={effectiveDisabled ? -1 : 0}
         className={wrapCls}
-        onClick={() => setOpen((o) => !o)}
-        >
+        onClick={() => !effectiveDisabled && setOpen((o) => !o)}
+        onKeyDown={handleKeyDown}
+      >
         {selected.length === 0 ? (
           <span className={twMerge('text-zinc-400 dark:text-zinc-500 font-normal', s.text)}>
             {placeholder}
@@ -419,16 +483,27 @@ export default function MultiSelectField({
           <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
             {headerTitle || 'Filtrar'}
           </span>
-          {hasSelectionsToClear && (
-            <button
-            data-component-id={componentId ? `${componentId}.clear-filter` : "erp.multiselect.clear-filter"}
-            type="button"
-            onClick={clearSelection}
-            className="text-[11px] font-semibold text-zinc-900 dark:text-zinc-100 hover:underline cursor-pointer"
-          >
-            Limpar filtro
-          </button>
-          )}
+          <div className="flex items-center gap-2">
+            {!isAllSelected && options.length > 0 && (
+              <button
+                type="button"
+                onClick={toggleAll}
+                className="text-[11px] font-medium text-primary hover:underline cursor-pointer"
+              >
+                Selecionar todos
+              </button>
+            )}
+            {hasSelectionsToClear && (
+              <button
+                data-component-id={componentId ? `${componentId}.clear-filter` : "erp.multiselect.clear-filter"}
+                type="button"
+                onClick={clearSelection}
+                className="text-[11px] font-semibold text-zinc-900 dark:text-zinc-100 hover:underline cursor-pointer"
+              >
+                Limpar
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Campo de Busca Opcional */}
@@ -441,7 +516,11 @@ export default function MultiSelectField({
               type="text"
               value={search}
               placeholder="Pesquisar..."
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setHighlighted(0);
+              }}
+              onKeyDown={handleKeyDown}
               className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 pl-7 pr-7 py-1 text-xs text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
             />
             {search && (
@@ -484,20 +563,22 @@ export default function MultiSelectField({
         </div>
 
         {/* Lista de Opções */}
-        <div className="max-h-56 overflow-y-auto space-y-0.5 pt-1">
+        <div ref={listRef} className="max-h-56 overflow-y-auto space-y-0.5 pt-1">
           {filtered.length === 0 ? (
             <div className="px-3 py-4 text-center text-xs text-zinc-400">
               Nenhuma opção encontrada.
             </div>
           ) : (
-            filtered.map((opt) => {
+            filtered.map((opt, idx) => {
               const isChecked = selected.includes(opt.value);
+              const isHighlighted = idx === highlighted;
 
               return (
                 <div
                   key={opt.value}
                   role="button"
                   tabIndex={0}
+                  onMouseEnter={() => setHighlighted(idx)}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -507,7 +588,9 @@ export default function MultiSelectField({
                     'flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors select-none',
                     isChecked
                       ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-medium'
-                      : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300'
+                      : isHighlighted
+                        ? 'bg-zinc-50 dark:bg-zinc-800/70 text-zinc-900 dark:text-zinc-100'
+                        : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300'
                   )}
                 >
                   <input
@@ -528,7 +611,6 @@ export default function MultiSelectField({
     );
   };
 
-  // Se for modo botão e não tiver label, renderiza direto sem FieldWrapper
   if (isButtonMode && !label) {
     return (
       <div ref={containerRef} className="relative inline-block">
@@ -543,11 +625,14 @@ export default function MultiSelectField({
       id={id}
       label={label}
       labelInline={labelInline}
+      orientation={orientation}
       labelWidth={labelWidth}
       required={required}
       tooltip={tooltip}
+      labelAction={labelAction}
       error={error}
       helpText={helpText}
+      hint={hint}
       width={width}
       className={className}
     >
