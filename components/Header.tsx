@@ -84,6 +84,7 @@ export default function Header({
               {brand ?? null}
             </div>
             <div className="flex shrink-0 items-center gap-1">
+              {search ?? null}
               {extra ?? null}
               {profile ?? null}
             </div>
