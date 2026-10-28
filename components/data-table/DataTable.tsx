@@ -36,6 +36,7 @@ export default function DataTable<T = Record<string, unknown>>({
   onRowClick,
   variant = 'minimal',
   size = 'md',
+  stickyHeader = false,
   dividers = true,
   hoverable = true,
   striped = true,
@@ -45,6 +46,7 @@ export default function DataTable<T = Record<string, unknown>>({
   expandedRowKeys: controlledExpandedRowKeys,
   defaultExpandedRowKeys,
   onExpandedRowsChange,
+  expandColumnWidth,
   actions,
   actionsDisplay = 'menu',
   maxInlineActions = 4,
@@ -64,7 +66,9 @@ export default function DataTable<T = Record<string, unknown>>({
   hiddenColumns: controlledHiddenColumns,
   onHiddenColumnsChange,
   globalSearch = false,
+  initialSearch,
   searchDebounceMs = 300,
+  onSearchChange,
   filterFields,
   filterVariant = 'modal',
   filters: controlledFilters,
@@ -107,6 +111,7 @@ export default function DataTable<T = Record<string, unknown>>({
   loadingLabel = 'Carregando registros...',
   showLoadingLabel = true,
   emptySlot,
+  caption,
   className,
   componentId,
   onClose,
@@ -236,7 +241,9 @@ export default function DataTable<T = Record<string, unknown>>({
     defaultSortDir,
     controlledSortKey,
     controlledSortDir,
+    initialSearch,
     searchDebounceMs,
+    onSearchChange,
     controlledFilters,
     initialFilters,
     onFilterChange,
@@ -288,13 +295,13 @@ export default function DataTable<T = Record<string, unknown>>({
 
   const [internalHiddenCols, setInternalHiddenCols] = useState<Set<string>>(() => {
     if (defaultHiddenColumns) return new Set(defaultHiddenColumns);
-    return new Set(columns.filter((c) => c.hidden).map((c) => c.key));
+    return new Set(columns.filter((c) => c.hidden && !c.required).map((c) => c.key));
   });
 
   useEffect(() => {
     if (controlledHiddenColumns) return;
     setInternalHiddenCols((prev) => {
-      const initialHidden = columns.filter((c) => c.hidden).map((c) => c.key);
+      const initialHidden = columns.filter((c) => c.hidden && !c.required).map((c) => c.key);
       let changed = false;
       initialHidden.forEach((k) => {
         if (!prev.has(k)) changed = true;
@@ -313,6 +320,13 @@ export default function DataTable<T = Record<string, unknown>>({
 
   const handleToggleCol = useCallback(
     (key: string) => {
+      const targetCol = columns.find((c) => c.key === key);
+      const isCurrentlyHidden = hiddenCols.has(key);
+      if (!isCurrentlyHidden) {
+        if (targetCol?.required) return;
+        const visibleCount = columns.filter((c) => !hiddenCols.has(c.key)).length;
+        if (visibleCount <= 1) return;
+      }
       const next = new Set(hiddenCols);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -323,7 +337,7 @@ export default function DataTable<T = Record<string, unknown>>({
         setInternalHiddenCols(next);
       }
     },
-    [hiddenCols, controlledHiddenColumns, onHiddenColumnsChange]
+    [columns, hiddenCols, controlledHiddenColumns, onHiddenColumnsChange]
   );
 
   const [tabCountsCache, setTabCountsCache] = useState<Record<number, number>>({});
@@ -446,6 +460,8 @@ export default function DataTable<T = Record<string, unknown>>({
     onSelectionChange,
     selectedKeys: controlledSelectedKeys,
     onRowSelect,
+    isServerData,
+    pagination,
   });
 
   const hasActions = Boolean(actions && actions.length > 0);
@@ -503,7 +519,20 @@ export default function DataTable<T = Record<string, unknown>>({
       Boolean(onClose)
   );
   const hasSelection = selectedKeys.size > 0 || selectedRows.length > 0;
-  const showToolbar = hasHeaderContent || globalSearch || (filterFields && filterFields.length > 0) || hasSelection;
+  const hasSortableColumns = useMemo(
+    () => visibleCols.some((c) => c.sortable !== false),
+    [visibleCols]
+  );
+  const hasDesktopToolbar = Boolean(
+    hasHeaderContent ||
+      globalSearch ||
+      (filterFields && filterFields.length > 0) ||
+      columnToggle ||
+      toolbarLeftSlot ||
+      toolbarSlot ||
+      hasSelection
+  );
+  const showToolbar = hasDesktopToolbar || hasSortableColumns;
 
   if (isForbidden) {
     return null;
@@ -514,7 +543,7 @@ export default function DataTable<T = Record<string, unknown>>({
       className={twMerge('w-full flex flex-col gap-3', className)}
       >
       {showToolbar && (
-        <div className="px-2 sm:px-0">
+        <div className={twMerge('px-2 sm:px-0', !hasDesktopToolbar && 'md:hidden')}>
           <DataTableToolbar
             title={resolvedTitle}
             description={resolvedDescription}
@@ -550,6 +579,11 @@ export default function DataTable<T = Record<string, unknown>>({
             onClearSelection={customOnClearSelection ?? clearSelection}
             onActionError={onActionError}
             onClose={onClose}
+            hasSortableColumns={hasSortableColumns}
+            onOpenMobileSort={() => setMobileSortOpen(true)}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            activeSortLabel={activeSortLabel}
           />
         </div>
       )}
@@ -613,7 +647,7 @@ export default function DataTable<T = Record<string, unknown>>({
                     className={twMerge(
                       'group inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 rounded-t-md',
                       isActive
-                        ? '-mb-[1px] bg-primary text-white border-t-2 border-t-primary border-x border-primary font-bold shadow-xs z-10'
+                        ? '-mb-[1px] bg-primary text-primary-foreground border-t-2 border-t-primary border-x border-primary font-bold shadow-xs z-10'
                         : 'bg-surface hover:bg-muted/40 text-foreground/80 hover:text-foreground border border-border/80 border-b-transparent dark:bg-card dark:hover:bg-muted/20'
                     )}
                   >
@@ -647,6 +681,7 @@ export default function DataTable<T = Record<string, unknown>>({
         {/* Visualização Desktop: Tabela Tradicional */}
         <div className="hidden md:block w-full overflow-x-auto">
           <table className="w-full min-w-full border-collapse text-left">
+            {caption && <caption className="sr-only">{caption}</caption>}
             <DataTableHeader
               columns={visibleCols}
               selectionEnabled={selectable}
@@ -659,6 +694,8 @@ export default function DataTable<T = Record<string, unknown>>({
               onSort={handleSortChange}
               size={size}
               hasActions={hasActions}
+              stickyHeader={stickyHeader}
+              expandColumnWidth={expandColumnWidth}
               checkboxClassName={checkboxClassName}
             />
 
@@ -676,7 +713,7 @@ export default function DataTable<T = Record<string, unknown>>({
               ) : pageRows.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={visibleCols.length + (selectable ? 1 : 0) + (hasActions ? 1 : 0)}
+                    colSpan={visibleCols.length + (selectable ? 1 : 0) + (hasActions ? 1 : 0) + (hasExpandable ? 1 : 0)}
                     className="py-12 text-center text-xs text-muted-foreground"
                   >
                     {emptySlot ?? 'Nenhum registro encontrado.'}
@@ -714,6 +751,7 @@ export default function DataTable<T = Record<string, unknown>>({
                       hoverable={hoverable}
                       striped={striped}
                       rowClassName={rowClassName}
+                      expandColumnWidth={expandColumnWidth}
                       checkboxClassName={checkboxClassName}
                       onActionError={onActionError}
                     />
