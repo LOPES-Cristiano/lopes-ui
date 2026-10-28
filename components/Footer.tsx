@@ -54,7 +54,7 @@ export default function Footer({
     return (
       <footer
         className={twMerge(
-          "border-t border-zinc-200 dark:border-zinc-800 py-4 px-6",
+          "border-t border-zinc-200 dark:border-zinc-800 py-4 px-4 sm:px-6",
           "flex flex-wrap items-center justify-between gap-3",
           "bg-white dark:bg-zinc-900",
           className,
@@ -75,9 +75,9 @@ export default function Footer({
         className,
       )}
     >
-      <div className="px-8 pt-10 pb-8 flex flex-wrap gap-10">
+      <div className="px-4 sm:px-8 pt-7 sm:pt-10 pb-6 sm:pb-8 flex flex-wrap gap-6 sm:gap-10">
         {/* Brand / tagline */}
-        <div className="flex-1 min-w-[180px]">
+        <div className="flex-1 min-w-[160px]">
           <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{brand}</span>
           {tagline && (
             <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-xs">
@@ -87,7 +87,7 @@ export default function Footer({
         </div>
 
         {/* Link columns */}
-        <div className="flex flex-wrap gap-10">
+        <div className="flex flex-wrap gap-6 sm:gap-10">
           {columns.map((col) => (
             <div key={col.title}>
               <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-3">
@@ -110,7 +110,7 @@ export default function Footer({
         </div>
       </div>
 
-      <div className="px-8 py-4 border-t border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3">
+      <div className="px-4 sm:px-8 py-4 border-t border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3">
         <span className="text-xs text-zinc-400">{copyrightText}</span>
       </div>
     </footer>
