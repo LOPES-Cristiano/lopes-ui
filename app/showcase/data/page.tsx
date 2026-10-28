@@ -832,10 +832,10 @@ export default function Page() {
               description="Planilha interativa de alta densidade com virtualização, colunas fixadas (pinned), grupos de cabeçalho, filtros por operadores (>, <, intervalo), edição inline, agregação de rodapé e exportação."
             />
 
-            <DemoCard id="spreadsheet-demo" title="Estoque e Preços por Filial (RO / AM)">
+            <DemoCard id="spreadsheet-demo" title="Alocação e Custos por Região Cloud">
               <div className="h-[380px]">
                 <Spreadsheet
-                  title="Posição de Estoque — Móveis & Eletrodomésticos"
+                  title="Capacidade de Recursos — Clusters & Serviços"
                   description="Duplo clique em células editáveis ou filtre usando operadores numéricos (ex: >10)"
                   height={320}
                   showFooter
@@ -845,18 +845,18 @@ export default function Page() {
                     { key: "sku", header: "SKU", width: 100, pinned: true, sortable: true },
                     { key: "produto", header: "Produto", width: 240, pinned: true, sortable: true, filterable: true },
                     { key: "setor", header: "Setor", width: 150, filterable: true, filterType: "multiselect" },
-                    { key: "pvh", header: "Porto Velho (RO)", group: "Saldo por Filial", type: "integer", width: 140, align: "right", aggregate: "sum", editable: true },
-                    { key: "jpr", header: "Ji-Paraná (RO)", group: "Saldo por Filial", type: "integer", width: 140, align: "right", aggregate: "sum", editable: true },
-                    { key: "mao", header: "Manaus (AM)", group: "Saldo por Filial", type: "integer", width: 140, align: "right", aggregate: "sum", editable: true },
+                    { key: "pvh", header: "US-East (N. Virginia)", group: "Instâncias Ativas", type: "integer", width: 150, align: "right", aggregate: "sum", editable: true },
+                    { key: "jpr", header: "SA-East (São Paulo)", group: "Instâncias Ativas", type: "integer", width: 150, align: "right", aggregate: "sum", editable: true },
+                    { key: "mao", header: "EU-West (Dublin)", group: "Instâncias Ativas", type: "integer", width: 150, align: "right", aggregate: "sum", editable: true },
                     { key: "preco", header: "Preço Varejo", type: "currency", width: 140, align: "right", aggregate: "avg", sortable: true },
                   ] satisfies SpreadsheetColumn<any>[]}
                   rows={[
-                    { sku: "MOV-101", produto: "Guarda-Roupa Casal 6 Portas", setor: "Móveis", pvh: 18, jpr: 24, mao: 15, preco: 1899.9 },
-                    { sku: "EST-204", produto: "Sofá Retrátil 3 Lugares 2,50m", setor: "Estofados", pvh: 12, jpr: 19, mao: 22, preco: 2690.0 },
-                    { sku: "COL-309", produto: "Colchão Queen Molas Ensacadas", setor: "Colchões", pvh: 30, jpr: 25, mao: 18, preco: 1549.0 },
-                    { sku: "ELE-412", produto: "Geladeira Frost Free 400L Inox", setor: "Eletrodomésticos", pvh: 9, jpr: 14, mao: 11, preco: 3499.0 },
-                    { sku: "ELE-450", produto: "Lavadora de Roupas 12kg Automática", setor: "Eletrodomésticos", pvh: 16, jpr: 20, mao: 14, preco: 2199.0 },
-                    { sku: "MOV-188", produto: "Mesa de Jantar 6 Cadeiras Madeira", setor: "Móveis", pvh: 7, jpr: 11, mao: 8, preco: 2390.0 },
+                    { sku: "SRV-101", produto: "API Gateway Edge Node", setor: "Rede", pvh: 18, jpr: 24, mao: 15, preco: 1899.9 },
+                    { sku: "SRV-204", produto: "PostgreSQL HA Primary", setor: "Banco de Dados", pvh: 12, jpr: 19, mao: 22, preco: 2690.0 },
+                    { sku: "SRV-309", produto: "Redis Cache Cluster", setor: "Cache", pvh: 30, jpr: 25, mao: 18, preco: 1549.0 },
+                    { sku: "SRV-412", produto: "Worker Queue Processor", setor: "Computação", pvh: 9, jpr: 14, mao: 11, preco: 3499.0 },
+                    { sku: "SRV-450", produto: "Observability Collector", setor: "Monitoramento", pvh: 16, jpr: 20, mao: 14, preco: 2199.0 },
+                    { sku: "SRV-188", produto: "Object Storage CDN", setor: "Storage", pvh: 7, jpr: 11, mao: 8, preco: 2390.0 },
                   ]}
                   onCellEdit={(row, col, val) => toast.success(`Célula ${row.sku} [${col}] atualizada para ${val}`)}
                 />
@@ -874,7 +874,7 @@ export default function Page() {
               description="Lista dupla para transferência e vinculação de itens (permissões, filiais autorizadas, produtos em campanha) com busca independente, seleção em lote e badges."
             />
 
-            <DemoCard id="transfer-list-demo" title="Filiais Autorizadas (Rondônia & Amazonas)">
+            <DemoCard id="transfer-list-demo" title="Escopos e Permissões Vinculadas">
               <div className="p-4">
                 <TransferListDemo />
               </div>
@@ -889,21 +889,21 @@ export default function Page() {
 
 function TransferListDemo() {
   const [source, setSource] = React.useState<TransferListItem[]>([
-    { id: "jpr", title: "Filial 01 — Ji-Paraná (Matriz)", subtitle: "Av. Marechal Rondon · (69) 3421-0000", tag: "RO", tagTone: "success" },
-    { id: "pvh", title: "Filial 02 — Porto Velho Centro", subtitle: "Av. Sete de Setembro · (69) 3224-0000", tag: "RO", tagTone: "success" },
-    { id: "mao1", title: "Filial 05 — Manaus Cidade Nova", subtitle: "Av. Noel Nutels · (92) 3642-0000", tag: "AM", tagTone: "info" },
+    { id: "jpr", title: "users.read — Leitura de Usuários", subtitle: "Diretório global e perfis de acesso", tag: "CORE", tagTone: "success" },
+    { id: "pvh", title: "billing.read — Consulta de Faturas", subtitle: "Relatórios financeiros e histórico", tag: "FIN", tagTone: "success" },
+    { id: "mao1", title: "audit.export — Exportação de Logs", subtitle: "Trilhas de auditoria e segurança", tag: "SEC", tagTone: "info" },
   ]);
   const [target, setTarget] = React.useState<TransferListItem[]>([
-    { id: "ari", title: "Filial 03 — Ariquemes", subtitle: "Av. Tancredo Neves · (69) 3535-0000", tag: "RO", tagTone: "success" },
-    { id: "caco", title: "Filial 04 — Cacoal", subtitle: "Av. Porto Velho · (69) 3441-0000", tag: "RO", tagTone: "success" },
-    { id: "hta", title: "Filial 06 — Humaitá", subtitle: "Centro · (92) 3373-0000", tag: "AM", tagTone: "info" },
-    { id: "itc", title: "Filial 07 — Itacoatiara", subtitle: "Centro · (92) 3521-0000", tag: "AM", tagTone: "info" },
+    { id: "ari", title: "users.write — Gestão de Usuários", subtitle: "Criação, bloqueio e reset de credenciais", tag: "CORE", tagTone: "success" },
+    { id: "caco", title: "webhooks.manage — Gestão de Webhooks", subtitle: "Configuração de endpoints e retentativas", tag: "API", tagTone: "success" },
+    { id: "hta", title: "tokens.issue — Emissão de API Keys", subtitle: "Chaves de integração com escopo restrito", tag: "SEC", tagTone: "info" },
+    { id: "itc", title: "clusters.deploy — Deploy em Produção", subtitle: "Publicação de releases e rollback", tag: "OPS", tagTone: "info" },
   ]);
 
   return (
     <TransferList
-      sourceTitle="Filiais Vinculadas ao Vendedor"
-      targetTitle="Filiais Disponíveis (RO / AM)"
+      sourceTitle="Escopos Atribuídos ao Papel"
+      targetTitle="Escopos Disponíveis no Sistema"
       sourceItems={source}
       targetItems={target}
       height={340}
