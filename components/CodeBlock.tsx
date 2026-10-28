@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Copy, Check, ChevronDown, ChevronUp, Terminal } from "lucide-react";
+import { Copy, Check, ChevronDown, ChevronUp, Terminal, FileCode2 } from "lucide-react";
 import { codeToHtml } from "shiki";
+import { twMerge } from "tailwind-merge";
+import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -14,6 +16,8 @@ export type CodeBlockTab = {
 };
 
 export type CodeBlockProps = {
+  /** RBAC component ID */
+  componentId?: string;
   code?: string;
   language?: string;
   filename?: string;
@@ -30,27 +34,59 @@ export type CodeBlockProps = {
 // ── Language label map ────────────────────────────────────────────────────────
 
 const LANG_LABEL: Record<string, string> = {
-  tsx: "TSX", ts: "TS", jsx: "JSX", js: "JS",
-  bash: "bash", sh: "bash", css: "CSS", json: "JSON",
-  html: "HTML", python: "Python", sql: "SQL",
+  tsx: "TSX",
+  ts: "TypeScript",
+  typescript: "TypeScript",
+  jsx: "JSX",
+  js: "JavaScript",
+  javascript: "JavaScript",
+  bash: " Terminal",
+  sh: "Shell",
+  css: "CSS",
+  json: "JSON",
+  html: "HTML",
+  python: "Python",
+  sql: "SQL",
 };
 
-// ── Icon for terminal-like filenames ──────────────────────────────────────────
+// ── Header Title / Filename Tag ───────────────────────────────────────────────
 
-function FilenameTag({ filename, language }: { filename?: string; language?: string }) {
-  if (!filename) return null;
-  const isTerminal = filename === "terminal" || language === "bash" || language === "sh";
+function HeaderMeta({ filename, language }: { filename?: string; language?: string }) {
+  const lang = (language || "tsx").toLowerCase();
+  const isTerminal = filename === "terminal" || lang === "bash" || lang === "sh";
+  const langLabel = LANG_LABEL[lang]?.trim() ?? lang.toUpperCase();
+
   return (
-    <div className="flex items-center gap-1.5 text-xs font-mono" style={{ color: "#a6adc8" }}>
-      {isTerminal
-        ? <Terminal size={12} style={{ color: "#50fa7b" }} />
-        : <span style={{ color: "#bd93f9" }}>·</span>}
-      <span>{isTerminal ? "terminal" : filename}</span>
+    <div className="flex items-center gap-2 text-xs">
+      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-zinc-800/80 text-zinc-400">
+        {isTerminal ? <Terminal size={12} /> : <FileCode2 size={12} />}
+      </span>
+      {filename ? (
+        <span className="font-mono font-medium text-zinc-200">
+          {isTerminal && filename === "terminal" ? "terminal" : filename}
+        </span>
+      ) : null}
+      <span className="rounded border border-zinc-700/70 bg-zinc-800/70 px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
+        {langLabel}
+      </span>
     </div>
   );
 }
 
 // ── Highlighted code (async, Shiki) ──────────────────────────────────────────
+
+function resolveShikiLang(language = "tsx") {
+  const lower = language.toLowerCase();
+  if (lower === "tsx" || lower === "jsx") return "tsx";
+  if (lower === "ts") return "typescript";
+  if (lower === "js") return "javascript";
+  if (lower === "sh") return "bash";
+  return lower || "plaintext";
+}
+
+function escapeHtml(raw: string) {
+  return raw.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 function HighlightedCode({
   code,
@@ -63,88 +99,80 @@ function HighlightedCode({
   lineNumbers?: boolean;
   maxLines?: number;
 }) {
-  const [html, setHtml] = useState<string>("");
   const [expanded, setExpanded] = useState(false);
   const trimmed = code.trimEnd();
   const totalLines = trimmed.split("\n").length;
   const isCollapsible = !!maxLines && totalLines > maxLines;
 
+  const visibleCode =
+    isCollapsible && !expanded
+      ? trimmed.split("\n").slice(0, maxLines).join("\n")
+      : trimmed;
+
+  const [displayHtml, setDisplayHtml] = useState<string>("");
+
   useEffect(() => {
     let cancelled = false;
-    const lang = language === "tsx" || language === "jsx" ? "tsx"
-      : language === "ts" ? "typescript"
-      : language === "js" ? "javascript"
-      : language || "plaintext";
-
-    codeToHtml(trimmed, {
-      lang,
-      theme: "dracula",
-      transformers: lineNumbers
-        ? [{
-            line(node, line) {
-              node.properties["data-line"] = line;
-            },
-          }]
-        : [],
-    })
-      .then((result) => {
-        if (!cancelled) setHtml(result);
-      })
-      .catch(() => {
-        if (!cancelled) setHtml(`<pre style="color:#f8f8f2">${trimmed.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`);
-      });
-
-    return () => { cancelled = true; };
-  }, [trimmed, language, lineNumbers]);
-
-  const visibleCode = isCollapsible && !expanded
-    ? trimmed.split("\n").slice(0, maxLines).join("\n")
-    : trimmed;
-
-  // Re-highlight when visible subset changes (collapsed vs full)
-  const [visibleHtml, setVisibleHtml] = useState<string>("");
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!isCollapsible) { setVisibleHtml(html); return; }
-    let cancelled = false;
-    const lang = language === "tsx" || language === "jsx" ? "tsx"
-      : language === "ts" ? "typescript"
-      : language === "js" ? "javascript"
-      : language || "plaintext";
+    const lang = resolveShikiLang(language);
 
     codeToHtml(visibleCode, {
       lang,
-      theme: "dracula",
-      transformers: lineNumbers ? [{ line(node, line) { node.properties["data-line"] = line; } }] : [],
+      theme: "github-dark",
+      transformers: lineNumbers
+        ? [
+            {
+              line(node, line) {
+                node.properties["data-line"] = line;
+              },
+            },
+          ]
+        : [],
     })
-      .then((r) => { if (!cancelled) setVisibleHtml(r); })
-      .catch(() => { if (!cancelled) setVisibleHtml(`<pre style="color:#f8f8f2">${visibleCode.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`); });
-    return () => { cancelled = true; };
-  }, [visibleCode, language, lineNumbers, html, isCollapsible]);
+      .then((result) => {
+        if (!cancelled) setDisplayHtml(result);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setDisplayHtml(
+            `<pre style="color:#e4e4e7;margin:0"><code>${escapeHtml(visibleCode)}</code></pre>`,
+          );
+        }
+      });
 
-  const displayHtml = isCollapsible ? visibleHtml : html;
+    return () => {
+      cancelled = true;
+    };
+  }, [visibleCode, language, lineNumbers]);
 
   return (
-    <div className="relative">
+    <div className="relative bg-zinc-950">
       <div
-        className={[
-          "shiki-wrap overflow-auto p-4 text-sm",
-          lineNumbers ? "line-numbers" : "",
-        ].join(" ")}
-        style={{ background: "#282a36" }}
-        dangerouslySetInnerHTML={{ __html: displayHtml || `<pre style="color:#f8f8f2;background:#282a36;padding:0">${visibleCode.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>` }}
+        className={twMerge(
+          "shiki-wrap overflow-x-auto p-4 text-[13px] leading-relaxed",
+          lineNumbers && "line-numbers",
+        )}
+        dangerouslySetInnerHTML={{
+          __html:
+            displayHtml ||
+            `<pre style="color:#e4e4e7;background:transparent;margin:0;padding:0"><code>${escapeHtml(visibleCode)}</code></pre>`,
+        }}
       />
       {isCollapsible && (
         <button
           data-component-id="erp.codeblock.collapse-toggle"
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="flex w-full items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors"
-          style={{ background: "#1e1f29", color: "#bd93f9", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+          className="flex w-full items-center justify-center gap-1.5 border-t border-zinc-800/90 bg-zinc-900/90 py-2 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-white cursor-pointer"
         >
-          {expanded
-            ? <><ChevronUp size={13} /> Ver menos</>
-            : <><ChevronDown size={13} /> Ver mais ({totalLines - maxLines!} linhas ocultas)</>}
+          {expanded ? (
+            <>
+              <ChevronUp size={13} /> Mostrar menos
+            </>
+          ) : (
+            <>
+              <ChevronDown size={13} /> Expandir código ({totalLines - maxLines!} linhas ocultas)
+            </>
+          )}
         </button>
       )}
     </div>
@@ -170,12 +198,12 @@ function CopyButton({ code }: { code: string }) {
       type="button"
       onClick={handleCopy}
       aria-label="Copiar código"
-      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors"
-      style={{
-        background: copied ? "rgba(80,250,123,0.12)" : "rgba(255,255,255,0.05)",
-        color: copied ? "#50fa7b" : "#a6adc8",
-        border: `1px solid ${copied ? "rgba(80,250,123,0.3)" : "rgba(255,255,255,0.06)"}`,
-      }}
+      className={twMerge(
+        "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer",
+        copied
+          ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
+          : "border-zinc-700/80 bg-zinc-800/70 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-800 hover:text-white",
+      )}
     >
       {copied ? <Check size={13} /> : <Copy size={13} />}
       <span>{copied ? "Copiado" : "Copiar"}</span>
@@ -183,21 +211,10 @@ function CopyButton({ code }: { code: string }) {
   );
 }
 
-// ── Window dots ───────────────────────────────────────────────────────────────
-
-function WindowDots() {
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className="inline-block w-3 h-3 rounded-full" style={{ background: "#ff5f56" }} />
-      <span className="inline-block w-3 h-3 rounded-full" style={{ background: "#ffbd2e" }} />
-      <span className="inline-block w-3 h-3 rounded-full" style={{ background: "#27c93f" }} />
-    </div>
-  );
-}
-
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function CodeBlock({
+  componentId,
   code = "",
   language = "tsx",
   filename,
@@ -207,42 +224,53 @@ export default function CodeBlock({
   tabs,
   className = "",
 }: CodeBlockProps) {
+  const { canAccess } = useAccessControl();
+  const isVisible = !componentId || canAccess(componentId);
   const [activeTab, setActiveTab] = useState(0);
+
+  if (!isVisible) return null;
 
   // Tabs mode
   if (tabs && tabs.length > 0) {
-    const tab = tabs[activeTab];
+    const tab = tabs[activeTab] ?? tabs[0];
     return (
-      <div className={"rounded-xl overflow-hidden text-sm " + className} style={{ background: "#282a36" }}>
-        {/* Tab bar */}
-        <div
-          className="flex items-center justify-between px-3 py-0"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#21222c" }}
-        >
-          <div className="flex items-center">
-            <div className="flex items-center gap-1.5 pr-4" style={{ borderRight: "1px solid rgba(255,255,255,0.07)" }}>
-              <WindowDots />
-            </div>
-            <div className="flex items-center">
-              {tabs.map((t, i) => (
+      <div
+        data-component-id={componentId}
+        className={twMerge(
+          "overflow-hidden rounded-xl border border-zinc-800/90 bg-zinc-950 text-sm text-zinc-100 shadow-xs",
+          className,
+        )}
+      >
+        {/* Clean Enterprise Tab Bar */}
+        <div className="flex items-center justify-between border-b border-zinc-800/90 bg-zinc-900/95 px-3">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+            {tabs.map((t, i) => {
+              const isActive = i === activeTab;
+              return (
                 <button
                   data-component-id={`erp.codeblock.tab-${i}`}
                   key={i}
                   type="button"
                   onClick={() => setActiveTab(i)}
-                  className="relative px-4 py-2.5 text-xs font-medium transition-colors"
-                  style={{
-                    color: i === activeTab ? "#f8f8f2" : "#6272a4",
-                    borderBottom: i === activeTab ? "2px solid #bd93f9" : "2px solid transparent",
-                    background: "transparent",
-                  }}
+                  className={twMerge(
+                    "relative inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors cursor-pointer whitespace-nowrap",
+                    isActive
+                      ? "text-zinc-100"
+                      : "text-zinc-400 hover:text-zinc-200",
+                  )}
                 >
-                  {t.label}
+                  <FileCode2 size={12} className={isActive ? "text-zinc-200" : "text-zinc-500"} />
+                  <span>{t.label}</span>
+                  {isActive && (
+                    <span className="absolute inset-x-0 bottom-0 h-0.5 bg-zinc-100" />
+                  )}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
-          {showCopy && <CopyButton code={tab.code} />}
+          <div className="py-1.5 pl-2">
+            {showCopy && <CopyButton code={tab.code} />}
+          </div>
         </div>
 
         {/* Code area */}
@@ -258,21 +286,18 @@ export default function CodeBlock({
 
   // Single file mode
   const lang = language || "tsx";
-  const langLabel = LANG_LABEL[lang] ?? lang.toUpperCase();
 
   return (
-    <div className={"rounded-xl overflow-hidden text-sm " + className} style={{ background: "#282a36" }}>
-      {/* Header */}
-      <div
-        className="flex items-center justify-between px-3 py-2"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#21222c" }}
-      >
-        <div className="flex items-center gap-3">
-          <WindowDots />
-          {filename
-            ? <FilenameTag filename={filename} language={lang} />
-            : <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: "rgba(189,147,249,0.15)", color: "#bd93f9" }}>{langLabel}</span>}
-        </div>
+    <div
+      data-component-id={componentId}
+      className={twMerge(
+        "overflow-hidden rounded-xl border border-zinc-800/90 bg-zinc-950 text-sm text-zinc-100 shadow-xs",
+        className,
+      )}
+    >
+      {/* Clean Enterprise Header (No Mac dots) */}
+      <div className="flex items-center justify-between border-b border-zinc-800/90 bg-zinc-900/95 px-3.5 py-2">
+        <HeaderMeta filename={filename} language={lang} />
         {showCopy && <CopyButton code={code} />}
       </div>
 
@@ -286,4 +311,4 @@ export default function CodeBlock({
     </div>
   );
 }
-
+export { CodeBlock };
