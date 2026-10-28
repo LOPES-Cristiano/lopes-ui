@@ -249,6 +249,21 @@ export default function MultiSelectField({
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Fechar ao pressionar Escape
+  useEffect(() => {
+    if (!open) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        setOpen(false);
+        setSearch('');
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [open]);
+
   // Foco no campo de busca ao abrir
   useEffect(() => {
     if (open && searchable) {
@@ -390,13 +405,14 @@ export default function MultiSelectField({
 
   // ── Renderização do Dropdown (Portal) ────────────────────────────────────
   const renderDropdown = () => {
-    if (!open) return null;
+    if (!open || typeof document === 'undefined') return null;
 
     return createPortal(
       <div
         ref={dropdownRef}
+        data-floating-open="true"
         style={dropdownStyle}
-        className="rounded-xl bg-white dark:bg-zinc-900 shadow-xl border border-zinc-200 dark:border-zinc-800 p-2 text-xs flex flex-col animate-in fade-in zoom-in-95 select-none"
+        className="pointer-events-auto rounded-xl bg-white dark:bg-zinc-900 shadow-xl border border-zinc-200 dark:border-zinc-800 p-2 text-xs flex flex-col animate-in fade-in zoom-in-95 select-none"
       >
         {/* Cabeçalho do Dropdown */}
         <div className="flex items-center justify-between px-2 py-1 border-b border-zinc-100 dark:border-zinc-800 mb-1">
