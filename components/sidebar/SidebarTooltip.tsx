@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { usePathname } from 'next/navigation';
+import { useSidebar } from './SidebarContext';
 
 export interface SidebarTooltipProps {
   label: string;
@@ -20,10 +22,24 @@ export function SidebarTooltip({
   disabled = false,
   children,
 }: SidebarTooltipProps) {
-  const [show, setShow] = useState(false);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const pathname = usePathname();
+  const { effectiveCollapsed } = useSidebar();
+  const scopeKey = `${pathname ?? ''}:${effectiveCollapsed ? '1' : '0'}:${disabled ? '1' : '0'}`;
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const ref = useRef<HTMLDivElement | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scopeKeyRef = useRef(scopeKey);
+
+  useEffect(() => {
+    scopeKeyRef.current = scopeKey;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, [scopeKey]);
+
+  const show = !disabled && activeKey === scopeKey;
 
   const isTouchOrMobile = useCallback(() => {
     if (typeof window === 'undefined') return true;
@@ -31,62 +47,98 @@ export function SidebarTooltip({
     return window.matchMedia('(hover: none), (pointer: coarse)').matches;
   }, []);
 
-  const updatePosition = useCallback(() => {
+  const updatePosition = useCallback((): boolean => {
     if (!ref.current || isTouchOrMobile()) {
-      setShow(false);
-      return;
+      setActiveKey(null);
+      setPos(null);
+      return false;
     }
     const r = ref.current.getBoundingClientRect();
-    if (r.width === 0 || r.height === 0 || r.right <= 0 || r.top < -50 || r.bottom > window.innerHeight + 50) {
-      setShow(false);
-      return;
+    if (
+      r.width === 0 ||
+      r.height === 0 ||
+      r.right <= 0 ||
+      r.top < 0 ||
+      r.bottom > window.innerHeight + 50
+    ) {
+      setActiveKey(null);
+      setPos(null);
+      return false;
     }
-    setPos({ top: r.top + r.height / 2, left: r.right + 10 });
+    const nextTop = r.top + r.height / 2;
+    const nextLeft = r.right + 10;
+    if (nextTop <= 0 || nextLeft <= 0) {
+      setActiveKey(null);
+      setPos(null);
+      return false;
+    }
+    setPos({ top: nextTop, left: nextLeft });
+    return true;
   }, [isTouchOrMobile]);
 
-  const onOpen = () => {
-    if (disabled || !label || isTouchOrMobile()) return;
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      if (isTouchOrMobile()) {
-        setShow(false);
-        return;
-      }
-      updatePosition();
-      setShow(true);
-    }, delayMs);
-  };
-
   const onClose = useCallback(() => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setShow(false);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setActiveKey(null);
+    setPos(null);
   }, []);
 
-  useEffect(() => {
-    if (disabled) {
-      onClose();
-    }
-  }, [disabled, onClose]);
+  const onOpen = useCallback(() => {
+    if (disabled || !label || isTouchOrMobile()) return;
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    const openedScopeKey = scopeKeyRef.current;
+    timeoutRef.current = setTimeout(() => {
+      timeoutRef.current = null;
+      if (
+        disabled ||
+        scopeKeyRef.current !== openedScopeKey ||
+        isTouchOrMobile() ||
+        (typeof document !== 'undefined' && document.visibilityState === 'hidden')
+      ) {
+        setActiveKey(null);
+        setPos(null);
+        return;
+      }
+      if (updatePosition()) {
+        setActiveKey(openedScopeKey);
+      }
+    }, delayMs);
+  }, [disabled, label, isTouchOrMobile, delayMs, updatePosition]);
 
   useEffect(() => {
     const handleGlobalResizeOrTouch = () => {
       if (isTouchOrMobile()) {
         onClose();
-      } else {
+      } else if (show) {
         updatePosition();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        onClose();
       }
     };
 
     window.addEventListener('resize', handleGlobalResizeOrTouch);
     window.addEventListener('orientationchange', handleGlobalResizeOrTouch);
     window.addEventListener('touchstart', onClose, { passive: true });
+    window.addEventListener('blur', onClose);
+    window.addEventListener('pointerdown', onClose, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('resize', handleGlobalResizeOrTouch);
       window.removeEventListener('orientationchange', handleGlobalResizeOrTouch);
       window.removeEventListener('touchstart', onClose);
+      window.removeEventListener('blur', onClose);
+      window.removeEventListener('pointerdown', onClose);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isTouchOrMobile, onClose, updatePosition]);
+  }, [isTouchOrMobile, onClose, show, updatePosition]);
 
   useEffect(() => {
     if (!show) return;
@@ -108,15 +160,25 @@ export function SidebarTooltip({
       className="w-full"
       onMouseEnter={onOpen}
       onMouseLeave={onClose}
+      onClick={onClose}
       onFocus={(e) => {
-        // Não abre tooltip por foco em touch
         if (isTouchOrMobile()) return;
+        const target = e.target as HTMLElement | null;
+        if (target && typeof target.matches === 'function') {
+          try {
+            // Ignora restauração de foco automática ao voltar de outra aba/janela
+            if (!target.matches(':focus-visible')) return;
+          } catch {}
+        }
         onOpen();
       }}
       onBlur={onClose}
     >
       {children}
       {show &&
+        pos !== null &&
+        pos.top > 0 &&
+        pos.left > 0 &&
         typeof document !== 'undefined' &&
         createPortal(
           <div
