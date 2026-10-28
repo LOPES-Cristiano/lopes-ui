@@ -4,8 +4,9 @@ import React from "react";
 import { twMerge } from "tailwind-merge";
 import {
   Inbox, FileSearch, Lock, AlertTriangle, WifiOff,
-  PackageOpen, Frown, type LucideIcon,
+  PackageOpen, Frown, Loader2, type LucideIcon,
 } from "lucide-react";
+import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -23,7 +24,14 @@ export type EmptyStateAction = {
   label: string;
   onClick?: () => void;
   href?: string;
+  icon?: React.ReactNode;
+  loading?: boolean;
+  disabled?: boolean;
   variant?: "primary" | "secondary";
+  /** Access-control identifier for this action button */
+  componentId?: string;
+  /** If false, disables the action button instead of hiding it when access is denied (default: true) */
+  hideIfDenied?: boolean;
 };
 
 export type EmptyStateProps = {
@@ -41,10 +49,13 @@ export type EmptyStateProps = {
   actions?: EmptyStateAction[];
   /** Layout size */
   size?: "sm" | "md" | "lg";
+  /** Orientation layout ("vertical" centered default or "horizontal" compact banner) */
+  layout?: "vertical" | "horizontal";
   /** Fill 100% of parent height and center vertically */
   fill?: boolean;
   className?: string;
   componentId?: string;
+  hideIfDenied?: boolean;
 };
 
 // ── Preset data ───────────────────────────────────────────────────────────────
@@ -137,25 +148,49 @@ const DESC_CLS: Record<NonNullable<EmptyStateProps["size"]>, string> = {
 // ── Action button ─────────────────────────────────────────────────────────────
 
 function ActionBtn({ action, size }: { action: EmptyStateAction; size: NonNullable<EmptyStateProps["size"]> }) {
+  const { canAccess } = useAccessControl();
+  const hasPermission = !action.componentId || canAccess(action.componentId);
+  const hideIfDenied = action.hideIfDenied ?? true;
+
+  if (!hasPermission && hideIfDenied) return null;
+
+  const isDisabled = Boolean(action.disabled || action.loading || !hasPermission);
   const cls = twMerge(
-    "inline-flex items-center rounded-lg font-medium transition-colors",
+    "inline-flex items-center gap-1.5 rounded-lg font-medium transition-colors",
     size === "sm" ? "px-3 py-1.5 text-xs" : size === "md" ? "px-4 py-2 text-sm" : "px-5 py-2.5 text-sm",
+    isDisabled ? "opacity-60 cursor-not-allowed pointer-events-none" : "cursor-pointer",
     action.variant === "secondary"
       ? "border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
       : "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-300",
   );
 
-  if (action.href) {
-    return <a href={action.href} className={cls}>{action.label}</a>;
+  const inner = (
+    <>
+      {action.loading ? (
+        <Loader2 size={14} className="animate-spin shrink-0" />
+      ) : (
+        action.icon && <span className="shrink-0">{action.icon}</span>
+      )}
+      <span>{action.label}</span>
+    </>
+  );
+
+  if (action.href && !isDisabled) {
+    return (
+      <a data-component-id={action.componentId ?? "erp.empty-state.action"} href={action.href} className={cls}>
+        {inner}
+      </a>
+    );
   }
   return (
     <button
-      data-component-id="erp.empty-state.action"
+      data-component-id={action.componentId ?? "erp.empty-state.action"}
       type="button"
+      disabled={isDisabled}
       className={cls}
       onClick={action.onClick}
     >
-      {action.label}
+      {inner}
     </button>
   );
 }
@@ -170,10 +205,17 @@ export default function EmptyState({
   illustration,
   actions,
   size = "md",
+  layout = "vertical",
   fill = false,
   className,
   componentId,
+  hideIfDenied = true,
 }: EmptyStateProps) {
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+
+  if (!hasPermission && hideIfDenied) return null;
+
   const config = preset !== "custom" ? PRESETS[preset] : null;
 
   const resolvedTitle       = title       ?? config?.title       ?? "Sem dados";
@@ -197,15 +239,61 @@ export default function EmptyState({
     return null;
   };
 
+  if (layout === "horizontal") {
+    return (
+      <div
+        {...(componentId ? { "data-component-id": componentId } : {})}
+        className={twMerge(
+          "flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 p-4 text-left",
+          fill && "h-full",
+          className,
+        )}
+      >
+        <div className="flex items-center gap-3.5 min-w-0">
+          {illustration ?? (
+            <div
+              className={twMerge(
+                "flex items-center justify-center rounded-xl shrink-0",
+                WRAP_SIZE[size],
+                iconBg,
+              )}
+            >
+              {renderIcon()}
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className={twMerge(TITLE_CLS[size], "text-zinc-800 dark:text-zinc-200")}>
+              {resolvedTitle}
+            </p>
+            {resolvedDescription && (
+              <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                {resolvedDescription}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {actions && actions.length > 0 && (
+          <div className="flex items-center gap-2 shrink-0">
+            {actions.map((a, i) => (
+              <ActionBtn key={i} action={a} size={size} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
+      {...(componentId ? { "data-component-id": componentId } : {})}
       className={twMerge(
         "flex flex-col items-center text-center",
         GAP[size],
         fill && "h-full justify-center",
         className,
       )}
-      >
+    >
       {/* Illustration or icon */}
       {illustration ?? (
         <div
