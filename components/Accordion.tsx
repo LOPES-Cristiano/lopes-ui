@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useId, useState } from "react";
+import React, { useId, useMemo, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { ChevronDown, type LucideIcon } from "lucide-react";
+import { useAccessControl } from "./useAccessControl";
 
 export type AccordionItem = {
   id?: string;
@@ -25,10 +26,16 @@ export type AccordionItem = {
   disabled?: boolean;
   /** Open by default */
   defaultOpen?: boolean;
+  /** Keep content mounted in DOM even when closed (default: true) */
+  keepMounted?: boolean;
   className?: string;
+  /** Access-control identifier for this accordion item */
+  componentId?: string;
+  /** If false, disables the item instead of hiding it when access is denied (default: true) */
+  hideIfDenied?: boolean;
 };
 
-export type AccordionVariant = "default" | "bordered" | "separated" | "minimal";
+export type AccordionVariant = "default" | "bordered" | "separated" | "splitted" | "flush" | "minimal";
 
 export type AccordionProps = {
   items: AccordionItem[];
@@ -41,9 +48,13 @@ export type AccordionProps = {
   variant?: AccordionVariant;
   chevronPosition?: "left" | "right";
   size?: "sm" | "md" | "lg";
+  /** Keep collapsed panels mounted in DOM (default: true for CSS grid transition) */
+  keepMounted?: boolean;
   className?: string;
   /** Access-control identifier emitted on the root wrapper */
   componentId?: string;
+  /** If true, hides the entire accordion when access is denied (default: true) */
+  hideIfDenied?: boolean;
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -74,6 +85,8 @@ const VARIANT_WRAP: Record<AccordionVariant, string> = {
     "divide-y divide-zinc-100 dark:divide-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden",
   bordered: "divide-y divide-zinc-200 dark:divide-zinc-700",
   separated: "flex flex-col gap-2",
+  splitted: "flex flex-col gap-2.5",
+  flush: "divide-y divide-zinc-200 dark:divide-zinc-800 border-b border-zinc-200 dark:border-zinc-800",
   minimal: "flex flex-col gap-1 border-0 bg-transparent divide-y-0",
 };
 
@@ -82,6 +95,9 @@ const VARIANT_ITEM: Record<AccordionVariant, string> = {
   bordered: "bg-white dark:bg-zinc-900",
   separated:
     "rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900",
+  splitted:
+    "rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs",
+  flush: "bg-transparent",
   minimal: "bg-transparent border-0 rounded-lg hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors",
 };
 
@@ -91,24 +107,29 @@ function Panel({
   item,
   open,
   onToggle,
+  onTriggerKeyDown,
   size = "md",
   variant = "default",
   chevronPosition,
+  keepMounted = true,
   headingId,
   panelId,
 }: {
   item: AccordionItem;
   open: boolean;
   onToggle: () => void;
+  onTriggerKeyDown?: (e: React.KeyboardEvent<HTMLElement>) => void;
   size?: AccordionProps["size"];
   variant?: AccordionVariant;
   chevronPosition?: "left" | "right";
+  keepMounted?: boolean;
   headingId: string;
   panelId: string;
 }) {
   const s = SIZE[size ?? "md"];
   const Icon = item.icon;
   const isLeftChevron = chevronPosition === "left" || !!item.actions;
+  const shouldMountContent = open || (item.keepMounted ?? keepMounted);
 
   const chevronEl = (
     <ChevronDown
@@ -129,19 +150,24 @@ function Panel({
       {item.actions ? (
         <div
           id={headingId}
+          data-component-id={item.componentId ?? `erp.accordion.item-${item.id}`}
+          data-accordion-trigger="true"
           role="button"
           tabIndex={item.disabled ? -1 : 0}
           aria-expanded={open}
           aria-controls={panelId}
+          aria-disabled={item.disabled || undefined}
           onClick={item.disabled ? undefined : onToggle}
           onKeyDown={(e) => {
             if (!item.disabled && (e.key === "Enter" || e.key === " ")) {
               e.preventDefault();
               onToggle();
+              return;
             }
+            onTriggerKeyDown?.(e);
           }}
           className={twMerge(
-            "flex w-full items-center justify-between gap-3 text-left transition-colors duration-150 select-none",
+            "flex w-full items-center justify-between gap-3 text-left transition-colors duration-150 select-none outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-inset",
             s.trigger,
             open
               ? "text-zinc-900 dark:text-zinc-50 border-b border-zinc-200/70 dark:border-zinc-800/80"
@@ -191,22 +217,26 @@ function Panel({
         </div>
       ) : (
         <button
-          data-component-id={`erp.accordion.item-${item.id}`}
+          data-component-id={item.componentId ?? `erp.accordion.item-${item.id}`}
+          data-accordion-trigger="true"
           type="button"
           id={headingId}
           aria-expanded={open}
           aria-controls={panelId}
           disabled={item.disabled}
           onClick={onToggle}
+          onKeyDown={onTriggerKeyDown}
           className={twMerge(
-            "flex w-full items-center text-left transition-colors duration-150 select-none",
+            "flex w-full items-center text-left transition-colors duration-150 select-none outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-inset",
             s.trigger,
             open
               ? "text-zinc-900 dark:text-zinc-50"
               : "text-zinc-700 dark:text-zinc-200",
             item.disabled
               ? "cursor-not-allowed opacity-40"
-              : "cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800",
+              : variant === "flush"
+                ? "cursor-pointer hover:underline"
+                : "cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800",
           )}
         >
           {isLeftChevron && chevronEl}
@@ -255,18 +285,21 @@ function Panel({
         id={panelId}
         role="region"
         aria-labelledby={headingId}
+        hidden={!open && !shouldMountContent}
         className="grid transition-[grid-template-rows] duration-200 ease-in-out"
         style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
-          <div
-            className={twMerge(
-              "text-zinc-600 dark:text-zinc-400 leading-relaxed",
-              item.contentClassName ?? s.content,
-            )}
-          >
-            {item.content}
-          </div>
+          {shouldMountContent && (
+            <div
+              className={twMerge(
+                "text-zinc-600 dark:text-zinc-400 leading-relaxed",
+                item.contentClassName ?? s.content,
+              )}
+            >
+              {item.content}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -276,29 +309,53 @@ function Panel({
 // ── Accordion (main export) ───────────────────────────────────────────────────
 
 export default function Accordion({
-  items,
+  items: rawItems,
   multiple = false,
   openIds,
   onToggle: onToggleProp,
   variant = "default",
   chevronPosition = "right",
   size = "md",
+  keepMounted = true,
   className,
   componentId,
+  hideIfDenied = true,
 }: AccordionProps) {
   const baseId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const { canAccess } = useAccessControl();
+  const hasRootPermission = !componentId || canAccess(componentId);
+
+  const items = useMemo(() => {
+    return rawItems
+      .filter((item) => {
+        const allowed = !item.componentId || canAccess(item.componentId);
+        if (!allowed && item.hideIfDenied !== false) return false;
+        return true;
+      })
+      .map((item) => {
+        const allowed = !item.componentId || canAccess(item.componentId);
+        return {
+          ...item,
+          disabled: Boolean(item.disabled || !allowed),
+        };
+      });
+  }, [rawItems, canAccess]);
 
   const [openSet, setOpenSet] = useState<Set<string | number>>(() => {
     const init = new Set<string | number>();
-    items.forEach((item, i) => {
+    rawItems.forEach((item, i) => {
       if (item.defaultOpen) init.add(item.id ?? i);
     });
     return init;
   });
 
+  if (!hasRootPermission && hideIfDenied) return null;
+
   const isControlled = openIds !== undefined;
 
   function toggle(id: string | number) {
+    if (!hasRootPermission) return;
     if (onToggleProp) {
       onToggleProp(id);
     }
@@ -316,10 +373,38 @@ export default function Accordion({
     }
   }
 
+  // WAI-ARIA Accordion keyboard navigation (ArrowDown, ArrowUp, Home, End)
+  function handleTriggerKeyDown(e: React.KeyboardEvent<HTMLElement>) {
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
+    const container = rootRef.current;
+    if (!container) return;
+
+    const triggers = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-accordion-trigger="true"]:not([disabled]):not([aria-disabled="true"])')
+    );
+    const currentIndex = triggers.indexOf(e.currentTarget);
+    if (currentIndex === -1 || triggers.length === 0) return;
+
+    e.preventDefault();
+    let nextIndex = currentIndex;
+    if (e.key === "ArrowDown") {
+      nextIndex = (currentIndex + 1) % triggers.length;
+    } else if (e.key === "ArrowUp") {
+      nextIndex = (currentIndex - 1 + triggers.length) % triggers.length;
+    } else if (e.key === "Home") {
+      nextIndex = 0;
+    } else if (e.key === "End") {
+      nextIndex = triggers.length - 1;
+    }
+    triggers[nextIndex]?.focus();
+  }
+
   return (
     <div
-      className={twMerge(VARIANT_WRAP[variant], className)}
-      >
+      ref={rootRef}
+      {...(componentId ? { "data-component-id": componentId } : {})}
+      className={twMerge(VARIANT_WRAP[variant], !hasRootPermission && "opacity-50 pointer-events-none", className)}
+    >
       {items.map((item, i) => {
         const id = item.id ?? i;
         const isOpen = isControlled ? openIds.includes(id) : openSet.has(id);
@@ -330,9 +415,11 @@ export default function Accordion({
             item={item}
             open={isOpen}
             onToggle={() => !item.disabled && toggle(id)}
+            onTriggerKeyDown={handleTriggerKeyDown}
             size={size}
             variant={variant}
             chevronPosition={chevronPosition}
+            keepMounted={keepMounted}
             headingId={`${baseId}-h-${i}`}
             panelId={`${baseId}-p-${i}`}
           />
@@ -355,6 +442,8 @@ export type MinimizavelGroupProps = {
   className?: string;
   triggerClassName?: string;
   contentClassName?: string;
+  componentId?: string;
+  hideIfDenied?: boolean;
 };
 
 export function MinimizavelGroup({
@@ -368,11 +457,18 @@ export function MinimizavelGroup({
   className,
   triggerClassName,
   contentClassName,
+  componentId,
+  hideIfDenied = true,
 }: MinimizavelGroupProps) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+
+  if (!hasPermission && hideIfDenied) return null;
 
   const handleToggle = () => {
+    if (!hasPermission) return;
     const next = !isOpen;
     if (controlledOpen === undefined) {
       setInternalOpen(next);
@@ -381,10 +477,14 @@ export function MinimizavelGroup({
   };
 
   return (
-    <div className={twMerge("group/minimizavel flex flex-col transition-all", className)}>
+    <div
+      data-component-id={componentId}
+      className={twMerge("group/minimizavel flex flex-col transition-all", !hasPermission && "opacity-50 pointer-events-none", className)}
+    >
       <button
-        data-component-id="erp.accordion.minimizavel-trigger"
+        data-component-id={componentId ? `${componentId}.trigger` : "erp.accordion.minimizavel-trigger"}
         type="button"
+        disabled={!hasPermission}
         onClick={handleToggle}
         className={twMerge(
           "flex w-full items-center justify-between py-1.5 px-2 text-xs font-semibold rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 select-none transition-colors",
@@ -415,4 +515,3 @@ export function MinimizavelGroup({
     </div>
   );
 }
-
