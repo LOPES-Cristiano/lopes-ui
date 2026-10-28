@@ -137,7 +137,7 @@ function AlertContent({
                   "rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-150 cursor-pointer shadow-xs",
                   a.variant === "ghost"
                     ? "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
-                    : twMerge("bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]", 
+                    : twMerge("bg-[var(--primary)] text-primary-foreground hover:bg-[var(--primary-hover)]", 
                         variant === "danger" && "bg-red-600 text-white hover:bg-red-700",
                         variant === "warning" && "bg-amber-500 text-white hover:bg-amber-600",
                         variant === "success" && "bg-emerald-600 text-white hover:bg-emerald-700",
