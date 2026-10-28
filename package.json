@@ -62,7 +62,7 @@
     "**/*.css"
   ],
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 0.0.0.0 -p 3002",
     "build": "next build",
     "build:lib": "tsup",
     "prepare": "tsup",
@@ -104,32 +104,84 @@
     "zod": ">=3.20.0 || >=4.0.0"
   },
   "peerDependenciesMeta": {
-    "@tanstack/react-table": { "optional": true },
-    "@tanstack/react-virtual": { "optional": true },
-    "@tiptap/extension-character-count": { "optional": true },
-    "@tiptap/extension-color": { "optional": true },
-    "@tiptap/extension-font-family": { "optional": true },
-    "@tiptap/extension-highlight": { "optional": true },
-    "@tiptap/extension-image": { "optional": true },
-    "@tiptap/extension-link": { "optional": true },
-    "@tiptap/extension-placeholder": { "optional": true },
-    "@tiptap/extension-subscript": { "optional": true },
-    "@tiptap/extension-superscript": { "optional": true },
-    "@tiptap/extension-table": { "optional": true },
-    "@tiptap/extension-table-cell": { "optional": true },
-    "@tiptap/extension-table-header": { "optional": true },
-    "@tiptap/extension-table-row": { "optional": true },
-    "@tiptap/extension-task-item": { "optional": true },
-    "@tiptap/extension-task-list": { "optional": true },
-    "@tiptap/extension-text-align": { "optional": true },
-    "@tiptap/extension-text-style": { "optional": true },
-    "@tiptap/extension-typography": { "optional": true },
-    "@tiptap/extension-underline": { "optional": true },
-    "@tiptap/pm": { "optional": true },
-    "@tiptap/react": { "optional": true },
-    "@tiptap/starter-kit": { "optional": true },
-    "shiki": { "optional": true },
-    "zod": { "optional": true }
+    "@tanstack/react-table": {
+      "optional": true
+    },
+    "@tanstack/react-virtual": {
+      "optional": true
+    },
+    "@tiptap/extension-character-count": {
+      "optional": true
+    },
+    "@tiptap/extension-color": {
+      "optional": true
+    },
+    "@tiptap/extension-font-family": {
+      "optional": true
+    },
+    "@tiptap/extension-highlight": {
+      "optional": true
+    },
+    "@tiptap/extension-image": {
+      "optional": true
+    },
+    "@tiptap/extension-link": {
+      "optional": true
+    },
+    "@tiptap/extension-placeholder": {
+      "optional": true
+    },
+    "@tiptap/extension-subscript": {
+      "optional": true
+    },
+    "@tiptap/extension-superscript": {
+      "optional": true
+    },
+    "@tiptap/extension-table": {
+      "optional": true
+    },
+    "@tiptap/extension-table-cell": {
+      "optional": true
+    },
+    "@tiptap/extension-table-header": {
+      "optional": true
+    },
+    "@tiptap/extension-table-row": {
+      "optional": true
+    },
+    "@tiptap/extension-task-item": {
+      "optional": true
+    },
+    "@tiptap/extension-task-list": {
+      "optional": true
+    },
+    "@tiptap/extension-text-align": {
+      "optional": true
+    },
+    "@tiptap/extension-text-style": {
+      "optional": true
+    },
+    "@tiptap/extension-typography": {
+      "optional": true
+    },
+    "@tiptap/extension-underline": {
+      "optional": true
+    },
+    "@tiptap/pm": {
+      "optional": true
+    },
+    "@tiptap/react": {
+      "optional": true
+    },
+    "@tiptap/starter-kit": {
+      "optional": true
+    },
+    "shiki": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.23",
