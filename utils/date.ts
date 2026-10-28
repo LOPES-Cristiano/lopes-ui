@@ -2,6 +2,10 @@
  * Utilitários para formatação e manipulação de datas
  */
 
+function pad2(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
 /**
  * Converte data ISO (YYYY-MM-DD ou YYYY-MM-DDTHH:mm:ss) para formato brasileiro (DD/MM/YYYY)
  */
@@ -36,11 +40,18 @@ export function formatDateTime(
   if (!data) return '-';
   const dataFmt = formatDate(data);
   if (hora) return `${dataFmt}${separator}${hora}`;
+  if (data instanceof Date) {
+    if (isNaN(data.getTime())) return '-';
+    const hhmmss = `${pad2(data.getHours())}:${pad2(data.getMinutes())}:${pad2(data.getSeconds())}`;
+    return `${dataFmt}${separator}${hhmmss}`;
+  }
   if (typeof data === 'string' && data.includes('T')) {
     try {
       const d = new Date(data);
       if (!isNaN(d.getTime())) {
-        return d.toLocaleString('pt-BR');
+        const dStr = `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
+        const tStr = `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+        return `${dStr}${separator}${tStr}`;
       }
     } catch {
       // ignore
@@ -50,18 +61,34 @@ export function formatDateTime(
 }
 
 /**
- * Converte um objeto Date em string no formato ISO YYYY-MM-DD
+ * Converte um objeto Date em string no formato ISO local YYYY-MM-DD (sem deslocamento UTC)
  */
 export function toIsoDate(date: Date = new Date()): string {
-  return date.toISOString().slice(0, 10);
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
 }
 
 /**
- * Verifica se uma data em formato ISO (YYYY-MM-DD) é anterior à data de hoje
+ * Verifica se uma data em formato ISO (YYYY-MM-DD ou timestamp ISO) é estritamente anterior à data de hoje (no fuso local).
  */
 export function isPastDate(isoDate: string | null | undefined): boolean {
   if (!isoDate) return false;
-  return new Date(isoDate + 'T00:00:00') < new Date();
+  const datePart = isoDate.split('T')[0];
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart);
+  const now = new Date();
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+  if (match) {
+    const y = Number(match[1]);
+    const m = Number(match[2]);
+    const d = Number(match[3]);
+    const targetMidnight = new Date(y, m - 1, d).getTime();
+    return !isNaN(targetMidnight) && targetMidnight < todayMidnight;
+  }
+
+  const parsed = new Date(isoDate);
+  if (isNaN(parsed.getTime())) return false;
+  const parsedMidnight = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()).getTime();
+  return parsedMidnight < todayMidnight;
 }
 
 /**
@@ -72,8 +99,9 @@ export function calculateElapsedHours(
   horaCadastro?: string | null
 ): number {
   if (!dataCadastro) return 0;
+  const cleanDate = dataCadastro.split('T')[0];
   const hora = horaCadastro && horaCadastro.length >= 5 ? horaCadastro : '00:00:00';
-  const dataHoraIso = `${dataCadastro}T${hora.length === 5 ? `${hora}:00` : hora}`;
+  const dataHoraIso = `${cleanDate}T${hora.length === 5 ? `${hora}:00` : hora}`;
   const dtCriacao = new Date(dataHoraIso);
   if (isNaN(dtCriacao.getTime())) return 0;
   const agora = new Date();
@@ -127,7 +155,8 @@ export function formatElapsedShort(
 ): string | null {
   if (!dataCadastro) return null;
   try {
-    const dataStr = horaCadastro ? `${dataCadastro}T${horaCadastro}` : `${dataCadastro}T00:00:00`;
+    const cleanDate = dataCadastro.split('T')[0];
+    const dataStr = horaCadastro ? `${cleanDate}T${horaCadastro}` : `${cleanDate}T00:00:00`;
     const criadoEm = new Date(dataStr).getTime();
     if (isNaN(criadoEm)) return null;
     const diffMin = Math.max(0, Math.floor((new Date().getTime() - criadoEm) / (1000 * 60)));
