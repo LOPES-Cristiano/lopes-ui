@@ -165,7 +165,11 @@ export default function TimePickerField({
     }
 
     function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        setOpen(false);
+      }
     }
 
     document.addEventListener("mousedown", handleOutsideClick);
@@ -267,8 +271,9 @@ export default function TimePickerField({
         {open && panelStyle.left !== undefined && typeof document !== "undefined" && createPortal(
           <div
             ref={panelRef}
+            data-floating-open="true"
             style={panelStyle}
-            className="flex flex-col rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md p-2 shadow-xl z-[99999] select-none text-zinc-800 dark:text-zinc-200 animate-in fade-in zoom-in-95 duration-100"
+            className="pointer-events-auto flex flex-col rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md p-2 shadow-xl z-[99999] select-none text-zinc-800 dark:text-zinc-200 animate-in fade-in zoom-in-95 duration-100"
           >
             {/* Colunas de Hora e Minuto - Fontes maiores e aproveitamento total */}
             <div className="grid grid-cols-2 gap-1.5 h-48 max-h-48 min-h-0">
@@ -288,7 +293,7 @@ export default function TimePickerField({
                         onClick={() => handleSelectHour(h)}
                         className={`w-full py-1.5 rounded text-center text-sm font-mono font-medium transition cursor-pointer ${
                           isSelected
-                            ? "bg-primary text-white font-bold shadow-xs"
+                            ? "bg-primary text-primary-foreground font-bold shadow-xs"
                             : "hover:bg-zinc-200/60 dark:hover:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300"
                         }`}
                       >
@@ -315,7 +320,7 @@ export default function TimePickerField({
                         onClick={() => handleSelectMinute(m)}
                         className={`w-full py-1.5 rounded text-center text-sm font-mono font-medium transition cursor-pointer ${
                           isSelected
-                            ? "bg-primary text-white font-bold shadow-xs"
+                            ? "bg-primary text-primary-foreground font-bold shadow-xs"
                             : "hover:bg-zinc-200/60 dark:hover:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300"
                         }`}
                       >
@@ -350,7 +355,7 @@ export default function TimePickerField({
                   data-component-id={componentId ? `${componentId}.confirm` : "erp.timepicker.confirm"}
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="px-3 py-1 rounded bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition cursor-pointer shadow-xs"
+                  className="px-3 py-1 rounded bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition cursor-pointer shadow-xs"
                 >
                   OK
                 </button>
