@@ -18,7 +18,6 @@ import {
   Upload,
   RotateCcw,
   WrapText,
-  FileCode,
   Maximize2,
   Minimize2,
 } from 'lucide-react';
@@ -238,6 +237,7 @@ export default function CodeEditor({
   const [wordWrap, setWordWrap] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [tabMovesFocus, setTabMovesFocus] = useState(false);
 
   // Fecha o modo tela cheia com ESC com prioridade
   useEffect(() => {
@@ -322,28 +322,45 @@ export default function CodeEditor({
     const isMac = typeof window !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
     const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
 
-    // 1. Salvar: Ctrl + S / Cmd + S
+    // 1. Escape / Ctrl+M: permite que o próximo Tab / Shift+Tab mova o foco para fora do editor (WCAG 2.1.2)
+    if (e.key === 'Escape') {
+      if (searchOpen) {
+        e.preventDefault();
+        setSearchOpen(false);
+        return;
+      }
+      setTabMovesFocus(true);
+      return;
+    }
+
+    if (e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'm' || e.key === 'M')) {
+      e.preventDefault();
+      setTabMovesFocus((prev) => !prev);
+      return;
+    }
+
+    // 2. Salvar: Ctrl + S / Cmd + S
     if (ctrlOrCmd && (e.key === 's' || e.key === 'S')) {
       e.preventDefault();
       if (onSave) onSave(currentValue);
       return;
     }
 
-    // 2. Formatar: Ctrl + Shift + F / Cmd + Shift + F
+    // 3. Formatar: Ctrl + Shift + F / Cmd + Shift + F
     if (ctrlOrCmd && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
       e.preventDefault();
       handleFormat();
       return;
     }
 
-    // 3. Buscar: Ctrl + F
+    // 4. Buscar: Ctrl + F
     if (ctrlOrCmd && (e.key === 'f' || e.key === 'F') && !e.shiftKey) {
       e.preventDefault();
       setSearchOpen(true);
       return;
     }
 
-    // 4. Substituir: Ctrl + H
+    // 5. Substituir: Ctrl + H
     if (ctrlOrCmd && (e.key === 'h' || e.key === 'H')) {
       e.preventDefault();
       setSearchOpen(true);
@@ -351,8 +368,13 @@ export default function CodeEditor({
       return;
     }
 
-    // 5. Indentação Inteligente com Tab e Shift + Tab
+    // 6. Indentação Inteligente com Tab e Shift + Tab (salvo quando tabMovesFocus está ativo)
     if (e.key === 'Tab') {
+      if (tabMovesFocus) {
+        setTabMovesFocus(false);
+        return;
+      }
+
       e.preventDefault();
       const indentStr = '  '; // 2 espaços
 
@@ -389,7 +411,12 @@ export default function CodeEditor({
       return;
     }
 
-    // 6. Mover Linhas: Alt + ArrowUp / ArrowDown
+    // Qualquer outra tecla não-modificadora volta o Tab ao modo de indentação
+    if (tabMovesFocus && !['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) {
+      setTabMovesFocus(false);
+    }
+
+    // 7. Mover Linhas: Alt + ArrowUp / ArrowDown
     if (e.altKey && !e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
       e.preventDefault();
       const textBefore = currentValue.substring(0, selectionStart);
@@ -425,7 +452,7 @@ export default function CodeEditor({
       return;
     }
 
-    // 7. Duplicar Linha: Alt + Shift + ArrowDown
+    // 8. Duplicar Linha: Alt + Shift + ArrowDown
     if (e.altKey && e.shiftKey && e.key === 'ArrowDown') {
       e.preventDefault();
       const textBefore = currentValue.substring(0, selectionStart);
@@ -524,16 +551,7 @@ export default function CodeEditor({
     }
 
     setSearchMatches(matches);
-    if (matches.length > 0) {
-      setCurrentMatchIdx(0);
-      const textarea = textareaRef.current;
-      if (textarea) {
-        textarea.focus();
-        textarea.setSelectionRange(matches[0], matches[0] + searchTerm.length);
-      }
-    } else {
-      setCurrentMatchIdx(-1);
-    }
+    setCurrentMatchIdx(matches.length > 0 ? 0 : -1);
   }, [searchTerm, currentValue, searchOpen]);
 
   const nextMatch = () => {
@@ -575,6 +593,7 @@ export default function CodeEditor({
 
   const editorContent = (
     <div
+      data-component-id={componentId}
       className={cn(
         'flex flex-col bg-card text-foreground transition-all duration-150',
         'select-text relative font-sans overflow-hidden',
@@ -754,6 +773,17 @@ export default function CodeEditor({
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (e.shiftKey) prevMatch();
+                    else nextMatch();
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setSearchOpen(false);
+                    textareaRef.current?.focus();
+                  }
+                }}
                 placeholder="Buscar termo..."
                 className="w-full h-7 pl-2 pr-12 text-xs font-mono rounded-lg bg-surface border border-border text-foreground focus:outline-hidden focus:border-primary"
                 autoFocus
@@ -796,6 +826,7 @@ export default function CodeEditor({
               type="button"
               onClick={() => setSearchOpen(false)}
               className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
+              aria-label="Fechar busca"
             >
               <X size={14} />
             </button>
@@ -929,6 +960,12 @@ export default function CodeEditor({
 
           {/* Posição do Cursor e Estatísticas */}
           <div className="flex items-center gap-3 text-muted-foreground/80 shrink-0 text-[10.5px]">
+            {tabMovesFocus && (
+              <>
+                <span className="text-primary font-semibold">Tab move foco</span>
+                <span>•</span>
+              </>
+            )}
             <span>
               Ln {cursorPos.line}, Col {cursorPos.col}
             </span>
