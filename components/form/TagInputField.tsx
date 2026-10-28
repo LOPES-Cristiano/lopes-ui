@@ -4,9 +4,11 @@ import React, { useId, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { cn } from "@/utils/cn";
 import FieldWrapper from "./FieldWrapper";
-import { useAccessControl, type AccessControlProps } from "../useAccessControl";
+import { useAccessControl } from "../useAccessControl";
 
-export interface TagInputFieldProps extends AccessControlProps {
+export interface TagInputFieldProps {
+  componentId?: string;
+  hideIfDenied?: boolean;
   /** Rótulo do campo */
   label?: string;
   /** Lista de tags (controlado) */
@@ -52,30 +54,19 @@ export default function TagInputField({
   required,
   disabled: propDisabled,
   className,
-  permission,
-  role,
-  permissions,
-  roles,
-  requireAll,
-  onUnauthorized,
-  fallback = null,
+  componentId,
+  hideIfDenied = false,
 }: TagInputFieldProps) {
   const id = useId();
   const [internalTags, setInternalTags] = useState<string[]>(defaultValue);
   const [inputVal, setInputVal] = useState("");
 
-  const access = useAccessControl({
-    permission,
-    role,
-    permissions,
-    roles,
-    requireAll,
-    onUnauthorized,
-  });
+  const { canAccess } = useAccessControl();
+  const hasAccess = componentId ? canAccess(componentId) : true;
 
-  if (!access.allowed && access.behavior === "hide") return <>{fallback}</>;
+  if (!hasAccess && hideIfDenied) return null;
 
-  const disabled = propDisabled || (!access.allowed && access.behavior === "disable");
+  const disabled = propDisabled || !hasAccess;
   const tags = controlledValue ?? internalTags;
   const isAtMax = maxTags !== undefined && tags.length >= maxTags;
 
