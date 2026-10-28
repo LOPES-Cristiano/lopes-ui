@@ -7,7 +7,6 @@ import {
   type SortingState,
   type VisibilityState,
   type ColumnPinningState,
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
@@ -147,6 +146,7 @@ export default function Spreadsheet<T = any>({
   const [menuOpen, setMenuOpen] = useState(false);
   const [edits, setEdits] = useState<Record<string, any>>({});
   const [editing, setEditing] = useState<{ rowId: string; colKey: string } | null>(null);
+  const editingRef = useRef<{ rowId: string; colKey: string } | null>(null);
   const [draft, setDraft] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
   const [ctx, setCtx] = useState<{ x: number; y: number; rowId: string; row: T } | null>(null);
@@ -240,9 +240,9 @@ export default function Spreadsheet<T = any>({
         minSize: c.minWidth ?? 60,
         enableSorting: c.sortable !== false,
         sortUndefined: 'last',
-        accessorFn: (row: T) => {
+        accessorFn: (row: T, index: number) => {
           if (hasEdits) {
-            const id = rowKey(row, 0);
+            const id = rowKey(row, index);
             const k = `${id}::${c.key}`;
             if (k in edits) {
               const ev = edits[k];
@@ -288,7 +288,15 @@ export default function Spreadsheet<T = any>({
     (row, _id, value) => {
       const q = norm(value);
       if (!q) return true;
-      return columns.some((c) => !isNumericType(c.type) && c.type !== 'date' && norm(row.getValue(c.key)).includes(q));
+      return columns.some((c) => {
+        const cellVal = row.getValue(c.key);
+        if (cellVal == null || cellVal === '') return false;
+        if (norm(String(cellVal)).includes(q)) return true;
+        if (isNumericType(c.type) || c.type === 'date') {
+          return norm(formatValue(c, cellVal)).includes(q);
+        }
+        return false;
+      });
     },
     [columns]
   );
@@ -333,18 +341,24 @@ export default function Spreadsheet<T = any>({
   const lastPinnedId = leftCols.length ? leftCols[leftCols.length - 1].id : null;
 
   const commitEdit = () => {
-    if (!editing) return;
-    const col = colMap.get(editing.colKey)!;
-    const row = tableRows.find((r) => r.id === editing.rowId)?.original;
+    const activeEditing = editingRef.current;
+    if (!activeEditing) return;
+    editingRef.current = null;
+    const col = colMap.get(activeEditing.colKey)!;
+    const row = tableRows.find((r) => r.id === activeEditing.rowId)?.original;
     if (row !== undefined) {
       let value: any = draft;
       if (col.parseEdit) value = col.parseEdit(draft, row);
       else if (isNumericType(col.type)) {
-        const n = Number(draft.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.'));
+        const cleaned = draft.replace(/[^\d,.-]/g, '');
+        const normalized = cleaned.includes(',')
+          ? cleaned.replace(/\./g, '').replace(',', '.')
+          : cleaned;
+        const n = /\d/.test(normalized) ? Number(normalized) : Number.NaN;
         value = draft.trim() === '' ? undefined : Number.isNaN(n) ? draft : n;
       }
-      setEdits((e) => ({ ...e, [`${editing.rowId}::${editing.colKey}`]: value }));
-      onCellEdit?.(row, editing.colKey, value);
+      setEdits((e) => ({ ...e, [`${activeEditing.rowId}::${activeEditing.colKey}`]: value }));
+      onCellEdit?.(row, activeEditing.colKey, value);
     }
     setEditing(null);
   };
@@ -697,8 +711,16 @@ export default function Spreadsheet<T = any>({
                           onMouseLeave={def.hoverCard ? scheduleHoverClose : undefined}
                           onDoubleClick={() => {
                             if (!def.editable) return;
-                            setEditing({ rowId: row.id, colKey: c.id });
-                            setDraft(value == null ? '' : String(value).replace('.', ','));
+                            const nextEditing = { rowId: row.id, colKey: c.id };
+                            editingRef.current = nextEditing;
+                            setEditing(nextEditing);
+                            setDraft(
+                              value == null
+                                ? ''
+                                : isNumericType(def.type)
+                                  ? String(value).replace('.', ',')
+                                  : String(value)
+                            );
                           }}
                           title={typeof value === 'string' && value.length > 24 ? value : undefined}
                           className={twMerge(
@@ -721,7 +743,10 @@ export default function Spreadsheet<T = any>({
                               onBlur={commitEdit}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') commitEdit();
-                                if (e.key === 'Escape') setEditing(null);
+                                if (e.key === 'Escape') {
+                                  editingRef.current = null;
+                                  setEditing(null);
+                                }
                               }}
                               className="w-full h-full px-2 text-xs bg-white dark:bg-zinc-900 outline-none"
                             />
