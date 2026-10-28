@@ -1,3 +1,4 @@
+import fs from "node:fs/promises";
 import { defineConfig } from "tsup";
 
 const LIB_EXTERNALS = [
@@ -24,6 +25,10 @@ export default defineConfig([
   {
     entry: {
       index: "components/index.ts",
+      primitives: "components/primitives/index.ts",
+      "rich-text": "components/rich-text/index.ts",
+      spreadsheet: "components/spreadsheet/index.ts",
+      "code-block": "components/CodeBlock.tsx",
       hooks: "hooks/index.ts",
       utils: "utils/index.ts",
     },
@@ -31,29 +36,31 @@ export default defineConfig([
     dts: true,
     sourcemap: true,
     clean: true,
-    splitting: false,
+    splitting: true,
+    treeshake: true,
     tsconfig: "tsconfig.build.json",
     external: LIB_EXTERNALS,
-    // Mark the entire bundle as a client module so Next.js RSC won't try to
-    // execute it on the server. Individual "use client" directives are also
-    // preserved as-is inside component files.
+    // Mark client bundles so Next.js RSC won't execute interactive hooks on the server.
     esbuildOptions(options) {
       options.banner = { js: '"use client";' };
+    },
+    async onSuccess() {
+      await fs.mkdir("dist", { recursive: true });
+      await fs.copyFile("styles/lopes-ui.css", "dist/styles.css");
     },
   },
 
   // ── CLI bundle ──────────────────────────────────────────────────────────
   {
     entry: { cli: "cli/index.ts" },
-    format: ["cjs"],        // node scripts are CommonJS
+    format: ["cjs"],
     dts: false,
     sourcemap: false,
-    clean: false,           // lib config already cleaned dist/
+    clean: false,
     splitting: false,
     tsconfig: "tsconfig.build.json",
     platform: "node",
     target: "node18",
-    // Only Node built-ins needed; no React/Next deps
     external: [],
   },
 ]);
