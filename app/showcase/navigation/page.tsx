@@ -14,6 +14,14 @@ import CodeBlock from "@/components/CodeBlock";
 import Button from "@/components/Button";
 import toast from "@/components/Toast";
 import ShortcutHint from "@/components/ShortcutHint";
+import Tabs from "@/components/Tabs";
+import Pagination from "@/components/Pagination";
+import Collapsible, { CollapsibleTrigger, CollapsibleContent } from "@/components/Collapsible";
+import Separator from "@/components/Separator";
+import ScrollArea from "@/components/ScrollArea";
+import Kbd, { KbdGroup } from "@/components/Kbd";
+import Dock from "@/components/Dock";
+import { Command } from "@/components/CommandMenu";
 import { SectionHeader, DemoCard, PropsTable } from "@/app/showcase/_shared";
 import Footer from "@/components/Footer";
 
@@ -870,7 +878,213 @@ const COMMANDS: CommandItem[] = [
           </section>
 
           <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Tabs ──────────────────────────────────────────────────── */}
+          <section id="tabs" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Navegação em Abas"
+              title="Tabs"
+              description="Componente de abas standalone com 5 variantes visuais (pills, underline, enclosed, lifted, bordered), orientação horizontal ou vertical, ícones e contadores."
+            />
+
+            <DemoCard id="tabs-variants" title="Variantes: Pills, Underline e Lifted">
+              <div className="space-y-8">
+                <div className="space-y-2.5">
+                  <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Variante Pills (Padrão)</p>
+                  <Tabs
+                    variant="pills"
+                    items={[
+                      {
+                        value: "visao-geral",
+                        label: "Visão Geral",
+                        badge: 12,
+                        content: <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-900/40 p-4 text-sm text-zinc-600 dark:text-zinc-300">Resumo executivo de desempenho, disponibilidade dos serviços e métricas de uso em tempo real.</div>,
+                      },
+                      {
+                        value: "integracoes",
+                        label: "Integrações & APIs",
+                        badge: 8,
+                        content: <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-900/40 p-4 text-sm text-zinc-600 dark:text-zinc-300">Chaves de API, endpoints de Webhook configurados e políticas de rate-limiting.</div>,
+                      },
+                      {
+                        value: "seguranca",
+                        label: "Segurança & RBAC",
+                        badge: 4,
+                        content: <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-900/40 p-4 text-sm text-zinc-600 dark:text-zinc-300">Papéis de acesso, permissões por componente (componentId) e trilhas de auditoria.</div>,
+                      },
+                    ]}
+                  />
+                </div>
+
+                <div className="space-y-2.5 pt-4 border-t border-zinc-100 dark:border-zinc-800/80">
+                  <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Variante Underline</p>
+                  <Tabs
+                    variant="underline"
+                    items={[
+                      {
+                        value: "prod",
+                        label: "Ambiente de Produção",
+                        content: <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-900/40 p-4 text-sm text-zinc-600 dark:text-zinc-300">Cluster principal ativo com replicação multi-região e auto-scaling habilitado.</div>,
+                      },
+                      {
+                        value: "staging",
+                        label: "Ambiente de Homologação",
+                        content: <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-900/40 p-4 text-sm text-zinc-600 dark:text-zinc-300">Ambiente isolado para testes de integração e validação de releases.</div>,
+                      },
+                    ]}
+                  />
+                </div>
+              </div>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Pagination ────────────────────────────────────────────── */}
+          <section id="pagination" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Paginação"
+              title="Pagination"
+              description="Controle de paginação completo com reticências inteligentes, botões Primeira/Última página, seletor de itens por página e resumo de registros."
+            />
+
+            <DemoCard id="pagination-demo" title="Paginação Interativa com Seletor de Tamanho de Página">
+              <PaginationShowcaseDemo />
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Dock ──────────────────────────────────────────────────── */}
+          <section id="dock" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Barra Flutuante"
+              title="Dock"
+              description="Barra de navegação estilo macOS / Mobile Bottom Bar com efeito de magnificação suave ao passar o mouse (magnify), indicador de item ativo e contadores."
+            />
+
+            <DemoCard id="dock-demo" title="Passe o mouse e clique nos módulos do Dock">
+              <div className="rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/40 py-8 px-4 flex justify-center">
+                <DockShowcaseDemo />
+              </div>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Collapsible, Separator, ScrollArea & Kbd ──────────────── */}
+          <section id="collapsible-separator-scroll-kbd" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Primitivos de Estrutura"
+              title="Collapsible, Separator, ScrollArea & Kbd"
+              description="Painel retrátil individual (Collapsible), divisor semântico com rótulo (Separator), container de rolagem com fade (ScrollArea) e teclas de atalho (Kbd)."
+            />
+
+            <DemoCard id="primitives-demo" title="Demonstração Combinada">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                <div className="space-y-5">
+                  <Collapsible defaultOpen>
+                    <CollapsibleTrigger className="flex items-center justify-between w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-4 py-3 text-sm font-semibold cursor-pointer hover:bg-zinc-100/80 dark:hover:bg-zinc-800/70 transition-colors">
+                      <span>Etapas do Pipeline de Build</span>
+                      <Badge variant="info" size="sm" label="3 etapas" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="mt-2.5 space-y-2 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-4 text-xs text-zinc-600 dark:text-zinc-300">
+                        <p>1. Typecheck (tsc --noEmit) — Concluído em 1.8s</p>
+                        <p>2. Bundle ESM & CJS (tsup) — Concluído em 4.2s</p>
+                        <p>3. Geração de Declarações (.d.ts) — Concluído em 3.1s</p>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  <Separator label="Atalhos de Teclado (Kbd & KbdGroup)" />
+
+                  <div className="flex flex-wrap items-center gap-6">
+                    <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
+                      <span>Busca Global:</span>
+                      <KbdGroup separator="+">
+                        <Kbd>Ctrl</Kbd>
+                        <Kbd>K</Kbd>
+                      </KbdGroup>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
+                      <span>Salvar Alterações:</span>
+                      <KbdGroup separator="+">
+                        <Kbd>Ctrl</Kbd>
+                        <Kbd>S</Kbd>
+                      </KbdGroup>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5">
+                  <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">ScrollArea (com sombras de fade no topo/base)</p>
+                  <ScrollArea maxHeight={188} showScrollShadows className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-3.5">
+                    <div className="space-y-2 text-xs">
+                      {[
+                        "v2.1.0 — Novos componentes: SpeedDial, Swap, Dock, RatingField e FilterChips",
+                        "v2.0.8 — Refactor completo do CodeBlock com tema GitHub Dark corporativo",
+                        "v2.0.5 — Padronização de controle de acesso (useAccessControl) em 33 componentes",
+                        "v2.0.0 — Lote shadcn/ui: Tabs, Pagination, SliderField, DateRangePickerField",
+                        "v1.9.4 — Melhorias de performance no DataTable e Spreadsheet virtualizado",
+                        "v1.9.0 — Suporte a RichTextEditor com Tiptap e tabelas interativas",
+                        "v1.8.2 — Novo sistema de notificações Toast com spring physics",
+                        "v1.8.0 — Tokens de tema Light/Dark unificados em CSS Variables",
+                      ].map((item, i) => (
+                        <div key={i} className="rounded-lg border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/70 dark:bg-zinc-900 px-3 py-2 text-zinc-700 dark:text-zinc-300">
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
       </div>
     </main>
+  );
+}
+
+function PaginationShowcaseDemo() {
+  const [page, setPage] = React.useState(2);
+  const [pageSize, setPageSize] = React.useState(10);
+
+  return (
+    <Pagination
+      page={page}
+      totalPages={12}
+      totalItems={118}
+      pageSize={pageSize}
+      pageSizeOptions={[10, 25, 50]}
+      onPageChange={setPage}
+      onPageSizeChange={(sz) => {
+        setPageSize(sz);
+        setPage(1);
+      }}
+    />
+  );
+}
+
+function DockShowcaseDemo() {
+  const [active, setActive] = React.useState("painel");
+
+  return (
+    <Dock
+      activeId={active}
+      onSelect={(item) => {
+        setActive(item.id);
+        toast(`Módulo selecionado: ${item.label}`);
+      }}
+      items={[
+        { id: "painel", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
+        { id: "componentes", label: "Componentes", icon: <Code2 size={18} />, badge: "75+" },
+        { id: "analytics", label: "Analytics", icon: <BarChart2 size={18} />, badge: 3 },
+        { id: "usuarios", label: "Usuários", icon: <Users size={18} /> },
+        { id: "config", label: "Configurações", icon: <Settings size={18} /> },
+      ]}
+    />
   );
 }
