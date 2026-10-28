@@ -4,6 +4,7 @@ import React, { useId, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
 import { Calendar } from "lucide-react";
+import { useAccessControl } from "../useAccessControl";
 
 export type DateFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   id?: string;
@@ -24,6 +25,8 @@ export type DateFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   variant?: "default" | "filled";
   inputClassName?: string;
   componentId?: string;
+  /** If true, hides the component when access is denied instead of disabling it */
+  hideIfDenied?: boolean;
 };
 
 const SIZE = {
@@ -38,17 +41,22 @@ export default function DateField({
   value, defaultValue, onChange, onBlur,
   disabled, readOnly, min, max,
   size = "md", variant = "default",
-  inputClassName, componentId,
+  inputClassName, componentId, hideIfDenied = false,
 }: DateFieldProps) {
   const autoId = useId();
   const id = idProp ?? autoId;
   const s = SIZE[size];
   const inputRef = useRef<HTMLInputElement>(null);
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+  const effectiveDisabled = Boolean(disabled || !hasPermission);
 
   function handleWrapperClick() {
-    if (disabled || readOnly) return;
+    if (effectiveDisabled || readOnly) return;
     try { inputRef.current?.showPicker(); } catch { inputRef.current?.focus(); }
   }
+
+  if (!hasPermission && hideIfDenied) return null;
 
   const wrapCls = twMerge(
     "relative flex w-full items-center overflow-hidden rounded-lg border transition-all duration-150",
@@ -56,13 +64,13 @@ export default function DateField({
       ? "bg-[var(--surface-muted)] border-transparent hover:bg-[var(--surface-hover)] focus-within:bg-[var(--surface)] focus-within:border-[var(--border-strong)] focus-within:ring-2 focus-within:ring-[var(--ring)]/10"
       : "bg-[var(--input-background)] border-[var(--input-border)] hover:border-[var(--border-strong)] focus-within:border-[var(--ring)] focus-within:ring-2 focus-within:ring-[var(--ring)]/10",
     error && "border-red-400 hover:border-red-400 focus-within:border-red-500 focus-within:ring-red-500/10",
-    (disabled || readOnly) && "opacity-60 pointer-events-none bg-[var(--surface-muted)]",
+    (effectiveDisabled || readOnly) && "opacity-60 pointer-events-none bg-[var(--surface-muted)]",
   );
 
   const inputCls = twMerge(
     "flex-1 min-w-0 w-full bg-transparent outline-none border-0 ring-0 text-[var(--input-foreground)] [color-scheme:light] dark:[color-scheme:dark]",
     s.h, s.text, s.pl, "pr-3",
-    (disabled || readOnly) && "cursor-not-allowed",
+    (effectiveDisabled || readOnly) && "cursor-not-allowed",
     inputClassName,
   );
 
@@ -72,7 +80,7 @@ export default function DateField({
       required={required} tooltip={tooltip} error={error} helpText={helpText}
       width={width} className={className}
     >
-      <div className={twMerge(wrapCls, !disabled && !readOnly && "cursor-pointer")} onClick={handleWrapperClick}>
+      <div className={twMerge(wrapCls, !effectiveDisabled && !readOnly && "cursor-pointer")} onClick={handleWrapperClick}>
         <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--surface-muted-foreground)]", s.iL)}>
           <Calendar size={s.iconSz} />
         </span>
@@ -81,14 +89,14 @@ export default function DateField({
           type={mode === "datetime" ? "datetime-local" : mode === "month" ? "month" : "date"}
           value={value === null ? '' : value} defaultValue={defaultValue}
           onChange={onChange} onBlur={onBlur}
-          disabled={disabled} readOnly={readOnly}
+          disabled={effectiveDisabled} readOnly={readOnly}
           ref={inputRef}
           autoComplete="off"
           min={min} max={max}
           required={required}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
-          className={twMerge(inputCls, !disabled && !readOnly && "cursor-pointer")}
+          className={twMerge(inputCls, !effectiveDisabled && !readOnly && "cursor-pointer")}
           data-component-id={componentId || (idProp ? `erp.form.date.${idProp}` : undefined)}
         />
       </div>
