@@ -4,7 +4,7 @@ import React, {
   useState, useEffect, useCallback, useRef, Children,
 } from "react";
 import { twMerge } from "tailwind-merge";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -13,6 +13,10 @@ export type CarouselAlign      = "start" | "center" | "end";
 
 export type CarouselProps = {
   children: React.ReactNode;
+  /** Orientation of the carousel ("horizontal" | "vertical") */
+  orientation?: CarouselOrientation;
+  /** Height of the viewport when orientation="vertical" (default: 320px) */
+  verticalHeight?: number | string;
   /** Number of slides visible at once */
   slidesPerView?: number;
   /** Gap between slides (Tailwind spacing value as px number) */
@@ -27,6 +31,10 @@ export type CarouselProps = {
   dots?: boolean;
   /** Show slide counter "2 / 8" */
   counter?: boolean;
+  /** Show linear progress bar */
+  showProgress?: boolean;
+  /** Optional thumbnail nodes rendered below the carousel */
+  thumbnails?: React.ReactNode[];
   /** Pause auto-play on hover */
   pauseOnHover?: boolean;
   /** Accessible label */
@@ -46,10 +54,10 @@ function Dot({ active, onClick }: { active: boolean; onClick: () => void }) {
       onClick={onClick}
       aria-label={active ? "Slide atual" : "Ir para slide"}
       className={twMerge(
-        "rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
+        "rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 cursor-pointer",
         active
           ? "w-5 h-2 bg-indigo-500"
-          : "w-2 h-2 bg-zinc-300 hover:bg-zinc-400",
+          : "w-2 h-2 bg-zinc-300 dark:bg-zinc-700 hover:bg-zinc-400",
       )}
     />
   );
@@ -59,13 +67,16 @@ function Dot({ active, onClick }: { active: boolean; onClick: () => void }) {
 
 function Arrow({
   dir,
+  orientation = "horizontal",
   onClick,
   disabled,
 }: {
   dir: "prev" | "next";
+  orientation?: CarouselOrientation;
   onClick: () => void;
   disabled: boolean;
 }) {
+  const isVert = orientation === "vertical";
   return (
     <button
       data-component-id="erp.carousel.nav"
@@ -74,17 +85,26 @@ function Arrow({
       disabled={disabled}
       aria-label={dir === "prev" ? "Slide anterior" : "Próximo slide"}
       className={twMerge(
-        "absolute top-1/2 -translate-y-1/2 z-10",
-        "flex h-9 w-9 items-center justify-center rounded-full",
+        "absolute z-10 flex h-9 w-9 items-center justify-center rounded-full cursor-pointer",
         "bg-white/90 dark:bg-zinc-800/90 shadow-md border border-zinc-200 dark:border-zinc-700",
         "text-zinc-600 dark:text-zinc-300 transition-all duration-150",
         "hover:bg-white dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 hover:shadow-lg",
         "disabled:opacity-30 disabled:cursor-not-allowed",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
-        dir === "prev" ? "left-2" : "right-2",
+        isVert
+          ? dir === "prev"
+            ? "top-2 left-1/2 -translate-x-1/2"
+            : "bottom-2 left-1/2 -translate-x-1/2"
+          : dir === "prev"
+            ? "top-1/2 -translate-y-1/2 left-2"
+            : "top-1/2 -translate-y-1/2 right-2",
       )}
     >
-      {dir === "prev" ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+      {isVert ? (
+        dir === "prev" ? <ChevronUp size={16} /> : <ChevronDown size={16} />
+      ) : (
+        dir === "prev" ? <ChevronLeft size={16} /> : <ChevronRight size={16} />
+      )}
     </button>
   );
 }
@@ -93,6 +113,8 @@ function Arrow({
 
 export default function Carousel({
   children,
+  orientation = "horizontal",
+  verticalHeight = 320,
   slidesPerView = 1,
   gap = 16,
   autoPlay = 0,
@@ -100,6 +122,8 @@ export default function Carousel({
   arrows = true,
   dots = true,
   counter = false,
+  showProgress = false,
+  thumbnails,
   pauseOnHover = true,
   ariaLabel = "Carrossel",
   className,
@@ -109,6 +133,7 @@ export default function Carousel({
   const slides = Children.toArray(children);
   const total  = slides.length;
   const maxIdx = Math.max(0, total - slidesPerView);
+  const isVert = orientation === "vertical";
 
   const [current, setCurrent] = useState(0);
   const [paused,  setPaused]  = useState(false);
@@ -118,6 +143,7 @@ export default function Carousel({
 
   const go = useCallback(
     (idx: number) => {
+      if (total <= 0) return;
       if (loop) {
         setCurrent(((idx % total) + total) % total);
       } else {
@@ -132,64 +158,97 @@ export default function Carousel({
 
   // Auto-play
   useEffect(() => {
-    if (!autoPlay || paused) return;
+    if (!autoPlay || paused || total <= 1) return;
     const id = setInterval(next, autoPlay);
     return () => clearInterval(id);
-  }, [autoPlay, paused, next]);
+  }, [autoPlay, paused, next, total]);
 
-  // Keyboard
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "ArrowLeft")  prev();
-      if (e.key === "ArrowRight") next();
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [prev, next]);
+  // Scoped keyboard navigation on the carousel root (shadcn/ui Carousel pattern — avoids hijacking global inputs)
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (isVert) {
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          prev();
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          next();
+        }
+      } else {
+        if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          prev();
+        } else if (e.key === "ArrowRight") {
+          e.preventDefault();
+          next();
+        }
+      }
+    },
+    [isVert, prev, next],
+  );
 
   // Touch / mouse drag
-  function onDragStart(clientX: number) {
-    dragStart.current = clientX;
+  function onDragStart(coord: number) {
+    dragStart.current = coord;
     setDragging(true);
   }
-  function onDragEnd(clientX: number) {
+  function onDragEnd(coord: number) {
     if (!dragging) return;
-    const delta = dragStart.current - clientX;
-    if (Math.abs(delta) > 40) { if (delta > 0) next(); else prev(); }
+    const delta = dragStart.current - coord;
+    if (Math.abs(delta) > 40) {
+      if (delta > 0) next();
+      else prev();
+    }
     setDragging(false);
   }
 
-  const slideW  = `calc((100% - ${gap * (slidesPerView - 1)}px) / ${slidesPerView})`;
-  const offset  = `calc(-${current} * (${slideW} + ${gap}px))`;
-  const canPrev = loop || current > 0;
-  const canNext = loop || current < maxIdx;
+  const slideSize = `calc((100% - ${gap * (slidesPerView - 1)}px) / ${slidesPerView})`;
+  const offset    = `calc(-${current} * (${slideSize} + ${gap}px))`;
+  const canPrev   = loop || current > 0;
+  const canNext   = loop || current < maxIdx;
 
   // Dots: show one dot per logical "page" when slidesPerView > 1
-  const pages = Math.ceil(total / slidesPerView);
+  const pages = Math.max(1, Math.ceil(total / slidesPerView));
   const activePage = Math.floor(current / slidesPerView);
+  const progressPct = total > 1 ? ((current + 1) / total) * 100 : 100;
 
   return (
     <div
-      className={twMerge("relative w-full select-none", className)}
+      {...(componentId ? { "data-component-id": componentId } : {})}
+      role="region"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      className={twMerge(
+        "relative w-full select-none outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 rounded-xl",
+        className,
+      )}
       aria-label={ariaLabel}
       aria-roledescription="carousel"
       onMouseEnter={() => pauseOnHover && setPaused(true)}
       onMouseLeave={() => pauseOnHover && setPaused(false)}
-      >
+    >
       {/* Track container */}
       <div
         className="overflow-hidden"
-        onMouseDown={(e) => onDragStart(e.clientX)}
-        onMouseUp={(e)   => onDragEnd(e.clientX)}
-        onTouchStart={(e) => onDragStart(e.touches[0].clientX)}
-        onTouchEnd={(e)   => onDragEnd(e.changedTouches[0].clientX)}
+        style={
+          isVert
+            ? { height: typeof verticalHeight === "number" ? `${verticalHeight}px` : verticalHeight }
+            : undefined
+        }
+        onMouseDown={(e) => onDragStart(isVert ? e.clientY : e.clientX)}
+        onMouseUp={(e)   => onDragEnd(isVert ? e.clientY : e.clientX)}
+        onTouchStart={(e) => onDragStart(isVert ? e.touches[0].clientY : e.touches[0].clientX)}
+        onTouchEnd={(e)   => onDragEnd(isVert ? e.changedTouches[0].clientY : e.changedTouches[0].clientX)}
       >
         <div
           ref={trackRef}
-          className="flex transition-transform duration-500 ease-in-out"
+          className={twMerge(
+            "flex transition-transform duration-500 ease-in-out",
+            isVert ? "flex-col h-full" : "flex-row",
+          )}
           style={{
             gap: `${gap}px`,
-            transform: `translateX(${offset})`,
+            transform: isVert ? `translateY(${offset})` : `translateX(${offset})`,
             cursor: dragging ? "grabbing" : "grab",
           }}
           aria-live="polite"
@@ -200,7 +259,11 @@ export default function Carousel({
               role="group"
               aria-roledescription="slide"
               aria-label={`Slide ${i + 1} de ${total}`}
-              style={{ minWidth: slideW, maxWidth: slideW }}
+              style={
+                isVert
+                  ? { minHeight: slideSize, maxHeight: slideSize }
+                  : { minWidth: slideSize, maxWidth: slideSize }
+              }
               className={twMerge("shrink-0", slideClassName)}
             >
               {slide}
@@ -210,11 +273,42 @@ export default function Carousel({
       </div>
 
       {/* Arrows */}
-      {arrows && (
+      {arrows && total > slidesPerView && (
         <>
-          <Arrow dir="prev" onClick={prev} disabled={!canPrev} />
-          <Arrow dir="next" onClick={next} disabled={!canNext} />
+          <Arrow dir="prev" orientation={orientation} onClick={prev} disabled={!canPrev} />
+          <Arrow dir="next" orientation={orientation} onClick={next} disabled={!canNext} />
         </>
+      )}
+
+      {/* Progress bar */}
+      {showProgress && total > 1 && (
+        <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+          <div
+            className="h-full rounded-full bg-indigo-500 transition-all duration-300"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+      )}
+
+      {/* Thumbnails strip */}
+      {thumbnails && thumbnails.length > 0 && (
+        <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
+          {thumbnails.map((thumb, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => go(i)}
+              className={twMerge(
+                "shrink-0 overflow-hidden rounded-lg border-2 transition-all cursor-pointer",
+                i === current
+                  ? "border-indigo-500 ring-2 ring-indigo-500/20 opacity-100"
+                  : "border-transparent opacity-60 hover:opacity-90",
+              )}
+            >
+              {thumb}
+            </button>
+          ))}
+        </div>
       )}
 
       {/* Dots + counter */}
