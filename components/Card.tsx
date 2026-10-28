@@ -41,6 +41,13 @@ export type CardProps = {
   radius?: CardRadius;
   /** Show a top accent bar */
   accent?: boolean;
+  /** Layout direction / overlay mode (daisyUI card-side / image-full inspired) */
+  layout?: "vertical" | "horizontal" | "image-full";
+  /** Background image URL when layout="image-full" */
+  imageSrc?: string;
+  imageAlt?: string;
+  /** Compact padding mode (daisyUI card-compact) */
+  compact?: boolean;
   /** Makes the card interactive (hover lift effect) */
   hoverable?: boolean;
   /** Makes the card clickable */
@@ -64,6 +71,7 @@ export type CardHeaderProps = {
   iconColor?: CardColor;
   /** Slot on the right side (badge, button, etc.) */
   action?: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
 };
 
@@ -169,7 +177,45 @@ const COLOR_STYLES: Record<CardColor, ColorStyle> = {
   },
 };
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Sub-components (shadcn/ui + lopes-ui compatible) ──────────────────────────
+
+export function CardTitle({
+  children,
+  className,
+}: {
+  children?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <h3 className={twMerge("text-sm font-semibold text-zinc-900 dark:text-zinc-50 leading-snug", className)}>
+      {children}
+    </h3>
+  );
+}
+
+export function CardDescription({
+  children,
+  className,
+}: {
+  children?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <p className={twMerge("mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed", className)}>
+      {children}
+    </p>
+  );
+}
+
+export function CardAction({
+  children,
+  className,
+}: {
+  children?: React.ReactNode;
+  className?: string;
+}) {
+  return <div className={twMerge("shrink-0 self-start", className)}>{children}</div>;
+}
 
 export function CardHeader({
   title,
@@ -177,12 +223,13 @@ export function CardHeader({
   icon: Icon,
   iconColor = "default",
   action,
+  children,
   className,
 }: CardHeaderProps) {
   const c = COLOR_STYLES[iconColor];
   return (
     <div className={twMerge("flex items-start justify-between gap-4 px-5 pt-5", className)}>
-      <div className="flex items-start gap-3 min-w-0">
+      <div className="flex items-start gap-3 min-w-0 flex-1">
         {Icon && (
           <span className={twMerge(
             "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
@@ -191,13 +238,14 @@ export function CardHeader({
             <Icon size={17} />
           </span>
         )}
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           {title && (
             <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 leading-snug truncate">{title}</p>
           )}
           {description && (
             <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">{description}</p>
           )}
+          {children}
         </div>
       </div>
       {action && <div className="shrink-0">{action}</div>}
@@ -218,6 +266,8 @@ export function CardBody({
     </div>
   );
 }
+
+export const CardContent = CardBody;
 
 export function CardFooter({
   children,
@@ -272,6 +322,10 @@ export default function Card({
   shadow = "none",
   radius = "xl",
   accent = false,
+  layout = "vertical",
+  imageSrc,
+  imageAlt = "",
+  compact = false,
   hoverable = false,
   onClick,
   children,
@@ -282,29 +336,60 @@ export default function Card({
   const isClickable = hoverable || !!onClick;
   const isHero = tone === "hero";
   const resolvedVariant = isHero ? "elevated" : variant;
+  const isImageFull = layout === "image-full";
+  const isHorizontal = layout === "horizontal";
 
   const classes = twMerge(
-    "flex flex-col overflow-hidden transition-all duration-200",
+    "relative overflow-hidden transition-all duration-200 text-left",
+    isHorizontal ? "flex flex-col sm:flex-row" : "flex flex-col",
     VARIANT_CLASSES[resolvedVariant],
     resolvedVariant === "filled" ? c.filled : "",
     isHero ? "shadow-lg bg-gradient-to-br from-white to-slate-50/80 dark:from-zinc-900 dark:to-zinc-900/60 border border-slate-200/80 dark:border-zinc-800" : SHADOW_CLASSES[shadow],
     RADIUS_CLASSES[radius],
-    isClickable && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:translate-y-0",
+    compact && "[&>div]:px-3.5 [&>div]:py-2.5",
+    isImageFull && "text-white border-transparent",
+    isClickable && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
     className,
   );
 
-  const Tag = onClick ? "button" : "div";
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!onClick) return;
+    // Ignore key events bubbling from interactive children (buttons, inputs, links)
+    if (e.target !== e.currentTarget) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onClick();
+    }
+  };
 
   return (
-    <Tag
+    <div
+      {...(componentId ? { "data-component-id": componentId } : {})}
       className={classes}
       onClick={onClick}
-      type={onClick ? "button" : undefined}
-      >
-      {accent && (
-        <div className={twMerge("h-1 w-full shrink-0", c.accent)} />
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? handleKeyDown : undefined}
+    >
+      {isImageFull && imageSrc && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageSrc}
+            alt={imageAlt}
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/25" />
+        </>
       )}
-      {children}
-    </Tag>
+      {accent && (
+        <div className={twMerge("relative z-10 h-1 w-full shrink-0", c.accent)} />
+      )}
+      {isImageFull ? (
+        <div className="relative z-10 flex flex-1 flex-col justify-end">{children}</div>
+      ) : (
+        children
+      )}
+    </div>
   );
 }
