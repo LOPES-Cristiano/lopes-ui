@@ -30,6 +30,8 @@ import DateRangePickerField, {
 } from "@/components/form/DateRangePickerField";
 import RatingField, { Rating } from "@/components/form/RatingField";
 import FilterChips from "@/components/form/FilterChips";
+import ColorPickerField from "@/components/form/ColorPickerField";
+import TagInputField from "@/components/form/TagInputField";
 import {
   FieldSet,
   FieldLegend,
@@ -1879,6 +1881,28 @@ import FileField   from "@/components/form/FileField";
         </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── ColorPickerField & TagInputField ─────────────────────────── */}
+        <section id="color-tag-fields" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Seletores Avançados"
+            title="ColorPickerField & TagInputField"
+            description="Seletor de cores com paleta de swatches, input HEX validado e cópia rápida, acompanhado do campo de múltiplas tags com suporte a teclado (Enter, vírgula, Backspace), limite máximo e sugestões clicáveis."
+          />
+
+          <DemoCard id="color-tag-demo" title="Personalização de Marca e Tags de Projeto">
+            <ColorAndTagShowcaseDemo />
+          </DemoCard>
+
+          <PropsTable
+            rows={[
+              ["ColorPickerField", "value, onChange, swatches, showCopy", "Seletor de cor HEX com paleta rápida e seletor nativo"],
+              ["TagInputField", "value, onChange, suggestions, maxTags", "Campo de chips/tags com sugestões e prevenção de duplicatas"],
+            ]}
+          />
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
       </div>
     </main>
   );
@@ -2079,6 +2103,36 @@ function FilterChipsShowcaseDemo() {
           ]}
         />
       </div>
+    </div>
+  );
+}
+
+
+function ColorAndTagShowcaseDemo() {
+  const [accentColor, setAccentColor] = React.useState("#4f46e5");
+  const [projectTags, setProjectTags] = React.useState<string[]>([
+    "Design System",
+    "Next.js 16",
+    "Tailwind v4",
+  ]);
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <ColorPickerField
+        label="Cor de Destaque do Workspace"
+        value={accentColor}
+        onChange={setAccentColor}
+        helpText="Clique nos swatches rápidos ou no conta-gotas para escolher uma cor customizada."
+      />
+
+      <TagInputField
+        label="Tecnologias & Escopos do Projeto"
+        value={projectTags}
+        onChange={setProjectTags}
+        maxTags={6}
+        suggestions={["TypeScript", "Radix UI", "RBAC", "Shiki", "ZodForm"]}
+        helpText="Digite e pressione Enter ou vírgula para adicionar."
+      />
     </div>
   );
 }
