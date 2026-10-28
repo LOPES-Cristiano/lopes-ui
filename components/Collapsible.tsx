@@ -90,13 +90,15 @@ export function CollapsibleTrigger({
 }
 
 export type CollapsibleContentProps = React.HTMLAttributes<HTMLDivElement> & {
+  /** Keep content in DOM so open/close height transitions run smoothly (default: true) */
   keepMounted?: boolean;
 };
 
 export function CollapsibleContent({
-  keepMounted = false,
+  keepMounted = true,
   className,
   children,
+  style,
   ...props
 }: CollapsibleContentProps) {
   const ctx = useContext(CollapsibleContext);
@@ -111,15 +113,22 @@ export function CollapsibleContent({
       id={ctx.contentId}
       data-slot="collapsible-content"
       data-state={ctx.open ? "open" : "closed"}
-      hidden={!ctx.open}
+      aria-hidden={!ctx.open}
+      inert={!ctx.open || undefined}
+      style={{
+        gridTemplateRows: ctx.open ? "1fr" : "0fr",
+        ...style,
+      }}
       className={cn(
-        "grid transition-all duration-200 ease-in-out",
-        ctx.open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+        "grid transition-[grid-template-rows,opacity] duration-250 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        ctx.open
+          ? "opacity-100"
+          : "opacity-0 pointer-events-none select-none",
         className,
       )}
       {...props}
     >
-      <div className="overflow-hidden">{children}</div>
+      <div className="min-h-0 overflow-hidden">{children}</div>
     </div>
   );
 }
