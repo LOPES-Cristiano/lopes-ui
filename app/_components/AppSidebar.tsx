@@ -12,6 +12,7 @@ import {
   LayoutTemplate, PackageOpen, ShieldAlert,
   Rss, LogIn, KeyRound, LockKeyhole,
   PanelRightOpen, Radio, Filter, Inbox, Columns, Banknote, Command, Sparkles, PanelBottom,
+  Briefcase, Headphones, Settings, ShoppingBag, Wrench, BarChart3,
 } from "lucide-react";
 
 export default function AppSidebar() {
@@ -25,10 +26,25 @@ export default function AppSidebar() {
       groups={[
         {
           id: "start",
-          label: "Início",
+          label: "Início & Templates",
           items: [
             { label: "Visão geral", href: "/#overview", icon: Home },
             { label: "Instalação",  href: "/#install",  icon: Zap },
+            {
+              label: "Páginas Exemplo",
+              href: "/templates",
+              icon: Sparkles,
+              badge: "5",
+              badgeVariant: "info",
+              children: [
+                { label: "Dashboard Executivo", href: "/templates#dashboard", badge: "Novo", badgeVariant: "success" },
+                { label: "CRM & Pipeline",      href: "/templates#crm",       badge: "Novo", badgeVariant: "success" },
+                { label: "Central Helpdesk",    href: "/templates#helpdesk",  badge: "Novo", badgeVariant: "success" },
+                { label: "Configurações & RBAC",href: "/templates#settings",  badge: "Novo", badgeVariant: "info" },
+                { label: "Vitrine & Checkout",  href: "/templates#catalog",   badge: "Novo", badgeVariant: "info" },
+              ],
+            },
+            { label: "UI Builder", href: "/ui-builder", icon: Wrench, badge: "Studio", badgeVariant: "info" },
           ],
         },
         {
@@ -197,16 +213,15 @@ export default function AppSidebar() {
               ],
             },
             {
-              label: "CodeBlock",
+              label: "CodeBlock, Snippet & Tour",
               href: "/showcase/animation#codeblock",
               icon: FileCode,
               children: [
-                { label: "Básico",             href: "/showcase/animation#codeblock-basic" },
-                { label: "Terminal",           href: "/showcase/animation#codeblock-terminal" },
-                { label: "Números de linha",   href: "/showcase/animation#codeblock-linenumbers" },
-                { label: "Recolher",           href: "/showcase/animation#codeblock-showmore" },
-                { label: "Abas",               href: "/showcase/animation#codeblock-tabs" },
-                { label: "Props",              href: "/showcase/animation#codeblock-props" },
+                { label: "CodeBlock",          href: "/showcase/animation#codeblock-basic" },
+                { label: "Snippet & Copy",     href: "/showcase/animation#snippet", badge: "Novo", badgeVariant: "success" },
+                { label: "Marquee",            href: "/showcase/animation#marquee", badge: "Novo", badgeVariant: "success" },
+                { label: "Tour (Onboarding)",  href: "/showcase/animation#tour", badge: "Novo", badgeVariant: "info" },
+                { label: "CodeEditor",         href: "/showcase/animation#code-editor" },
               ],
             },
             {
@@ -303,6 +318,7 @@ export default function AppSidebar() {
                 { label: "RatingField",           href: "/showcase/forms#rating-field", badge: "Novo", badgeVariant: "info" },
                 { label: "FilterChips",           href: "/showcase/forms#filter-chips", badge: "Novo", badgeVariant: "info" },
                 { label: "FieldSet & ZodForm",    href: "/showcase/forms#field-set", badge: "Novo", badgeVariant: "success" },
+                { label: "ColorPicker & TagInput",href: "/showcase/forms#color-tag-fields", badge: "Novo", badgeVariant: "success" },
                 { label: "NumberField",           href: "/showcase/forms#fields-number" },
                 { label: "DateField & TimeField", href: "/showcase/forms#datetime-fields" },
                 { label: "CheckboxGroup",         href: "/showcase/forms#checkboxgroup" },
@@ -566,6 +582,8 @@ export default function AppSidebar() {
                 { label: "Drag & Drop",      href: "/showcase/data#treeview-dnd" },
                 { label: "Spreadsheet",      href: "/showcase/data#spreadsheet" },
                 { label: "TransferList",     href: "/showcase/data#transfer-list" },
+                { label: "Chart (Gráficos)", href: "/showcase/data#charts", badge: "Novo", badgeVariant: "success" },
+                { label: "DescriptionList",  href: "/showcase/data#description-list", badge: "Novo", badgeVariant: "success" },
               ],
             },
             {
@@ -592,6 +610,7 @@ export default function AppSidebar() {
                 { label: "HoverGallery & 3D",href: "/showcase/display#hover-gallery", badge: "Novo", badgeVariant: "info" },
                 { label: "Indicator, Stack & Mask", href: "/showcase/display#indicator-stack-mask", badge: "Novo", badgeVariant: "info" },
                 { label: "Mockups",          href: "/showcase/display#mockups", badge: "Novo", badgeVariant: "info" },
+                { label: "BentoGrid & BentoCard", href: "/showcase/display#bento-grid", badge: "Novo", badgeVariant: "success" },
               ],
             },
           ],
