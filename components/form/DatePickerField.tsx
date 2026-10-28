@@ -6,6 +6,7 @@ import { CalendarDays, X } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
 import Calendar from "../Calendar";
+import { useAccessControl } from "../useAccessControl";
 
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
@@ -22,19 +23,26 @@ export type DatePickerFieldProps = Omit<FieldWrapperProps, "children" | "id"> & 
   disabledDate?: (date: Date) => boolean;
   readOnly?: boolean;
   placeholder?: string;
+  /** Renders an inline clear button when a date is selected */
+  clearable?: boolean;
   className?: string;
   size?: "sm" | "md" | "lg";
   componentId?: string;
+  /** If true, hides the component when access is denied instead of disabling it */
+  hideIfDenied?: boolean;
 };
 
 export default function DatePickerField({
   label,
   labelInline,
+  orientation,
   labelWidth,
   required,
   tooltip,
+  labelAction,
   error,
   helpText,
+  hint,
   width,
   className,
   id: idProp,
@@ -47,15 +55,20 @@ export default function DatePickerField({
   disabled,
   disabledDate,
   readOnly,
+  clearable = true,
   size = "sm",
   placeholder = "dd/mm/aaaa",
   componentId,
+  hideIfDenied = false,
 }: DatePickerFieldProps) {
   const autoId = useId();
   const id = idProp ?? autoId;
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+  const effectiveDisabled = Boolean(disabled || !hasPermission);
   const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({
     position: "fixed",
     visibility: "hidden",
@@ -116,14 +129,13 @@ export default function DatePickerField({
 
     const width = Math.min(320, window.innerWidth - 24);
     const left = Math.min(Math.max(12, rect.left), window.innerWidth - width - 12);
-    
+
     const panelHeight = 350;
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
-    
-    // Só abre acima se não houver espaço embaixo e houver espaço suficiente acima
+
     const shouldOpenAbove = spaceBelow < panelHeight && spaceAbove >= panelHeight;
-    
+
     let top: number;
     if (shouldOpenAbove) {
       top = Math.max(12, rect.top - panelHeight - 6);
@@ -151,7 +163,7 @@ export default function DatePickerField({
   }, []);
 
   const handleToggle = () => {
-    if (disabled || readOnly) return;
+    if (effectiveDisabled || readOnly) return;
     if (!open) {
       updatePosition();
       setOpen(true);
@@ -200,41 +212,54 @@ export default function DatePickerField({
   }, [open, updatePosition]);
 
   function handleSelect(date: Date) {
-    if (readOnly || disabled) return;
+    if (readOnly || effectiveDisabled) return;
     onChange?.(toIsoDate(date));
     setOpen(false);
   }
 
   function handleClear() {
-    if (readOnly || disabled) return;
+    if (readOnly || effectiveDisabled) return;
+    setTypedValue("");
     onChange?.("");
     setOpen(false);
   }
 
   function handleToday() {
-    if (readOnly || disabled) return;
+    if (readOnly || effectiveDisabled) return;
     onChange?.(toIsoDate(new Date()));
     setOpen(false);
   }
+
+  if (!hasPermission && hideIfDenied) return null;
+
+  const canShowClear = clearable && Boolean(typedValue) && !effectiveDisabled && !readOnly;
 
   return (
     <FieldWrapper
       id={id}
       label={label}
       labelInline={labelInline}
+      orientation={orientation}
       labelWidth={labelWidth}
       required={required}
       tooltip={tooltip}
+      labelAction={labelAction}
       error={error}
       helpText={helpText}
+      hint={hint}
       width={width}
       className={className}
     >
       <div ref={containerRef} className="relative">
         <div className="relative flex items-center">
-          <input data-component-id={componentId ? `${componentId}.input` : "erp.datepicker.input"} id={id} name={name ?? `datepicker_off_${id}`} type="text" value={typedValue}
+          <input
+            data-component-id={componentId ? `${componentId}.input` : "erp.datepicker.input"}
+            id={id}
+            name={name ?? `datepicker_off_${id}`}
+            type="text"
+            value={typedValue}
             placeholder={placeholder || "dd/mm/aaaa"}
-            disabled={disabled}
+            disabled={effectiveDisabled}
             readOnly={readOnly}
             autoComplete="off"
             autoCorrect="off"
@@ -246,30 +271,44 @@ export default function DatePickerField({
             data-form-type="other"
             onChange={handleInputChange}
             className={twMerge(
-              "flex w-full items-center gap-2 border bg-white dark:bg-zinc-900 pr-9 text-left outline-none transition-all duration-150",
+              "flex w-full items-center gap-2 border bg-white dark:bg-zinc-900 text-left outline-none transition-all duration-150",
+              canShowClear ? "pr-14" : "pr-9",
               size === "sm"
-                ? "h-8 text-xs px-2.5 rounded-md"
+                ? "h-8 text-xs pl-2.5 rounded-md"
                 : size === "lg"
-                  ? "h-12 text-base px-4 rounded-lg"
-                  : "h-10 text-sm px-3 rounded-lg",
+                  ? "h-12 text-base pl-4 rounded-lg"
+                  : "h-10 text-sm pl-3 rounded-lg",
               error
                 ? "border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
                 : "border-zinc-300 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/10 dark:border-zinc-700 dark:focus:border-zinc-500",
-              (disabled || readOnly) && "cursor-not-allowed opacity-60",
+              (effectiveDisabled || readOnly) && "cursor-not-allowed opacity-60",
             )}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
-            />
-          <button
-            data-component-id={componentId ? `${componentId}.toggle` : "erp.datepicker.toggle"}
-            type="button"
-            disabled={disabled || readOnly}
-            onClick={handleToggle}
-            className="absolute right-3 flex items-center justify-center text-[var(--surface-muted-foreground)] hover:text-[var(--surface-foreground)] transition-colors"
-            aria-label="Alternar calendário"
-          >
-            <CalendarDays size={15} />
-          </button>
+          />
+          <span className="absolute right-2.5 flex items-center gap-1">
+            {canShowClear && (
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={handleClear}
+                aria-label="Limpar data"
+                className="flex h-5 w-5 items-center justify-center rounded text-[var(--surface-muted-foreground)] hover:text-[var(--surface-foreground)] transition-colors"
+              >
+                <X size={13} />
+              </button>
+            )}
+            <button
+              data-component-id={componentId ? `${componentId}.toggle` : "erp.datepicker.toggle"}
+              type="button"
+              disabled={effectiveDisabled || readOnly}
+              onClick={handleToggle}
+              className="flex h-5 w-5 items-center justify-center text-[var(--surface-muted-foreground)] hover:text-[var(--surface-foreground)] transition-colors"
+              aria-label="Alternar calendário"
+            >
+              <CalendarDays size={15} />
+            </button>
+          </span>
         </div>
 
         {open && panelStyle.left !== undefined && typeof document !== "undefined" && createPortal(
