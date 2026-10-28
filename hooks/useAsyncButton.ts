@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import toast from "@/components/Toast";
 
 type ToastMethod = "success" | "error" | "loading";
@@ -24,29 +24,63 @@ export function useAsyncButton(
   }: UseAsyncButtonOptions = {}
 ) {
   const [loading, setLoading] = useState(false);
-  const finished = useRef(false);
+  const inFlightRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
 
   const handleClick = useCallback(async () => {
-
-    
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setLoading(true);
-    finished.current = false;
-    const timer = setTimeout(() => {
-      if (!finished.current) {
-        callToast(timeoutType, timeoutMessage);
-        setLoading(false);
+
+    let timedOut = false;
+    let loadingToastId: string | undefined;
+
+    timerRef.current = setTimeout(() => {
+      if (inFlightRef.current) {
+        timedOut = true;
+        inFlightRef.current = false;
+        loadingToastId = callToast(timeoutType, timeoutMessage);
+        if (mountedRef.current) setLoading(false);
       }
     }, timeout);
+
     try {
       await asyncAction();
-      finished.current = true;
-      clearTimeout(timer);
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      if (loadingToastId && timeoutType === "loading") {
+        toast.dismiss(loadingToastId);
+      }
     } catch {
-      finished.current = true;
-      clearTimeout(timer);
-      callToast(onErrorType, onErrorMessage);
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      if (loadingToastId && timeoutType === "loading") {
+        toast.dismiss(loadingToastId);
+      }
+      if (!timedOut) {
+        callToast(onErrorType, onErrorMessage);
+      }
     } finally {
-      setLoading(false);
+      inFlightRef.current = false;
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [asyncAction, timeout, timeoutMessage, timeoutType, onErrorMessage, onErrorType]);
 
