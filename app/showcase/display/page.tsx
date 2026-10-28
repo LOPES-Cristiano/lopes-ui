@@ -937,12 +937,12 @@ import { Star } from "lucide-react";
             <DemoCard id="status-badge-tones" title="Tons semânticos & tamanhos">
               <div className="p-6 space-y-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  <StatusBadge tone="success" label="Entregue & Montado" />
-                  <StatusBadge tone="info" label="Em Rota (RO/AM)" pulse />
-                  <StatusBadge tone="warning" label="Aguardando Montador" />
-                  <StatusBadge tone="danger" label="Avaria no Transporte" />
-                  <StatusBadge tone="primary" label="Separação no CD" />
-                  <StatusBadge tone="brand" label="Garantia BigLar" />
+                  <StatusBadge tone="success" label="Operacional" />
+                  <StatusBadge tone="info" label="Sincronizando" pulse />
+                  <StatusBadge tone="warning" label="Aguardando Revisão" />
+                  <StatusBadge tone="danger" label="Falha Crítica" />
+                  <StatusBadge tone="primary" label="Em Processamento" />
+                  <StatusBadge tone="brand" label="Plano Enterprise" />
                   <StatusBadge tone="neutral" label="Rascunho" />
                 </div>
                 <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
@@ -977,30 +977,30 @@ import { Star } from "lucide-react";
               description="Conjunto de primitivos padronizados (DetailHeader, DetailGrid, DetailPanel, InfoField, MetricField e DetailTabs) para telas e modais de visualização de registros."
             />
 
-            <DemoCard id="detail-layout-demo" title="Ficha de Produto — Móveis & Eletro">
+            <DemoCard id="detail-layout-demo" title="Ficha do Serviço — Lopes UI Cloud">
               <div className="p-6 space-y-6 bg-white dark:bg-zinc-900 rounded-xl">
                 <DetailHeader
-                  titleLabel="Catálogo de Estofados · SKU #EST-6901"
-                  titleValue="Sofá Retrátil e Reclinável Imperial 3,20m — Veludo Cinza"
+                  titleLabel="Catálogo de Serviços · SRV #API-6901"
+                  titleValue="Gateway de Autenticação & RBAC Multi-Tenant v2"
                   avatar={<Avatar initials="SI" size="lg" />}
                   badge={<StatusBadge tone="success" label="Em Linha" />}
                 />
 
                 <DetailPanel title="Indicadores de Estoque & Vendas" icon={TrendingUp}>
                   <DetailGrid columns={4}>
-                    <MetricField label="Estoque CD Ji-Paraná (RO)" value="42 un." variant="success" subtext="Pronta entrega (69)" />
-                    <MetricField label="Estoque CD Manaus (AM)" value="28 un." variant="info" subtext="Pronta entrega (92)" />
-                    <MetricField label="Preço à Vista" value="R$ 3.490,00" variant="primary" subtext="Até 10x sem juros" />
-                    <MetricField label="Garantia de Fábrica" value="12 meses" variant="default" subtext="Estrutura em eucalipto" />
+                    <MetricField label="Disponibilidade (SLA)" value="99,98%" variant="success" subtext="Últimos 90 dias" />
+                    <MetricField label="Latência Média (p95)" value="18 ms" variant="info" subtext="Região sa-east-1" />
+                    <MetricField label="Custo Mensal Estimado" value="R$ 1.490,00" variant="primary" subtext="Faturamento consolidado" />
+                    <MetricField label="Retenção de Backups" value="30 dias" variant="default" subtext="Snapshots diários" />
                   </DetailGrid>
                 </DetailPanel>
 
                 <DetailPanel title="Especificações Técnicas" icon={Package}>
                   <DetailGrid columns={4}>
-                    <InfoField label="Fabricante" value="Estofados Conforto Norte" />
-                    <InfoField label="Dimensões (L × A × P)" value="320 × 105 × 118 cm" />
-                    <InfoField label="Densidade da Espuma" value="D-33 Soft com Molas Ensacadas" highlight />
-                    <InfoField label="Necessita Montagem?" value="Sim (Encaixe de Módulos)" variant="info" />
+                    <InfoField label="Mantenedor" value="Equipe Plataforma Lopes UI" />
+                    <InfoField label="Runtime" value="Node.js 22 LTS · Edge Ready" />
+                    <InfoField label="Criptografia" value="TLS 1.3 + AES-256-GCM" highlight />
+                    <InfoField label="Auto-Scaling?" value="Ativo (2 a 16 réplicas)" variant="info" />
                   </DetailGrid>
                 </DetailPanel>
               </div>
