@@ -11,9 +11,17 @@ import {
   ArrowUp,
   Minus,
   ArrowDown,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./primitives/dropdown-menu";
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -290,20 +298,24 @@ export function AssigneesStack({ assignees }: { assignees: KanbanAssignee[] }) {
 
 function KanbanCardItem({
   card,
+  cardIndex,
   columnId,
   column,
   onDragStart,
   onDragEnd,
+  onDropAtCard,
   isDragging,
   onCardClick,
   renderCard,
 }: {
   card: KanbanCard;
+  cardIndex: number;
   columnId: string;
   columnTipo?: string;
   column: KanbanColumn;
   onDragStart: (colId: string, cardId: string) => void;
   onDragEnd: () => void;
+  onDropAtCard: (targetColId: string, targetIndex: number) => void;
   isDragging: boolean;
   onCardClick?: (card: KanbanCard, columnId: string) => void;
   renderCard?: (card: KanbanCard, column: KanbanColumn) => React.ReactNode;
@@ -321,6 +333,11 @@ function KanbanCardItem({
           onDragStart(columnId, card.id);
         }}
         onDragEnd={onDragEnd}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.stopPropagation();
+          onDropAtCard(columnId, cardIndex);
+        }}
         className={twMerge(
           "transition-all duration-150 cursor-pointer select-none",
           isDragging && "opacity-40 scale-95 ring-2 ring-blue-500 shadow-xl rounded-lg"
@@ -343,6 +360,11 @@ function KanbanCardItem({
       draggable
       onDragStart={() => onDragStart(columnId, card.id)}
       onDragEnd={onDragEnd}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.stopPropagation();
+        onDropAtCard(columnId, cardIndex);
+      }}
       onClick={() => onCardClick?.(card, columnId)}
       className={twMerge(
         "group relative rounded-lg bg-white dark:bg-zinc-900",
@@ -420,6 +442,9 @@ export default function KanbanBoard({
   onAddCard,
   onCardClick,
   onMoveCard,
+  onEditColumn,
+  onDeleteColumn,
+  showColumnActions = true,
   renderCard,
   renderColumnHeader,
   emptyColumnLabel = "Nenhum item nesta etapa",
@@ -446,39 +471,50 @@ export default function KanbanBoard({
     setDragOverColId(null);
   }, []);
 
-  const handleDrop = useCallback(
-    (targetColId: string) => {
+  const handleDropAt = useCallback(
+    (targetColId: string, targetIndex?: number) => {
       if (!dragRef.current) return;
       const { sourceColId, cardId } = dragRef.current;
       dragRef.current = null;
       setDraggingId(null);
       setDragOverColId(null);
 
-      // Evita mover o cartão para o final da própria coluna se solto na mesma coluna
-      if (sourceColId === targetColId) return;
-
+      const sourceCol = columns.find((col) => col.id === sourceColId);
       const targetCol = columns.find((col) => col.id === targetColId);
-      if (!targetCol) return;
+      if (!sourceCol || !targetCol) return;
 
-      let draggedCard: KanbanCard | undefined;
-      const updated = columns.map((col) => {
-        if (col.id !== sourceColId) return col;
-        const filtered = col.cards.filter((c) => {
-          if (c.id === cardId) {
-            draggedCard = c;
-            return false;
-          }
-          return true;
-        });
-        return { ...col, cards: filtered };
-      });
+      const sourceIdx = sourceCol.cards.findIndex((c) => c.id === cardId);
+      if (sourceIdx === -1) return;
+      const draggedCard = sourceCol.cards[sourceIdx];
 
-      if (!draggedCard) return;
+      // Intra-column vertical reorder
+      if (sourceColId === targetColId) {
+        const destIdx = targetIndex ?? sourceCol.cards.length - 1;
+        if (destIdx === sourceIdx) return;
+        const nextCards = [...sourceCol.cards];
+        nextCards.splice(sourceIdx, 1);
+        nextCards.splice(destIdx, 0, draggedCard);
+        const finalCols = columns.map((col) =>
+          col.id === sourceColId ? { ...col, cards: nextCards } : col
+        );
+        setColumns(finalCols);
+        onChange?.(finalCols);
+        onMoveCard?.(cardId, sourceColId, targetColId, destIdx);
+        return;
+      }
 
-      const insertionIndex = targetCol.cards.length;
-      const finalCols = updated.map((col) => {
-        if (col.id !== targetColId) return col;
-        return { ...col, cards: [...col.cards, draggedCard!] };
+      // Cross-column move
+      const insertionIndex = targetIndex ?? targetCol.cards.length;
+      const finalCols = columns.map((col) => {
+        if (col.id === sourceColId) {
+          return { ...col, cards: col.cards.filter((c) => c.id !== cardId) };
+        }
+        if (col.id === targetColId) {
+          const nextCards = [...col.cards];
+          nextCards.splice(insertionIndex, 0, draggedCard);
+          return { ...col, cards: nextCards };
+        }
+        return col;
       });
 
       setColumns(finalCols);
@@ -500,7 +536,7 @@ export default function KanbanBoard({
               type="button"
               onClick={() => {
                 const el = document.getElementById(`kanban-col-${col.id}`);
-                el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
               }}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap bg-white dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-200 border border-zinc-200/90 dark:border-zinc-700/80 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-700/70 shrink-0 cursor-pointer active:scale-95 transition-all"
             >
@@ -522,6 +558,9 @@ export default function KanbanBoard({
       >
         {columns.map((column) => {
           const isTarget = dragOverColId === column.id;
+          const wipExceeded = column.limit !== undefined && column.cards.length > column.limit;
+          const wipAtLimit = column.limit !== undefined && column.cards.length === column.limit;
+          const hasColMenu = showColumnActions && Boolean(onEditColumn || onDeleteColumn);
 
           return (
             <div
@@ -532,7 +571,7 @@ export default function KanbanBoard({
                 setDragOverColId(column.id);
               }}
               onDragLeave={() => setDragOverColId(null)}
-              onDrop={() => handleDrop(column.id)}
+              onDrop={() => handleDropAt(column.id)}
               className={twMerge(
                 "flex flex-col w-[86vw] sm:w-[300px] lg:w-[320px] 2xl:flex-1 2xl:w-auto 2xl:min-w-[280px] shrink-0 snap-center snap-always md:snap-none rounded-xl bg-zinc-50/80 dark:bg-zinc-900/40 border border-zinc-200/80 dark:border-zinc-800/80 p-3 select-none transition-all duration-150 h-full max-h-full min-h-0",
                 isTarget && "bg-blue-50/30 dark:bg-blue-950/20 border-blue-400 dark:border-blue-500 ring-2 ring-blue-400/40"
@@ -549,8 +588,24 @@ export default function KanbanBoard({
                         <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
                           {column.title}
                         </span>
-                        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200 border border-zinc-300/60 dark:border-zinc-700 shadow-2xs font-mono">
-                          {column.cards.length}
+                        <span
+                          className={twMerge(
+                            "inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold border shadow-2xs font-mono",
+                            wipExceeded
+                              ? "bg-red-100 text-red-700 border-red-300 dark:bg-red-950/60 dark:text-red-300 dark:border-red-800"
+                              : wipAtLimit
+                                ? "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
+                                : "bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200 border-zinc-300/60 dark:border-zinc-700"
+                          )}
+                          title={
+                            column.limit !== undefined
+                              ? `Limite WIP: ${column.cards.length} / ${column.limit}`
+                              : undefined
+                          }
+                        >
+                          {column.limit !== undefined
+                            ? `${column.cards.length}/${column.limit}`
+                            : column.cards.length}
                         </span>
                       </div>
 
@@ -567,14 +622,37 @@ export default function KanbanBoard({
                             <Plus className="w-3.5 h-3.5" />
                           </button>
                         )}
-                        <button
-                          data-component-id={`erp.kanban.col-menu-${column.id}`}
-                          type="button"
-                          aria-label="Opções da coluna"
-                          className="p-1 rounded-lg hover:bg-zinc-200/60 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
-                        >
-                          <MoreVertical className="w-3.5 h-3.5" />
-                        </button>
+                        {hasColMenu && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                data-component-id={`erp.kanban.col-menu-${column.id}`}
+                                type="button"
+                                aria-label="Opções da coluna"
+                                className="p-1 rounded-lg hover:bg-zinc-200/60 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                              >
+                                <MoreVertical className="w-3.5 h-3.5" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {onEditColumn && (
+                                <DropdownMenuItem onClick={() => onEditColumn(column)}>
+                                  <Pencil className="w-3.5 h-3.5 mr-2" />
+                                  Editar coluna
+                                </DropdownMenuItem>
+                              )}
+                              {onDeleteColumn && (
+                                <DropdownMenuItem
+                                  onClick={() => onDeleteColumn(column.id)}
+                                  className="text-red-600 focus:text-red-600 dark:text-red-400"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 mr-2" />
+                                  Excluir coluna
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
                     </div>
 
@@ -594,15 +672,17 @@ export default function KanbanBoard({
                     <span>{emptyColumnLabel}</span>
                   </div>
                 ) : (
-                  column.cards.map((card) => (
+                  column.cards.map((card, cardIdx) => (
                     <KanbanCardItem
                       key={`${column.id}-${card.id}`}
                       card={card}
+                      cardIndex={cardIdx}
                       columnId={column.id}
                       columnTipo={column.tipo}
                       column={column}
                       onDragStart={handleDragStart}
                       onDragEnd={handleDragEnd}
+                      onDropAtCard={handleDropAt}
                       isDragging={draggingId === card.id}
                       onCardClick={onCardClick}
                       renderCard={renderCard}
