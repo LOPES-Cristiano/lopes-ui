@@ -157,8 +157,8 @@ export type ViewportMode = "desktop" | "laptop" | "tablet" | "mobile";
 export const PRESETS: { id: string; name: string; desc: string; icon: any; blocks: BuilderBlock[] }[] = [
   {
     id: "dashboard_vendas",
-    name: "Dashboard de Vendas & Lojas (RO/AM)",
-    desc: "Visão executiva de faturamento de móveis, estofados, dormitórios e pedidos das lojas de Rondônia e Amazonas.",
+    name: "Dashboard de Vendas & Lojas (Geral)",
+    desc: "Visão executiva de faturamento de assinaturas, licenças, serviços e pedidos das lojas de todas as unidades.",
     icon: BarChart3,
     blocks: [
       {
@@ -168,7 +168,7 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
         props: {
           item1: "Início",
           item2: "Comercial",
-          item3: "Vendas & Pedidos de Móveis",
+          item3: "Vendas & Pedidos Comerciais",
         },
       },
       {
@@ -177,8 +177,8 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
         title: "Cabeçalho de Página",
         props: {
           title: "Painel de Vendas - Lopes Corp",
-          subtitle: "Acompanhamento consolidado de vendas, dormitórios, estofados e pedidos das lojas de RO e AM.",
-          badge: "Varejo de Móveis",
+          subtitle: "Acompanhamento consolidado de vendas, assinaturas, serviços e pedidos das lojas de unidades ativas.",
+          badge: "Gestão Comercial",
           badgeTone: "success",
           primaryAction: "Exportar Relatório",
           secondaryAction: "Atualizar Dados",
@@ -189,19 +189,19 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
         type: "kpi_grid",
         title: "Grid de Indicadores (KPIs)",
         props: {
-          kpi1_title: "Faturamento Móveis & Eletro",
+          kpi1_title: "Faturamento Produtos & Serviços",
           kpi1_value: "R$ 3.845.200",
           kpi1_trend: "14.2",
           kpi1_subtitle: "vs. mês anterior",
-          kpi2_title: "Pedidos de Dormitórios/Salas",
+          kpi2_title: "Pedidos de Planos Ativos",
           kpi2_value: "1.420",
           kpi2_trend: "8.5",
           kpi2_subtitle: "Meta de 1.500",
-          kpi3_title: "Ticket Médio (Móveis)",
+          kpi3_title: "Ticket Médio",
           kpi3_value: "R$ 2.450",
           kpi3_trend: "-2.1",
           kpi3_subtitle: "Estável",
-          kpi4_title: "Lojas Rondônia & Amazonas",
+          kpi4_title: "Lojas Sudeste & Sul",
           kpi4_value: "28 lojas",
           kpi4_trend: "3.5",
           kpi4_subtitle: "Neste mês",
@@ -212,17 +212,17 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
         type: "filter_bar",
         title: "Barra de Filtros e Busca",
         props: {
-          searchPlaceholder: "Buscar por cliente, pedido, sofá, dormitório ou CPF...",
-          filter1Label: "Status da Montagem",
-          filter2Label: "Filial (Porto Velho / Manaus / Ji-Paraná)",
+          searchPlaceholder: "Buscar por cliente, pedido, licença, serviço ou CPF...",
+          filter1Label: "Status da Implantação",
+          filter2Label: "Filial (São Paulo / Rio de Janeiro / Campinas)",
         },
       },
       {
         id: "b4",
         type: "data_table",
-        title: "Tabela de Pedidos de Móveis",
+        title: "Tabela de Pedidos Comerciais",
         props: {
-          title: "Últimos Pedidos Emitidos (Lojas RO/AM)",
+          title: "Últimos Pedidos Emitidos (Lojas Geral)",
           totalCount: "1.420 registros encontrados",
         },
       },
@@ -230,7 +230,7 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
   },
   {
     id: "cadastro_completo",
-    name: "Formulário Rico de Cadastro (Móveis/Clientes)",
+    name: "Formulário Rico de Cadastro (Produtos/Clientes)",
     desc: "Cadastro completo com seções, campos de texto, números, selects de filiais, datas e switches.",
     icon: FileText,
     blocks: [
@@ -240,7 +240,7 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
         title: "Cabeçalho de Formulário",
         props: {
           title: "Novo Pedido & Cadastro de Venda",
-          subtitle: "Preencha as informações do cliente, produtos selecionados e agendamento de entrega/montagem.",
+          subtitle: "Preencha as informações do cliente, produtos selecionados e agendamento de entrega/implantação.",
           badge: "Nova Venda",
           badgeTone: "primary",
           primaryAction: "Salvar Pedido",
@@ -260,13 +260,13 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
           fields: [
             { id: "f1", type: "text", label: "Nome Completo do Cliente", placeholder: "Ex: João Silva da Rocha", span: 2, required: true },
             { id: "f2", type: "text", label: "CPF / CNPJ", placeholder: "000.000.000-00", span: 1, required: true },
-            { id: "f3", type: "select", label: "Filial de Atendimento", options: ["Porto Velho Centro", "Ji-Paraná", "Ariquemes", "Cacoal", "Manaus Flores"], span: 1, required: true },
+            { id: "f3", type: "select", label: "Filial de Atendimento", options: ["Unidade Matriz", "Campinas", "Curitiba", "Belo Horizonte", "Rio de Janeiro"], span: 1, required: true },
             { id: "f4", type: "email", label: "E-mail de Contato", placeholder: "cliente@exemplo.com.br", span: 2, required: false },
-            { id: "f5", type: "text", label: "Telefone / WhatsApp", placeholder: "(69) 99999-0000", span: 1, required: true },
+            { id: "f5", type: "text", label: "Telefone / WhatsApp", placeholder: "(11) 99999-0000", span: 1, required: true },
             { id: "f6", type: "date", label: "Data de Agendamento da Entrega", span: 1, required: true },
-            { id: "f7", type: "textarea", label: "Observações da Montagem & Referência", placeholder: "Ex: Entregar após as 14h, condomínio com elevador de carga...", span: 4, required: false },
-            { id: "f8", type: "switch", label: "Incluir Serviço de Montagem Especializada Gratuita", helperText: "Equipe técnica Lopes Corp credenciada", span: 2, defaultValue: true },
-            { id: "f9", type: "switch", label: "Emitir Notificação via WhatsApp para o Cliente", helperText: "Rastreio em tempo real pela BR-364 / BR-319", span: 2, defaultValue: true },
+            { id: "f7", type: "textarea", label: "Observações da Implantação & Referência", placeholder: "Ex: Entregar após as 14h, condomínio com elevador de carga...", span: 4, required: false },
+            { id: "f8", type: "switch", label: "Incluir Serviço de Implantação Especializada Gratuita", helperText: "Equipe técnica Lopes Corp credenciada", span: 2, defaultValue: true },
+            { id: "f9", type: "switch", label: "Emitir Notificação via WhatsApp para o Cliente", helperText: "Rastreio em tempo real pela Rota Expressa", span: 2, defaultValue: true },
           ],
         },
       },
@@ -274,8 +274,8 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
   },
   {
     id: "operacao_estoque",
-    name: "Expedição, Logística & Montagem",
-    desc: "Mesa de controle de expedição CD Porto Velho, rotas BR-364 / BR-319 e montagem de móveis.",
+    name: "Expedição, Logística & Implantação",
+    desc: "Mesa de controle de expedição CD São Paulo, rotas Rota Expressa e implantação de itens.",
     icon: Package,
     blocks: [
       {
@@ -283,9 +283,9 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
         type: "page_header",
         title: "Cabeçalho de Página",
         props: {
-          title: "Mesa de Expedição, Rotas & Montagem (RO/AM)",
-          subtitle: "Controle de volumes, saídas de móveis e agendamento de montagem residencial.",
-          badge: "CD Porto Velho Matriz",
+          title: "Mesa de Expedição, Rotas & Implantação (Geral)",
+          subtitle: "Controle de volumes, saídas de itens e agendamento de implantação residencial.",
+          badge: "CD São Paulo Matriz",
           badgeTone: "info",
           primaryAction: "Nova Remessa",
           secondaryAction: "Conferência de Carga",
@@ -296,10 +296,10 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
         type: "stepper",
         title: "Passo a Passo (Stepper)",
         props: {
-          step1: "Separação no CD Porto Velho",
+          step1: "Separação no CD São Paulo",
           step2: "Conferência de Volumes",
-          step3: "Expedição & Rota BR-364",
-          step4: "Montagem Residencial",
+          step3: "Expedição & Rota Rota Principal",
+          step4: "Implantação Concluída",
           activeStep: "2",
         },
       },
@@ -309,27 +309,27 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
         title: "Alerta de Rota Logística",
         props: {
           tone: "warning",
-          title: "Atenção na rota Ji-Paraná / Cacoal pela BR-364",
-          description: "O caminhão de entrega de estofados reportou lentidão próximo a Ouro Preto do Oeste.",
+          title: "Atenção na rota Campinas / Belo Horizonte pela Rota Principal",
+          description: "O caminhão de entrega de pedidos reportou lentidão próximo a Jundiaí.",
         },
       },
       {
         id: "b3",
         type: "kanban",
-        title: "Fluxo de Montagem & Entregas",
+        title: "Fluxo de Implantação & Entregas",
         props: {
           col1: "Aguardando Separação (12)",
-          col2: "Em Rota / BR-364 (18)",
-          col3: "Agendado p/ Montagem (14)",
-          col4: "Montagem Concluída (52)",
+          col2: "Em Rota / Rota Principal (18)",
+          col3: "Agendado p/ Implantação (14)",
+          col4: "Implantação Concluída (52)",
         },
       },
     ],
   },
   {
     id: "auditoria_historico",
-    name: "Auditoria Fiscal SEFAZ RO/AM & Logs",
-    desc: "Trilha de emissão de NF-e, autorização SEFAZ Rondônia / Amazonas e status do ERP Lopes Corp.",
+    name: "Auditoria Fiscal Gateway Geral & Logs",
+    desc: "Trilha de emissão de NF-e, autorização Gateway Nacional e status do ERP Lopes Corp.",
     icon: Clock,
     blocks: [
       {
@@ -339,7 +339,7 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
         props: {
           title: "Auditoria de Segurança & Trilha Fiscal",
           subtitle: "Logs detalhados de compliance, emissão de NF-e e integridade dos microsserviços do ERP Lopes Corp.",
-          badge: "SEFAZ RO / AM Online",
+          badge: "Gateway Nacional Online",
           badgeTone: "success",
           primaryAction: "Exportar Log CSV",
         },
@@ -349,7 +349,7 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
         type: "service_status",
         title: "Status de Serviço & API",
         props: {
-          serviceName: "API de Emissão NF-e (SEFAZ Rondônia / Amazonas)",
+          serviceName: "API de Emissão NF-e (Gateway Nacional)",
           status: "operational",
           latencyMs: "52",
           uptimePct: "99.98",
@@ -361,13 +361,13 @@ export const PRESETS: { id: string; name: string; desc: string; icon: any; block
         title: "Linha do Tempo (Timeline)",
         props: {
           item1_title: "Emissão de Nota Fiscal #8942",
-          item1_desc: "Chave autorizada com sucesso pelo SEFAZ RO (Porto Velho).",
+          item1_desc: "Chave autorizada com sucesso pelo Gateway Fiscal (São Paulo).",
           item1_date: "Hoje às 14:32",
-          item2_title: "Agendamento de Montagem de Móveis",
-          item2_desc: "Equipe de montagem designada para cliente em Ji-Paraná.",
+          item2_title: "Agendamento de Implantação de Móveis",
+          item2_desc: "Equipe de implantação designada para cliente em Campinas.",
           item2_date: "Hoje às 11:15",
           item3_title: "Transferência entre Filiais",
-          item3_desc: "Remessa enviada do CD Porto Velho para Loja Manaus Flores.",
+          item3_desc: "Remessa enviada do CD São Paulo para Loja Rio de Janeiro.",
           item3_date: "Ontem às 18:40",
         },
       },
@@ -511,7 +511,7 @@ export default function UIBuilder() {
           title: "Painel Estruturado (Card)",
           props: {
             cardTitle: "Informações Gerais da Loja",
-            cardSubtitle: "Filial Porto Velho Centro",
+            cardSubtitle: "Filial Unidade Matriz",
             cardContent: "Este painel agrupa informações críticas com bordas suaves e elevação padronizada.",
             footerAction: "Gerenciar Filial",
           },
@@ -524,7 +524,7 @@ export default function UIBuilder() {
           type,
           title: "Grid de Indicadores (KPIs)",
           props: {
-            kpi1_title: "Faturamento Móveis",
+            kpi1_title: "Faturamento Mensal",
             kpi1_value: "R$ 3.845.200",
             kpi1_trend: "14.2",
             kpi1_subtitle: "vs. mês anterior",
@@ -539,7 +539,7 @@ export default function UIBuilder() {
             kpi4_title: "Lojas Ativas",
             kpi4_value: "28 lojas",
             kpi4_trend: "3.5",
-            kpi4_subtitle: "Rondônia & Amazonas",
+            kpi4_subtitle: "Sudeste & Sul",
           },
         };
         break;
@@ -552,7 +552,7 @@ export default function UIBuilder() {
           props: {
             searchPlaceholder: "Buscar por cliente, produto, pedido ou CPF...",
             filter1Label: "Status do Pedido",
-            filter2Label: "Filial (RO / AM)",
+            filter2Label: "Filial (Nacional)",
           },
         };
         break;
@@ -581,13 +581,13 @@ export default function UIBuilder() {
             submitLabel: "Salvar Dados",
             cancelLabel: "Cancelar",
             fields: [
-              { id: "f1", type: "text", label: "Nome / Descrição", placeholder: "Ex: Sofá Retrátil 4 Lugares", span: 2, required: true },
+              { id: "f1", type: "text", label: "Nome / Descrição", placeholder: "Ex: Licença Enterprise Anual", span: 2, required: true },
               { id: "f2", type: "number", label: "Código de Referência", placeholder: "Ex: 89412", span: 1, required: true },
-              { id: "f3", type: "select", label: "Categoria do Móvel", options: ["Salas de Estar", "Dormitórios", "Salas de Jantar", "Colchões", "Eletros"], span: 1, required: true },
-              { id: "f4", type: "select", label: "Filial Responsável", options: ["Porto Velho", "Ji-Paraná", "Manaus", "Ariquemes"], span: 1, required: true },
+              { id: "f3", type: "select", label: "Categoria do Item", options: ["Salas de Estar", "Corporativo", "Salas de Jantar", "Add-ons", "Eletros"], span: 1, required: true },
+              { id: "f4", type: "select", label: "Filial Responsável", options: ["São Paulo", "Campinas", "Rio de Janeiro", "Curitiba"], span: 1, required: true },
               { id: "f5", type: "date", label: "Previsão de Entrega", span: 1, required: true },
-              { id: "f6", type: "textarea", label: "Observações do Produto", placeholder: "Detalhes de montagem ou tecido...", span: 3, required: false },
-              { id: "f7", type: "switch", label: "Disponível para Pronta Entrega", helperText: "Estoque no CD Porto Velho", span: 3, defaultValue: true },
+              { id: "f6", type: "textarea", label: "Observações do Produto", placeholder: "Detalhes de implantação ou tecido...", span: 3, required: false },
+              { id: "f7", type: "switch", label: "Disponível para Pronta Entrega", helperText: "Estoque no CD São Paulo", span: 3, defaultValue: true },
             ],
           },
         };
@@ -601,13 +601,13 @@ export default function UIBuilder() {
             sourceTitle: "Usuários com Acesso à Filial",
             targetTitle: "Colaboradores Disponíveis",
             sourceItems: [
-              { id: "1", title: "Marcos Vinícius Silva", subtitle: "Gerente Comercial - Porto Velho", tag: "GERENTE", tagTone: "primary" },
-              { id: "2", title: "Ana Paula Souza", subtitle: "Supervisora de Vendas - Ji-Paraná", tag: "SUPERVISOR", tagTone: "success" },
+              { id: "1", title: "Marcos Vinícius Silva", subtitle: "Gerente Comercial - São Paulo", tag: "GERENTE", tagTone: "primary" },
+              { id: "2", title: "Ana Paula Souza", subtitle: "Supervisora de Vendas - Campinas", tag: "SUPERVISOR", tagTone: "success" },
             ],
             targetItems: [
-              { id: "3", title: "Lucas Lima Rocha", subtitle: "Consultor de Dormitórios - Ariquemes", tag: "VENDEDOR", tagTone: "info" },
-              { id: "4", title: "Patrícia Menezes", subtitle: "Atendimento & Montagem - Manaus", tag: "SUPORTE", tagTone: "warning" },
-              { id: "5", title: "Carlos Eduardo Costa", subtitle: "Expedição CD Porto Velho", tag: "ESTOQUE", tagTone: "neutral" },
+              { id: "3", title: "Lucas Lima Rocha", subtitle: "Consultor de Corporativo - Curitiba", tag: "VENDEDOR", tagTone: "info" },
+              { id: "4", title: "Patrícia Menezes", subtitle: "Atendimento & Suporte - Rio de Janeiro", tag: "SUPORTE", tagTone: "warning" },
+              { id: "5", title: "Carlos Eduardo Costa", subtitle: "Expedição CD São Paulo", tag: "ESTOQUE", tagTone: "neutral" },
             ],
             height: 380,
           },
@@ -621,9 +621,9 @@ export default function UIBuilder() {
           title: "Quadro de Fluxo (Kanban)",
           props: {
             col1: "Aguardando Separação (12)",
-            col2: "Em Rota / BR-364 (18)",
-            col3: "Agendado p/ Montagem (14)",
-            col4: "Montagem Concluída (52)",
+            col2: "Em Rota / Rota Principal (18)",
+            col3: "Agendado p/ Implantação (14)",
+            col4: "Implantação Concluída (52)",
           },
         };
         break;
@@ -635,13 +635,13 @@ export default function UIBuilder() {
           title: "Linha do Tempo (Timeline)",
           props: {
             item1_title: "Emissão de Nota Fiscal #8942",
-            item1_desc: "Chave autorizada pelo SEFAZ RO (Porto Velho).",
+            item1_desc: "Chave autorizada pelo Gateway Fiscal (São Paulo).",
             item1_date: "Hoje às 14:32",
-            item2_title: "Agendamento de Montagem",
-            item2_desc: "Equipe técnica designada para Ji-Paraná.",
+            item2_title: "Agendamento de Implantação",
+            item2_desc: "Equipe técnica designada para Campinas.",
             item2_date: "Hoje às 11:15",
-            item3_title: "Transferência CD Porto Velho -> Manaus",
-            item3_desc: "Carga de dormitórios despachada.",
+            item3_title: "Transferência CD São Paulo -> Rio de Janeiro",
+            item3_desc: "Carga de serviços despachada.",
             item3_date: "Ontem às 18:40",
           },
         };
@@ -653,11 +653,11 @@ export default function UIBuilder() {
           type,
           title: "Feed de Atividades (ActivityFeed)",
           props: {
-            event1_title: "Marcos Souza despachou o pedido #9041 (Sofá Retrátil)",
-            event1_desc: "Carga liberada para filial Ji-Paraná pela BR-364.",
+            event1_title: "Marcos Souza despachou o pedido #9041 (Licença Enterprise)",
+            event1_desc: "Carga liberada para filial Campinas pela Rota Principal.",
             event1_time: "Há 5 min",
-            event2_title: "Equipe de Montagem 03 finalizou entrega em Porto Velho",
-            event2_desc: "Montagem de dormitório concluída com assinatura do cliente.",
+            event2_title: "Equipe de Operações 03 finalizou entrega em São Paulo",
+            event2_desc: "Implantação de serviço concluída com assinatura do cliente.",
             event2_time: "Há 2 horas",
           },
         };
@@ -672,7 +672,7 @@ export default function UIBuilder() {
             step1: "Separação no CD",
             step2: "Conferência de Volumes",
             step3: "Expedição & Rota",
-            step4: "Montagem Residencial",
+            step4: "Implantação Concluída",
             activeStep: "2",
           },
         };
@@ -684,9 +684,9 @@ export default function UIBuilder() {
           type,
           title: "Accordion (Sanfona)",
           props: {
-            item1_title: "Políticas de Entrega e Montagem (Rondônia & Amazonas)",
-            item1_content: "Prazos de entrega por rotas rodoviárias (BR-364) e fluviais (Manaus). Montagem gratuita inclusa em compras de móveis.",
-            item2_title: "Garantia e Assistência Técnica de Estofados e Móveis",
+            item1_title: "Políticas de Entrega e Implantação (Sudeste & Sul)",
+            item1_content: "Prazos de entrega por rotas rodoviárias (Rota Principal) e fluviais (Rio de Janeiro). Implantação gratuita inclusa em compras de itens.",
+            item2_title: "Garantia e Assistência Técnica de Produtos e Serviços",
             item2_content: "Procedimentos para solicitação de assistência e reposição de peças de fábrica.",
           },
         };
@@ -699,9 +699,9 @@ export default function UIBuilder() {
           title: "Estrutura Hierárquica (TreeView)",
           props: {
             rootLabel: "Matriz Lopes Corp (Matriz)",
-            child1: "Lojas Rondônia (Porto Velho, Ji-Paraná, Ariquemes, Cacoal)",
-            child2: "Lojas Amazonas (Manaus Centro, Flores, Manauara)",
-            child3: "Centro de Distribuição Principal (CD Porto Velho)",
+            child1: "Unidades Sudeste (São Paulo, Campinas, Curitiba, Belo Horizonte)",
+            child2: "Unidades Sul (Rio de Janeiro, Niterói)",
+            child3: "Centro de Distribuição Principal (CD São Paulo)",
           },
         };
         break;
@@ -712,7 +712,7 @@ export default function UIBuilder() {
           type,
           title: "Monitor de Serviço (ServiceStatusCard)",
           props: {
-            serviceName: "API de Emissão NF-e (SEFAZ Rondônia / Amazonas)",
+            serviceName: "API de Emissão NF-e (Gateway Nacional)",
             status: "operational",
             latencyMs: "52",
             uptimePct: "99.98",
@@ -1166,7 +1166,7 @@ export default function UIBuilder() {
             <tbody className="divide-y divide-border">
               <tr className="hover:bg-muted/20 transition-colors">
                 <td className="px-6 py-4 font-mono font-medium">#PED-8942</td>
-                <td className="px-6 py-4 font-medium text-foreground">Lopes Corp - Loja Porto Velho Centro</td>
+                <td className="px-6 py-4 font-medium text-foreground">Lopes Corp - Loja Unidade Matriz</td>
                 <td className="px-6 py-4 text-muted-foreground">24/08/2026</td>
                 <td className="px-6 py-4 font-semibold text-foreground">R$ 14.850,00</td>
                 <td className="px-6 py-4">
@@ -1178,7 +1178,7 @@ export default function UIBuilder() {
               </tr>
               <tr className="hover:bg-muted/20 transition-colors">
                 <td className="px-6 py-4 font-mono font-medium">#PED-8941</td>
-                <td className="px-6 py-4 font-medium text-foreground">Lopes Corp - Filial Ji-Paraná</td>
+                <td className="px-6 py-4 font-medium text-foreground">Lopes Corp - Filial Campinas</td>
                 <td className="px-6 py-4 text-muted-foreground">24/08/2026</td>
                 <td className="px-6 py-4 font-semibold text-foreground">R$ 8.240,00</td>
                 <td className="px-6 py-4">
@@ -1285,7 +1285,7 @@ ${fields
             <h4 className="font-semibold text-xs text-foreground uppercase tracking-wide">{colTitle}</h4>
             <div className="bg-card border border-border p-3.5 rounded-xl shadow-xs space-y-2">
               <span className="text-xs font-mono font-bold text-primary">#ORD-10{idx}</span>
-              <p className="text-xs font-medium text-foreground">Remessa para filial Ji-Paraná (Estofados & Dormitórios)</p>
+              <p className="text-xs font-medium text-foreground">Remessa para filial Campinas (Licenças & Serviços)</p>
             </div>
           </div>
         ))}
@@ -1905,7 +1905,7 @@ ${blocksCode}
                           <StatCard
                             title={p.kpi4_title || "Lojas Ativas"}
                             value={p.kpi4_value || "0"}
-                            trend={{ value: parseFloat(p.kpi4_trend) || 0, label: p.kpi4_subtitle || "Rondônia/Amazonas" }}
+                            trend={{ value: parseFloat(p.kpi4_trend) || 0, label: p.kpi4_subtitle || "Nacional" }}
                           />
                         </div>
                       )}
@@ -1938,7 +1938,7 @@ ${blocksCode}
                         <div className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden">
                           <div className="px-6 py-4 border-b border-border flex items-center justify-between">
                             <div>
-                              <h3 className="font-bold text-foreground text-sm">{p.title || "Tabela de Pedidos de Móveis"}</h3>
+                              <h3 className="font-bold text-foreground text-sm">{p.title || "Tabela de Pedidos Comerciais"}</h3>
                               <p className="text-xs text-muted-foreground">{p.totalCount || "1.420 registros"}</p>
                             </div>
                             <Button componentId="erp.components.uibuilder.btn.exportar" variant="outline" size="sm" leftIcon={<Download size={14} />}>Exportar</Button>
@@ -1958,7 +1958,7 @@ ${blocksCode}
                               <tbody className="divide-y divide-border">
                                 <tr className="hover:bg-muted/20 transition-colors">
                                   <td className="px-6 py-4 font-mono font-medium">#PED-8942</td>
-                                  <td className="px-6 py-4 font-medium text-foreground">Lopes Corp - Loja Porto Velho Centro</td>
+                                  <td className="px-6 py-4 font-medium text-foreground">Lopes Corp - Loja Unidade Matriz</td>
                                   <td className="px-6 py-4 text-muted-foreground">24/08/2026</td>
                                   <td className="px-6 py-4 font-semibold text-foreground">R$ 14.850,00</td>
                                   <td className="px-6 py-4">
@@ -1970,7 +1970,7 @@ ${blocksCode}
                                 </tr>
                                 <tr className="hover:bg-muted/20 transition-colors">
                                   <td className="px-6 py-4 font-mono font-medium">#PED-8941</td>
-                                  <td className="px-6 py-4 font-medium text-foreground">Lopes Corp - Filial Ji-Paraná</td>
+                                  <td className="px-6 py-4 font-medium text-foreground">Lopes Corp - Filial Campinas</td>
                                   <td className="px-6 py-4 text-muted-foreground">24/08/2026</td>
                                   <td className="px-6 py-4 font-semibold text-foreground">R$ 8.240,00</td>
                                   <td className="px-6 py-4">
@@ -2128,7 +2128,7 @@ ${blocksCode}
                                   <span className="text-xs font-mono font-bold text-primary">#ORD-10{ci}</span>
                                   <StatusBadge tone="info">Normal</StatusBadge>
                                 </div>
-                                <p className="text-xs font-medium text-foreground">Remessa para filial Ji-Paraná (Estofados & Dormitórios)</p>
+                                <p className="text-xs font-medium text-foreground">Remessa para filial Campinas (Licenças & Serviços)</p>
                               </div>
                             </div>
                           ))}
@@ -2182,9 +2182,9 @@ ${blocksCode}
                                 id: "root",
                                 label: p.rootLabel || "Matriz Lopes Corp",
                                 children: [
-                                  { id: "c1", label: p.child1 || "Lojas Rondônia" },
-                                  { id: "c2", label: p.child2 || "Lojas Amazonas" },
-                                  { id: "c3", label: p.child3 || "CD Porto Velho" },
+                                  { id: "c1", label: p.child1 || "Unidades Sudeste" },
+                                  { id: "c2", label: p.child2 || "Unidades Sul" },
+                                  { id: "c3", label: p.child3 || "CD São Paulo" },
                                 ],
                               },
                             ]}
