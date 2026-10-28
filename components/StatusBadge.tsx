@@ -70,8 +70,8 @@ const TONE_STYLES: Record<StatusTone, { soft: string; solid: string; dot: string
     dotPulse: 'bg-indigo-400',
   },
   brand: {
-    soft: 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground border border-primary/20',
-    solid: 'bg-primary text-white border-transparent',
+    soft: 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary border border-primary/20',
+    solid: 'bg-primary text-primary-foreground border-transparent',
     dot: 'bg-primary',
     dotPulse: 'bg-primary/80',
   },
