@@ -161,7 +161,11 @@ function RecipientField({
           value={input}
           onChange={(e) => { setInput(e.target.value); setShowSug(true); }}
           onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
+            if (
+              e.key === "Enter" ||
+              e.key === "," ||
+              (e.key === "Tab" && !e.shiftKey && input.trim().length > 0)
+            ) {
               e.preventDefault();
               commitInput();
             }
