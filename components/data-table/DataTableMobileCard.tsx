@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Minus, MoreVertical, Plus } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import type { DataTableAction, DataTableColumn } from './DataTable.types';
+import ConfirmDialog from '../ConfirmDialog';
 
 export type DataTableMobileCardProps<T = Record<string, unknown>> = {
   row: T;
@@ -18,6 +19,18 @@ export type DataTableMobileCardProps<T = Record<string, unknown>> = {
   expandedContent?: React.ReactNode;
 };
 
+const CODE_KEYS = new Set(['code', 'id', 'codigo']);
+const TITLE_KEYS = new Set([
+  'title',
+  'name',
+  'nome',
+  'label',
+  'titulo',
+  'descricao',
+  'description',
+]);
+const STATUS_KEYS = new Set(['status', 'situacao', 'state']);
+
 export function DataTableMobileCard<T = Record<string, unknown>>({
   row,
   rowIndex,
@@ -31,63 +44,83 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
   expandedContent,
 }: DataTableMobileCardProps<T>) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [runningActionIndex, setRunningActionIndex] = useState<number | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{
+    action: DataTableAction<T>;
+    index: number;
+  } | null>(null);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const r = row as any;
 
-  // Identifica colunas-chave de forma inteligente
-  const codeCol = columns.find(
-    (c) => c.key === 'codigo' || c.key === 'numero' || c.key === 'id' || c.key === 'chave' || c.key === 'protocolo'
-  );
+  const resolveCellValue = (col: DataTableColumn<T>) =>
+    col.getValue ? col.getValue(row) : col.accessor ? col.accessor(row) : r?.[col.key];
 
+  const visibleColumns = columns.filter((c) => !c.hidden);
+
+  // Heurísticas genéricas limpas com fallback para as primeiras colunas visíveis
+  const codeCol = visibleColumns.find((c) => CODE_KEYS.has(c.key));
+  const statusCol = visibleColumns.find((c) => STATUS_KEYS.has(c.key));
   const titleCol =
-    columns.find(
-      (c) =>
-        c.key === 'nomeRazao' ||
-        c.key === 'nome' ||
-        c.key === 'razaoSocial' ||
-        c.key === 'cliente' ||
-        c.key === 'clienteNome' ||
-        c.key === 'pessoaNome' ||
-        c.key === 'fornecedor' ||
-        c.key === 'descricao' ||
-        c.key === 'titulo' ||
-        c.key === 'pessoa' ||
-        c.key === 'usuario' ||
-        c.key === 'tipoOperacao' ||
-        c.key === 'naturezaOperacao' ||
-        c.key === 'operacao'
-    ) ||
-    (codeCol && columns.find((c) => c !== codeCol && !c.hidden)) ||
+    visibleColumns.find((c) => TITLE_KEYS.has(c.key)) ||
+    visibleColumns.find((c) => c !== codeCol && c !== statusCol) ||
+    visibleColumns[0] ||
     columns[0];
 
-  const statusCol = columns.find(
-    (c) =>
-      c.key === 'status' ||
-      c.key === 'situacao' ||
-      c.key === 'situacaoDescricao' ||
-      c.key === 'situacaoId' ||
-      c.key === 'ativo' ||
-      c.key === 'situacaoNome'
-  );
-
-  const rawTitle = titleCol ? (titleCol.getValue ? titleCol.getValue(row) : r[titleCol.key]) : 'Registro';
+  const rawTitle = titleCol ? resolveCellValue(titleCol) : 'Registro';
   const renderedTitle = titleCol?.render ? titleCol.render(rawTitle, row, rowIndex) : rawTitle;
-  const titleStr = typeof rawTitle === 'string' ? rawTitle : typeof renderedTitle === 'string' ? renderedTitle : String(r.id ?? 'Registro');
+  const titleStr =
+    typeof rawTitle === 'string' || typeof rawTitle === 'number'
+      ? String(rawTitle)
+      : typeof renderedTitle === 'string' || typeof renderedTitle === 'number'
+        ? String(renderedTitle)
+        : String(r?.id ?? 'Registro');
 
   const visibleActions = actions?.filter((a) => !a.hidden?.(row)) ?? [];
   const isCustomRenderedTitle = Boolean(titleCol?.render && React.isValidElement(renderedTitle));
   const isStriped = rowIndex % 2 === 1;
 
   // Código a exibir no topo (se não for a coluna do título principal)
-  const codeVal = codeCol && codeCol !== titleCol ? (codeCol.getValue ? codeCol.getValue(row) : r[codeCol.key]) : null;
-  const codeRendered = codeCol && codeCol !== titleCol && codeCol.render ? codeCol.render(codeVal, row, rowIndex) : codeVal;
+  const codeVal = codeCol && codeCol !== titleCol ? resolveCellValue(codeCol) : null;
+  const codeRendered =
+    codeCol && codeCol !== titleCol && codeCol.render
+      ? codeCol.render(codeVal, row, rowIndex)
+      : codeVal;
 
   // Status a exibir no topo (se não for a coluna do título principal)
-  const statusVal = statusCol && statusCol !== titleCol ? (statusCol.getValue ? statusCol.getValue(row) : r[statusCol.key]) : null;
-  const statusRendered = statusCol && statusCol !== titleCol && statusCol.render ? statusCol.render(statusVal, row, rowIndex) : statusVal;
+  const statusVal = statusCol && statusCol !== titleCol ? resolveCellValue(statusCol) : null;
+  const statusRendered =
+    statusCol && statusCol !== titleCol && statusCol.render
+      ? statusCol.render(statusVal, row, rowIndex)
+      : statusVal;
 
-  // Colunas secundárias para exibir metadados importantes no card mobile
-  const secondaryCols = columns.filter((c) => c !== titleCol && c !== codeCol && c !== statusCol && !c.hidden);
+  // Colunas secundárias para exibir metadados no card mobile
+  const secondaryCols = visibleColumns.filter(
+    (c) => c !== titleCol && c !== codeCol && c !== statusCol
+  );
+
+  const executeAction = async (action: DataTableAction<T>, index: number) => {
+    setRunningActionIndex(index);
+    try {
+      await action.onClick?.(row);
+    } catch (err) {
+      const actionLabel = typeof action.label === 'function' ? action.label(row) : action.label;
+      onActionError?.(err, typeof actionLabel === 'string' ? actionLabel : undefined);
+    } finally {
+      setRunningActionIndex(null);
+    }
+  };
+
+  const handleActionClick = (action: DataTableAction<T>, index: number) => {
+    if (action.disabled?.(row)) return;
+    const confirmConfig =
+      typeof action.confirm === 'function' ? action.confirm(row) : action.confirm;
+    if (confirmConfig) {
+      setConfirmAction({ action, index });
+      return;
+    }
+    void executeAction(action, index);
+  };
 
   return (
     <div className="flex flex-col border-b border-zinc-200/70 dark:border-zinc-800/70">
@@ -112,7 +145,7 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                   className={twMerge(
                     'inline-flex items-center justify-center h-6 w-6 rounded-md border transition-all duration-200 cursor-pointer',
                     isExpanded
-                      ? 'bg-primary text-white border-primary shadow-xs'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                       : 'bg-muted/30 border-border/80 text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                   )}
                   title={isExpanded ? 'Recolher detalhes' : 'Expandir detalhes'}
@@ -172,7 +205,8 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                   <div className="absolute right-0 top-full mt-1.5 z-50 min-w-44 rounded-2xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-0.5">
                     {visibleActions.map((action, aIdx) => {
                       const Icon = action.getIcon ? action.getIcon(row) : action.icon;
-                      const label = typeof action.label === 'function' ? action.label(row) : action.label;
+                      const label =
+                        typeof action.label === 'function' ? action.label(row) : action.label;
 
                       const customBtnClass =
                         typeof action.buttonClassName === 'function'
@@ -184,31 +218,34 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                           ? action.iconClassName(row)
                           : action.iconClassName;
 
-                      const isDisabled = Boolean(action.disabled?.(row));
+                      const isDisabled =
+                        Boolean(action.disabled?.(row)) || runningActionIndex === aIdx;
 
                       return (
                         <button
-                          data-component-id={(typeof action.componentId === 'function' ? action.componentId(row) : action.componentId) || `erp.data-table.mobile-card.action-${aIdx}`}
+                          data-component-id={
+                            (typeof action.componentId === 'function'
+                              ? action.componentId(row)
+                              : action.componentId) ||
+                            `erp.data-table.mobile-card.action-${aIdx}`
+                          }
                           key={aIdx}
                           type="button"
                           disabled={isDisabled}
                           onClick={() => {
                             if (isDisabled) return;
                             setMenuOpen(false);
-                            try {
-                              action.onClick(row);
-                            } catch (err) {
-                              onActionError?.(err, typeof label === 'string' ? label : undefined);
-                            }
+                            handleActionClick(action, aIdx);
                           }}
                           className={twMerge(
                             'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold transition-colors text-left',
                             isDisabled
                               ? 'opacity-40 cursor-not-allowed pointer-events-none'
                               : 'cursor-pointer',
-                            !isDisabled && (action.danger
-                              ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40'
-                              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-zinc-800'),
+                            !isDisabled &&
+                              (action.danger
+                                ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40'
+                                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-zinc-800'),
                             customBtnClass
                           )}
                         >
@@ -217,7 +254,9 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                               size={15}
                               className={twMerge(
                                 'shrink-0',
-                                action.danger ? 'text-red-500' : 'text-slate-500 dark:text-slate-400',
+                                action.danger
+                                  ? 'text-red-500'
+                                  : 'text-slate-500 dark:text-slate-400',
                                 customIconClass
                               )}
                             />
@@ -236,13 +275,18 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
         {/* Linha de Detalhes Secundários & Status */}
         {(secondaryCols.length > 0 || (statusRendered != null && statusRendered !== '')) && (
           <div className="flex items-center justify-between gap-2 pt-0.5">
-            {/* Detalhes Secundários (Filial, Perfis, etc.) */}
+            {/* Detalhes Secundários */}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground min-w-0 flex-1">
               {secondaryCols.map((col, idx) => {
-                const rawVal = col.getValue ? col.getValue(row) : r[col.key];
+                const rawVal = resolveCellValue(col);
                 const rendered = col.render ? col.render(rawVal, row, rowIndex) : rawVal;
-                if (rendered == null || rendered === '' || typeof rendered === 'boolean') return null;
-                if (typeof rendered === 'string' && (rendered.trim() === '-' || rendered.trim() === '—')) return null;
+                if (rendered == null || rendered === '' || typeof rendered === 'boolean')
+                  return null;
+                if (
+                  typeof rendered === 'string' &&
+                  (rendered.trim() === '-' || rendered.trim() === '—')
+                )
+                  return null;
 
                 const colLabel = col.label || col.header;
                 const isPrimitive = typeof rendered === 'string' || typeof rendered === 'number';
@@ -253,7 +297,9 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                       <span className="text-muted-foreground/70 font-normal">{colLabel}:</span>
                     )}
                     {isPrimitive ? (
-                      <span className="font-medium text-slate-700 dark:text-zinc-300 truncate">{rendered}</span>
+                      <span className="font-medium text-slate-700 dark:text-zinc-300 truncate">
+                        {rendered}
+                      </span>
                     ) : (
                       rendered
                     )}
@@ -284,6 +330,39 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
           {expandedContent}
         </div>
       )}
+
+      {confirmAction &&
+        (() => {
+          const confirmProp = confirmAction.action.confirm;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const confirmConfig =
+            typeof confirmProp === 'function' ? (confirmProp as (r: T) => any)(row) : confirmProp;
+          if (!confirmConfig) return null;
+          return (
+            <ConfirmDialog
+              open={!!confirmAction}
+              title={typeof confirmConfig.title === 'string' ? confirmConfig.title : undefined}
+              description={
+                typeof confirmConfig.description === 'string'
+                  ? confirmConfig.description
+                  : typeof confirmConfig.message === 'string'
+                    ? confirmConfig.message
+                    : undefined
+              }
+              confirmLabel={confirmConfig.confirmLabel ?? confirmConfig.confirmText ?? 'Confirmar'}
+              cancelLabel={confirmConfig.cancelLabel ?? confirmConfig.cancelText ?? 'Cancelar'}
+              variant={confirmAction.action.danger ? 'danger' : 'warning'}
+              loading={runningActionIndex === confirmAction.index}
+              onCancel={() => setConfirmAction(null)}
+              onConfirm={async () => {
+                const idx = confirmAction.index;
+                const act = confirmAction.action;
+                setConfirmAction(null);
+                await executeAction(act, idx);
+              }}
+            />
+          );
+        })()}
     </div>
   );
 }
