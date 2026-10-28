@@ -1,16 +1,19 @@
 /**
  * Converte um valor numérico monetário (em Reais) para sua representação por extenso em maiúsculas.
- * Exemplo: 243.00 -> "DUZENTOS E QUARENTA E TRES REAIS"
- * Exemplo: 1500.50 -> "UM MIL E QUINHENTOS REAIS E CINQUENTA CENTAVOS"
- * Exemplo: 1.00 -> "UM REAL"
- * Exemplo: 0.50 -> "CINQUENTA CENTAVOS"
+ * Exemplos:
+ *   243.00        -> "DUZENTOS E QUARENTA E TRÊS REAIS"
+ *   1500.50       -> "MIL E QUINHENTOS REAIS E CINQUENTA CENTAVOS"
+ *   1000000.00    -> "UM MILHÃO DE REAIS"
+ *   1000000000.00 -> "UM BILHÃO DE REAIS"
+ *   1.00          -> "UM REAL"
+ *   0.50          -> "CINQUENTA CENTAVOS"
  */
 
 const UNIDADES = [
   '',
   'UM',
   'DOIS',
-  'TRES',
+  'TRÊS',
   'QUATRO',
   'CINCO',
   'SEIS',
@@ -56,7 +59,7 @@ const CENTENAS = [
 ];
 
 function converterCentena(n: number): string {
-  if (n === 0) return '';
+  if (n <= 0 || n > 999) return '';
   if (n === 100) return 'CEM';
 
   const c = Math.floor(n / 100);
@@ -82,46 +85,81 @@ function converterCentena(n: number): string {
   return partes.join(' E ');
 }
 
+interface GrupoEscala {
+  valor: number;
+  texto: string;
+}
+
 export function numeroParaExtenso(valor: number): string {
-  if (isNaN(valor) || valor == null || valor < 0) return 'ZERO REAIS';
-  if (valor === 0) return 'ZERO REAIS';
+  if (!Number.isFinite(valor) || valor == null || valor <= 0) return 'ZERO REAIS';
 
   const valorArredondado = Math.round(valor * 100) / 100;
   const parteInteira = Math.floor(valorArredondado);
   const centavos = Math.round((valorArredondado - parteInteira) * 100);
 
-  const partesReais: string[] = [];
+  let textoReais = '';
 
   if (parteInteira > 0) {
-    const milhoes = Math.floor(parteInteira / 1_000_000);
+    const trilhoes = Math.floor(parteInteira / 1_000_000_000_000);
+    const bilhoes = Math.floor((parteInteira % 1_000_000_000_000) / 1_000_000_000);
+    const milhoes = Math.floor((parteInteira % 1_000_000_000) / 1_000_000);
     const milhares = Math.floor((parteInteira % 1_000_000) / 1_000);
     const unidades = parteInteira % 1_000;
 
+    const grupos: GrupoEscala[] = [];
+
+    if (trilhoes > 0) {
+      grupos.push({
+        valor: trilhoes,
+        texto: trilhoes === 1 ? 'UM TRILHÃO' : `${converterCentena(trilhoes)} TRILHÕES`,
+      });
+    }
+    if (bilhoes > 0) {
+      grupos.push({
+        valor: bilhoes,
+        texto: bilhoes === 1 ? 'UM BILHÃO' : `${converterCentena(bilhoes)} BILHÕES`,
+      });
+    }
     if (milhoes > 0) {
-      partesReais.push(
-        milhoes === 1
-          ? 'UM MILHAO'
-          : `${converterCentena(milhoes)} MILHOES`
-      );
+      grupos.push({
+        valor: milhoes,
+        texto: milhoes === 1 ? 'UM MILHÃO' : `${converterCentena(milhoes)} MILHÕES`,
+      });
     }
-
     if (milhares > 0) {
-      partesReais.push(
-        milhares === 1
-          ? 'UM MIL'
-          : `${converterCentena(milhares)} MIL`
-      );
+      grupos.push({
+        valor: milhares,
+        texto: milhares === 1 ? 'MIL' : `${converterCentena(milhares)} MIL`,
+      });
     }
-
     if (unidades > 0) {
-      partesReais.push(converterCentena(unidades));
+      grupos.push({
+        valor: unidades,
+        texto: converterCentena(unidades),
+      });
     }
-  }
 
-  let textoReais = '';
-  if (partesReais.length > 0) {
-    const textoBase = partesReais.join(' E ');
-    textoReais = parteInteira === 1 ? `${textoBase} REAL` : `${textoBase} REAIS`;
+    // Conjunção gramatical brasileira: usa " E " antes do último grupo quando < 100 ou múltiplo exato de 100
+    let textoBase = '';
+    for (let i = 0; i < grupos.length; i++) {
+      if (i === 0) {
+        textoBase = grupos[i].texto;
+      } else {
+        const isLast = i === grupos.length - 1;
+        const lastNeedsE = isLast && (unidades > 0 ? (unidades < 100 || unidades % 100 === 0) : grupos[i].valor <= 100 || grupos[i].valor % 100 === 0);
+        textoBase += (lastNeedsE ? ' E ' : ', ') + grupos[i].texto;
+      }
+    }
+
+    // Regra do "DE REAIS" quando termina exatamente em milhão/bilhão/trilhão (milhares === 0 && unidades === 0)
+    const precisaDe = parteInteira >= 1_000_000 && parteInteira % 1_000_000 === 0;
+    if (parteInteira === 1) {
+      textoReais = `${textoBase} REAL`;
+    } else if (precisaDe) {
+      textoReais = `${textoBase} DE REAIS`;
+    } else {
+      textoReais = `${textoBase} REAIS`;
+    }
   }
 
   let textoCentavos = '';
@@ -133,14 +171,14 @@ export function numeroParaExtenso(valor: number): string {
   if (textoReais && textoCentavos) {
     return `${textoReais} E ${textoCentavos}`;
   }
-
   if (textoReais) {
     return textoReais;
   }
-
   if (textoCentavos) {
     return textoCentavos;
   }
 
   return 'ZERO REAIS';
 }
+
+export const valorMonetarioPorExtenso = numeroParaExtenso;
