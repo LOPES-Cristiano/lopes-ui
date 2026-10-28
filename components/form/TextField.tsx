@@ -85,6 +85,10 @@ export default function TextField({
     }
   }, [value]);
 
+  if (!hasPermission && hideIfDenied) {
+    return null;
+  }
+
   const hasAffix = Boolean(leftIcon || rightIcon || prefix || suffix);
 
   const baseInput = twMerge(
@@ -155,6 +159,7 @@ export default function TextField({
         <input
           ref={inputRef}
           id={id}
+          data-component-id={componentId}
           name={name ?? `input_off_${id}`}
           type={type}
           placeholder={placeholder}
@@ -174,7 +179,6 @@ export default function TextField({
           data-lpignore="true"
           data-bwignore="true"
           data-form-type="other"
-          role="presentation"
           inputMode={inputMode}
           autoFocus={autoFocus}
           minLength={minLength}
@@ -199,6 +203,7 @@ export default function TextField({
           <input
             ref={inputRef}
             id={id}
+            data-component-id={componentId}
             name={name ?? `input_off_${id}`}
             type={type}
             placeholder={placeholder}
@@ -218,7 +223,6 @@ export default function TextField({
             data-lpignore="true"
             data-bwignore="true"
             data-form-type="other"
-            role="presentation"
             inputMode={inputMode}
             autoFocus={autoFocus}
             minLength={minLength}
