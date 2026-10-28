@@ -23,6 +23,7 @@ export interface EmojiPickerProps {
   className?: string;
   autoFocus?: boolean;
   componentId?: string;
+  storageKey?: string;
 }
 
 type EmojiItem = {
@@ -216,7 +217,7 @@ const EMOJI_CATEGORIES: EmojiCategory[] = [
       { char: '🔒', name: 'cadeado trancado', keywords: ['seguranca', 'protegido', 'senha'] },
       { char: '🔓', name: 'cadeado aberto', keywords: ['liberado', 'desbloqueado'] },
       { char: '🔑', name: 'chave', keywords: ['acesso', 'permissao', 'login'] },
-      { char: '🛒', name: 'carrinho de compras', keywords: ['compras', 'biglar', 'venda', 'varejo'] },
+      { char: '🛒', name: 'carrinho de compras', keywords: ['compras', 'venda', 'varejo'] },
       { char: '🏪', name: 'loja', keywords: ['filial', 'moveis', 'eletro', 'matriz', 'estabelecimento'] },
       { char: '🏢', name: 'predio comercial', keywords: ['matriz', 'sede', 'escritorio'] },
     ],
@@ -227,7 +228,7 @@ const EMOJI_CATEGORIES: EmojiCategory[] = [
     icon: Heart,
     emojis: [
       { char: '❤️', name: 'coracao vermelho', keywords: ['amor', 'love', 'coração', 'curtir'] },
-      { char: '💙', name: 'coracao azul', keywords: ['biglar', 'azul', 'confianca'] },
+      { char: '💙', name: 'coracao azul', keywords: ['azul', 'confianca'] },
       { char: '💚', name: 'coracao verde', keywords: ['esperanca', 'verde', 'certo'] },
       { char: '💛', name: 'coracao amarelo', keywords: ['alegria', 'amarelo'] },
       { char: '🧡', name: 'coracao laranja', keywords: ['energia', 'laranja'] },
@@ -314,7 +315,7 @@ const EMOJI_CATEGORIES: EmojiCategory[] = [
   },
 ];
 
-const LOCAL_STORAGE_RECENT_KEY = 'biglar_chat_recent_emojis_v1';
+const LOCAL_STORAGE_RECENT_KEY = 'lopes_ui_recent_emojis_v1';
 
 export default function EmojiPicker({
   onSelectEmoji,
@@ -322,6 +323,7 @@ export default function EmojiPicker({
   className = '',
   autoFocus = true,
   componentId,
+  storageKey = LOCAL_STORAGE_RECENT_KEY,
 }: EmojiPickerProps) {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('smileys');
@@ -332,7 +334,7 @@ export default function EmojiPicker({
   // Carrega recentes do storage
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(LOCAL_STORAGE_RECENT_KEY);
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
@@ -342,7 +344,7 @@ export default function EmojiPicker({
     } catch {
       // ignore storage errors
     }
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (autoFocus) {
@@ -355,7 +357,7 @@ export default function EmojiPicker({
     try {
       const updated = [emojiChar, ...recentEmojis.filter((e) => e !== emojiChar)].slice(0, 20);
       setRecentEmojis(updated);
-      localStorage.setItem(LOCAL_STORAGE_RECENT_KEY, JSON.stringify(updated));
+      localStorage.setItem(storageKey, JSON.stringify(updated));
     } catch {
       // ignore
     }
@@ -403,7 +405,7 @@ export default function EmojiPicker({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar emoji..."
-            className="w-full h-8 pl-8 pr-7 text-xs rounded-xl bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1D68FE]/20 focus:border-[#1D68FE] transition"
+            className="w-full h-8 pl-8 pr-7 text-xs rounded-xl bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
           />
           {search && (
             <button
@@ -460,7 +462,7 @@ export default function EmojiPicker({
               onClick={() => setActiveCategory('recent')}
               className={`flex-1 py-1.5 rounded-lg flex items-center justify-center text-xs transition cursor-pointer ${
                 activeCategory === 'recent'
-                  ? 'bg-[#1D68FE] text-white font-semibold shadow-xs'
+                  ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
                   : 'text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-800'
               }`}
               title="Recentes"
@@ -479,7 +481,7 @@ export default function EmojiPicker({
                 onClick={() => setActiveCategory(category.id)}
                 className={`flex-1 py-1.5 rounded-lg flex items-center justify-center text-xs transition cursor-pointer ${
                   isActive
-                    ? 'bg-[#1D68FE] text-white font-semibold shadow-xs'
+                    ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
                     : 'text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-800'
                 }`}
                 title={category.label}
