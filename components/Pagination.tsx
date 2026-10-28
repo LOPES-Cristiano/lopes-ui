@@ -102,7 +102,7 @@ export default function Pagination({
         className,
       )}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2.5 sm:gap-3 w-full sm:w-auto">
         {showSummary && totalItems !== undefined && (
           <span className="tabular-nums">
             Mostrando <strong className="font-semibold text-zinc-900 dark:text-zinc-100">{startItem}</strong>–
@@ -130,7 +130,7 @@ export default function Pagination({
         )}
       </div>
 
-      <div className="inline-flex items-center gap-1">
+      <div className="inline-flex items-center justify-center sm:justify-end gap-1 w-full sm:w-auto overflow-x-auto no-scrollbar">
         {showEdges && (
           <button
             type="button"
@@ -159,12 +159,17 @@ export default function Pagination({
           <ChevronLeft size={14} />
         </button>
 
+        {/* Compact mobile indicator (< 640px) */}
+        <span className="sm:hidden inline-flex items-center justify-center px-2.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200 tabular-nums">
+          {safePage} <span className="mx-1 text-zinc-400 font-normal">/</span> {totalPages}
+        </span>
+
         {pages.map((item, idx) =>
           item === "ellipsis" ? (
             <span
               key={`ellipsis-${idx}`}
               aria-hidden="true"
-              className={cn("inline-flex items-center justify-center text-zinc-400", btnSizeCls)}
+              className={cn("hidden sm:inline-flex items-center justify-center text-zinc-400", btnSizeCls)}
             >
               <MoreHorizontal size={14} />
             </span>
@@ -176,7 +181,7 @@ export default function Pagination({
               disabled={disabled}
               onClick={() => onPageChange(item)}
               className={cn(
-                "inline-flex items-center justify-center rounded-lg font-medium tabular-nums transition-colors cursor-pointer",
+                "hidden sm:inline-flex items-center justify-center rounded-lg font-medium tabular-nums transition-colors cursor-pointer",
                 btnSizeCls,
                 item === safePage
                   ? "bg-primary text-primary-foreground shadow-xs"
