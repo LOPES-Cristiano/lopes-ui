@@ -389,11 +389,12 @@ function CodeEditorDemo() {
   const [code, setCode] = React.useState(
     JSON.stringify(
       {
-        empresa: "BigLar Móveis e Eletrodomésticos Ltda.",
-        slogan: "Conforto e qualidade para o seu lar",
-        pracas: ["Rondônia (69)", "Amazonas (92)"],
-        departamentos: ["Móveis", "Estofados", "Colchões", "Eletrodomésticos"],
-        entregaPropria: true,
+        name: "lopes-ui",
+        version: "1.2.0",
+        theme: "system",
+        subpaths: ["primitives", "rich-text", "spreadsheet", "code-block", "hooks", "utils"],
+        accessibility: "WCAG 2.1 AA",
+        treeShakeable: true,
       },
       null,
       2
@@ -402,7 +403,7 @@ function CodeEditorDemo() {
 
   return (
     <CodeEditor
-      title="configuracao-catalogo.json"
+      title="lopes-ui.config.json"
       language="json"
       value={code}
       onChange={setCode}
