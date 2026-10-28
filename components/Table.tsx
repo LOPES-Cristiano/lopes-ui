@@ -1,13 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type TableSize   = "xs" | "sm" | "md" | "lg";
 export type TableVariant = "default" | "striped" | "bordered" | "minimal";
+export type TableSortDirection = "asc" | "desc" | null;
 
 export type TableColumn<T = Record<string, unknown>> = {
   /** Unique key — also used to read `row[key]` when no `render` is provided */
@@ -20,6 +22,12 @@ export type TableColumn<T = Record<string, unknown>> = {
   align?: "left" | "center" | "right";
   /** Fixed column width (CSS value) */
   width?: string;
+  /** Pin column to the left or right edge while scrolling horizontally */
+  sticky?: "left" | "right";
+  /** Enable click-to-sort on this column */
+  sortable?: boolean;
+  /** Custom comparator when sortable=true */
+  sortFn?: (a: T, b: T) => number;
   /** Header className */
   headerClassName?: string;
   /** Cell className */
@@ -37,6 +45,10 @@ export type TableColumn<T = Record<string, unknown>> = {
 export type TableProps<T = Record<string, unknown>> = {
   columns: TableColumn<T>[];
   rows: T[];
+  /** Show skeleton loading rows instead of data */
+  loading?: boolean;
+  /** Number of skeleton rows when loading=true (default: 5) */
+  skeletonRows?: number;
   /** Row key extractor — defaults to `index` */
   rowKey?: (row: T, index: number) => string | number;
   /** Clicked row callback */
@@ -45,10 +57,16 @@ export type TableProps<T = Record<string, unknown>> = {
   rowClassName?: (row: T, index: number) => string | undefined;
   /** Visual variant */
   variant?: TableVariant;
+  /** Alternating row background stripes (daisyUI table-zebra alias) */
+  zebra?: boolean;
   /** Cell / row density */
   size?: TableSize;
+  /** Alias for size (daisyUI / compact table density) */
+  density?: TableSize;
   /** Sticky first header row */
   stickyHeader?: boolean;
+  /** Pin header and footer rows while scrolling vertically (daisyUI table-pin-rows alias) */
+  pinRows?: boolean;
   /** Show horizontal borders between rows */
   dividers?: boolean;
   /** Highlight row on hover */
@@ -149,12 +167,17 @@ function computeColumnSummary<T>(col: TableColumn<T>, rows: T[]): React.ReactNod
 export default function Table<T = Record<string, unknown>>({
   columns,
   rows,
+  loading = false,
+  skeletonRows = 5,
   rowKey,
   onRowClick,
   rowClassName,
   variant = "default",
-  size = "md",
+  zebra = false,
+  size,
+  density,
   stickyHeader = false,
+  pinRows = false,
   dividers = true,
   hoverable = true,
   showSummary = false,
@@ -168,18 +191,57 @@ export default function Table<T = Record<string, unknown>>({
   tableClassName,
   componentId,
 }: TableProps<T>) {
+  const effectiveSize: TableSize = density ?? size ?? "md";
+  const effectiveStickyHeader = stickyHeader || pinRows;
+  const effectiveStriped = variant === "striped" || zebra;
   const { canAccess } = useAccessControl();
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<TableSortDirection>(null);
+
+  const handleSort = (col: TableColumn<T>) => {
+    if (!col.sortable) return;
+    if (sortKey !== col.key) {
+      setSortKey(col.key);
+      setSortDir("asc");
+    } else if (sortDir === "asc") {
+      setSortDir("desc");
+    } else {
+      setSortKey(null);
+      setSortDir(null);
+    }
+  };
+
+  const sortedRows = useMemo(() => {
+    if (!sortKey || !sortDir) return rows;
+    const col = columns.find((c) => c.key === sortKey);
+    if (!col) return rows;
+    const copy = [...rows];
+    copy.sort((a, b) => {
+      if (col.sortFn) {
+        return sortDir === "asc" ? col.sortFn(a, b) : -col.sortFn(a, b);
+      }
+      const va = (a as Record<string, unknown>)[sortKey];
+      const vb = (b as Record<string, unknown>)[sortKey];
+      if (typeof va === "number" && typeof vb === "number") {
+        return sortDir === "asc" ? va - vb : vb - va;
+      }
+      const sa = String(va ?? "");
+      const sb = String(vb ?? "");
+      return sortDir === "asc" ? sa.localeCompare(sb, "pt-BR") : sb.localeCompare(sa, "pt-BR");
+    });
+    return copy;
+  }, [rows, sortKey, sortDir, columns]);
 
   // Calculate summaries if requested
-  const columnSummaries = React.useMemo(() => {
+  const columnSummaries = useMemo(() => {
     if (!showSummary && !summaryValues) return null;
     return columns.map((col) => {
       if (summaryValues && col.key in summaryValues) {
         return summaryValues[col.key];
       }
-      return computeColumnSummary(col, rows);
+      return computeColumnSummary(col, sortedRows);
     });
-  }, [showSummary, summaryValues, columns, rows]);
+  }, [showSummary, summaryValues, columns, sortedRows]);
 
   if (componentId && !canAccess(componentId)) {
     return null;
@@ -192,7 +254,7 @@ export default function Table<T = Record<string, unknown>>({
 
   const rowClass = (row: T, idx: number) =>
     twMerge(
-      variant === "striped" && idx % 2 === 1 ? "bg-zinc-50/70 dark:bg-zinc-800/40" : "bg-white dark:bg-zinc-950",
+      effectiveStriped && idx % 2 === 1 ? "bg-zinc-50/70 dark:bg-zinc-800/40" : "bg-white dark:bg-zinc-950",
       dividers && "border-b border-zinc-100 dark:border-zinc-800 last:border-0",
       hoverable && "transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/60",
       onRowClick && "cursor-pointer",
@@ -215,8 +277,9 @@ export default function Table<T = Record<string, unknown>>({
 
   return (
     <div
+      {...(componentId ? { "data-component-id": componentId } : {})}
       className={twMerge("w-full", className)}
-      >
+    >
       <div className={twMerge(
         "w-full overflow-hidden border",
         roundedClasses[rounded] ?? "rounded-xl",
@@ -227,28 +290,62 @@ export default function Table<T = Record<string, unknown>>({
           {/* Head */}
           <thead>
             <tr className={twMerge(headerBg, bordered && "border-b border-zinc-200 dark:border-zinc-700")}>
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className={twMerge(
-                    SIZE_TH[size],
-                    "font-semibold text-zinc-600 dark:text-zinc-400 tracking-wide uppercase whitespace-nowrap",
-                    stickyHeader && "sticky top-0 z-10 bg-zinc-50 dark:bg-zinc-900 shadow-[0_1px_0_0_#e4e4e7] dark:shadow-[0_1px_0_0_#27272a]",
-                    bordered && "border-x border-zinc-200 dark:border-zinc-700 first:border-l-0 last:border-r-0",
-                    ALIGN[col.align ?? "left"],
-                    col.headerClassName,
-                  )}
-                  style={col.width ? { width: col.width, minWidth: col.width } : undefined}
-                >
-                  {col.label}
-                </th>
-              ))}
+              {columns.map((col) => {
+                const isSorted = sortKey === col.key && sortDir !== null;
+                return (
+                  <th
+                    key={col.key}
+                    onClick={col.sortable ? () => handleSort(col) : undefined}
+                    className={twMerge(
+                      SIZE_TH[effectiveSize],
+                      "font-semibold text-zinc-600 dark:text-zinc-400 tracking-wide uppercase whitespace-nowrap",
+                      effectiveStickyHeader && "sticky top-0 z-10 bg-zinc-50 dark:bg-zinc-900 shadow-[0_1px_0_0_#e4e4e7] dark:shadow-[0_1px_0_0_#27272a]",
+                      col.sticky === "left" && "sticky left-0 z-20 bg-zinc-50 dark:bg-zinc-900",
+                      col.sticky === "right" && "sticky right-0 z-20 bg-zinc-50 dark:bg-zinc-900",
+                      col.sortable && "cursor-pointer select-none hover:text-zinc-900 dark:hover:text-zinc-200",
+                      bordered && "border-x border-zinc-200 dark:border-zinc-700 first:border-l-0 last:border-r-0",
+                      ALIGN[col.align ?? "left"],
+                      col.headerClassName,
+                    )}
+                    style={col.width ? { width: col.width, minWidth: col.width } : undefined}
+                  >
+                    {col.sortable ? (
+                      <span className="inline-flex items-center gap-1">
+                        <span>{col.label}</span>
+                        {isSorted ? (
+                          sortDir === "asc" ? <ArrowUp size={12} /> : <ArrowDown size={12} />
+                        ) : (
+                          <ArrowUpDown size={12} className="opacity-40" />
+                        )}
+                      </span>
+                    ) : (
+                      col.label
+                    )}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
 
           {/* Body */}
           <tbody>
-            {rows.length === 0 ? (
+            {loading ? (
+              Array.from({ length: skeletonRows }).map((_, rIdx) => (
+                <tr
+                  key={`skeleton-${rIdx}`}
+                  className={twMerge(
+                    "bg-white dark:bg-zinc-950",
+                    dividers && "border-b border-zinc-100 dark:border-zinc-800 last:border-0"
+                  )}
+                >
+                  {columns.map((col) => (
+                    <td key={col.key} className={SIZE_TD[effectiveSize]}>
+                      <div className="h-4 w-3/4 animate-pulse rounded bg-zinc-100 dark:bg-zinc-800" />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : sortedRows.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length}
@@ -258,7 +355,7 @@ export default function Table<T = Record<string, unknown>>({
                 </td>
               </tr>
             ) : (
-              rows.map((row, idx) => (
+              sortedRows.map((row, idx) => (
                 <tr
                   key={rowKey ? rowKey(row, idx) : idx}
                   className={rowClass(row, idx)}
@@ -271,8 +368,10 @@ export default function Table<T = Record<string, unknown>>({
                       <td
                         key={col.key}
                         className={twMerge(
-                          SIZE_TD[size],
+                          SIZE_TD[effectiveSize],
                           "text-zinc-700 dark:text-zinc-300",
+                          col.sticky === "left" && "sticky left-0 z-10 bg-inherit",
+                          col.sticky === "right" && "sticky right-0 z-10 bg-inherit",
                           bordered && "border-x border-zinc-100 dark:border-zinc-800 first:border-l-0 last:border-r-0",
                           ALIGN[col.align ?? "left"],
                           col.cellClassName,
@@ -292,7 +391,7 @@ export default function Table<T = Record<string, unknown>>({
             <tfoot className="border-t-2 border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 font-semibold text-xs">
               {footerSlot}
             </tfoot>
-          ) : hasAnySummary && columnSummaries ? (
+          ) : hasAnySummary && columnSummaries && !loading ? (
             <tfoot className="border-t-2 border-zinc-200 dark:border-zinc-700 bg-zinc-50/90 dark:bg-zinc-900/90 font-bold text-xs text-zinc-800 dark:text-zinc-200">
               <tr>
                 {columns.map((col, idx) => {
@@ -309,7 +408,7 @@ export default function Table<T = Record<string, unknown>>({
                     <td
                       key={col.key}
                       className={twMerge(
-                        SIZE_TD[size],
+                        SIZE_TD[effectiveSize],
                         "font-semibold",
                         bordered && "border-x border-zinc-200 dark:border-zinc-700 first:border-l-0 last:border-r-0",
                         ALIGN[col.align ?? (idx === labelTargetIdx ? "right" : "left")],
