@@ -14,8 +14,10 @@ export function DataTableHeader<T = Record<string, unknown>>({
   sortDir,
   onSort,
   size = 'md',
+  stickyHeader = false,
   hasActions = false,
   hasExpandable = false,
+  expandColumnWidth,
   checkboxClassName,
 }: {
   columns: DataTableColumn<T>[];
@@ -27,18 +29,38 @@ export function DataTableHeader<T = Record<string, unknown>>({
   sortDir: SortDir;
   onSort: (key: string) => void;
   size?: DataTableSize;
+  stickyHeader?: boolean;
   hasActions?: boolean;
   hasExpandable?: boolean;
+  expandColumnWidth?: string | number;
   checkboxClassName?: string;
 }) {
   const headerPaddingCls =
     size === 'sm' ? 'py-2 px-3 text-xs uppercase tracking-wider' : size === 'lg' ? 'py-3.5 px-4 text-sm uppercase tracking-wider' : 'py-3 px-3 text-xs uppercase tracking-wider';
 
   return (
-    <thead className="bg-zinc-50/80 dark:bg-zinc-800/40 border-b border-zinc-200/80 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 font-semibold">
+    <thead
+      className={twMerge(
+        'border-b border-zinc-200/80 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 font-semibold',
+        stickyHeader ? 'sticky top-0 z-10 bg-surface' : 'bg-zinc-50/80 dark:bg-zinc-800/40'
+      )}
+    >
       <tr>
         {hasExpandable && (
-          <th scope="col" className={twMerge('w-10 text-center', headerPaddingCls)} aria-label="Expandir / Recolher" />
+          <th
+            scope="col"
+            style={
+              expandColumnWidth !== undefined
+                ? { width: expandColumnWidth, minWidth: expandColumnWidth }
+                : undefined
+            }
+            className={twMerge(
+              expandColumnWidth === undefined && 'w-10',
+              'text-center',
+              headerPaddingCls
+            )}
+            aria-label="Expandir / Recolher"
+          />
         )}
 
         {selectionEnabled && (
