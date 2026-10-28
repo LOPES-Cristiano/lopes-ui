@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useId, useCallback } from "react";
 import { twMerge } from "tailwind-merge";
+import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -19,9 +20,25 @@ export type OTPInputProps = {
   mask?: boolean;
   /** Numeric-only keyboard on mobile */
   inputMode?: "numeric" | "text";
+  /** Renders a visual separator after every N digits (e.g. groupSize={3} -> 000 - 000) */
+  groupSize?: number;
   className?: string;
   componentId?: string;
+  /** If true, hides the component when access is denied instead of disabling it */
+  hideIfDenied?: boolean;
 };
+
+export function InputOTPSeparator({ className }: { className?: string }) {
+  return (
+    <span
+      role="separator"
+      aria-hidden="true"
+      className={twMerge("px-0.5 text-zinc-400 dark:text-zinc-500 select-none font-medium", className)}
+    >
+      −
+    </span>
+  );
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -34,12 +51,17 @@ export default function OTPInput({
   error = false,
   mask = false,
   inputMode = "numeric",
+  groupSize,
   className,
   componentId,
+  hideIfDenied = false,
 }: OTPInputProps) {
   const uid = useId();
   const [internal, setInternal] = useState<string[]>(Array(length).fill(""));
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+  const effectiveDisabled = Boolean(disabled || !hasPermission);
 
   // Use controlled value when provided
   const digits: string[] = value !== undefined
@@ -125,46 +147,55 @@ export default function OTPInput({
     e.target.select();
   };
 
+  if (!hasPermission && hideIfDenied) return null;
+
   return (
     <div
       className={twMerge("flex items-center gap-2", className)}
       data-component-id={componentId}
     >
-      {Array.from({ length }).map((_, idx) => (
-        <input
-          data-component-id={componentId ? `${componentId}.slot-${idx}` : `erp.otp.slot-${idx}`}
-          key={`${uid}-${idx}`}
-          ref={(el) => { inputsRef.current[idx] = el; }}
-          id={idx === 0 ? `${uid}-0` : undefined}
-          type={mask ? "password" : "text"}
-          inputMode={inputMode}
-          maxLength={1}
-          value={digits[idx]}
-          disabled={disabled}
-          autoComplete={idx === 0 ? "one-time-code" : "off"}
-          aria-label={`Dígito ${idx + 1} de ${length}`}
-          onChange={(e) => handleChange(idx, e.target.value)}
-          onKeyDown={(e)  => handleKeyDown(idx, e)}
-          onPaste={handlePaste}
-          onFocus={handleFocus}
-          className={twMerge(
-            "w-11 h-12 text-center text-lg font-semibold rounded-lg border outline-none transition-all",
-            "bg-white dark:bg-zinc-900",
-            "text-zinc-900 dark:text-zinc-100",
-            "caret-transparent",
-            "disabled:opacity-50 disabled:cursor-not-allowed",
-            error
-              ? "border-red-400 dark:border-red-600 focus:ring-2 focus:ring-red-400"
-              : [
-                  "border-zinc-300 dark:border-zinc-700",
-                  "focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0",
-                  digits[idx]
-                    ? "border-indigo-400 dark:border-indigo-600"
-                    : "",
-                ].join(" ")
-          )}
-        />
-      ))}
+      {Array.from({ length }).map((_, idx) => {
+        const showSeparator =
+          Boolean(groupSize && groupSize > 0 && idx > 0 && idx % groupSize === 0);
+
+        return (
+          <React.Fragment key={`${uid}-${idx}`}>
+            {showSeparator && <InputOTPSeparator />}
+            <input
+              data-component-id={componentId ? `${componentId}.slot-${idx}` : `erp.otp.slot-${idx}`}
+              ref={(el) => { inputsRef.current[idx] = el; }}
+              id={idx === 0 ? `${uid}-0` : undefined}
+              type={mask ? "password" : "text"}
+              inputMode={inputMode}
+              maxLength={1}
+              value={digits[idx]}
+              disabled={effectiveDisabled}
+              autoComplete={idx === 0 ? "one-time-code" : "off"}
+              aria-label={`Dígito ${idx + 1} de ${length}`}
+              onChange={(e) => handleChange(idx, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(idx, e)}
+              onPaste={handlePaste}
+              onFocus={handleFocus}
+              className={twMerge(
+                "w-11 h-12 text-center text-lg font-semibold rounded-lg border outline-none transition-all",
+                "bg-white dark:bg-zinc-900",
+                "text-zinc-900 dark:text-zinc-100",
+                "caret-transparent",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                error
+                  ? "border-red-400 dark:border-red-600 focus:ring-2 focus:ring-red-400"
+                  : [
+                      "border-zinc-300 dark:border-zinc-700",
+                      "focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0",
+                      digits[idx]
+                        ? "border-indigo-400 dark:border-indigo-600"
+                        : "",
+                    ].join(" ")
+              )}
+            />
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 }
