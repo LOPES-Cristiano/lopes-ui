@@ -279,7 +279,7 @@ export default function LoginForm({
           type="submit"
           data-component-id={componentId ? `${componentId}.submit` : "erp.login.submit"}
           disabled={isLoading}
-          className="w-full rounded-lg bg-primary hover:bg-primary-hover active:bg-primary-active text-white text-sm font-semibold px-4 py-2.5 flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="w-full rounded-lg bg-primary hover:bg-primary-hover active:bg-primary-active text-primary-foreground text-sm font-semibold px-4 py-2.5 flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {isLoading ? <Loader2 size={16} className="animate-spin" /> : null}
           {submitLabel}
