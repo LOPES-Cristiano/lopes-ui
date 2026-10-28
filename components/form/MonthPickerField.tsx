@@ -148,7 +148,11 @@ export default function MonthPickerField({
     }
 
     function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        setOpen(false);
+      }
     }
 
     document.addEventListener("mousedown", handleOutsideClick);
@@ -241,8 +245,9 @@ export default function MonthPickerField({
         {open && typeof document !== "undefined" && createPortal(
           <div
             ref={panelRef}
+            data-floating-open="true"
             style={panelStyle}
-            className="flex flex-col rounded-xl border border-border bg-card p-3 shadow-2xl animate-in fade-in-0 zoom-in-95 duration-150 select-none"
+            className="pointer-events-auto flex flex-col rounded-xl border border-border bg-card p-3 shadow-2xl animate-in fade-in-0 zoom-in-95 duration-150 select-none"
           >
             {/* Header com Ano e Navegação */}
             <div className="flex items-center justify-between border-b border-border pb-2.5 mb-2.5">
@@ -296,7 +301,7 @@ export default function MonthPickerField({
                     className={twMerge(
                       "flex flex-col items-center justify-center py-2 px-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
                       isSelected
-                        ? "bg-primary text-white shadow-xs font-bold ring-1 ring-primary"
+                        ? "bg-primary text-primary-foreground shadow-xs font-bold ring-1 ring-primary"
                         : isToday
                           ? "border border-primary/40 text-primary hover:bg-primary/10 font-bold"
                           : "text-foreground hover:bg-muted hover:text-foreground"
