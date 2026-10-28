@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useId } from "react";
+import React, { useId, useState } from "react";
 import { twMerge } from "tailwind-merge";
+import { Eye, EyeOff, X } from "lucide-react";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
 import { useAccessControl } from "../useAccessControl";
 
@@ -28,6 +29,14 @@ export type TextFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   minLength?: number;
   /** Maximum character length */
   maxLength?: number;
+  /** Built-in password visibility toggle when type="password" (default: true) */
+  showPasswordToggle?: boolean;
+  /** Renders a clear (×) button when the field has text */
+  clearable?: boolean;
+  /** Callback invoked when the clear button is clicked */
+  onClear?: () => void;
+  /** Shows a live character counter (e.g. "12/50") */
+  showCount?: boolean;
 
   // ── Appearance ────────────────────────────────────────────────────────────
   size?: "sm" | "md" | "lg";
@@ -53,10 +62,11 @@ const SIZE = {
 } as const;
 
 export default function TextField({
-  label, labelInline, labelWidth, required, tooltip, error, helpText, width, className,
+  label, labelInline, orientation, labelWidth, required, tooltip, labelAction, error, helpText, hint, width, className,
   id: idProp, name, type = "text", placeholder,
   value, defaultValue, onChange, onBlur, onFocus, onKeyDown,
   disabled, readOnly, autoComplete, inputMode, autoFocus, minLength, maxLength,
+  showPasswordToggle = true, clearable = false, onClear, showCount = false,
   size = "sm", variant = "default",
   leftIcon, rightIcon, prefix, suffix,
   inputClassName, componentId, hideIfDenied = false,
@@ -69,12 +79,41 @@ export default function TextField({
   const id = idProp ?? generatedId;
   const s = SIZE[size];
 
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [uncontrolledText, setUncontrolledText] = useState(defaultValue ?? "");
+
   const inputRef = React.useRef<HTMLInputElement>(null);
   const cursorRef = React.useRef<number | null>(null);
 
+  const currentText = value !== undefined ? (value ?? "") : uncontrolledText;
+  const isPasswordField = type === "password";
+  const canTogglePassword = isPasswordField && showPasswordToggle && !effectiveDisabled;
+  const canClear = clearable && Boolean(currentText) && !effectiveDisabled && !readOnly;
+  const resolvedType = isPasswordField && passwordVisible ? "text" : type;
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     cursorRef.current = e.target.selectionStart;
+    if (value === undefined) {
+      setUncontrolledText(e.target.value);
+    }
     onChange?.(e);
+  };
+
+  const handleClear = () => {
+    if (value === undefined) {
+      setUncontrolledText("");
+    }
+    if (inputRef.current) {
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      nativeInputValueSetter?.call(inputRef.current, "");
+      const event = new Event("input", { bubbles: true });
+      inputRef.current.dispatchEvent(event);
+      inputRef.current.focus();
+    }
+    onClear?.();
   };
 
   React.useLayoutEffect(() => {
@@ -89,7 +128,16 @@ export default function TextField({
     return null;
   }
 
-  const hasAffix = Boolean(leftIcon || rightIcon || prefix || suffix);
+  const hasInteractiveRight = canTogglePassword || canClear;
+  const hasAffix = Boolean(leftIcon || rightIcon || prefix || suffix || hasInteractiveRight);
+
+  const countNode = showCount ? (
+    <span className="tabular-nums text-[11px] text-zinc-400 dark:text-zinc-500">
+      {maxLength !== undefined ? `${currentText.length}/${maxLength}` : currentText.length}
+    </span>
+  ) : null;
+
+  const resolvedLabelAction = labelAction ?? countNode;
 
   const baseInput = twMerge(
     "w-full font-sans transition-colors duration-150 outline-hidden",
@@ -134,11 +182,18 @@ export default function TextField({
     ],
   );
 
+  const rightPadClass =
+    (canTogglePassword && canClear) || ((canTogglePassword || canClear) && rightIcon)
+      ? "pr-14"
+      : rightIcon || canTogglePassword || canClear
+        ? s.padR
+        : s.pr;
+
   const inputCls = twMerge(
     baseInput,
     "bg-transparent border-0 focus:ring-0 focus:outline-hidden",
-    leftIcon  ? s.padL : s.pl,
-    rightIcon ? s.padR : s.pr,
+    leftIcon ? s.padL : s.pl,
+    rightPadClass,
     inputClassName,
   );
 
@@ -147,11 +202,14 @@ export default function TextField({
       id={id}
       label={label}
       labelInline={labelInline}
+      orientation={orientation}
       labelWidth={labelWidth}
       required={required}
       tooltip={tooltip}
+      labelAction={resolvedLabelAction}
       error={error}
       helpText={helpText}
+      hint={hint}
       width={width}
       className={className}
     >
@@ -161,9 +219,9 @@ export default function TextField({
           id={id}
           data-component-id={componentId}
           name={name ?? `input_off_${id}`}
-          type={type}
+          type={resolvedType}
           placeholder={placeholder}
-          value={value === null ? '' : value}
+          value={value === null ? "" : value}
           defaultValue={defaultValue}
           onChange={handleChange}
           onBlur={onBlur}
@@ -171,7 +229,7 @@ export default function TextField({
           onKeyDown={onKeyDown}
           disabled={effectiveDisabled}
           readOnly={readOnly}
-          autoComplete={autoComplete ?? (type === 'password' ? 'current-password' : 'off')}
+          autoComplete={autoComplete ?? (type === "password" ? "current-password" : "off")}
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck={false}
@@ -187,7 +245,7 @@ export default function TextField({
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
           className={standaloneCls}
-          />
+        />
       ) : (
         <div className={wrapCls}>
           {leftIcon && (
@@ -205,9 +263,9 @@ export default function TextField({
             id={id}
             data-component-id={componentId}
             name={name ?? `input_off_${id}`}
-            type={type}
+            type={resolvedType}
             placeholder={placeholder}
-            value={value === null ? '' : value}
+            value={value === null ? "" : value}
             defaultValue={defaultValue}
             onChange={handleChange}
             onBlur={onBlur}
@@ -215,7 +273,7 @@ export default function TextField({
             onKeyDown={onKeyDown}
             disabled={effectiveDisabled}
             readOnly={readOnly}
-            autoComplete={autoComplete ?? (type === 'password' ? 'current-password' : 'off')}
+            autoComplete={autoComplete ?? (type === "password" ? "current-password" : "off")}
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
@@ -231,15 +289,41 @@ export default function TextField({
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
             className={inputCls}
-            />
+          />
           {suffix && (
             <span className={twMerge("shrink-0 select-none self-stretch flex items-center border-l border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400", s.aff)}>
               {suffix}
             </span>
           )}
-          {rightIcon && (
-            <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-zinc-400", s.iR)}>
-              {React.cloneElement(rightIcon, { size: s.iconSz })}
+          {(rightIcon || hasInteractiveRight) && (
+            <span className={twMerge("absolute top-1/2 -translate-y-1/2 flex items-center gap-1 text-zinc-400", s.iR)}>
+              {canClear && (
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  aria-label="Limpar campo"
+                  onClick={handleClear}
+                  className="inline-flex h-5 w-5 items-center justify-center rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+                >
+                  <X size={s.iconSz - 1} />
+                </button>
+              )}
+              {canTogglePassword && (
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  aria-label={passwordVisible ? "Ocultar senha" : "Mostrar senha"}
+                  onClick={() => setPasswordVisible((prev) => !prev)}
+                  className="inline-flex h-5 w-5 items-center justify-center rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+                >
+                  {passwordVisible ? <EyeOff size={s.iconSz} /> : <Eye size={s.iconSz} />}
+                </button>
+              )}
+              {rightIcon && (
+                <span className="pointer-events-none inline-flex items-center">
+                  {React.cloneElement(rightIcon, { size: s.iconSz })}
+                </span>
+              )}
             </span>
           )}
         </div>
