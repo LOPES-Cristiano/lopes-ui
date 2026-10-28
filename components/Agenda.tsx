@@ -67,7 +67,14 @@ function startOfDay(d: Date) {
 }
 
 function normalizeDate(d: Date | string): Date {
-  return typeof d === "string" ? new Date(d) : d;
+  if (typeof d === "string") {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      const [y, m, day] = d.split("-").map(Number);
+      return new Date(y, m - 1, day);
+    }
+    return new Date(d);
+  }
+  return d;
 }
 
 function isSameDay(a: Date, b: Date) {
@@ -210,6 +217,7 @@ export default function Agenda({
   if (groupList.length === 0) {
     return (
       <div
+        data-component-id={componentId}
         className={twMerge("flex flex-col items-center justify-center py-12 text-zinc-400 dark:text-zinc-500 text-sm", className)}
         >
         <Clock size={28} className="mb-2 opacity-40" />
@@ -220,6 +228,7 @@ export default function Agenda({
 
   return (
     <div
+      data-component-id={componentId}
       className={twMerge("space-y-5", className)}
       >
       {groupList.map(({ day, events: dayEvents }) => (
@@ -260,7 +269,15 @@ export default function Agenda({
                   role={ev.onClick ? "button" : undefined}
                   tabIndex={ev.onClick ? 0 : undefined}
                   onClick={() => ev.onClick?.(ev)}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") ev.onClick?.(ev); }}
+                  onKeyDown={(e) => {
+                    if (!ev.onClick) return;
+                    if (e.key === " ") {
+                      e.preventDefault();
+                      ev.onClick(ev);
+                    } else if (e.key === "Enter") {
+                      ev.onClick(ev);
+                    }
+                  }}
                   className={twMerge(
                     "flex items-start gap-3 rounded-xl border border-transparent transition-colors",
                     padding,
