@@ -1,16 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { twMerge } from 'tailwind-merge';
 import { clsx } from 'clsx';
 import { useHasOpenModal } from './Modal';
+import { useAccessControl } from './useAccessControl';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type QuickAction = {
   id: string;
   componentId?: string;
+  /** If false, disables the action instead of hiding it when access is denied (default: true) */
+  hideIfDenied?: boolean;
   label: string;
   icon: React.ReactNode;
   onClick: () => void;
@@ -24,6 +27,8 @@ export type QuickActionsProps = {
   actions: QuickAction[];
   /** Floating position. Default: "bottom-right" */
   position?: 'bottom-right' | 'bottom-left' | 'bottom-center' | 'top-right' | 'top-left';
+  componentId?: string;
+  hideIfDenied?: boolean;
   className?: string;
   mainButtonClassName?: string;
 };
@@ -32,11 +37,32 @@ export type QuickActionsProps = {
 
 export default function QuickActions({
   actions,
+  componentId,
+  hideIfDenied = true,
   className,
   mainButtonClassName,
 }: QuickActionsProps) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { canAccess } = useAccessControl();
+  const hasRootPermission = !componentId || canAccess(componentId);
+
+  const visibleActions = useMemo(() => {
+    if (!actions) return [];
+    return actions
+      .filter((action) => {
+        const allowed = !action.componentId || canAccess(action.componentId);
+        if (!allowed && action.hideIfDenied !== false) return false;
+        return true;
+      })
+      .map((action) => {
+        const allowed = !action.componentId || canAccess(action.componentId);
+        return {
+          ...action,
+          disabled: Boolean(action.disabled || !allowed),
+        };
+      });
+  }, [actions, canAccess]);
 
   // Offset de arraste a partir da posição inicial (canto inferior direito)
   const [offset, setOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -127,7 +153,15 @@ export default function QuickActions({
 
   const hasOpenModal = useHasOpenModal();
 
-  if (!mounted || typeof document === 'undefined' || !actions || actions.length === 0 || hasOpenModal) return null;
+  if (
+    !mounted ||
+    typeof document === 'undefined' ||
+    (!hasRootPermission && hideIfDenied) ||
+    visibleActions.length === 0 ||
+    hasOpenModal
+  ) {
+    return null;
+  }
 
   // Determina se o menu deve abrir para cima ou para baixo com base na posição do offset
   const winH = typeof window !== 'undefined' ? window.innerHeight : 800;
@@ -148,6 +182,7 @@ export default function QuickActions({
       {/* Container Principal Posicionado no canto inferior direito com Movimento Suave */}
       <div
         ref={containerRef}
+        data-component-id={componentId}
         style={{
           transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
           transition: isDragging ? 'none' : 'transform 0.32s cubic-bezier(0.18, 0.89, 0.32, 1.12)',
@@ -156,6 +191,7 @@ export default function QuickActions({
         }}
         className={twMerge(
           'fixed bottom-6 right-4 z-40 flex flex-col items-end select-none',
+          !hasRootPermission && 'opacity-50 pointer-events-none',
           className
         )}
       >
@@ -174,7 +210,7 @@ export default function QuickActions({
           )}
           aria-hidden={!open}
         >
-          {actions.map((action, idx) => (
+          {visibleActions.map((action, idx) => (
             <div
               key={action.id}
               onClick={() => {
@@ -227,10 +263,11 @@ export default function QuickActions({
 
         {/* Toggle FAB (+) com Rotação e Movimento Ultra Suave */}
         <button
-          data-component-id="erp.quick-actions.fab-toggle"
+          data-component-id={componentId ? `${componentId}.fab-toggle` : 'erp.quick-actions.fab-toggle'}
           type="button"
           aria-label={open ? 'Fechar ações rápidas' : 'Abrir ações rápidas'}
           aria-expanded={open}
+          disabled={!hasRootPermission}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
