@@ -121,7 +121,7 @@ export function DataTablePagination({
       </div>
 
       {/* Lado Direito: Controles de Paginação */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-center gap-2">
         <div className="flex items-center gap-1">
           {/* Primeira Página */}
           <button
