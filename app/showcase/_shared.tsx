@@ -16,7 +16,7 @@ export function DemoCard({ id, title, children }: { id?: string; title: string; 
       <div className="rounded-t-xl border-b border-zinc-100 dark:border-zinc-800 px-4 py-2.5 bg-zinc-50/40 dark:bg-zinc-900/50">
         <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{title}</span>
       </div>
-      <div className="p-5 sm:p-6">{children}</div>
+      <div className="p-3.5 sm:p-6 overflow-x-auto">{children}</div>
     </div>
   );
 }
