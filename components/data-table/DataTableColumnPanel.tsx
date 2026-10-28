@@ -23,6 +23,8 @@ export function DataTableColumnPanel<T = Record<string, unknown>>({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  const visibleCount = columns.filter((c) => !hidden.has(c.key)).length;
+
   return (
     <div
       role="dialog"
@@ -57,6 +59,8 @@ export function DataTableColumnPanel<T = Record<string, unknown>>({
         <div className="p-4 space-y-1.5 max-h-[60vh] overflow-y-auto">
           {columns.map((col) => {
             const isVisible = !hidden.has(col.key);
+            const isLastVisible = isVisible && visibleCount <= 1;
+            const isDisabled = Boolean(col.required) || isLastVisible;
             const headerText = col.header ?? col.label ?? col.key;
 
             return (
@@ -66,8 +70,21 @@ export function DataTableColumnPanel<T = Record<string, unknown>>({
                 type="button"
                 role="checkbox"
                 aria-checked={isVisible}
-                onClick={() => onToggle(col.key)}
-                className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                aria-disabled={isDisabled || undefined}
+                disabled={isDisabled}
+                title={
+                  col.required
+                    ? 'Coluna obrigatória'
+                    : isLastVisible
+                      ? 'Pelo menos uma coluna deve permanecer visível'
+                      : undefined
+                }
+                onClick={() => {
+                  if (!isDisabled) onToggle(col.key);
+                }}
+                className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                  isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                } ${
                   isVisible
                     ? 'border-border bg-surface text-foreground hover:bg-muted/30'
                     : 'border-border/40 bg-muted/20 text-muted-foreground line-through'
@@ -90,7 +107,7 @@ export function DataTableColumnPanel<T = Record<string, unknown>>({
             data-component-id="erp.data-table.done-columns"
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-primary px-4 py-1.5 text-xs font-bold text-white hover:bg-primary/90 transition-colors cursor-pointer"
+            className="rounded-xl bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer"
           >
             Concluir
           </button>
