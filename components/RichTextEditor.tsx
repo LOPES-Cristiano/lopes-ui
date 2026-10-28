@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useCallback, useRef, useState, useEffect } from "react";
 import { useEditor, EditorContent, type Editor, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
@@ -34,7 +34,7 @@ import {
   Maximize2, Minimize2, Merge, Split, PanelTop,
 } from "lucide-react";
 
-// â•â•â•â•â•â•â•â•â•â•â• Types â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ Types ═══════════
 export type RichTextEditorProps = {
   value?: string; defaultValue?: string; onChange?: (html: string) => void;
   placeholder?: string; minHeight?: string; maxHeight?: string; disabled?: boolean;
@@ -44,9 +44,9 @@ export type RichTextEditorProps = {
 export type ToolbarGroup = "history"|"font"|"block"|"inline"|"format"|"align"|"list"|"link"|"table"|"media";
 const ALL_GROUPS: ToolbarGroup[] = ["history","font","block","inline","format","align","list","link","table","media"];
 
-// â•â•â•â•â•â•â•â•â•â•â• Constants â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ Constants ═══════════
 const FONT_OPTIONS = [
-  { label: "Padrao", value: "" },
+  { label: "Padrão", value: "" },
   { label: "Arial", value: "Arial, sans-serif" },
   { label: "Times New Roman", value: "'Times New Roman', serif" },
   { label: "Courier New", value: "'Courier New', monospace" },
@@ -57,9 +57,9 @@ const FONT_OPTIONS = [
 const FONT_SIZES = [8,9,10,11,12,13,14,16,18,20,22,24,28,32,36,48,72];
 const DEFAULT_FONT_SIZE = 14;
 const TEXT_COLORS = [
-  {color:"#09090b",label:"Preto"},{color:"#4f46e5",label:"Indigo"},{color:"#2563eb",label:"Azul"},
+  {color:"#09090b",label:"Preto"},{color:"#4f46e5",label:"Índigo"},{color:"#2563eb",label:"Azul"},
   {color:"#0891b2",label:"Ciano"},{color:"#16a34a",label:"Verde"},{color:"#dc2626",label:"Vermelho"},
-  {color:"#d97706",label:"Ambar"},{color:"#db2777",label:"Rosa"},{color:"#7c3aed",label:"Roxo"},
+  {color:"#d97706",label:"Âmbar"},{color:"#db2777",label:"Rosa"},{color:"#7c3aed",label:"Roxo"},
   {color:"#71717a",label:"Cinza"},
 ];
 const HIGHLIGHT_COLORS = [
@@ -68,7 +68,7 @@ const HIGHLIGHT_COLORS = [
   {color:"#fed7aa",label:"Laranja"},{color:"#d1fae5",label:"Menta"},
 ];
 
-// â•â•â•â•â•â•â•â•â•â•â• FontSize Extension â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ FontSize Extension ═══════════
 const FontSizeExtension = TextStyle.extend({
   name: "textStyle",
   addAttributes() {
@@ -90,7 +90,7 @@ const FontSizeExtension = TextStyle.extend({
   },
 });
 
-// â•â•â•â•â•â•â•â•â•â•â• ResizableImage NodeView â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ ResizableImage NodeView ═══════════
 function ResizableImageView({ node, updateAttributes, deleteNode, selected }: {
   node: any; updateAttributes: (attrs: Record<string,any>) => void; deleteNode: () => void; selected: boolean;
 }) {
@@ -124,12 +124,15 @@ function ResizableImageView({ node, updateAttributes, deleteNode, selected }: {
       <div ref={containerRef} contentEditable={false}
         onMouseEnter={()=>setIsHovered(true)}
         onMouseLeave={()=>{if(!isResizing)setIsHovered(false);}}
-        style={{position:"relative",display:"inline-block",maxWidth:"100%",
+        className={twMerge(
+          "relative inline-block max-w-full rounded-lg select-none",
+          isActive && "ring-2 ring-primary ring-offset-2",
+          !isResizing && "transition-shadow duration-150"
+        )}
+        style={{
           width: resolvedWidth==="auto" ? undefined : resolvedWidth,
-          outline: isActive ? "2.5px solid #6366f1" : "2.5px solid transparent",
-          outlineOffset:"3px", borderRadius:"8px",
           cursor: isResizing ? "ew-resize" : "default",
-          transition: isResizing ? "none" : "outline-color 0.15s", userSelect:"none"}}>
+        }}>
         <img src={node.attrs.src} alt={node.attrs.alt??"Imagem"} draggable={false}
           style={{display:"block",width:"100%",height:"auto",borderRadius:"6px",
             boxShadow:"0 4px 6px -1px rgba(0,0,0,0.08)",pointerEvents:"none"}}/>
@@ -139,11 +142,14 @@ function ResizableImageView({ node, updateAttributes, deleteNode, selected }: {
             backdropFilter:"blur(10px)",borderRadius:"10px",padding:"5px 8px",zIndex:40,
             boxShadow:"0 8px 24px rgba(0,0,0,0.4)",whiteSpace:"nowrap",pointerEvents:"all"}}>
             {(["left","center","right"] as const).map(a=>(
-              <button key={a} type="button" onMouseDown={e=>{e.preventDefault();updateAttributes({align:a});}}
-                style={{background:imgAlign===a?"#6366f1":"rgba(255,255,255,0.1)",color:"white",border:"none",
-                  borderRadius:"5px",width:"22px",height:"22px",display:"flex",alignItems:"center",
-                  justifyContent:"center",cursor:"pointer",fontSize:"11px"}}>
-                {a==="left"?"â†":a==="center"?"â‰¡":"â†’"}
+              <button key={a} type="button"
+                aria-label={a === "left" ? "Alinhar à esquerda" : a === "center" ? "Centralizar" : "Alinhar à direita"}
+                onMouseDown={e=>{e.preventDefault();updateAttributes({align:a});}}
+                className={twMerge(
+                  "border-none rounded-[5px] w-[22px] h-[22px] flex items-center justify-center cursor-pointer text-[11px]",
+                  imgAlign === a ? "bg-primary text-primary-foreground" : "bg-white/10 text-white"
+                )}>
+                {a === "left" ? "←" : a === "center" ? "≡" : "→"}
               </button>
             ))}
             <div style={{width:"1px",height:"16px",background:"rgba(255,255,255,0.15)",margin:"0 4px"}}/>
@@ -156,18 +162,19 @@ function ResizableImageView({ node, updateAttributes, deleteNode, selected }: {
                   cursor:"pointer",fontSize:"9px",fontWeight:600}}>{w}</button>
             ))}
             <div style={{width:"1px",height:"16px",background:"rgba(255,255,255,0.15)",margin:"0 4px"}}/>
-            <button type="button" onMouseDown={e=>{e.preventDefault();deleteNode();}}
+            <button type="button" aria-label="Remover imagem" onMouseDown={e=>{e.preventDefault();deleteNode();}}
               style={{background:"rgba(239,68,68,0.18)",color:"#f87171",border:"none",borderRadius:"5px",
                 width:"22px",height:"22px",display:"flex",alignItems:"center",justifyContent:"center",
-                cursor:"pointer",fontSize:"15px",fontWeight:"bold"}}>x</button>
+                cursor:"pointer",fontSize:"15px",fontWeight:"bold"}}>×</button>
           </div>
         )}
         {isActive && (
           <div onMouseDown={handleResizeMouseDown} title="Arrastar para redimensionar"
+            className="bg-primary text-primary-foreground shadow-md"
             style={{position:"absolute",bottom:"6px",right:"6px",width:"20px",height:"20px",
-              background:"#6366f1",borderRadius:"4px",cursor:"se-resize",display:"flex",
-              alignItems:"center",justifyContent:"center",zIndex:40,boxShadow:"0 2px 8px rgba(99,102,241,0.5)"}}>
-            <svg width="9" height="9" viewBox="0 0 9 9" fill="white">
+              borderRadius:"4px",cursor:"se-resize",display:"flex",
+              alignItems:"center",justifyContent:"center",zIndex:40}}>
+            <svg width="9" height="9" viewBox="0 0 9 9" fill="currentColor">
               <circle cx="1.5" cy="1.5" r="1.1"/><circle cx="4.5" cy="4.5" r="1.1"/><circle cx="7.5" cy="7.5" r="1.1"/>
             </svg>
           </div>
@@ -204,7 +211,7 @@ const ResizableImage = Image.extend({
   addNodeView() { return ReactNodeViewRenderer(ResizableImageView); },
 });
 
-// â•â•â•â•â•â•â•â•â•â•â• Toolbar Primitives â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ Toolbar Primitives ═══════════
 function ToolBtn({ icon: Icon, label, onClick, active, disabled }: {
   icon: LucideIcon; label: string; onClick: () => void; active?: boolean; disabled?: boolean;
 }) {
@@ -214,7 +221,7 @@ function ToolBtn({ icon: Icon, label, onClick, active, disabled }: {
       className={twMerge("inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors cursor-pointer",
         "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100",
         "disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none",
-        active && "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900")}>
+        active && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground dark:hover:bg-primary/90 dark:hover:text-primary-foreground")}>
       <Icon size={13} strokeWidth={2}/>
     </button>
   );
@@ -222,7 +229,7 @@ function ToolBtn({ icon: Icon, label, onClick, active, disabled }: {
 
 function Sep() { return <div className="mx-0.5 h-4 w-px bg-zinc-200 dark:bg-zinc-700 shrink-0"/>; }
 
-// â•â•â•â•â•â•â•â•â•â•â• Toolbar â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ Toolbar ═══════════
 function Toolbar({ editor, groups }: { editor: Editor; groups: ToolbarGroup[] }) {
   const has = (g: ToolbarGroup) => groups.includes(g);
   const [fontFamilyOpen, setFontFamilyOpen] = useState(false);
@@ -334,23 +341,23 @@ function Toolbar({ editor, groups }: { editor: Editor; groups: ToolbarGroup[] })
                   className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center justify-between transition-colors cursor-pointer"
                   style={{ fontFamily: f.value || undefined }}>
                   <span>{f.label}</span>
-                  {currentFontFamily === f.value && <Check size={12} className="text-indigo-500 shrink-0"/>}
+                  {currentFontFamily === f.value && <Check size={12} className="text-primary shrink-0"/>}
                 </button>
               ))}
             </div>
           )}
         </div>
         <div className="flex items-center gap-0.5">
-          <button type="button" title="Diminuir Fonte" onMouseDown={e=>e.preventDefault()} onClick={decreaseFontSize}
+          <button type="button" title="Diminuir Fonte" aria-label="Diminuir Fonte" onMouseDown={e=>e.preventDefault()} onClick={decreaseFontSize}
             className="inline-flex h-7 w-7 items-center justify-center rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
             <AArrowDown size={14} strokeWidth={2}/>
           </button>
-          <select value={currentFontSize} onMouseDown={e=>e.stopPropagation()}
+          <select aria-label="Tamanho da fonte" value={currentFontSize} onMouseDown={e=>e.stopPropagation()}
             onChange={e => { const sz=Number(e.target.value); if(sz===DEFAULT_FONT_SIZE)(editor.chain().focus() as any).unsetFontSize().run(); else(editor.chain().focus() as any).setFontSize(sz).run(); }}
-            className="h-7 w-[52px] text-center text-xs rounded-md bg-transparent text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:border-indigo-500 cursor-pointer appearance-none px-1">
+            className="h-7 w-[52px] text-center text-xs rounded-md bg-transparent text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:border-primary cursor-pointer appearance-none px-1">
             {FONT_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <button type="button" title="Aumentar Fonte" onMouseDown={e=>e.preventDefault()} onClick={increaseFontSize}
+          <button type="button" title="Aumentar Fonte" aria-label="Aumentar Fonte" onMouseDown={e=>e.preventDefault()} onClick={increaseFontSize}
             className="inline-flex h-7 w-7 items-center justify-center rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
             <AArrowUp size={14} strokeWidth={2}/>
           </button>
@@ -359,22 +366,22 @@ function Toolbar({ editor, groups }: { editor: Editor; groups: ToolbarGroup[] })
       </>}
 
       {has("block") && <>
-        <ToolBtn icon={Pilcrow} label="Paragrafo" onClick={() => editor.chain().focus().setParagraph().run()} active={editor.isActive("paragraph")}/>
-        <ToolBtn icon={Heading1} label="Titulo 1" onClick={() => editor.chain().focus().toggleHeading({level:1}).run()} active={editor.isActive("heading",{level:1})}/>
-        <ToolBtn icon={Heading2} label="Titulo 2" onClick={() => editor.chain().focus().toggleHeading({level:2}).run()} active={editor.isActive("heading",{level:2})}/>
-        <ToolBtn icon={Heading3} label="Titulo 3" onClick={() => editor.chain().focus().toggleHeading({level:3}).run()} active={editor.isActive("heading",{level:3})}/>
+        <ToolBtn icon={Pilcrow} label="Parágrafo" onClick={() => editor.chain().focus().setParagraph().run()} active={editor.isActive("paragraph")}/>
+        <ToolBtn icon={Heading1} label="Título 1" onClick={() => editor.chain().focus().toggleHeading({level:1}).run()} active={editor.isActive("heading",{level:1})}/>
+        <ToolBtn icon={Heading2} label="Título 2" onClick={() => editor.chain().focus().toggleHeading({level:2}).run()} active={editor.isActive("heading",{level:2})}/>
+        <ToolBtn icon={Heading3} label="Título 3" onClick={() => editor.chain().focus().toggleHeading({level:3}).run()} active={editor.isActive("heading",{level:3})}/>
         {after("inline","format","align","list","link","table","media") && <Sep/>}
       </>}
 
       {has("inline") && <>
         <ToolBtn icon={Bold} label="Negrito" onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")}/>
-        <ToolBtn icon={Italic} label="Italico" onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")}/>
+        <ToolBtn icon={Italic} label="Itálico" onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")}/>
         <ToolBtn icon={UnderlineIcon} label="Sublinhado" onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")}/>
         <ToolBtn icon={Strikethrough} label="Tachado" onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")}/>
         <ToolBtn icon={SubscriptIcon} label="Subscrito" onClick={() => editor.chain().focus().toggleSubscript().run()} active={editor.isActive("subscript")}/>
         <ToolBtn icon={SuperscriptIcon} label="Sobrescrito" onClick={() => editor.chain().focus().toggleSuperscript().run()} active={editor.isActive("superscript")}/>
-        <ToolBtn icon={Code} label="Codigo inline" onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive("code")}/>
-        <ToolBtn icon={RemoveFormatting} label="Limpar formatacao" onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}/>
+        <ToolBtn icon={Code} label="Código inline" onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive("code")}/>
+        <ToolBtn icon={RemoveFormatting} label="Limpar formatação" onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}/>
         {after("format","align","list","link","table","media") && <Sep/>}
       </>}
 
@@ -386,7 +393,7 @@ function Toolbar({ editor, groups }: { editor: Editor; groups: ToolbarGroup[] })
               onMouseDown={e=>e.stopPropagation()}>
               <div className="grid grid-cols-5 gap-1.5 mb-2">
                 {TEXT_COLORS.map(c => (
-                  <button key={c.color} type="button" title={c.label}
+                  <button key={c.color} type="button" title={c.label} aria-label={c.label}
                     onClick={() => { editor.chain().focus().setColor(c.color).run(); setColorPickerOpen(false); }}
                     className="w-5 h-5 rounded-full border border-zinc-200 hover:scale-110 transition cursor-pointer"
                     style={{ backgroundColor: c.color }}/>
@@ -409,7 +416,7 @@ function Toolbar({ editor, groups }: { editor: Editor; groups: ToolbarGroup[] })
               onMouseDown={e=>e.stopPropagation()}>
               <div className="grid grid-cols-4 gap-1.5 mb-2">
                 {HIGHLIGHT_COLORS.map(c => (
-                  <button key={c.color} type="button" title={c.label}
+                  <button key={c.color} type="button" title={c.label} aria-label={c.label}
                     onClick={() => { editor.chain().focus().setHighlight({color:c.color}).run(); setHighlightPickerOpen(false); }}
                     className="w-5 h-5 rounded-full border border-zinc-200 hover:scale-110 transition cursor-pointer"
                     style={{ backgroundColor: c.color }}/>
@@ -440,7 +447,7 @@ function Toolbar({ editor, groups }: { editor: Editor; groups: ToolbarGroup[] })
         <ToolBtn icon={List} label="Lista" onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")}/>
         <ToolBtn icon={ListOrdered} label="Lista numerada" onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")}/>
         <ToolBtn icon={SquareCheck} label="Checklist" onClick={() => editor.chain().focus().toggleTaskList().run()} active={editor.isActive("taskList")}/>
-        <ToolBtn icon={Quote} label="Citacao" onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")}/>
+        <ToolBtn icon={Quote} label="Citação" onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")}/>
         <ToolBtn icon={Minus} label="Separador" onClick={() => editor.chain().focus().setHorizontalRule().run()}/>
         {after("link","table","media") && <Sep/>}
       </>}
@@ -452,9 +459,9 @@ function Toolbar({ editor, groups }: { editor: Editor; groups: ToolbarGroup[] })
             <div className="absolute left-0 top-full mt-1.5 z-50 p-2 bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 w-64 animate-in fade-in-50 duration-150">
               <input autoFocus type="url" placeholder="https://exemplo.com.br" value={linkUrl} onChange={e=>setLinkUrl(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();applyLink();}if(e.key==="Escape")setLinkOpen(false);}}
-                className="flex-1 text-xs bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500"/>
-              <button type="button" onClick={applyLink} className="px-2 py-1 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded cursor-pointer">OK</button>
-              <button type="button" onClick={() => setLinkOpen(false)} className="p-1 text-zinc-400 hover:text-zinc-600 cursor-pointer"><X className="w-3.5 h-3.5"/></button>
+                className="flex-1 text-xs bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-primary"/>
+              <button type="button" onClick={applyLink} className="px-2 py-1 text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded cursor-pointer">OK</button>
+              <button type="button" aria-label="Fechar" onClick={() => setLinkOpen(false)} className="p-1 text-zinc-400 hover:text-zinc-600 cursor-pointer"><X className="w-3.5 h-3.5"/></button>
             </div>
           )}
         </div>
@@ -465,23 +472,23 @@ function Toolbar({ editor, groups }: { editor: Editor; groups: ToolbarGroup[] })
       {has("table") && <>
         <ToolBtn icon={TableIcon} label="Inserir Tabela" onClick={insertTable} active={editor.isActive("table")}/>
         {editor.isActive("table") && (
-          <div className="flex items-center gap-0.5 bg-indigo-50/70 dark:bg-indigo-950/40 p-0.5 rounded border border-indigo-200/60 dark:border-indigo-800/60">
+          <div className="flex items-center gap-0.5 bg-primary/10 p-0.5 rounded border border-primary/30">
             <ToolBtn icon={Rows} label="Adicionar linha" onClick={() => editor.chain().focus().addRowAfter().run()}/>
             <ToolBtn icon={Columns} label="Adicionar coluna" onClick={() => editor.chain().focus().addColumnAfter().run()}/>
-            <div className="mx-0.5 h-4 w-px bg-indigo-200 dark:bg-indigo-800 shrink-0"/>
-            <button type="button" title="Excluir linha" onMouseDown={e=>e.preventDefault()} onClick={() => editor.chain().focus().deleteRow().run()}
+            <div className="mx-0.5 h-4 w-px bg-primary/25 shrink-0"/>
+            <button type="button" title="Excluir linha" aria-label="Excluir linha" onMouseDown={e=>e.preventDefault()} onClick={() => editor.chain().focus().deleteRow().run()}
               className="inline-flex h-7 px-1.5 items-center gap-0.5 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer">
               <Rows size={11}/><X size={8}/>
             </button>
-            <button type="button" title="Excluir coluna" onMouseDown={e=>e.preventDefault()} onClick={() => editor.chain().focus().deleteColumn().run()}
+            <button type="button" title="Excluir coluna" aria-label="Excluir coluna" onMouseDown={e=>e.preventDefault()} onClick={() => editor.chain().focus().deleteColumn().run()}
               className="inline-flex h-7 px-1.5 items-center gap-0.5 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer">
               <Columns size={11}/><X size={8}/>
             </button>
-            <div className="mx-0.5 h-4 w-px bg-indigo-200 dark:bg-indigo-800 shrink-0"/>
-            <ToolBtn icon={Merge} label="Mesclar celulas" onClick={() => editor.chain().focus().mergeCells().run()} disabled={!editor.can().mergeCells()}/>
-            <ToolBtn icon={Split} label="Dividir celula" onClick={() => editor.chain().focus().splitCell().run()} disabled={!editor.can().splitCell()}/>
-            <ToolBtn icon={PanelTop} label="Alternar linha de cabecalho" onClick={() => editor.chain().focus().toggleHeaderRow().run()}/>
-            <div className="mx-0.5 h-4 w-px bg-indigo-200 dark:bg-indigo-800 shrink-0"/>
+            <div className="mx-0.5 h-4 w-px bg-primary/25 shrink-0"/>
+            <ToolBtn icon={Merge} label="Mesclar células" onClick={() => editor.chain().focus().mergeCells().run()} disabled={!editor.can().mergeCells()}/>
+            <ToolBtn icon={Split} label="Dividir célula" onClick={() => editor.chain().focus().splitCell().run()} disabled={!editor.can().splitCell()}/>
+            <ToolBtn icon={PanelTop} label="Alternar linha de cabeçalho" onClick={() => editor.chain().focus().toggleHeaderRow().run()}/>
+            <div className="mx-0.5 h-4 w-px bg-primary/25 shrink-0"/>
             <ToolBtn icon={Trash2} label="Excluir tabela" onClick={() => editor.chain().focus().deleteTable().run()}/>
           </div>
         )}
@@ -495,26 +502,26 @@ function Toolbar({ editor, groups }: { editor: Editor; groups: ToolbarGroup[] })
             <div className="absolute left-0 top-full mt-1.5 z-50 p-3 bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-700 w-72 space-y-2.5 animate-in fade-in-50 duration-150">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Inserir Imagem</span>
-                <button type="button" onClick={() => setImageModalOpen(false)} className="text-zinc-400 hover:text-zinc-600 cursor-pointer"><X className="w-3.5 h-3.5"/></button>
+                <button type="button" aria-label="Fechar" onClick={() => setImageModalOpen(false)} className="text-zinc-400 hover:text-zinc-600 cursor-pointer"><X className="w-3.5 h-3.5"/></button>
               </div>
               <div className="flex items-start gap-2 p-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
                 <Info size={12} className="text-amber-600 mt-0.5 shrink-0"/>
                 <p className="text-[10px] text-amber-700 dark:text-amber-300 leading-relaxed">
-                  Imagens sao salvas como <strong>base64 inline</strong>. Prefira URLs externas para imagens grandes.
+                  Imagens são salvas como <strong>base64 inline</strong>. Prefira URLs externas para imagens grandes.
                 </p>
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">Upload do Computador:</label>
                 <input ref={imageFileRef} type="file" accept="image/*" onChange={handleImageFile}
-                  className="w-full text-xs text-zinc-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"/>
+                  className="w-full text-xs text-zinc-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"/>
               </div>
               <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800">
                 <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">Ou via URL:</label>
                 <div className="flex items-center gap-1.5">
                   <input type="url" placeholder="https://.../imagem.png" value={imageUrl} onChange={e=>setImageUrl(e.target.value)}
                     onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();applyImageUrl();}}}
-                    className="flex-1 text-xs bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500"/>
-                  <button type="button" onClick={applyImageUrl} className="px-2.5 py-1 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded cursor-pointer">OK</button>
+                    className="flex-1 text-xs bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-primary"/>
+                  <button type="button" onClick={applyImageUrl} className="px-2.5 py-1 text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded cursor-pointer">OK</button>
                 </div>
               </div>
             </div>
@@ -525,7 +532,7 @@ function Toolbar({ editor, groups }: { editor: Editor; groups: ToolbarGroup[] })
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â• Main Component â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ Main Component ═══════════
 export default function RichTextEditor({
   value, defaultValue, onChange, placeholder = "Escreva aqui...",
   minHeight = "10rem", maxHeight = "32rem", disabled = false, readOnly = false,
@@ -574,11 +581,11 @@ export default function RichTextEditor({
       },
     },
     extensions: [
-      // StarterKit v3 ja inclui Underline e Link: desativados aqui para evitar extensoes duplicadas.
+      // StarterKit v3 já inclui Underline e Link: desativados aqui para evitar extensões duplicadas.
       StarterKit.configure({ underline: false, link: false, bulletList: { keepMarks: true, keepAttributes: false }, orderedList: { keepMarks: true, keepAttributes: false } }),
       Underline, FontSizeExtension, Color, FontFamily,
       Highlight.configure({ multicolor: true }),
-      Link.configure({ openOnClick: false, HTMLAttributes: { rel: "noopener noreferrer", target: "_blank", class: "text-indigo-600 underline font-medium cursor-pointer" } }),
+      Link.configure({ openOnClick: false, HTMLAttributes: { rel: "noopener noreferrer", target: "_blank", class: "text-primary underline font-medium cursor-pointer" } }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Table.configure({ resizable: true }), TableRow, TableHeader, TableCell,
       ResizableImage.configure({ allowBase64: true }),
@@ -604,9 +611,11 @@ export default function RichTextEditor({
 
   if (!editor) {
     return (
-      <div className={twMerge("flex flex-col overflow-hidden text-sm",
-        !isBorderless && "rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900",
-        isBorderless && "bg-transparent", (disabled || readOnly) && "opacity-60", className)}
+      <div
+        data-component-id={componentId}
+        className={twMerge("flex flex-col overflow-hidden text-sm",
+          !isBorderless && "rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900",
+          isBorderless && "bg-transparent", (disabled || readOnly) && "opacity-60", className)}
         style={{ minHeight }} />
     );
   }
@@ -614,10 +623,12 @@ export default function RichTextEditor({
   const readMinutes = Math.max(1, Math.ceil(wordCount / 200));
 
   return (
-    <div className={twMerge("flex flex-col overflow-hidden text-sm",
-      !isBorderless && "rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs",
-      isBorderless && "bg-transparent", (disabled || readOnly) && "opacity-60", className,
-      fullscreen && "fixed inset-0 z-[100] !rounded-none !max-h-none bg-white dark:bg-zinc-900")}
+    <div
+      data-component-id={componentId}
+      className={twMerge("flex flex-col overflow-hidden text-sm",
+        !isBorderless && "rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs",
+        isBorderless && "bg-transparent", (disabled || readOnly) && "opacity-60", className,
+        fullscreen && "fixed inset-0 z-[100] !rounded-none !max-h-none bg-white dark:bg-zinc-900")}
       >
       {!readOnly && (
         <div className="relative border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/70">
