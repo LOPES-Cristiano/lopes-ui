@@ -151,7 +151,7 @@ export default function OTPInput({
             "w-11 h-12 text-center text-lg font-semibold rounded-lg border outline-none transition-all",
             "bg-white dark:bg-zinc-900",
             "text-zinc-900 dark:text-zinc-100",
-            "caret-transparent select-none",
+            "caret-transparent",
             "disabled:opacity-50 disabled:cursor-not-allowed",
             error
               ? "border-red-400 dark:border-red-600 focus:ring-2 focus:ring-red-400"
