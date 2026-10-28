@@ -188,7 +188,7 @@ const HoverCardContent = React.forwardRef<HTMLDivElement, HoverCardContentProps>
           ...style,
         }}
         className={cn(
-          'z-[99999] w-72 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 text-zinc-900 dark:text-zinc-100 shadow-xl outline-none animate-in fade-in-0 zoom-in-95 duration-150',
+          'z-[99999] w-72 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 text-zinc-900 dark:text-zinc-100 shadow-xl outline-none animate-in fade-in-0 zoom-in-95 duration-150',
           className
         )}
         {...props}
