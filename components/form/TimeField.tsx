@@ -4,6 +4,7 @@ import React, { useId, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
 import { Clock } from "lucide-react";
+import { useAccessControl } from "../useAccessControl";
 
 export type TimeFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   id?: string;
@@ -24,6 +25,8 @@ export type TimeFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   variant?: "default" | "filled";
   inputClassName?: string;
   componentId?: string;
+  /** If true, hides the component when access is denied instead of disabling it */
+  hideIfDenied?: boolean;
 };
 
 const SIZE = {
@@ -38,17 +41,22 @@ export default function TimeField({
   value, defaultValue, onChange, onBlur,
   disabled, readOnly, min, max,
   size = "md", variant = "default",
-  inputClassName, componentId,
+  inputClassName, componentId, hideIfDenied = false,
 }: TimeFieldProps) {
   const autoId = useId();
   const id = idProp ?? autoId;
   const s = SIZE[size];
   const inputRef = useRef<HTMLInputElement>(null);
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+  const effectiveDisabled = Boolean(disabled || !hasPermission);
 
   function handleWrapperClick() {
-    if (disabled || readOnly) return;
+    if (effectiveDisabled || readOnly) return;
     try { inputRef.current?.showPicker(); } catch { inputRef.current?.focus(); }
   }
+
+  if (!hasPermission && hideIfDenied) return null;
 
   const wrapCls = twMerge(
     "relative flex w-full items-center overflow-hidden rounded-lg border transition-all duration-150",
@@ -56,13 +64,13 @@ export default function TimeField({
       ? "bg-zinc-100 border-transparent hover:bg-zinc-200/70 focus-within:bg-white focus-within:border-zinc-300 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 dark:focus-within:bg-zinc-900 dark:focus-within:border-zinc-600"
       : "bg-white border-zinc-300 hover:border-zinc-400 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:border-zinc-600 dark:focus-within:border-zinc-500",
     error && "border-red-400 hover:border-red-400 focus-within:border-red-500 focus-within:ring-red-500/10",
-    (disabled || readOnly) && "opacity-60 pointer-events-none bg-zinc-50 dark:bg-zinc-800/50",
+    (effectiveDisabled || readOnly) && "opacity-60 pointer-events-none bg-zinc-50 dark:bg-zinc-800/50",
   );
 
   const inputCls = twMerge(
     "flex-1 min-w-0 w-full bg-transparent outline-none border-0 ring-0 text-zinc-900 dark:text-zinc-100 [color-scheme:light] dark:[color-scheme:dark]",
     s.h, s.text, s.pl, "pr-3",
-    (disabled || readOnly) && "cursor-not-allowed",
+    (effectiveDisabled || readOnly) && "cursor-not-allowed",
     inputClassName,
   );
 
@@ -72,7 +80,7 @@ export default function TimeField({
       required={required} tooltip={tooltip} error={error} helpText={helpText}
       width={width} className={className}
     >
-      <div className={twMerge(wrapCls, !disabled && !readOnly && "cursor-pointer")} onClick={handleWrapperClick}>
+      <div className={twMerge(wrapCls, !effectiveDisabled && !readOnly && "cursor-pointer")} onClick={handleWrapperClick}>
         <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-zinc-400", s.iL)}>
           <Clock size={s.iconSz} />
         </span>
@@ -82,13 +90,13 @@ export default function TimeField({
           step={precision === "seconds" ? 1 : 60}
           value={value === null ? '' : value} defaultValue={defaultValue}
           onChange={onChange} onBlur={onBlur}
-          disabled={disabled} readOnly={readOnly}
+          disabled={effectiveDisabled} readOnly={readOnly}
           ref={inputRef}
           min={min} max={max}
           required={required}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
-          className={twMerge(inputCls, !disabled && !readOnly && "cursor-pointer")}
+          className={twMerge(inputCls, !effectiveDisabled && !readOnly && "cursor-pointer")}
           data-component-id={componentId || (idProp ? `erp.form.time.${idProp}` : undefined)}
         />
       </div>
