@@ -21,6 +21,12 @@ export type CalendarEvent = {
   endTime?: string;
 };
 
+export type CalendarPreset = {
+  label: string;
+  /** Returns a single Date or a [start, end] range */
+  getValue: () => Date | [Date, Date];
+};
+
 export type CalendarProps = {
   /** Controlled selected date */
   value?: Date | null;
@@ -46,6 +52,10 @@ export type CalendarProps = {
   rangeValue?: [Date | null, Date | null];
   /** Called when range changes */
   onRangeChange?: (range: [Date | null, Date | null]) => void;
+  /** Number of months rendered side by side (1 or 2, shadcn/ui dual calendar pattern) */
+  numberOfMonths?: 1 | 2;
+  /** Quick date/range presets shown in a sidebar/footer */
+  presets?: CalendarPreset[];
   /** Size variant */
   size?: "sm" | "md" | "lg";
   /** Show compact dot per event or small chips */
@@ -129,6 +139,30 @@ const SIZE = {
   lg: { cell: "h-11 w-11 text-base", header: "text-base", dayLabel: "text-xs", chip: "text-xs" },
 };
 
+function buildMonthRows(year: number, month: number, firstDayOfWeek: 0 | 1) {
+  const daysInMonth = getDaysInMonth(year, month);
+  const rawFirstDay = getFirstDayOfMonth(year, month);
+  const offset = (rawFirstDay - firstDayOfWeek + 7) % 7;
+  const prevMonthDays = getDaysInMonth(year, month === 0 ? 11 : month - 1);
+
+  const totalCells = Math.ceil((offset + daysInMonth) / 7) * 7;
+  const cells: Array<{ date: Date; isCurrentMonth: boolean }> = [];
+  for (let i = 0; i < totalCells; i++) {
+    const dayNum = i - offset + 1;
+    if (dayNum < 1) {
+      cells.push({ date: new Date(year, month - 1, prevMonthDays + dayNum), isCurrentMonth: false });
+    } else if (dayNum > daysInMonth) {
+      cells.push({ date: new Date(year, month + 1, dayNum - daysInMonth), isCurrentMonth: false });
+    } else {
+      cells.push({ date: new Date(year, month, dayNum), isCurrentMonth: true });
+    }
+  }
+
+  const rows: Array<Array<{ date: Date; isCurrentMonth: boolean }>> = [];
+  for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
+  return rows;
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Calendar({
@@ -144,6 +178,8 @@ export default function Calendar({
   rangeMode = false,
   rangeValue,
   onRangeChange,
+  numberOfMonths = 1,
+  presets,
   size = "md",
   eventDisplay = "dot",
   fillWidth = false,
@@ -231,26 +267,7 @@ export default function Calendar({
     else setViewMonth(m => m + 1);
   };
 
-  // ── Day grid ───────────────────────────────────────────────────────────────
-  const daysInMonth = getDaysInMonth(viewYear, viewMonth);
-  const rawFirstDay = getFirstDayOfMonth(viewYear, viewMonth);
-  const offset = (rawFirstDay - firstDayOfWeek + 7) % 7;
-  const prevMonthDays = getDaysInMonth(viewYear, viewMonth === 0 ? 11 : viewMonth - 1);
-
   const dayHeaders = Array.from({ length: 7 }, (_, i) => DAY_NAMES_FULL[(i + firstDayOfWeek) % 7]);
-
-  const totalCells = Math.ceil((offset + daysInMonth) / 7) * 7;
-  const cells: Array<{ date: Date; isCurrentMonth: boolean }> = [];
-  for (let i = 0; i < totalCells; i++) {
-    const dayNum = i - offset + 1;
-    if (dayNum < 1) {
-      cells.push({ date: new Date(viewYear, viewMonth - 1, prevMonthDays + dayNum), isCurrentMonth: false });
-    } else if (dayNum > daysInMonth) {
-      cells.push({ date: new Date(viewYear, viewMonth + 1, dayNum - daysInMonth), isCurrentMonth: false });
-    } else {
-      cells.push({ date: new Date(viewYear, viewMonth, dayNum), isCurrentMonth: true });
-    }
-  }
 
   const eventsByDay = new Map<string, CalendarEvent[]>();
   for (const ev of events) {
@@ -276,6 +293,22 @@ export default function Calendar({
     } else {
       if (onChange) onChange(date);
       else setInternalSelected(date);
+    }
+  };
+
+  const handlePresetClick = (preset: CalendarPreset) => {
+    const val = preset.getValue();
+    if (Array.isArray(val)) {
+      const [start, end] = val;
+      if (onRangeChange) onRangeChange([start, end]);
+      else setInternalRange([start, end]);
+      setViewYear(start.getFullYear());
+      setViewMonth(start.getMonth());
+    } else {
+      if (onChange) onChange(val);
+      else setInternalSelected(val);
+      setViewYear(val.getFullYear());
+      setViewMonth(val.getMonth());
     }
   };
 
@@ -321,245 +354,288 @@ export default function Calendar({
     return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
   };
 
-  const rows = [];
-  for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
+  const renderMonthGrid = (mYear: number, mMonth: number) => {
+    const rows = buildMonthRows(mYear, mMonth, firstDayOfWeek);
+    return (
+      <div className="min-w-0 flex-1">
+        {/* ── Day headers ── */}
+        <div className={twMerge("grid mb-1 gap-1", showWeekNumbers ? "grid-cols-[auto_repeat(7,minmax(0,1fr))]" : "grid-cols-7")}>
+          {showWeekNumbers && <div className={twMerge("text-center font-medium text-zinc-300 dark:text-zinc-600 pb-1", eff.dayLabel)} />}
+          {dayHeaders.map((d) => (
+            <div key={d} className={twMerge("text-center font-bold text-zinc-400 dark:text-zinc-500 pb-1", eff.dayLabel)}>
+              {d}
+            </div>
+          ))}
+        </div>
+
+        {/* ── Day grid ── */}
+        <div className="space-y-1">
+          {rows.map((row, ri) => {
+            const weekNum = getWeekNumber(row[0].date);
+            return (
+              <div
+                key={ri}
+                className={twMerge("grid gap-1", showWeekNumbers ? "grid-cols-[auto_repeat(7,minmax(0,1fr))]" : "grid-cols-7")}
+              >
+                {showWeekNumbers && (
+                  <div className={twMerge("flex items-center justify-center text-zinc-300 dark:text-zinc-600 font-mono", eff.dayLabel)}>
+                    {weekNum}
+                  </div>
+                )}
+                {row.map(({ date, isCurrentMonth }, ci) => {
+                  const isToday = isSameDay(date, today);
+                  const isSelected = !rangeMode && selected ? isSameDay(date, selected) : false;
+                  const isStart = isRangeStart(date) ?? false;
+                  const isEnd = isRangeEnd(date) ?? false;
+                  const inRange = isInRange(date);
+                  const disabled = checkDisabled(date);
+                  const dayEvents = eventsByDay.get(startOfDay(date).toDateString()) ?? [];
+                  const dayNum = date.getDate();
+
+                  const isHighlighted = isSelected || isStart || isEnd;
+
+                  return (
+                    <div
+                      key={`${ri}-${ci}`}
+                      className={twMerge(
+                        "relative flex flex-col items-center",
+                        eventDisplay === "chip" ? "pb-1" : "",
+                        inRange && !isStart && !isEnd
+                          ? "bg-blue-50 dark:bg-blue-950/40"
+                          : "",
+                        isStart && rangeMode ? "rounded-l-full" : "",
+                        isEnd && rangeMode ? "rounded-r-full" : "",
+                      )}
+                      onMouseEnter={() => rangeMode && setHoverDate(date)}
+                      onMouseLeave={() => rangeMode && setHoverDate(null)}
+                    >
+                      <button
+                        data-component-id={componentId ? `${componentId}.day-${toIso(date)}` : `erp.calendar.day-${toIso(date)}`}
+                        type="button"
+                        onClick={() => handleDayClick(date)}
+                        disabled={disabled}
+                        className={twMerge(
+                          "flex w-full aspect-square items-center justify-center rounded-xl font-bold transition-all",
+                          fillWidth ? "h-auto" : eff.cell,
+                          disabled
+                            ? "opacity-25 cursor-not-allowed"
+                            : "cursor-pointer",
+                          isHighlighted
+                            ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25"
+                            : isToday
+                              ? "border-2 border-blue-500 text-blue-600 dark:text-blue-400 font-black"
+                              : isCurrentMonth
+                                ? "text-zinc-800 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                : "text-zinc-300 dark:text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-900",
+                        )}
+                      >
+                        {dayNum}
+                      </button>
+
+                      {/* Event indicators */}
+                      {dayEvents.length > 0 && (
+                        eventDisplay === "dot" ? (
+                          <div className="flex gap-0.5 mt-0.5 justify-center">
+                            {dayEvents.slice(0, 3).map((ev, ei) => (
+                              <span
+                                key={ei}
+                                className={twMerge("block rounded-full w-1 h-1", EVENT_COLORS[ev.color ?? "default"])}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="w-full px-0.5 space-y-0.5 mt-0.5">
+                            {dayEvents.slice(0, 2).map((ev, ei) => (
+                              <div
+                                key={ei}
+                                className={twMerge(
+                                  "truncate rounded px-1 leading-tight font-medium w-full text-center",
+                                  s.chip,
+                                  EVENT_CHIP_COLORS[ev.color ?? "default"],
+                                )}
+                              >
+                                {ev.title}
+                              </div>
+                            ))}
+                            {dayEvents.length > 2 && (
+                              <div className={twMerge("text-center text-zinc-400 font-medium", s.chip)}>
+                                +{dayEvents.length - 2}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const secondMonth = viewMonth === 11 ? 0 : viewMonth + 1;
+  const secondYear = viewMonth === 11 ? viewYear + 1 : viewYear;
 
   return (
     <div
       ref={rootRef}
       data-component-id={componentId}
-      className={twMerge(fillWidth ? "block w-full select-none" : "inline-block select-none", className)}
-      >
-      {/* ── Header ── */}
-      <div className={twMerge("mb-3 flex items-center gap-2 px-1", compact && "gap-1.5")}>
-        <button
-          data-component-id={componentId ? `${componentId}.prev-month` : 'erp.calendar.prev-month'}
-          type="button"
-          onClick={prevMonth}
-          className="shrink-0 rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 cursor-pointer"
-          aria-label="Mês anterior"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-          <div className="relative">
+      className={twMerge(
+        fillWidth ? "flex flex-col sm:flex-row gap-4 w-full select-none" : "inline-flex flex-col sm:flex-row gap-4 select-none",
+        className
+      )}
+    >
+      {/* Optional Presets Sidebar */}
+      {presets && presets.length > 0 && (
+        <div className="flex sm:flex-col gap-1 border-b sm:border-b-0 sm:border-r border-zinc-200 dark:border-zinc-800 pb-2 sm:pb-0 sm:pr-3 overflow-x-auto sm:min-w-[140px]">
+          <p className="hidden sm:block px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+            Atalhos
+          </p>
+          {presets.map((preset, idx) => (
             <button
-              data-component-id={componentId ? `${componentId}.month-trigger` : 'erp.calendar.month-trigger'}
+              key={idx}
               type="button"
-              onClick={() => {
-                setMonthOpen((current) => !current);
-                setYearOpen(false);
-              }}
-              aria-haspopup="listbox"
-              aria-expanded={monthOpen}
-              className={twMerge(
-                "flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white px-3 py-1.5 text-left font-semibold text-zinc-800 outline-none transition-colors hover:border-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-600 cursor-pointer",
-                compact ? "w-[126px]" : "w-[152px]",
-                eff.header,
-              )}
+              onClick={() => handlePresetClick(preset)}
+              className="whitespace-nowrap rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
             >
-              <span className="min-w-0 flex-1 truncate">{MONTH_NAMES[viewMonth]}</span>
-              <ChevronDown size={14} className={twMerge("shrink-0 text-zinc-400 transition-transform", monthOpen && "rotate-180")} />
+              {preset.label}
             </button>
-            {monthOpen && (
-              <div className="absolute left-0 top-full z-[60] mt-1 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900">
-                <div ref={monthContainerRef} className="max-h-56 overflow-y-auto p-1">
-                  {MONTH_NAMES.map((month, index) => (
-                    <button
-                      data-component-id={componentId ? `${componentId}.month-${index}` : `erp.calendar.month-${index}`}
-                      key={month}
-                      type="button"
-                      data-active={index === viewMonth ? "true" : undefined}
-                      onClick={() => {
-                        setViewMonth(index);
-                        setMonthOpen(false);
-                      }}
-                      className={twMerge(
-                        "flex w-full items-center rounded-lg px-3 py-1.5 text-left text-xs transition-colors cursor-pointer",
-                        index === viewMonth
-                          ? "bg-blue-600 text-white font-bold"
-                          : "text-zinc-700 hover:bg-blue-50 hover:text-blue-700 dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
-                      )}
-                    >
-                      {month}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="relative">
-            <button
-              data-component-id={componentId ? `${componentId}.year-trigger` : 'erp.calendar.year-trigger'}
-              type="button"
-              onClick={() => {
-                setYearOpen((current) => !current);
-                setMonthOpen(false);
-              }}
-              aria-haspopup="listbox"
-              aria-expanded={yearOpen}
-              className={twMerge(
-                "flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white px-3 py-1.5 text-left font-semibold text-zinc-800 outline-none transition-colors hover:border-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-600 cursor-pointer",
-                compact ? "w-[80px]" : "w-[96px]",
-                eff.header,
-              )}
-            >
-              <span className="min-w-0 flex-1 truncate">{viewYear}</span>
-              <ChevronDown size={14} className={twMerge("shrink-0 text-zinc-400 transition-transform", yearOpen && "rotate-180")} />
-            </button>
-            {yearOpen && (
-              <div className="absolute right-0 top-full z-[60] mt-1 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900">
-                <div ref={yearContainerRef} className="max-h-56 overflow-y-auto p-1">
-                  {yearOptions.map((year) => (
-                    <button
-                      data-component-id={componentId ? `${componentId}.year-${year}` : `erp.calendar.year-${year}`}
-                      key={year}
-                      type="button"
-                      data-active={year === viewYear ? "true" : undefined}
-                      onClick={() => {
-                        setViewYear(year);
-                        setYearOpen(false);
-                      }}
-                      className={twMerge(
-                        "flex w-full items-center rounded-lg px-3 py-1.5 text-left text-xs transition-colors cursor-pointer",
-                        year === viewYear
-                          ? "bg-blue-600 text-white font-bold"
-                          : "text-zinc-700 hover:bg-blue-50 hover:text-blue-700 dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
-                      )}
-                    >
-                      {year}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          ))}
         </div>
-        <button
-          data-component-id={componentId ? `${componentId}.next-month` : 'erp.calendar.next-month'}
-          type="button"
-          onClick={nextMonth}
-          className="shrink-0 rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 cursor-pointer"
-          aria-label="Próximo mês"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
+      )}
 
-      {/* ── Day headers ── */}
-      <div className={twMerge("grid mb-1 gap-1", showWeekNumbers ? "grid-cols-[auto_repeat(7,minmax(0,1fr))]" : "grid-cols-7")}>
-        {showWeekNumbers && <div className={twMerge("text-center font-medium text-zinc-300 dark:text-zinc-600 pb-1", eff.dayLabel)} />}
-        {dayHeaders.map((d) => (
-          <div key={d} className={twMerge("text-center font-bold text-zinc-400 dark:text-zinc-500 pb-1", eff.dayLabel)}>
-            {d}
-          </div>
-        ))}
-      </div>
-
-      {/* ── Day grid ── */}
-      <div className="space-y-1">
-        {rows.map((row, ri) => {
-          const weekNum = getWeekNumber(row[0].date);
-          return (
-            <div
-              key={ri}
-              className={twMerge("grid gap-1", showWeekNumbers ? "grid-cols-[auto_repeat(7,minmax(0,1fr))]" : "grid-cols-7")}
-            >
-              {showWeekNumbers && (
-                <div className={twMerge("flex items-center justify-center text-zinc-300 dark:text-zinc-600 font-mono", eff.dayLabel)}>
-                  {weekNum}
+      <div className="flex-1 min-w-0">
+        {/* ── Header ── */}
+        <div className={twMerge("mb-3 flex items-center gap-2 px-1", compact && "gap-1.5")}>
+          <button
+            data-component-id={componentId ? `${componentId}.prev-month` : 'erp.calendar.prev-month'}
+            type="button"
+            onClick={prevMonth}
+            className="shrink-0 rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 cursor-pointer"
+            aria-label="Mês anterior"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+            <div className="relative">
+              <button
+                data-component-id={componentId ? `${componentId}.month-trigger` : 'erp.calendar.month-trigger'}
+                type="button"
+                onClick={() => {
+                  setMonthOpen((current) => !current);
+                  setYearOpen(false);
+                }}
+                aria-haspopup="listbox"
+                aria-expanded={monthOpen}
+                className={twMerge(
+                  "flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white px-3 py-1.5 text-left font-semibold text-zinc-800 outline-none transition-colors hover:border-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-600 cursor-pointer",
+                  compact ? "w-[126px]" : "w-[152px]",
+                  eff.header,
+                )}
+              >
+                <span className="min-w-0 flex-1 truncate">{MONTH_NAMES[viewMonth]}</span>
+                <ChevronDown size={14} className={twMerge("shrink-0 text-zinc-400 transition-transform", monthOpen && "rotate-180")} />
+              </button>
+              {monthOpen && (
+                <div className="absolute left-0 top-full z-[60] mt-1 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900">
+                  <div ref={monthContainerRef} className="max-h-56 overflow-y-auto p-1">
+                    {MONTH_NAMES.map((month, index) => (
+                      <button
+                        data-component-id={componentId ? `${componentId}.month-${index}` : `erp.calendar.month-${index}`}
+                        key={month}
+                        type="button"
+                        data-active={index === viewMonth ? "true" : undefined}
+                        onClick={() => {
+                          setViewMonth(index);
+                          setMonthOpen(false);
+                        }}
+                        className={twMerge(
+                          "flex w-full items-center rounded-lg px-3 py-1.5 text-left text-xs transition-colors cursor-pointer",
+                          index === viewMonth
+                            ? "bg-blue-600 text-white font-bold"
+                            : "text-zinc-700 hover:bg-blue-50 hover:text-blue-700 dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
+                        )}
+                      >
+                        {month}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
-              {row.map(({ date, isCurrentMonth }, ci) => {
-                const isToday = isSameDay(date, today);
-                const isSelected = !rangeMode && selected ? isSameDay(date, selected) : false;
-                const isStart = isRangeStart(date) ?? false;
-                const isEnd = isRangeEnd(date) ?? false;
-                const inRange = isInRange(date);
-                const disabled = checkDisabled(date);
-                const dayEvents = eventsByDay.get(startOfDay(date).toDateString()) ?? [];
-                const dayNum = date.getDate();
-
-                const isHighlighted = isSelected || isStart || isEnd;
-
-                return (
-                  <div
-                    key={`${ri}-${ci}`}
-                    className={twMerge(
-                      "relative flex flex-col items-center",
-                      eventDisplay === "chip" ? "pb-1" : "",
-                      inRange && !isStart && !isEnd
-                        ? "bg-blue-50 dark:bg-blue-950/40"
-                        : "",
-                      isStart && rangeMode ? "rounded-l-full" : "",
-                      isEnd && rangeMode ? "rounded-r-full" : "",
-                    )}
-                    onMouseEnter={() => rangeMode && setHoverDate(date)}
-                    onMouseLeave={() => rangeMode && setHoverDate(null)}
-                  >
-                    <button
-                      data-component-id={componentId ? `${componentId}.day-${toIso(date)}` : `erp.calendar.day-${toIso(date)}`}
-                      type="button"
-                      onClick={() => handleDayClick(date)}
-                      disabled={disabled}
-                      className={twMerge(
-                        "flex w-full aspect-square items-center justify-center rounded-xl font-bold transition-all",
-                        fillWidth ? "h-auto" : eff.cell,
-                        disabled
-                          ? "opacity-25 cursor-not-allowed"
-                          : "cursor-pointer",
-                        isHighlighted
-                          ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25"
-                          : isToday
-                            ? "border-2 border-blue-500 text-blue-600 dark:text-blue-400 font-black"
-                            : isCurrentMonth
-                              ? "text-zinc-800 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                              : "text-zinc-300 dark:text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-900",
-                      )}
-                    >
-                      {dayNum}
-                    </button>
-
-                    {/* Event indicators */}
-                    {dayEvents.length > 0 && (
-                      eventDisplay === "dot" ? (
-                        <div className="flex gap-0.5 mt-0.5 justify-center">
-                          {dayEvents.slice(0, 3).map((ev, ei) => (
-                            <span
-                              key={ei}
-                              className={twMerge("block rounded-full w-1 h-1", EVENT_COLORS[ev.color ?? "default"])}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="w-full px-0.5 space-y-0.5 mt-0.5">
-                          {dayEvents.slice(0, 2).map((ev, ei) => (
-                            <div
-                              key={ei}
-                              className={twMerge(
-                                "truncate rounded px-1 leading-tight font-medium w-full text-center",
-                                s.chip,
-                                EVENT_CHIP_COLORS[ev.color ?? "default"],
-                              )}
-                            >
-                              {ev.title}
-                            </div>
-                          ))}
-                          {dayEvents.length > 2 && (
-                            <div className={twMerge("text-center text-zinc-400 font-medium", s.chip)}>
-                              +{dayEvents.length - 2}
-                            </div>
-                          )}
-                        </div>
-                      )
-                    )}
-                  </div>
-                );
-              })}
             </div>
-          );
-        })}
+
+            <div className="relative">
+              <button
+                data-component-id={componentId ? `${componentId}.year-trigger` : 'erp.calendar.year-trigger'}
+                type="button"
+                onClick={() => {
+                  setYearOpen((current) => !current);
+                  setMonthOpen(false);
+                }}
+                aria-haspopup="listbox"
+                aria-expanded={yearOpen}
+                className={twMerge(
+                  "flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white px-3 py-1.5 text-left font-semibold text-zinc-800 outline-none transition-colors hover:border-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-600 cursor-pointer",
+                  compact ? "w-[80px]" : "w-[96px]",
+                  eff.header,
+                )}
+              >
+                <span className="min-w-0 flex-1 truncate">{viewYear}</span>
+                <ChevronDown size={14} className={twMerge("shrink-0 text-zinc-400 transition-transform", yearOpen && "rotate-180")} />
+              </button>
+              {yearOpen && (
+                <div className="absolute right-0 top-full z-[60] mt-1 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900">
+                  <div ref={yearContainerRef} className="max-h-56 overflow-y-auto p-1">
+                    {yearOptions.map((year) => (
+                      <button
+                        data-component-id={componentId ? `${componentId}.year-${year}` : `erp.calendar.year-${year}`}
+                        key={year}
+                        type="button"
+                        data-active={year === viewYear ? "true" : undefined}
+                        onClick={() => {
+                          setViewYear(year);
+                          setYearOpen(false);
+                        }}
+                        className={twMerge(
+                          "flex w-full items-center rounded-lg px-3 py-1.5 text-left text-xs transition-colors cursor-pointer",
+                          year === viewYear
+                            ? "bg-blue-600 text-white font-bold"
+                            : "text-zinc-700 hover:bg-blue-50 hover:text-blue-700 dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
+                        )}
+                      >
+                        {year}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {numberOfMonths === 2 && (
+              <span className="hidden md:inline-flex items-center px-3 py-1.5 text-sm font-semibold text-zinc-600 dark:text-zinc-300">
+                — {MONTH_NAMES[secondMonth]} {secondYear}
+              </span>
+            )}
+          </div>
+          <button
+            data-component-id={componentId ? `${componentId}.next-month` : 'erp.calendar.next-month'}
+            type="button"
+            onClick={nextMonth}
+            className="shrink-0 rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 cursor-pointer"
+            aria-label="Próximo mês"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+
+        {/* ── Grids (1 or 2 months) ── */}
+        <div className={twMerge("flex flex-col md:flex-row", numberOfMonths === 2 && "gap-6")}>
+          {renderMonthGrid(viewYear, viewMonth)}
+          {numberOfMonths === 2 && renderMonthGrid(secondYear, secondMonth)}
+        </div>
       </div>
     </div>
   );
