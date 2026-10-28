@@ -443,6 +443,14 @@ export default function UIBuilder() {
   const [previewConfirmOpen, setPreviewConfirmOpen] = useState(false);
   const [previewDrawerOpen, setPreviewDrawerOpen] = useState(false);
 
+  // Collapse sidebars on smaller screens by default so canvas is visible
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setLeftSidebarOpen(false);
+      setRightSidebarOpen(false);
+    }
+  }, []);
+
   // Keyboard shortcut: Escape to exit fullscreen
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1439,31 +1447,31 @@ ${blocksCode}
       )}
     >
       {/* ── Top App Bar / Tooling Header ── */}
-      <header className="h-14 border-b border-border bg-card/90 backdrop-blur-md px-4 flex items-center justify-between shrink-0 sticky top-0 z-40">
-        <div className="flex items-center gap-3">
+      <header className="min-h-14 py-1.5 border-b border-border bg-card/90 backdrop-blur-md px-2.5 sm:px-4 flex flex-wrap items-center justify-between gap-2 shrink-0 sticky top-0 z-40">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {/* Toggle Left Sidebar Button */}
           <button
             type="button"
             data-component-id="erp.uibuilder.header.toggle-left-sidebar"
             onClick={() => setLeftSidebarOpen((prev) => !prev)}
             title={leftSidebarOpen ? "Recolher Catálogo Lateral" : "Expandir Catálogo Lateral"}
-            className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors border border-border/60"
+            className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors border border-border/60 shrink-0"
           >
             {leftSidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
           </button>
 
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-primary/10 text-primary rounded-xl">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="hidden sm:flex p-1.5 bg-primary/10 text-primary rounded-xl shrink-0">
               <Sparkles size={18} />
             </div>
-            <div>
-              <h1 className="text-sm font-bold text-foreground leading-tight flex items-center gap-2">
-                UI Builder & Prototyper
-                <span className="text-[10px] font-mono px-2 py-0.5 bg-primary/10 text-primary rounded-full font-semibold">
+            <div className="min-w-0">
+              <h1 className="text-xs sm:text-sm font-bold text-foreground leading-tight flex items-center gap-2 truncate">
+                <span className="truncate">UI Builder</span>
+                <span className="hidden md:inline-flex text-[10px] font-mono px-2 py-0.5 bg-primary/10 text-primary rounded-full font-semibold shrink-0">
                   Lopes UI
                 </span>
               </h1>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="hidden sm:block text-[10px] text-muted-foreground truncate">
                 {blocks.length} blocos ativos no canvas • Lopes UI
               </p>
             </div>
@@ -1604,7 +1612,8 @@ ${blocksCode}
               )}
             >
               <Code2 size={13} />
-              <span>Código TSX</span>
+              <span className="hidden sm:inline">Código TSX</span>
+              <span className="sm:hidden">Código</span>
             </button>
           </div>
 
@@ -1642,8 +1651,8 @@ ${blocksCode}
         {/* ── Left Sidebar: Component Catalog (Collapsible) ── */}
         <aside
           className={cn(
-            "border-r border-border bg-card flex flex-col shrink-0 transition-all duration-300 overflow-hidden",
-            leftSidebarOpen ? "w-80" : "w-0 p-0 border-r-0"
+            "border-r border-border bg-card flex flex-col shrink-0 transition-all duration-300 overflow-hidden max-lg:fixed max-lg:top-14 max-lg:bottom-0 max-lg:left-0 max-lg:z-30 max-lg:shadow-2xl",
+            leftSidebarOpen ? "w-80 max-w-[calc(100vw-2rem)]" : "w-0 p-0 border-r-0"
           )}
         >
           <div className="p-4 border-b border-border space-y-3">
@@ -1778,7 +1787,7 @@ ${blocksCode}
                       )}
                     >
                       {/* Floating Block Actions Bar */}
-                      <div className="absolute -top-3.5 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-card/95 backdrop-blur-md border border-border shadow-md rounded-xl p-1 flex items-center gap-1 z-30">
+                      <div className={cn("absolute -top-3.5 right-2 sm:right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-card/95 backdrop-blur-md border border-border shadow-md rounded-xl p-1 flex items-center gap-1 z-30 max-w-[calc(100%-1rem)] overflow-x-auto", isSelected && "opacity-100")}>
                         <span className="text-[10px] font-bold px-1.5 py-0.5 text-muted-foreground">
                           {block.title}
                         </span>
@@ -2316,8 +2325,8 @@ ${blocksCode}
         {/* ── Right Sidebar: Property Inspector (Collapsible) ── */}
         <aside
           className={cn(
-            "border-l border-border bg-card flex flex-col shrink-0 transition-all duration-300 overflow-hidden",
-            rightSidebarOpen ? "w-88" : "w-0 p-0 border-l-0"
+            "border-l border-border bg-card flex flex-col shrink-0 transition-all duration-300 overflow-hidden max-lg:fixed max-lg:top-14 max-lg:bottom-0 max-lg:right-0 max-lg:z-30 max-lg:shadow-2xl",
+            rightSidebarOpen ? "w-88 max-w-[calc(100vw-2rem)]" : "w-0 p-0 border-l-0"
           )}
         >
           <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
