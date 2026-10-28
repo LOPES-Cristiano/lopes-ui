@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { TrendingUp, TrendingDown, Minus, type LucideIcon } from "lucide-react";
 
@@ -15,18 +15,24 @@ export type StatCardTrend = {
   inverted?: boolean;   // e.g. for "despesas": going up is bad
 };
 
-export type SparkPoint = { value: number };
+export type SparkPoint = { value: number; label?: string };
 
 export type StatCardProps = {
   title: string;
   value: string | number;
-  /** Secondary unit or context (e.g. "usuários", "/ mês") */
+  /** Secondary unit or context (e.g. "pedidos", "/ mês") */
   unit?: string;
   /** Previous period value — shown as small secondary text */
   previousValue?: string | number;
   trend?: StatCardTrend;
   /** Sparkline data — last N points */
   spark?: SparkPoint[];
+  /** Optional progress percentage (0–100) towards a target goal */
+  progress?: number;
+  /** Optional label for the progress bar (e.g. "82% da meta mensal") */
+  progressLabel?: React.ReactNode;
+  /** Optional footer slot at the bottom of the card */
+  footer?: React.ReactNode;
   icon?: LucideIcon;
   color?: StatCardColor;
   /** Loading skeleton */
@@ -60,9 +66,11 @@ const SPARK_COLOR: Record<StatCardColor, string> = {
   teal:    "#14b8a6",
 };
 
-// ── Sparkline ─────────────────────────────────────────────────────────────────
+// ── Sparkline with interactive hover dot & tooltip ────────────────────────────
 
 function Sparkline({ data, color }: { data: SparkPoint[]; color: string }) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+
   if (data.length < 2) return null;
 
   const W = 80;
@@ -74,26 +82,53 @@ function Sparkline({ data, color }: { data: SparkPoint[]; color: string }) {
   const max = Math.max(...values);
   const range = max - min || 1;
 
-  const pts = values.map((v, i) => {
+  const coords = values.map((v, i) => {
     const x = PAD + (i / (values.length - 1)) * (W - PAD * 2);
     const y = H - PAD - ((v - min) / range) * (H - PAD * 2);
-    return `${x},${y}`;
+    return { x, y, value: v, label: data[i].label };
   });
 
+  const pts = coords.map((c) => `${c.x},${c.y}`);
   const linePath = `M ${pts.join(" L ")}`;
   const areaPath = `${linePath} L ${W - PAD},${H - PAD} L ${PAD},${H - PAD} Z`;
+  const activePoint = hoverIdx !== null ? coords[hoverIdx] : null;
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden>
-      <defs>
-        <linearGradient id={`sg-${color.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity={0.25} />
-          <stop offset="100%" stopColor={color} stopOpacity={0} />
-        </linearGradient>
-      </defs>
-      <path d={areaPath} fill={`url(#sg-${color.replace("#", "")})`} />
-      <path d={linePath} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <div
+      className="relative inline-flex items-center"
+      onMouseLeave={() => setHoverIdx(null)}
+    >
+      {activePoint && (
+        <div className="pointer-events-none absolute -top-6 right-0 z-10 rounded bg-zinc-900 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-white shadow-sm whitespace-nowrap dark:bg-zinc-100 dark:text-zinc-900">
+          {activePoint.label ? `${activePoint.label}: ` : ""}
+          {activePoint.value.toLocaleString("pt-BR")}
+        </div>
+      )}
+      <svg
+        width={W}
+        height={H}
+        viewBox={`0 0 ${W} ${H}`}
+        aria-hidden
+        onMouseMove={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const relX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+          const idx = Math.round(relX * (values.length - 1));
+          setHoverIdx(idx);
+        }}
+      >
+        <defs>
+          <linearGradient id={`sg-${color.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.25} />
+            <stop offset="100%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <path d={areaPath} fill={`url(#sg-${color.replace("#", "")})`} />
+        <path d={linePath} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+        {activePoint && (
+          <circle cx={activePoint.x} cy={activePoint.y} r={2.5} fill={color} />
+        )}
+      </svg>
+    </div>
   );
 }
 
@@ -140,6 +175,9 @@ export default function StatCard({
   previousValue,
   trend,
   spark,
+  progress,
+  progressLabel,
+  footer,
   icon: Icon,
   color = "default",
   loading = false,
@@ -148,20 +186,33 @@ export default function StatCard({
   componentId,
 }: StatCardProps) {
   const sparkColor = SPARK_COLOR[color];
-
-  const Tag = onClick ? "button" : "div";
+  const clampedProgress =
+    typeof progress === "number" ? Math.max(0, Math.min(100, progress)) : undefined;
 
   return (
-    <Tag
-      type={onClick ? "button" : undefined}
+    <div
+      {...(componentId ? { "data-component-id": componentId } : {})}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.target !== e.currentTarget) return;
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
       className={twMerge(
         "group/stat relative flex flex-col gap-1.5 sm:gap-3 rounded-xl sm:rounded-2xl border border-zinc-100 dark:border-zinc-800",
         "bg-white dark:bg-zinc-900 p-2.5 sm:p-5 text-left w-full",
-        onClick && "cursor-pointer hover:border-zinc-200 dark:hover:border-zinc-700 hover:shadow-md hover:shadow-zinc-900/5 dark:hover:shadow-black/20 transition-all duration-150",
+        onClick && "cursor-pointer hover:border-zinc-200 dark:hover:border-zinc-700 hover:shadow-md hover:shadow-zinc-900/5 dark:hover:shadow-black/20 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
         className,
       )}
-      >
+    >
       {/* Top row: icon + sparkline */}
       <div className="flex items-start justify-between gap-2 sm:gap-3">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -219,6 +270,60 @@ export default function StatCard({
           </div>
         )}
       </div>
-    </Tag>
+
+      {/* Target Goal Progress Bar */}
+      {!loading && clampedProgress !== undefined && (
+        <div className="mt-1 flex flex-col gap-1">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+            <div
+              className="h-full rounded-full transition-all duration-300"
+              style={{ width: `${clampedProgress}%`, backgroundColor: sparkColor }}
+            />
+          </div>
+          {progressLabel && (
+            <div className="flex items-center justify-between text-[10px] text-zinc-400 dark:text-zinc-500">
+              <span>{progressLabel}</span>
+              <span className="font-mono font-semibold">{Math.round(clampedProgress)}%</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Optional Footer */}
+      {!loading && footer && (
+        <div className="mt-1 border-t border-zinc-100 dark:border-zinc-800/80 pt-2.5 text-xs text-zinc-500 dark:text-zinc-400">
+          {footer}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── StatGroup (daisyUI stats joined container with dividers) ──────────────────
+
+export type StatGroupProps = React.HTMLAttributes<HTMLDivElement> & {
+  orientation?: "horizontal" | "vertical";
+};
+
+export function StatGroup({
+  orientation = "horizontal",
+  className,
+  children,
+  ...props
+}: StatGroupProps) {
+  return (
+    <div
+      className={twMerge(
+        "inline-flex w-full overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs",
+        orientation === "vertical"
+          ? "flex-col divide-y divide-zinc-200 dark:divide-zinc-800"
+          : "flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-zinc-200 dark:divide-zinc-800",
+        "[&>*]:flex-1 [&>*]:rounded-none [&>*]:border-0 [&>*]:shadow-none",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
   );
 }
