@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
 
 export interface AccessControlData {
   tasks: string[];
@@ -45,9 +45,11 @@ const PERMISSIVE_FALLBACK: AccessControlData = {
   refresh: async () => {},
 };
 
+const EMPTY_TASKS: string[] = [];
+
 export function AccessControlProvider({
   children,
-  initialTasks = [],
+  initialTasks = EMPTY_TASKS,
   initialIsAdmin = false,
   permissionsMap,
   canAccessFn,
@@ -58,15 +60,23 @@ export function AccessControlProvider({
   const [isAdmin, setIsAdmin] = useState<boolean>(initialIsAdmin);
   const [loading, setLoading] = useState<boolean>(false);
 
+  // Sync state when async session permissions arrive via props
+  useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
+
+  useEffect(() => {
+    setIsAdmin(initialIsAdmin);
+  }, [initialIsAdmin]);
+
   const hasTask = useCallback(
     (taskCode: string): boolean => {
       if (!taskCode) return true;
       if (isAdmin) return true;
       if (tasks.includes(taskCode)) return true;
+      // Full module permission (e.g. "FINANCEIRO") implies read permission ("FINANCEIRO.VIEW"),
+      // NEVER the reverse ("FINANCEIRO.VIEW" must NOT grant "FINANCEIRO").
       if (taskCode.endsWith(".VIEW") && tasks.includes(taskCode.replace(/\.VIEW$/, ""))) {
-        return true;
-      }
-      if (!taskCode.endsWith(".VIEW") && tasks.includes(`${taskCode}.VIEW`)) {
         return true;
       }
       return false;
