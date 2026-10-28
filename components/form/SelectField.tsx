@@ -182,13 +182,31 @@ export default function SelectField({
 
   useEffect(() => {
     const handler = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        !containerRef.current?.contains(target) &&
+        !listRef.current?.contains(target)
+      ) {
         setOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [open]);
 
   useEffect(() => {
     if (highlighted >= 0) {
@@ -222,7 +240,11 @@ export default function SelectField({
         }
         break;
       case "Escape":
-        setOpen(false);
+        if (open) {
+          event.preventDefault();
+          event.stopPropagation();
+          setOpen(false);
+        }
         break;
     }
   };
@@ -274,7 +296,7 @@ export default function SelectField({
               : open
                 ? "border-primary ring-2 ring-primary/20 bg-white dark:bg-zinc-900"
                 : "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20",
-            disabled && "cursor-not-allowed opacity-60 bg-zinc-100 dark:bg-zinc-800/60",
+            effectiveDisabled && "cursor-not-allowed opacity-60 bg-zinc-100 dark:bg-zinc-800/60",
             error && "border-rose-500 dark:border-rose-500 ring-1 ring-rose-500/30 focus:border-rose-500 focus:ring-rose-500/20",
           )}
         >
@@ -285,7 +307,7 @@ export default function SelectField({
             </span>
           </span>
           <span className="flex items-center gap-1">
-            {clearable && hasValue && !disabled && (
+            {clearable && hasValue && !effectiveDisabled && (
               <span
                 role="button"
                 tabIndex={-1}
@@ -306,12 +328,13 @@ export default function SelectField({
           </span>
         </button>
 
-        {open && createPortal(
+        {open && typeof document !== "undefined" && createPortal(
           <ul
             ref={listRef}
             role="listbox"
+            data-floating-open="true"
             style={dropdownStyle}
-            className="z-[999999] overflow-y-auto overscroll-contain rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-1 shadow-xl space-y-0.5"
+            className="pointer-events-auto z-[999999] overflow-y-auto overscroll-contain rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-1 shadow-xl space-y-0.5"
           >
             {options.map((option, index) => {
               const isSelected = option.value === value;
