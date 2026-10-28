@@ -3,14 +3,18 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/utils/cn";
-import { useAccessControl, type AccessControlProps } from "./useAccessControl";
+import { useAccessControl } from "./useAccessControl";
 
-export interface BentoGridProps extends React.HTMLAttributes<HTMLDivElement>, AccessControlProps {
+export interface BentoGridProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Número de colunas em telas grandes */
   columns?: 2 | 3 | 4;
+  componentId?: string;
+  hideIfDenied?: boolean;
 }
 
-export interface BentoCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title">, AccessControlProps {
+export interface BentoCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
+  componentId?: string;
+  hideIfDenied?: boolean;
   /** Título do card */
   title: React.ReactNode;
   /** Descrição abaixo do título */
@@ -56,25 +60,14 @@ export function BentoGrid({
   columns = 3,
   className,
   children,
-  permission,
-  role,
-  permissions,
-  roles,
-  requireAll,
-  onUnauthorized,
-  fallback = null,
+  componentId,
+  hideIfDenied = true,
   ...props
 }: BentoGridProps) {
-  const access = useAccessControl({
-    permission,
-    role,
-    permissions,
-    roles,
-    requireAll,
-    onUnauthorized,
-  });
+  const { canAccess } = useAccessControl();
+  const hasAccess = componentId ? canAccess(componentId) : true;
 
-  if (!access.allowed) return <>{fallback}</>;
+  if (!hasAccess && hideIfDenied) return null;
 
   return (
     <div
@@ -100,30 +93,19 @@ export function BentoCard({
   featured = false,
   className,
   children,
-  permission,
-  role,
-  permissions,
-  roles,
-  requireAll,
-  onUnauthorized,
-  fallback = null,
+  componentId,
+  hideIfDenied = true,
   ...props
 }: BentoCardProps) {
-  const access = useAccessControl({
-    permission,
-    role,
-    permissions,
-    roles,
-    requireAll,
-    onUnauthorized,
-  });
+  const { canAccess } = useAccessControl();
+  const hasAccess = componentId ? canAccess(componentId) : true;
 
-  if (!access.allowed) return <>{fallback}</>;
+  if (!hasAccess && hideIfDenied) return null;
 
   return (
     <div
       className={cn(
-        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border p-6 transition-all duration-300",
+        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border p-4 sm:p-6 transition-all duration-300",
         featured
           ? "border-indigo-500/40 bg-gradient-to-br from-indigo-50/60 via-white to-white dark:from-indigo-950/30 dark:via-zinc-900 dark:to-zinc-900 shadow-sm hover:shadow-md hover:border-indigo-500/70"
           : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-sm",
