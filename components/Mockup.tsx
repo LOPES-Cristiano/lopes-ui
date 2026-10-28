@@ -31,15 +31,15 @@ export function BrowserMockup({
       {...props}
     >
       {/* Browser Top Toolbar */}
-      <div className="flex items-center gap-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-800/60 px-4 py-2.5">
+      <div className="flex items-center gap-2 sm:gap-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-800/60 px-3 sm:px-4 py-2 sm:py-2.5">
         <div className="flex items-center gap-1.5 shrink-0">
-          <span className="h-3 w-3 rounded-full bg-rose-400" />
-          <span className="h-3 w-3 rounded-full bg-amber-400" />
-          <span className="h-3 w-3 rounded-full bg-emerald-400" />
+          <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-rose-400" />
+          <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-amber-400" />
+          <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-emerald-400" />
         </div>
 
-        <div className="flex flex-1 items-center justify-center">
-          <div className="flex w-full max-w-md items-center gap-2 rounded-lg border border-zinc-200/80 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="flex flex-1 min-w-0 items-center justify-center">
+          <div className="flex w-full max-w-md min-w-0 items-center gap-2 rounded-lg border border-zinc-200/80 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 sm:px-3 py-1 text-xs text-zinc-500 dark:text-zinc-400">
             {secure ? (
               <Lock size={12} className="text-emerald-500 shrink-0" />
             ) : (
@@ -53,7 +53,7 @@ export function BrowserMockup({
       </div>
 
       {/* Browser Viewport Body */}
-      <div className={cn("p-5", bodyClassName)}>{children}</div>
+      <div className={cn("p-3.5 sm:p-5", bodyClassName)}>{children}</div>
     </div>
   );
 }
@@ -82,20 +82,20 @@ export function WindowMockup({
       )}
       {...props}
     >
-      <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 px-4 py-2.5">
-        <div className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-rose-400" />
-          <span className="h-3 w-3 rounded-full bg-amber-400" />
-          <span className="h-3 w-3 rounded-full bg-emerald-400" />
+      <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 px-3 sm:px-4 py-2 sm:py-2.5">
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-rose-400" />
+          <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-amber-400" />
+          <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-emerald-400" />
         </div>
         {title && (
           <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400 truncate px-2">
             {title}
           </div>
         )}
-        <div className="min-w-[36px] flex justify-end">{headerExtra}</div>
+        <div className="min-w-[28px] sm:min-w-[36px] flex justify-end shrink-0">{headerExtra}</div>
       </div>
-      <div className={cn("p-5", bodyClassName)}>{children}</div>
+      <div className={cn("p-3.5 sm:p-5", bodyClassName)}>{children}</div>
     </div>
   );
 }
@@ -119,14 +119,14 @@ export function PhoneMockup({
   return (
     <div
       className={cn(
-        "inline-flex flex-col items-center rounded-[42px] border-[8px] border-zinc-900 dark:border-zinc-800 bg-zinc-900 p-1.5 shadow-2xl",
+        "inline-flex flex-col items-center rounded-[38px] sm:rounded-[42px] border-[6px] sm:border-[8px] border-zinc-900 dark:border-zinc-800 bg-zinc-900 p-1 sm:p-1.5 shadow-2xl w-full max-w-[304px]",
         className
       )}
       {...props}
     >
       <div
         className={cn(
-          "relative flex h-[560px] w-[280px] flex-col overflow-hidden rounded-[32px] bg-white dark:bg-zinc-950",
+          "relative flex h-[500px] sm:h-[560px] w-full max-w-[280px] flex-col overflow-hidden rounded-[28px] sm:rounded-[32px] bg-white dark:bg-zinc-950",
           screenClassName
         )}
       >
