@@ -619,7 +619,7 @@ export default function CodeEditor({
 
       {/* ── TOOLBAR SUPERIOR ──────────────────────────────────────────────── */}
       {showToolbar && (
-        <div className="h-10 px-3 border-b border-border/80 bg-surface/70 flex items-center justify-between gap-2 shrink-0 select-none">
+        <div className="min-h-10 px-2.5 sm:px-3 py-1 border-b border-border/80 bg-surface/70 flex flex-wrap items-center justify-between gap-2 shrink-0 select-none">
           <div className="flex items-center gap-2 min-w-0">
             <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
               <Code2 size={13} strokeWidth={2.5} />
@@ -766,7 +766,7 @@ export default function CodeEditor({
 
       {/* ── BARRA FLUTUANTE DE BUSCA E SUBSTITUIÇÃO ───────────────────────── */}
       {searchOpen && (
-        <div className="absolute top-11 right-3 z-30 p-2 rounded-xl bg-card border border-border shadow-xl space-y-2 max-w-sm w-full animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute top-11 left-3 right-3 sm:left-auto z-30 p-2 rounded-xl bg-card border border-border shadow-xl space-y-2 sm:max-w-sm sm:w-full animate-in fade-in slide-in-from-top-2 duration-150">
           <div className="flex items-center gap-1.5">
             <div className="relative flex-1">
               <input
@@ -972,9 +972,9 @@ export default function CodeEditor({
             <span>•</span>
             <span>{totalLines} lin</span>
             <span>•</span>
-            <span>{currentValue.length} car</span>
+            <span className="hidden sm:inline">{currentValue.length} car • UTF-8</span>
             <span>•</span>
-            <span>UTF-8</span>
+
           </div>
         </div>
       )}
