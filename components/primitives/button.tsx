@@ -9,11 +9,11 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-primary text-white shadow-xs hover:bg-primary-hover active:bg-primary-active',
+          'bg-primary text-primary-foreground shadow-xs hover:bg-primary-hover active:bg-primary-active',
         primary:
-          'bg-primary text-white shadow-xs hover:bg-primary-hover active:bg-primary-active',
+          'bg-primary text-primary-foreground shadow-xs hover:bg-primary-hover active:bg-primary-active',
         solid:
-          'bg-primary text-white shadow-xs hover:bg-primary-hover active:bg-primary-active',
+          'bg-primary text-primary-foreground shadow-xs hover:bg-primary-hover active:bg-primary-active',
         destructive:
           'bg-red-600 text-white shadow-xs hover:bg-red-500 active:bg-red-700',
         danger:
@@ -80,6 +80,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || !hasPermission}
         {...props}
+        {...(componentId ? { 'data-component-id': componentId } : {})}
       />
     );
   }
