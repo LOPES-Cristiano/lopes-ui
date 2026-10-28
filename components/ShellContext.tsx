@@ -3,26 +3,17 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
 
 const COOKIE_KEY = "shell_sidebar_collapsed";
+export const DEFAULT_SHELL_BACK_EVENT = "lopes-ui:back";
 
 let lastBackTimestamp = 0;
-
-if (typeof window !== "undefined") {
-  window.addEventListener(
-    "popstate",
-    () => {
-      lastBackTimestamp = Date.now();
-    },
-    { passive: true },
-  );
-}
 
 /**
  * Aciona o recuo de um passo no sistema:
  * 1. Protegido com debounce para evitar duplo recuo se o navegador já disparou popstate.
  * 2. Se houver modal aberto, fecha o modal do topo com segurança via ESC.
- * 3. Dispara evento cancelável 'lopes:back' / 'biglar:back' para wizards/etapas internas interceptarem.
+ * 3. Dispara evento cancelável `lopes-ui:back` (ou `eventName` configurado) para wizards/etapas internas interceptarem.
  */
-export function triggerShellBack(): void {
+export function triggerShellBack(eventName: string = DEFAULT_SHELL_BACK_EVENT): void {
   if (typeof window === "undefined") return;
 
   const now = Date.now();
@@ -44,7 +35,7 @@ export function triggerShellBack(): void {
     } catch {}
   }
 
-  const event = new CustomEvent("biglar:back", { cancelable: true });
+  const event = new CustomEvent(eventName, { cancelable: true });
   window.dispatchEvent(event);
 }
 
@@ -52,7 +43,11 @@ export function triggerShellBack(): void {
  * Hook utilitário para que páginas/modais com sub-passos/etapas possam interceptar o gesto de voltar.
  * Se o handler retornar true, impede a navegação padrão e realiza a ação customizada.
  */
-export function useOnShellBack(handler: () => boolean | void, active: boolean = true) {
+export function useOnShellBack(
+  handler: () => boolean | void,
+  active: boolean = true,
+  eventName: string = DEFAULT_SHELL_BACK_EVENT,
+) {
   useEffect(() => {
     if (!active || typeof window === "undefined") return;
 
@@ -67,9 +62,9 @@ export function useOnShellBack(handler: () => boolean | void, active: boolean = 
       }
     };
 
-    window.addEventListener("biglar:back", onBack);
-    return () => window.removeEventListener("biglar:back", onBack);
-  }, [handler, active]);
+    window.addEventListener(eventName, onBack);
+    return () => window.removeEventListener(eventName, onBack);
+  }, [handler, active, eventName]);
 }
 
 export type ShellContextValue = {
@@ -97,14 +92,16 @@ export function useShell(): ShellContextValue | null {
 
 export function ShellProvider({
   children,
-  defaultCollapsed = false,
+  defaultCollapsed,
   defaultHasSidebar = false,
+  backEventName = DEFAULT_SHELL_BACK_EVENT,
 }: {
   children: React.ReactNode;
   defaultCollapsed?: boolean;
   defaultHasSidebar?: boolean;
+  backEventName?: string;
 }) {
-  const [sidebarCollapsed, setSidebarCollapsedState] = useState<boolean>(defaultCollapsed);
+  const [sidebarCollapsed, setSidebarCollapsedState] = useState<boolean>(defaultCollapsed ?? false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [customSidebar, setCustomSidebarState] = useState<React.ReactNode | null>(null);
   const [sidebarCount, setSidebarCount] = useState(0);
@@ -113,13 +110,37 @@ export function ShellProvider({
   const everHadSidebarRef = useRef(false);
 
   useEffect(() => {
+    const onPopState = () => {
+      lastBackTimestamp = Date.now();
+    };
+    window.addEventListener("popstate", onPopState, { passive: true });
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  // Only hydrate from localStorage when SSR did not explicitly pass `defaultCollapsed`
+  useEffect(() => {
+    if (defaultCollapsed !== undefined) return;
     try {
+      const hasCookie = document.cookie
+        .split(";")
+        .some((c) => c.trim().startsWith(`${COOKIE_KEY}=`));
+      if (hasCookie) {
+        const cookieVal = document.cookie
+          .split(";")
+          .map((c) => c.trim())
+          .find((c) => c.startsWith(`${COOKIE_KEY}=`))
+          ?.split("=")[1];
+        if (cookieVal !== undefined) {
+          setSidebarCollapsedState(cookieVal === "true");
+          return;
+        }
+      }
       const stored = localStorage.getItem(COOKIE_KEY);
       if (stored !== null) {
         setSidebarCollapsedState(stored === "true");
       }
     } catch {}
-  }, []);
+  }, [defaultCollapsed]);
 
   const setSidebarCollapsed = useCallback((value: boolean | ((prev: boolean) => boolean)) => {
     setSidebarCollapsedState((prev) => {
@@ -136,6 +157,10 @@ export function ShellProvider({
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed((s) => !s);
   }, [setSidebarCollapsed]);
+
+  const triggerBack = useCallback(() => {
+    triggerShellBack(backEventName);
+  }, [backEventName]);
 
   useEffect(() => {
     if (!mobileSidebarOpen) return;
@@ -220,7 +245,7 @@ export function ShellProvider({
         }
       } else if (mode === "back_step") {
         if (deltaX <= -50) {
-          triggerShellBack();
+          triggerShellBack(backEventName);
         }
       }
     };
@@ -238,7 +263,7 @@ export function ShellProvider({
       window.removeEventListener("touchend", handleTouchEnd);
       window.removeEventListener("touchcancel", handleTouchCancel);
     };
-  }, [mobileSidebarOpen]);
+  }, [mobileSidebarOpen, backEventName]);
 
   const setCustomSidebar = useCallback((node: React.ReactNode | null) => {
     setCustomSidebarState(node);
@@ -284,7 +309,7 @@ export function ShellProvider({
       _registerSidebar,
       customSidebar,
       setCustomSidebar,
-      triggerBack: triggerShellBack,
+      triggerBack,
     }),
     [
       sidebarCollapsed,
@@ -296,6 +321,7 @@ export function ShellProvider({
       customSidebar,
       _registerSidebar,
       setCustomSidebar,
+      triggerBack,
     ],
   );
 
