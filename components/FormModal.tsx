@@ -137,7 +137,7 @@ export function FormModal({
     return (
       <div
         className={twMerge(
-          'flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary text-white font-bold text-xs sm:text-sm shrink-0 shadow-xs',
+          'flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary text-primary-foreground font-bold text-xs sm:text-sm shrink-0 shadow-xs',
           av.className
         )}
       >
@@ -188,7 +188,7 @@ export function FormModal({
                   disabled={loading || saving}
                   onClick={onNext}
                   rightIcon={<ChevronRight size={15} />}
-                  className="!bg-primary hover:!bg-primary/90 !text-white font-bold rounded-lg shadow-xs px-4 text-xs flex-1 sm:flex-none"
+                  className="!bg-primary hover:!bg-primary/90 !text-primary-foreground font-bold rounded-lg shadow-xs px-4 text-xs flex-1 sm:flex-none"
                 >
                   {nextLabel}
                 </Button>
@@ -201,8 +201,8 @@ export function FormModal({
                   loading={saving}
                   disabled={loading}
                   onClick={onSave}
-                  leftIcon={<Check size={15} className="!text-white stroke-[3]" />}
-                  className="!bg-primary hover:!bg-primary/90 !text-white font-bold px-6 rounded-lg shadow-xs text-xs flex-1 sm:flex-none"
+                  leftIcon={<Check size={15} className="!text-primary-foreground stroke-[3]" />}
+                  className="!bg-primary hover:!bg-primary/90 !text-primary-foreground font-bold px-6 rounded-lg shadow-xs text-xs flex-1 sm:flex-none"
                 >
                   {saveLabel || (isEditing ? 'Salvar Alterações' : 'Salvar e Concluir')}
                 </Button>
@@ -253,9 +253,20 @@ export function FormModal({
         autoComplete="off"
         onSubmit={(e) => e.preventDefault()}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
-            e.preventDefault();
+          if (e.key !== 'Enter') return;
+          const target = e.target as HTMLElement | null;
+          if (!target) return;
+          const tag = target.tagName;
+          if (
+            tag === 'BUTTON' ||
+            tag === 'A' ||
+            tag === 'TEXTAREA' ||
+            target.isContentEditable ||
+            target.closest('button, a, textarea, [contenteditable="true"]')
+          ) {
+            return;
           }
+          e.preventDefault();
         }}
         className="flex flex-col flex-1 min-h-0 overflow-hidden"
       >
@@ -308,12 +319,12 @@ export function FormModal({
                     aria-current={selected ? 'page' : undefined}
                     className={`flex items-center justify-center lg:justify-start gap-2 px-3 py-2.5 rounded-lg text-xs font-medium cursor-pointer transition-colors shrink-0 lg:w-full relative ${
                       selected
-                        ? 'bg-primary text-white font-semibold shadow-xs'
+                        ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
                     {tab.icon && (
-                      <span className={`shrink-0 ${selected ? 'text-white' : 'text-muted-foreground'}`}>
+                      <span className={`shrink-0 ${selected ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
                         {tab.icon}
                       </span>
                     )}
