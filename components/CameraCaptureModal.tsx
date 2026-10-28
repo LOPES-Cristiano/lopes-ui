@@ -262,7 +262,7 @@ export function CameraCaptureModal({
               <div className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 w-6 h-6 border-b-2 border-r-2 border-primary pointer-events-none rounded-br-lg" />
 
               {/* Badge de status */}
-              <div className="absolute top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-white text-xs font-medium flex items-center gap-2 shadow-lg">
+              <div className="absolute top-3.5 left-1/2 -translate-x-1/2 max-w-[calc(100%-1.5rem)] px-3 sm:px-3.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-white text-[11px] sm:text-xs font-medium flex items-center gap-2 shadow-lg">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Câmera conectada • Encaixe o rosto no quadro</span>
               </div>
@@ -271,7 +271,7 @@ export function CameraCaptureModal({
         </div>
 
         {/* Rodapé com Botões Padrão do Sistema */}
-        <div className="flex items-center justify-end gap-3 px-5 sm:px-6 py-4 bg-muted/40 border-t border-border">
+        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-muted/40 border-t border-border">
           <Button
             componentId={`${componentId}.cancelar`}
             type="button"
