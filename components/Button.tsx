@@ -67,9 +67,9 @@ export type ButtonProps = {
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 const variantClasses: Record<string, string> = {
-  solid: 'bg-primary text-white hover:bg-primary-hover active:bg-primary-active',
-  default: 'bg-primary text-white hover:bg-primary-hover active:bg-primary-active',
-  primary: 'bg-primary text-white hover:bg-primary-hover active:bg-primary-active',
+  solid: 'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active',
+  default: 'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active',
+  primary: 'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active',
   secondary: 'bg-surface-muted text-surface-foreground hover:bg-surface-hover',
   outline: 'bg-transparent border border-border text-surface-foreground hover:bg-surface-hover',
   ghost: 'bg-transparent hover:bg-surface-hover text-surface-foreground',
@@ -129,29 +129,32 @@ const tooltipPositionClasses: Record<string, string> = {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function Button({
-  componentId,
-  leftIcon,
-  leading,
-  rightIcon,
-  trailing,
-  children,
-  fullWidth = false,
-  full = false,
-  variant = 'default',
-  size = 'md',
-  className,
-  loading = false,
-  pill = false,
-  square = false,
-  tooltip,
-  tooltipPosition = 'top',
-  confirm,
-  disabled,
-  hideIfDenied = true,
-  onClick,
-  ...props
-}: ButtonProps) {
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  {
+    componentId,
+    leftIcon,
+    leading,
+    rightIcon,
+    trailing,
+    children,
+    fullWidth = false,
+    full = false,
+    variant = 'default',
+    size = 'md',
+    className,
+    loading = false,
+    pill = false,
+    square = false,
+    tooltip,
+    tooltipPosition = 'top',
+    confirm,
+    disabled,
+    hideIfDenied = true,
+    onClick,
+    ...props
+  },
+  ref
+) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { canAccess } = useAccessControl();
 
@@ -199,7 +202,9 @@ export default function Button({
 
   const btn = (
     <button
+      ref={ref}
       {...props}
+      {...(componentId ? { 'data-component-id': componentId } : {})}
       onClick={handleClick}
       disabled={isDisabled}
       className={cn(
@@ -276,4 +281,8 @@ export default function Button({
       />
     </>
   );
-}
+});
+
+Button.displayName = 'Button';
+
+export default Button;
