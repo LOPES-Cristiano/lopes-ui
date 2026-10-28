@@ -4,14 +4,22 @@ import React from "react";
 import Link from "next/link";
 import { twMerge } from "tailwind-merge";
 import { ChevronRight, Slash, Home, MoreHorizontal, type LucideIcon } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./primitives/dropdown-menu";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type BreadcrumbSeparator = "chevron" | "slash" | "dot";
+export type BreadcrumbCollapseMode = "dropdown" | "expand";
 
 export type BreadcrumbItem = {
   label: string;
   href?: string;
+  onClick?: () => void;
   icon?: LucideIcon;
   /** Override component-level separator before this item */
   separator?: BreadcrumbSeparator;
@@ -28,6 +36,12 @@ export type BreadcrumbProps = {
    * The first and last items are always shown. Defaults to `undefined` (no collapse).
    */
   maxItems?: number;
+  /**
+   * How collapsed items behave when clicking "...":
+   * - "dropdown" (default, shadcn/ui style): opens a menu with the hidden items
+   * - "expand": expands all items inline
+   */
+  collapseMode?: BreadcrumbCollapseMode;
   className?: string;
   componentId?: string;
 };
@@ -79,11 +93,25 @@ function BreadcrumbLink({
     return (
       <Link
         href={item.href}
+        onClick={item.onClick}
         className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
         aria-label={homeOnly ? item.label : undefined}
       >
         {content}
       </Link>
+    );
+  }
+
+  if (item.onClick) {
+    return (
+      <button
+        type="button"
+        onClick={item.onClick}
+        className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded cursor-pointer"
+        aria-label={homeOnly ? item.label : undefined}
+      >
+        {content}
+      </button>
     );
   }
 
@@ -94,28 +122,68 @@ function BreadcrumbLink({
   );
 }
 
-// ── Collapsed ellipsis button ─────────────────────────────────────────────────
+// ── Collapsed ellipsis button (shadcn/ui BreadcrumbEllipsis + DropdownMenu) ───
 
 function EllipsisButton({
   hiddenItems,
+  collapseMode = "dropdown",
   onExpand,
 }: {
   hiddenItems: BreadcrumbItem[];
+  collapseMode?: BreadcrumbCollapseMode;
   onExpand: () => void;
 }) {
   const title = hiddenItems.map((i) => i.label).join(" › ");
 
-  return (
+  const triggerBtn = (
     <button
       data-component-id="erp.breadcrumb.expand"
       type="button"
       title={title}
       aria-label={`Mostrar ${hiddenItems.length} itens ocultos: ${title}`}
-      onClick={onExpand}
-      className="flex items-center justify-center w-6 h-6 rounded hover:bg-header-control-hover text-header-breadcrumb-muted hover:text-header-breadcrumb-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-header-breadcrumb-focus-ring"
+      onClick={collapseMode === "expand" ? onExpand : undefined}
+      className="flex items-center justify-center w-6 h-6 rounded hover:bg-header-control-hover text-header-breadcrumb-muted hover:text-header-breadcrumb-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-header-breadcrumb-focus-ring cursor-pointer"
     >
       <MoreHorizontal className="w-3.5 h-3.5" />
     </button>
+  );
+
+  if (collapseMode === "expand") {
+    return triggerBtn;
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>{triggerBtn}</DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[10rem]">
+        {hiddenItems.map((hidden, idx) => {
+          const HiddenIcon = hidden.icon;
+          if (hidden.href) {
+            return (
+              <DropdownMenuItem key={`${hidden.label}-${idx}`} asChild>
+                <Link href={hidden.href} onClick={hidden.onClick} className="flex items-center gap-2">
+                  {HiddenIcon && <HiddenIcon className="w-3.5 h-3.5 text-muted-foreground" />}
+                  <span>{hidden.label}</span>
+                </Link>
+              </DropdownMenuItem>
+            );
+          }
+          return (
+            <DropdownMenuItem
+              key={`${hidden.label}-${idx}`}
+              onClick={() => {
+                if (hidden.onClick) hidden.onClick();
+                else onExpand();
+              }}
+              className="flex items-center gap-2"
+            >
+              {HiddenIcon && <HiddenIcon className="w-3.5 h-3.5 text-muted-foreground" />}
+              <span>{hidden.label}</span>
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -126,6 +194,7 @@ export default function Breadcrumb({
   separator = "chevron",
   homeIcon = false,
   maxItems,
+  collapseMode = "dropdown",
   className,
   componentId,
 }: BreadcrumbProps) {
@@ -134,12 +203,10 @@ export default function Breadcrumb({
   const shouldCollapse =
     maxItems !== undefined && items.length > maxItems && collapsed;
 
-  // Build the visible item list
   let visibleItems: BreadcrumbItem[];
   let hiddenItems: BreadcrumbItem[] = [];
 
   if (shouldCollapse && maxItems !== undefined) {
-    // Always show first + last; fill remaining slots with items from the start/end
     const keep = Math.max(2, maxItems);
     const head = items.slice(0, 1);
     const tail = items.slice(-(keep - 1));
@@ -160,20 +227,35 @@ export default function Breadcrumb({
     >
       <ol className="flex min-w-0 max-w-full flex-nowrap items-center overflow-hidden whitespace-nowrap text-sm">
         {visibleItems.map((item, index) => {
-          const isCurrent = index === visibleItems.length - 1 && !shouldCollapse;
+          const isCurrent = index === visibleItems.length - 1;
           const isFirst = index === 0;
           const isHome = homeIcon && isFirst;
           const sep = item.separator ?? separator;
 
-          // Inject the ellipsis button in the gap between head and tail
           const showEllipsis =
             shouldCollapse &&
             hiddenItems.length > 0 &&
-            index === 1; // right after the first item
+            index === 1;
 
           return (
             <React.Fragment key={`${item.label}-${index}`}>
-              {/* Separator (skip before first item) */}
+              {/* Collapsed ellipsis right after the first item */}
+              {showEllipsis && (
+                <>
+                  <li aria-hidden="true" className="mx-1.5 flex items-center">
+                    <Sep type={sep} />
+                  </li>
+                  <li className="flex items-center">
+                    <EllipsisButton
+                      hiddenItems={hiddenItems}
+                      collapseMode={collapseMode}
+                      onExpand={() => setCollapsed(false)}
+                    />
+                  </li>
+                </>
+              )}
+
+              {/* Separator before this item (including after ellipsis) */}
               {index > 0 && (
                 <li
                   aria-hidden="true"
@@ -183,22 +265,6 @@ export default function Breadcrumb({
                 </li>
               )}
 
-              {/* Collapsed ellipsis */}
-              {showEllipsis && (
-                <>
-                  <li aria-hidden="true" className="mx-1.5 flex items-center">
-                    <Sep type={sep} />
-                  </li>
-                  <li className="flex items-center">
-                    <EllipsisButton
-                      hiddenItems={hiddenItems}
-                      onExpand={() => setCollapsed(false)}
-                    />
-                  </li>
-                </>
-              )}
-
-              {/* Wait — if collapsed + this is index 1 onward (the tail), we need a separator before the ellipsis */}
               <li className="flex items-center">
                 <BreadcrumbLink
                   item={isHome ? { ...item, icon: item.icon ?? Home } : item}
