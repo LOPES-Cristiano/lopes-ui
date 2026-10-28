@@ -88,7 +88,14 @@ function toIso(d: Date): string {
 }
 
 function normalizeDate(d: Date | string): Date {
-  return typeof d === "string" ? new Date(d) : d;
+  if (typeof d === "string") {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      const [y, m, day] = d.split("-").map(Number);
+      return new Date(y, m - 1, day);
+    }
+    return new Date(d);
+  }
+  return d;
 }
 
 const MONTH_NAMES = [
@@ -147,10 +154,11 @@ export default function Calendar({
   const today = startOfDay(new Date());
 
   // ── State ──────────────────────────────────────────────────────────────────
+  const initialBaseDate = controlledValue ?? defaultValue ?? rangeValue?.[0] ?? new Date();
   const [internalSelected, setInternalSelected] = useState<Date | null>(defaultValue ?? null);
   const [internalRange, setInternalRange] = useState<[Date | null, Date | null]>([null, null]);
-  const [viewYear, setViewYear] = useState((defaultValue ?? new Date()).getFullYear());
-  const [viewMonth, setViewMonth] = useState((defaultValue ?? new Date()).getMonth());
+  const [viewYear, setViewYear] = useState(initialBaseDate.getFullYear());
+  const [viewMonth, setViewMonth] = useState(initialBaseDate.getMonth());
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
   const [monthOpen, setMonthOpen] = useState(false);
   const [yearOpen, setYearOpen] = useState(false);
@@ -161,11 +169,18 @@ export default function Calendar({
   const selected = controlledValue !== undefined ? controlledValue : internalSelected;
   const range = rangeValue !== undefined ? rangeValue : internalRange;
 
-  useEffect(() => {
-    const activeDate = selected ?? (range[0] ?? null) ?? new Date();
-    setViewYear(activeDate.getFullYear());
-    setViewMonth(activeDate.getMonth());
-  }, [selected, range]);
+  const activeSyncDate = rangeMode ? (range?.[0] ?? null) : (selected ?? range?.[0] ?? null);
+  const activeSyncTimestamp = activeSyncDate ? activeSyncDate.getTime() : null;
+  const [prevSyncTimestamp, setPrevSyncTimestamp] = useState<number | null>(activeSyncTimestamp);
+
+  if (activeSyncTimestamp !== prevSyncTimestamp) {
+    setPrevSyncTimestamp(activeSyncTimestamp);
+    if (activeSyncTimestamp !== null) {
+      const activeDate = new Date(activeSyncTimestamp);
+      setViewYear(activeDate.getFullYear());
+      setViewMonth(activeDate.getMonth());
+    }
+  }
 
   useEffect(() => {
     function handleOutside(event: MouseEvent) {
@@ -312,6 +327,7 @@ export default function Calendar({
   return (
     <div
       ref={rootRef}
+      data-component-id={componentId}
       className={twMerge(fillWidth ? "block w-full select-none" : "inline-block select-none", className)}
       >
       {/* ── Header ── */}
