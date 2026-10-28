@@ -1,7 +1,8 @@
 'use client';
 
 import { useAccessControl } from './useAccessControl';
-import { useEffect, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, type CSSProperties, type ReactNode } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 
 // ─── INFO FIELD ──────────────────────────────────────────────────────────────
@@ -66,12 +67,33 @@ interface DetailHeaderProps {
   avatar?: ReactNode;
   chips?: ReactNode;
   badge?: ReactNode;
+  onBack?: () => void;
+  backAriaLabel?: string;
 }
 
-export function DetailHeader({ titleLabel, titleValue, avatar, chips, badge }: DetailHeaderProps) {
+export function DetailHeader({
+  titleLabel,
+  titleValue,
+  avatar,
+  chips,
+  badge,
+  onBack,
+  backAriaLabel,
+}: DetailHeaderProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 mb-5 text-left">
       <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
+        {onBack ? (
+          <button
+            data-component-id="erp.detail-layout.back"
+            type="button"
+            onClick={onBack}
+            aria-label={backAriaLabel || 'Voltar'}
+            className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 cursor-pointer"
+          >
+            <ArrowLeft size={16} />
+          </button>
+        ) : null}
         {avatar}
         <div className="min-w-0 flex-1 pr-6 sm:pr-0">
           {titleLabel ? (
@@ -162,20 +184,21 @@ interface DetailTabsProps {
 export function DetailTabs({ tabs, activeTab, onChange }: DetailTabsProps) {
   const { canAccess } = useAccessControl();
 
+  const visibleTabs = useMemo(
+    () => tabs.filter((t) => !t.componentId || canAccess(t.componentId)),
+    [tabs, canAccess]
+  );
+
   // Redireciona automaticamente para a primeira aba permitida caso a aba ativa esteja bloqueada
   useEffect(() => {
-    const accessibleTabs = tabs.filter((tab) => {
-      const cid = tab.componentId ?? `erp.detail-layout.tab-${tab.id}`;
-      return canAccess(cid);
-    });
-    if (accessibleTabs.length > 0 && !accessibleTabs.some((t) => t.id === activeTab)) {
-      onChange(accessibleTabs[0].id);
+    if (visibleTabs.length > 0 && !visibleTabs.some((t) => t.id === activeTab)) {
+      onChange(visibleTabs[0].id);
     }
-  }, [tabs, activeTab, onChange, canAccess]);
+  }, [visibleTabs, activeTab, onChange]);
 
   return (
     <div className="border-b border-border w-full flex items-end gap-1 sm:gap-1.5 overflow-x-auto overflow-y-hidden scrollbar-none py-0.5">
-      {tabs.map((tab) => {
+      {visibleTabs.map((tab) => {
         const active = activeTab === tab.id;
         // Se componentId específico não for informado → fallback para o prefixo
         // 'erp.detail-layout.tab-*' que está na allowlist (sempre visível).
@@ -189,7 +212,7 @@ export function DetailTabs({ tabs, activeTab, onChange }: DetailTabsProps) {
             className={twMerge(
               'group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 rounded-t-md',
               active
-                ? '-mb-[1px] bg-primary text-white border-t-2 border-t-primary border-x border-primary font-bold shadow-xs z-10'
+                ? '-mb-[1px] bg-primary text-primary-foreground border-t-2 border-t-primary border-x border-primary font-bold shadow-xs z-10'
                 : 'bg-zinc-50/90 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white border border-border/80 border-b-transparent'
             )}
           >
@@ -197,7 +220,7 @@ export function DetailTabs({ tabs, activeTab, onChange }: DetailTabsProps) {
               <span
                 className={
                   active
-                    ? 'text-white'
+                    ? 'text-primary-foreground shrink-0'
                     : 'text-muted-foreground group-hover:text-foreground shrink-0'
                 }
               >
