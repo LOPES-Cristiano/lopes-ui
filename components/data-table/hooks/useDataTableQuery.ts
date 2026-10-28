@@ -13,7 +13,9 @@ export function useDataTableQuery({
   defaultSortDir = null,
   controlledSortKey,
   controlledSortDir,
+  initialSearch,
   searchDebounceMs = 300,
+  onSearchChange,
   controlledFilters,
   initialFilters,
   onFilterChange,
@@ -31,7 +33,9 @@ export function useDataTableQuery({
   defaultSortDir?: SortDir;
   controlledSortKey?: string | null;
   controlledSortDir?: SortDir;
+  initialSearch?: string;
   searchDebounceMs?: number;
+  onSearchChange?: (search: string) => void;
   controlledFilters?: Record<string, any>;
   initialFilters?: Record<string, any>;
   onFilterChange?: (filters: Record<string, any>) => void;
@@ -42,8 +46,8 @@ export function useDataTableQuery({
 }) {
   const [internalPage, setInternalPage] = useState(1);
   const [internalPageSize, setInternalPageSize] = useState(defaultPageSize);
-  const [searchQ, setSearchQ] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [searchQ, setSearchQ] = useState(initialSearch ?? '');
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch ?? '');
   const [filters, setFilters] = useState<Record<string, string>>(initialFilters ?? {});
   const [internalSortKey, setInternalSortKey] = useState<string | null>(defaultSortKey ?? null);
   const [internalSortDir, setInternalSortDir] = useState<SortDir>(defaultSortDir ?? null);
@@ -153,9 +157,10 @@ export function useDataTableQuery({
   const handleSearchChange = useCallback(
     (newSearch: string) => {
       setSearchQ(newSearch);
+      onSearchChange?.(newSearch);
       setResolvedPage(1);
     },
-    [setResolvedPage],
+    [onSearchChange, setResolvedPage],
   );
 
   const handleFilterChange = useCallback(
@@ -208,18 +213,8 @@ export function useDataTableQuery({
     (newTab: number) => {
       setActiveTabState(newTab);
       setResolvedPage(1);
-      // Garante que a consulta seja atualizada/recarregada ao clicar na aba
-      onQueryChange?.({
-        page: 1,
-        pageSize,
-        search: debouncedSearch,
-        filters: activeFilters,
-        sortKey,
-        sortDir,
-        activeTab: newTab,
-      });
     },
-    [pageSize, debouncedSearch, activeFilters, sortKey, sortDir, setResolvedPage, onQueryChange],
+    [setResolvedPage],
   );
 
   return {
