@@ -2,9 +2,11 @@
 
 import React from "react";
 import { cn } from "@/utils/cn";
-import { useAccessControl, type AccessControlProps } from "./useAccessControl";
+import { useAccessControl } from "./useAccessControl";
 
-export interface MarqueeProps extends React.HTMLAttributes<HTMLDivElement>, AccessControlProps {
+export interface MarqueeProps extends React.HTMLAttributes<HTMLDivElement> {
+  componentId?: string;
+  hideIfDenied?: boolean;
   /** Inverte a direção da animação */
   reverse?: boolean;
   /** Pausa a rolagem ao passar o mouse */
@@ -28,25 +30,14 @@ export default function Marquee({
   fadeEdges = true,
   className,
   children,
-  permission,
-  role,
-  permissions,
-  roles,
-  requireAll,
-  onUnauthorized,
-  fallback = null,
+  componentId,
+  hideIfDenied = true,
   ...props
 }: MarqueeProps) {
-  const access = useAccessControl({
-    permission,
-    role,
-    permissions,
-    roles,
-    requireAll,
-    onUnauthorized,
-  });
+  const { canAccess } = useAccessControl();
+  const hasAccess = componentId ? canAccess(componentId) : true;
 
-  if (!access.allowed) return <>{fallback}</>;
+  if (!hasAccess && hideIfDenied) return null;
 
   const isVertical = orientation === "vertical";
 
