@@ -260,11 +260,11 @@ function AppCard({
 
 const COLS_CLS: Record<string | number, string> = {
   2:      "grid-cols-2",
-  3:      "grid-cols-3",
+  3:      "grid-cols-2 sm:grid-cols-3",
   4:      "grid-cols-2 sm:grid-cols-4",
-  5:      "grid-cols-3 sm:grid-cols-5",
-  6:      "grid-cols-3 sm:grid-cols-6",
-  auto:   "grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6",
+  5:      "grid-cols-2 sm:grid-cols-3 md:grid-cols-5",
+  6:      "grid-cols-2 sm:grid-cols-3 md:grid-cols-6",
+  auto:   "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6",
 };
 
 function AppGrid({
@@ -455,7 +455,7 @@ export function AppLauncher({
           role="dialog"
           aria-modal="true"
           aria-label={title || "Aplicativos"}
-          className="w-full max-w-3xl max-h-[85dvh] overflow-y-auto rounded-2xl border border-border bg-surface p-6 text-surface-foreground shadow-2xl"
+          className="w-full max-w-3xl max-h-[88dvh] overflow-y-auto rounded-2xl border border-border bg-surface p-4 sm:p-6 text-surface-foreground shadow-2xl"
         >
           {launcherContent}
         </div>
