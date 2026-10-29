@@ -44,8 +44,8 @@ export function useDataTableQuery({
   onPageSizeChange?: (pageSize: number) => void;
   onQueryChange?: (state: DataTableQueryState) => void;
 }) {
-  const [internalPage, setInternalPage] = useState(1);
-  const [internalPageSize, setInternalPageSize] = useState(defaultPageSize);
+  const [internalPage, setInternalPage] = useState(controlledPage ?? 1);
+  const [internalPageSize, setInternalPageSize] = useState(controlledPageSize ?? defaultPageSize);
   const [searchQ, setSearchQ] = useState(initialSearch ?? '');
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch ?? '');
   const [filters, setFilters] = useState<Record<string, string>>(initialFilters ?? {});
@@ -63,8 +63,12 @@ export function useDataTableQuery({
 
   const isFirstRender = useRef(true);
 
-  const page = controlledPage ?? internalPage;
-  const pageSize = controlledPageSize ?? internalPageSize;
+  const isPageControlled = controlledPage !== undefined && Boolean(onPageChange || onQueryChange);
+  const isPageSizeControlled =
+    controlledPageSize !== undefined && Boolean(onPageSizeChange || onQueryChange);
+
+  const page = isPageControlled ? controlledPage! : internalPage;
+  const pageSize = isPageSizeControlled ? controlledPageSize! : internalPageSize;
   const sortKey = controlledSortKey !== undefined ? controlledSortKey : internalSortKey;
   const sortDir = controlledSortDir !== undefined ? controlledSortDir : internalSortDir;
 
@@ -137,14 +141,19 @@ export function useDataTableQuery({
     onQueryChangeRef.current = onQueryChange;
   }, [onQueryChange]);
 
+  const prevPageSizeRef = useRef(pageSize);
+
   // Emite onQueryChange de forma consistente e unificada (Issue #6)
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
+    const pageSizeChanged = prevPageSizeRef.current !== pageSize;
+    prevPageSizeRef.current = pageSize;
+    const nextPage = pageSizeChanged ? 1 : page;
     onQueryChangeRef.current?.({
-      page,
+      page: nextPage,
       pageSize,
       search: debouncedSearch,
       filters: activeFilters,
