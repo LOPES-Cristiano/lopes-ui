@@ -70,52 +70,38 @@ export function ProfileTrigger({
   avatarClassName = '',
 }: ProfileTriggerProps) {
   const [open, setOpen] = useState(false);
-  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
-  const [imgFailed, setImgFailed] = useState(false);
+  const [resolvedEntry, setResolvedEntry] = useState<{ key: string; url: string | null } | null>(
+    null
+  );
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const cfg = sizeConfig[size];
   const shapeClass = shape === 'circle' ? 'rounded-full' : 'rounded-lg';
 
   const directSrc = avatarUrl || fotoUrl || avatar || null;
+  const userIdKey =
+    !directSrc && usuarioId != null && resolveAvatarUrl ? String(usuarioId).trim() : '';
 
   useEffect(() => {
+    if (!userIdKey || !resolveAvatarUrl) return;
     let cancelled = false;
-    if (directSrc || usuarioId == null || !resolveAvatarUrl) {
-      setResolvedSrc(null);
-      return;
-    }
-    const userIdStr = String(usuarioId).trim();
-    if (!userIdStr) {
-      setResolvedSrc(null);
-      return;
-    }
-    try {
-      const result = resolveAvatarUrl(userIdStr);
-      if (typeof result === 'string' || result === null) {
-        setResolvedSrc(result || null);
-      } else if (result && typeof result.then === 'function') {
-        result
-          .then((url) => {
-            if (!cancelled) setResolvedSrc(url || null);
-          })
-          .catch(() => {
-            if (!cancelled) setResolvedSrc(null);
-          });
-      }
-    } catch {
-      if (!cancelled) setResolvedSrc(null);
-    }
+    Promise.resolve()
+      .then(() => resolveAvatarUrl(userIdKey))
+      .then((url) => {
+        if (!cancelled) setResolvedEntry({ key: userIdKey, url: url || null });
+      })
+      .catch(() => {
+        if (!cancelled) setResolvedEntry({ key: userIdKey, url: null });
+      });
     return () => {
       cancelled = true;
     };
-  }, [directSrc, usuarioId, resolveAvatarUrl]);
+  }, [userIdKey, resolveAvatarUrl]);
 
+  const resolvedSrc = resolvedEntry && resolvedEntry.key === userIdKey ? resolvedEntry.url : null;
   const imgSrc = directSrc || resolvedSrc;
-
-  useEffect(() => {
-    setImgFailed(false);
-  }, [imgSrc]);
+  const imgFailed = Boolean(imgSrc && failedSrc === imgSrc);
 
   useEffect(() => {
     if (!open) return;
@@ -144,7 +130,7 @@ export function ProfileTrigger({
     <span className={`inline-flex items-center ${cfg.gap}`}>
       {/* Avatar elegante */}
       <span
-        className={`h-10 w-10 ${shapeClass} overflow-hidden flex items-center justify-center bg-blue-600 dark:bg-zinc-800 text-white font-bold text-xs shrink-0 shadow-xs ${
+        className={`${cfg.avatar} ${shapeClass} overflow-hidden flex items-center justify-center bg-primary text-primary-foreground font-bold shrink-0 shadow-xs ${
           avatarClassName || 'ring-2 ring-white/40 md:ring-slate-300 md:dark:ring-zinc-600'
         }`}
       >
@@ -154,7 +140,7 @@ export function ProfileTrigger({
             src={imgSrc}
             alt={name ?? 'avatar'}
             className="h-full w-full object-cover"
-            onError={() => setImgFailed(true)}
+            onError={() => setFailedSrc(imgSrc)}
           />
         ) : (
           <span className="flex items-center justify-center">
