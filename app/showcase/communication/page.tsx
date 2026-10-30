@@ -28,11 +28,25 @@ function EmailComposerDemo() {
   const [attachments, setAttachments] = React.useState<EmailAttachment[]>([]);
   return (
     <EmailComposer
-      defaultTo={[{ name: "Ana Souza", email: "ana.souza@empresa.com" }]}
-      defaultSubject="Reunião de alinhamento — Q3"
+      defaultTo={[{ name: "Ana Souza", email: "ana.souza@empresa.com.br" }]}
+      defaultSubject="Confirmação de Entrega & Montagem — Pedido #PED-69042"
       contactSuggestions={DEMO_CONTACTS}
       attachments={attachments}
-      signature="<strong>Cristiano Lopes</strong><br/>Engenharia de Produto · <a href='#'>empresa.com</a>"
+      templates={[
+        {
+          id: "entrega-ro",
+          label: "Agendamento de Entrega & Montagem (RO/AM)",
+          subject: "Sua entrega de Móveis & Eletro está agendada!",
+          body: "<p>Olá,</p><p>Confirmamos a entrega e montagem dos seus <strong>móveis e eletrodomésticos</strong> para o próximo período agendado. Nossa equipe entrará em contato pelo WhatsApp <strong>(69) / (92)</strong> 30 minutos antes da chegada.</p><p><em>Conforto e qualidade para o seu lar!</em></p>",
+        },
+        {
+          id: "pos-venda",
+          label: "Pesquisa de Satisfação Pós-Montagem",
+          subject: "Como foi a montagem dos seus móveis?",
+          body: "<p>Olá,</p><p>Esperamos que seu novo ambiente tenha ficado excelente! Conte para nós como foi sua experiência com nossa equipe de entrega e montagem.</p>",
+        },
+      ]}
+      signature="<strong>Central de Relacionamento — Móveis &amp; Eletro</strong><br/>Rondônia (69) &amp; Amazonas (92) · <em>Conforto e qualidade para o seu lar</em>"
       onAttach={(files) => {
         const newAtts: EmailAttachment[] = files.map((f, i) => ({
           id: `${Date.now()}-${i}`,
