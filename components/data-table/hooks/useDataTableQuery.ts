@@ -67,8 +67,8 @@ export function useDataTableQuery({
   const isPageSizeControlled =
     controlledPageSize !== undefined && Boolean(onPageSizeChange || onQueryChange);
 
-  const page = isPageControlled ? controlledPage! : internalPage;
-  const pageSize = isPageSizeControlled ? controlledPageSize! : internalPageSize;
+  const page = internalPage;
+  const pageSize = internalPageSize;
   const sortKey = controlledSortKey !== undefined ? controlledSortKey : internalSortKey;
   const sortDir = controlledSortDir !== undefined ? controlledSortDir : internalSortDir;
 
