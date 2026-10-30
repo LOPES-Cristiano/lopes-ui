@@ -96,50 +96,50 @@ const CATEGORIES = [
   {
     href: "/showcase/forms",
     icon: FormInput,
-    title: "Formulários & Inputs",
-    description: "TextField, SelectField, DateRangePicker, RadioGroup, Slider, ColorPicker, TagInput, ZodForm e mais.",
-    count: 24,
+    title: "Formulários & Editores",
+    description: "RichTextEditor (/ e A4), CascaderField, TreeSelectField, MentionsField, TagsInput, SegmentedControl, FileDropzone, SignaturePad, InlineEdit e ZodForm.",
+    count: 35,
   },
   {
     href: "/showcase/display",
     icon: Layers,
     title: "Display & Vitrine",
-    description: "Avatar, Badge, Card, BentoGrid, Progress, HoverCard, Item, Countdown, Diff, Mockups e mais.",
-    count: 20,
+    description: "StatCard (StatsSegmentsCard & StatsRingCard), Badge & BadgeRibbon, QRCode, Watermark, Skeleton Suite, Masonry, Callout, ImageLightbox e BentoGrid.",
+    count: 32,
   },
   {
     href: "/showcase/actions",
     icon: Zap,
     title: "Ações & Feedback",
-    description: "Button, ButtonGroup, ToggleGroup, SpeedDial, Swap, Loading, Modal, FormDrawer, Toast e mais.",
-    count: 15,
+    description: "Button (Dashed/Tonal/Round), Popconfirm, Result, FloatButton & BackTop, Spin Overlay, PasswordConfirmDialog, SortableList, Modal e Toast.",
+    count: 20,
   },
   {
     href: "/showcase/data",
     icon: BarChart2,
     title: "Dados, Tabelas & Gráficos",
-    description: "Chart (Bar, Area, Donut), DataTable, Spreadsheet, DescriptionList, KanbanBoard, TreeView e mais.",
-    count: 11,
+    description: "DescriptionList (Cards, Horizontal & Table), Chart, DataTable, Spreadsheet, JsonViewer, Barcode (Code-128), TransferList, TreeView e KanbanBoard.",
+    count: 13,
   },
   {
     href: "/showcase/communication",
     icon: MessageCircle,
     title: "Comunicação",
-    description: "ChatWindow, ChatComposer, EmailComposer, NotificationBell, SmartObject e ContextMenu.",
+    description: "ChatWindow, ChatComposer (/ quick replies & emoji), EmailComposer (templates & fullscreen), NotificationBell e SmartObject.",
     count: 6,
   },
   {
     href: "/showcase/navigation",
     icon: Navigation,
     title: "Navegação & Layout",
-    description: "Tabs, Pagination, Dock, Sidebar, Header, Breadcrumb, CommandMenu, SplitPane, Kbd e mais.",
-    count: 14,
+    description: "Tabs (Card & Editable-Card), Splitter (Colapso 1-clique), TableOfContents, Pagination, Dock, Sidebar, Header, Breadcrumb e CommandMenu.",
+    count: 15,
   },
   {
     href: "/showcase/animation",
     icon: Play,
     title: "Animação, Código & Tour",
-    description: "CodeBlock, Snippet, CopyButton, Marquee, Tour, CodeEditor, TextRotate, Stepper e Timeline.",
+    description: "CodeEditor (Syntax Highlight & Run), Stepper (Navigation & Dot), CodeBlock, Snippet, Marquee, Tour, TextRotate e Timeline.",
     count: 9,
   },
 ] as const;
@@ -154,9 +154,9 @@ export default function Home() {
       >
         <div className="max-w-4xl">
           <div className="flex flex-wrap items-center gap-2 mb-5">
-            <Badge label="Lopes UI v1.3" variant="primary" size="sm" />
-            <Badge label="95+ Componentes & Primitivos" variant="success" size="sm" dot />
-            <Badge label="Tailwind CSS v4 + Radix UI" variant="default" size="sm" />
+            <Badge label="Lopes UI v1.5" variant="primary" size="sm" />
+            <Badge label="125+ Componentes & Primitivos" variant="success" size="sm" dot />
+            <Badge label="Tailwind CSS v4 + Radix UI + Tiptap v3" variant="default" size="sm" />
             <Badge label="RBAC Nativo" variant="info" size="sm" />
           </div>
 
@@ -243,13 +243,13 @@ export default function Home() {
               icon={ShieldCheck}
               badge={<Badge label="useAccessControl" variant="success" size="xs" />}
               title="RBAC Nativo em Todos os Componentes"
-              description="Passe permission='users.write' ou role='admin' diretamente nos componentes para ocultar ou desabilitar automaticamente."
+              description="Passe componentId diretamente nos componentes para ocultar ou desabilitar automaticamente via AccessControlProvider."
               cta="Testar Simulador RBAC"
               href="/templates#settings"
             >
               <div className="pt-2">
                 <Snippet
-                  code={`<Button permission="billing.export">Exportar</Button>`}
+                  code={`<Button componentId="erp.vendas.exportar">Exportar</Button>`}
                   symbol={false}
                   size="sm"
                   className="w-full"
@@ -261,27 +261,32 @@ export default function Home() {
               colSpan={3}
               icon={Terminal}
               badge={<Badge label="Ecossistema Completo" variant="info" size="xs" />}
-              title="Componentes inspirados no melhor do shadcn/ui, Radix UI e daisyUI"
-              description="De formulários validados com ZodForm e seletores avançados (DateRangePicker, ColorPicker, TagInput) até Kanban, Chat Omnichannel e Editor Rich Text."
+              title="Componentes inspirados no melhor do Ant Design, Mantine UI, shadcn/ui e Radix UI"
+              description="De seletores corporativos (CascaderField, TreeSelectField, MentionsField, QRCode ISO 18004, Watermark, Popconfirm, Result) e editores avançados (RichTextEditor com Slash Commands & Documento A4, CodeEditor) até SegmentedControl, FileDropzone e Kanban."
             >
-              <Marquee duration={32} className="mt-2">
+              <Marquee duration={34} className="mt-2">
                 {[
+                  "CascaderField",
+                  "TreeSelectField",
+                  "MentionsField",
+                  "TagsInput & CheckableTag",
+                  "QRCode (ISO 18004)",
+                  "Watermark",
+                  "Popconfirm",
+                  "Result",
+                  "Skeleton Suite",
+                  "FloatButton & BackTop",
+                  "Masonry & BadgeRibbon",
+                  "RichTextEditor (/ & A4)",
+                  "CodeEditor",
+                  "SegmentedControl",
+                  "FileDropzone",
+                  "SignaturePad",
+                  "InlineEdit",
+                  "StatsSegmentsCard",
+                  "Barcode (Code-128)",
                   "DataTable",
                   "Spreadsheet",
-                  "Chart (Area/Bar/Donut)",
-                  "KanbanBoard",
-                  "ChatWindow",
-                  "EmailComposer",
-                  "RichTextEditor",
-                  "DateRangePickerField",
-                  "ColorPickerField",
-                  "TagInputField",
-                  "RadioGroupField",
-                  "SliderField",
-                  "BentoGrid",
-                  "SpeedDial",
-                  "Dock",
-                  "Countdown",
                 ].map((name) => (
                   <span
                     key={name}
