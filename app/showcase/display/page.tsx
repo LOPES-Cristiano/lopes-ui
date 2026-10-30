@@ -2,29 +2,36 @@
 
 import React, { useState } from "react";
 import Avatar, { AvatarGroup } from "@/components/Avatar";
-import Badge from "@/components/Badge";
+import Badge, { BadgeRibbon } from "@/components/Badge";
 import Calendar, { type CalendarEvent } from "@/components/Calendar";
-import Agenda, { type AgendaEvent } from "@/components/Agenda";
 import Card, { CardHeader, CardBody, CardFooter } from "@/components/Card";
 import Carousel from "@/components/Carousel";
-import StatCard, { StatGroup, type SparkPoint } from "@/components/StatCard";
+import StatCard, { StatsSegmentsCard, StatsRingCard, type SparkPoint } from "@/components/StatCard";
 import ServiceStatusCard, { UptimeBar, type UptimeDay, type ServiceIncident } from "@/components/ServiceStatusCard";
 import PingIndicator from "@/components/PingIndicator";
 import StatusBadge from "@/components/StatusBadge";
-import { DetailHeader, DetailGrid, DetailPanel, InfoField, MetricField, DetailTabs } from "@/components/DetailLayout";
+import { DetailHeader, DetailGrid, DetailPanel, InfoField, MetricField } from "@/components/DetailLayout";
 import EmojiPicker from "@/components/EmojiPicker";
 import Progress, { RadialProgress } from "@/components/Progress";
 import HoverCard from "@/components/HoverCard";
 import { Item, ItemGroup, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from "@/components/Item";
-import AspectRatio from "@/components/AspectRatio";
 import Countdown from "@/components/Countdown";
 import Diff from "@/components/Diff";
 import HoverGallery, { Hover3DCard } from "@/components/HoverGallery";
 import Indicator from "@/components/Indicator";
 import Stack from "@/components/Stack";
 import Mask from "@/components/Mask";
-import { BrowserMockup, WindowMockup, PhoneMockup, CodeMockup } from "@/components/Mockup";
+import { BrowserMockup, CodeMockup } from "@/components/Mockup";
 import BentoGrid, { BentoCard } from "@/components/BentoGrid";
+import ActionGridCard, { SwitchesCard } from "@/components/ActionGridCard";
+import Callout from "@/components/Callout";
+import Spoiler from "@/components/Spoiler";
+import HighlightText from "@/components/HighlightText";
+import ImageLightbox, { type LightboxMediaItem } from "@/components/ImageLightbox";
+import QRCode, { type QRCodeModuleStyle, type QRCodeStatus } from "@/components/QRCode";
+import Watermark from "@/components/Watermark";
+import Skeleton from "@/components/Skeleton";
+import Masonry from "@/components/Masonry";
 import CodeBlock from "@/components/CodeBlock";
 import toast from "@/components/Toast";
 import { TrendingUp, Star, ShoppingCart, Users, Package, ArrowRight, MoreHorizontal, Globe, Cpu, Layers, MapPin, Phone, Truck, Bell } from "lucide-react";
@@ -55,21 +62,6 @@ const DEMO_CAL_EVENTS: CalendarEvent[] = [
   { id: "e6", date: relDate(5),  title: "Deploy",            color: "primary",  allDay: false, startTime: "18:00" },
   { id: "e7", date: relDate(7),  title: "Reunião de board",  color: "default",  allDay: false, startTime: "11:00", endTime: "12:30" },
   { id: "e8", date: relDate(-2), title: "Retrospectiva",     color: "success",  allDay: false, startTime: "16:00", endTime: "17:00" },
-];
-
-const DEMO_AGENDA_EVENTS: AgendaEvent[] = [
-  { id: "a1", date: relDate(0),  title: "Stand-up diário",    color: "primary",  startTime: "09:00", endTime: "09:15", location: "Google Meet",  attendees: [{ name: "Ana Lima" }, { name: "Bruno Costa" }, { name: "Carol D." }] },
-  { id: "a2", date: relDate(0),  title: "Code review",        color: "info",     startTime: "14:00", endTime: "15:00", description: "Revisão do PR #347 – novo módulo de pagamentos.", location: "GitHub" },
-  { id: "a3", date: relDate(0),  title: "1:1 com o gestor",   color: "default",  startTime: "17:00", endTime: "17:30", location: "Sala 3B" },
-  { id: "a4", date: relDate(1),  title: "Sprint planning",    color: "success",  startTime: "10:00", endTime: "12:00", attendees: [{ name: "Ana Lima" }, { name: "Diego S." }, { name: "Evelyn R." }, { name: "Felipe T." }, { name: "Giovana M." }] },
-  { id: "a5", date: relDate(1),  title: "Almoço de equipe",   color: "warning",  allDay: false, startTime: "12:30", endTime: "14:00", location: "Restaurante Olivia", description: "Celebração pelo lançamento do v2.0." },
-  { id: "a6", date: relDate(2),  title: "Feriado nacional",   color: "warning",  allDay: true },
-  { id: "a7", date: relDate(3),  title: "Entrevista técnica", color: "danger",   startTime: "15:30", endTime: "16:30", location: "Zoom", attendees: [{ name: "RH - Pedro S." }] },
-  { id: "a8", date: relDate(5),  title: "Deploy v2.1",        color: "primary",  startTime: "18:00", description: "Janela de manutenção – comunicar stakeholders." },
-  { id: "a9", date: relDate(7),  title: "Reunião de board",   color: "info",     startTime: "11:00", endTime: "12:30", location: "Sala de Diretoria", attendees: [{ name: "CEO" }, { name: "CTO" }, { name: "VP Eng." }] },
-  { id: "a10",date: relDate(7),  title: "Treinamento DX",     color: "success",  startTime: "14:00", endTime: "17:00", description: "Workshop: Design System avançado." },
-  { id: "a11",date: relDate(10), title: "OKR check-in",       color: "default",  startTime: "10:00", endTime: "11:00" },
-  { id: "a12",date: relDate(12), title: "Demo day",           color: "primary",  allDay: false, startTime: "15:00", endTime: "17:00", location: "Auditório", attendees: [{ name: "Toda a empresa" }], description: "Apresentação dos resultados do trimestre." },
 ];
 
 function CalendarSingleDemo() {
@@ -244,12 +236,10 @@ export default function Page() {
 
           <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
-
-          <section id="badges" className="space-y-10 pb-10 sm:pb-14">
+          <section id="badges" className="space-y-10 pb-10 sm:pb-14 scroll-mt-20">
             <div>
-              <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Badge</h2>
-              <p className="mt-1 text-zinc-500">Etiquetas compactas para status, categorias e contadores.</p>
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Badge &amp; BadgeRibbon</h2>
+              <p className="mt-1 text-zinc-500">Etiquetas compactas para status, categorias, indicadores pulsantes inline (<code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1 rounded">status</code>) e fitas promocionais 3D de canto (<code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1 rounded">BadgeRibbon</code>).</p>
             </div>
 
             {/* Variants soft */}
@@ -321,32 +311,72 @@ export default function Page() {
               </div>
             </div>
 
+            {/* Badge status + BadgeRibbon unified inside #badges */}
+            <div id="badge-status-ribbon" className="space-y-5 scroll-mt-20">
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">
+                Modo Status Inline (<code className="text-sm font-mono">status=&quot;processing&quot;</code>) &amp; Fitas <code className="text-sm font-mono">BadgeRibbon</code>
+              </h3>
+              <div className="p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800 space-y-6">
+                <div className="flex flex-wrap items-center gap-6">
+                  <Badge status="processing" text="Em rota de entrega (RO)" />
+                  <Badge status="success" text="Montagem concluída" />
+                  <Badge status="warning" text="Aguardando confirmação 127V" />
+                  <Badge status="error" text="Endereço pendente" />
+                  <Badge status="default" text="Rascunho de orçamento" />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                  <BadgeRibbon text="Mais Vendido RO" variant="primary">
+                    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900 p-4 pt-5 space-y-1">
+                      <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 pr-16">Sofá Retrátil 3 Lugares</p>
+                      <p className="text-xs text-zinc-500">Molas ensacadas + espuma D-33 Soft · Porto Velho (69)</p>
+                    </div>
+                  </BadgeRibbon>
+
+                  <BadgeRibbon text="Inverter 127V" variant="success">
+                    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900 p-4 pt-5 space-y-1">
+                      <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 pr-16">Geladeira Duplex 450L</p>
+                      <p className="text-xs text-zinc-500">Pronta entrega no CD Manaus (92)</p>
+                    </div>
+                  </BadgeRibbon>
+
+                  <BadgeRibbon text="10x Sem Juros" variant="warning" placement="start">
+                    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900 p-4 pt-7 space-y-1">
+                      <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Colchão King Pocket</p>
+                      <p className="text-xs text-zinc-500">Fita alinhada à esquerda (<code className="font-mono">placement=&quot;start&quot;</code>)</p>
+                    </div>
+                  </BadgeRibbon>
+                </div>
+              </div>
+            </div>
+
             <div id="badge-props" className="space-y-4">
               <PropsTable rows={[
-                ["label",       "string",        "—",         "Texto exibido"],
+                ["label",       "string",        "—",         "Texto exibido na pílula"],
                 ["variant",     "BadgeVariant",  "'default'", "Esquema de cor"],
+                ["status",      "'success'|'processing'|'error'|'warning'|'default'", "—", "Modo indicador inline (com anel pulsante em processing)"],
+                ["text",        "ReactNode",     "—",         "Texto acompanhando o indicador no modo status"],
                 ["size",        "'xs'|'sm'|'md'|'lg'", "'md'", "Tamanho"],
                 ["solid",       "boolean",       "false",     "Fundo sólido em vez de suave"],
                 ["square",      "boolean",       "false",     "Forma retangular em vez de pílula"],
                 ["dot",         "boolean",       "false",     "Ponto colorido antes do texto"],
                 ["icon",        "LucideIcon",    "—",         "Ícone antes do texto"],
                 ["onRemove",    "() => void",    "—",         "Exibe × e chama ao clicar (badge removível)"],
+                ["BadgeRibbon", "text, variant, placement ('end'|'start')", "'end'", "Fita 3D dobrada no canto superior do card"],
                 ["className",   "string",        "—",         "Classes adicionais"],
                 ["componentId", "string",        "—",         "Identificador de controle de acesso"],
               ]} />
-              <CodeBlock code={`import Badge from "@/components/Badge";
+              <CodeBlock code={`import Badge, { BadgeRibbon } from "@/components/Badge";
 import { Star } from "lucide-react";
 
 <Badge label="Sucesso" variant="success" />
 <Badge label="Sólido" variant="primary" solid />
-<Badge label="Online" variant="success" dot />
-<Badge label="Destaque" variant="violet" icon={Star} />
-<Badge label="Remover" variant="info" onRemove={() => remove()} />
-<Badge label="v1.0" variant="default" square />`} />
+<Badge status="processing" text="Em rota de entrega" />
+<BadgeRibbon text="Mais Vendido" variant="primary">
+  <Card>...</Card>
+</BadgeRibbon>`} />
             </div>
           </section>
-
-          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
           <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
@@ -787,14 +817,14 @@ import { Star } from "lucide-react";
 
           <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-          <section id="stat-card" className="space-y-10 pb-10 sm:pb-14">
+          <section id="stat-card" className="space-y-10 pb-10 sm:pb-14 scroll-mt-20">
             <SectionHeader
-              label="Métricas"
-              title="Stat Card"
-              description="Cards de KPI para dashboards e páginas home de sub-sistemas. Suportam sparkline SVG, badge de tendência e skeleton de carregamento."
+              label="Métricas & KPIs"
+              title="StatCard, StatsSegmentsCard & StatsRingCard"
+              description="Família completa de cartões de KPI para dashboards: StatCard (com sparkline SVG e tendência), StatsSegmentsCard (distribuição percentual multicategoria) e StatsRingCard (progresso radial de metas)."
             />
 
-            <DemoCard id="stat-card-basic" title="Básico">
+            <DemoCard id="stat-card-basic" title="StatCard — Básico">
               <div className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <StatCard title="Usuários" value="12.4k" trend={{ value: 8.3 }} />
                 <StatCard title="Receita"  value="R$ 47k" trend={{ value: -2.1 }} />
@@ -803,7 +833,7 @@ import { Star } from "lucide-react";
               </div>
             </DemoCard>
 
-            <DemoCard id="stat-card-spark" title="Com sparkline">
+            <DemoCard id="stat-card-spark" title="StatCard — Com sparkline">
               <div className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <StatCard
                   title="Sessões"
@@ -836,7 +866,39 @@ import { Star } from "lucide-react";
               </div>
             </DemoCard>
 
-            <DemoCard id="stat-card-colors" title="Cores & skeleton">
+            <DemoCard id="stat-card-segments-ring" title="Variantes Analíticas — StatsSegmentsCard & StatsRingCard">
+              <div className="p-4 sm:p-6 grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch">
+                <StatsSegmentsCard
+                  title="Mix de Vendas por Departamento"
+                  subtitle="Unidades RO & AM"
+                  totalValue="R$ 1.842.500"
+                  trend={{ value: 14.8, label: "vs. mês anterior" }}
+                  segments={[
+                    { label: "Estofados & Salas", value: "R$ 773.850", share: 42, color: "indigo" },
+                    { label: "Eletrodomésticos", value: "R$ 571.175", share: 31, color: "emerald" },
+                    { label: "Colchões & Quartos", value: "R$ 331.650", share: 18, color: "amber" },
+                    { label: "Cozinhas", value: "R$ 165.825", share: 9, color: "teal" },
+                  ]}
+                />
+
+                <div className="grid grid-cols-1 gap-4">
+                  <StatsRingCard
+                    title="Entregas & Montagens no Prazo (SLA)"
+                    value="1.428"
+                    subtitle="pedidos entregues no mês"
+                    progress={89}
+                    color="emerald"
+                    stats={[
+                      { label: "Rondônia (RO)", value: "812 entregas" },
+                      { label: "Amazonas (AM)", value: "616 entregas" },
+                      { label: "Em rota hoje", value: "64 caminhões" },
+                    ]}
+                  />
+                </div>
+              </div>
+            </DemoCard>
+
+            <DemoCard id="stat-card-colors" title="Paletas de Cor & Skeleton">
               <div className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {(["default","indigo","blue","emerald","amber","red","violet","teal"] as const).map((c) => (
                   <StatCard key={c} title={c} value="9.876" color={c} trend={{ value: 5 }} spark={DEMO_SPARK_UP} />
@@ -1542,7 +1604,7 @@ import { Star } from "lucide-react";
                   icon={TrendingUp}
                   badge={<Badge label="RBAC" variant="info" size="xs" />}
                   title="Controle de Acesso Integrado (useAccessControl)"
-                  description="Condicione a visibilidade ou habilitação de qualquer botão, campo ou painel diretamente via props declarativas permission e role."
+                  description="Condicione a visibilidade ou habilitação de qualquer botão, campo ou painel diretamente via componentId e AccessControlProvider."
                   cta="Testar Simulador RBAC"
                   href="/templates#settings"
                 />
@@ -1561,7 +1623,555 @@ import { Star } from "lucide-react";
           </section>
 
           <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── ActionGridCard & SwitchesCard (Mantine UI) ───────────── */}
+          <section id="action-grid-switches" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Mantine UI Cards"
+              title="ActionGridCard & SwitchesCard"
+              description="Cartão de ações rápidas em grade colorida (ActionsGrid) e painel estruturado de preferências com interruptores acessíveis (SwitchesCard)."
+            />
+
+            <DemoCard id="action-grid-demo" title="Atalhos Operacionais da Loja & Preferências de Logística">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                <ActionGridCard
+                  title="Central Operacional — Móveis & Eletro"
+                  subtitle="Acesso rápido às rotinas das unidades RO e AM"
+                  columns={3}
+                  items={[
+                    { id: "cat", label: "Showroom & Salas", icon: Layers, color: "indigo", onClick: () => toast("Abrindo catálogo de estofados") },
+                    { id: "frete", label: "Rota de Entregas", icon: Truck, color: "emerald", badge: "12", onClick: () => toast("12 entregas em rota hoje") },
+                    { id: "mont", label: "Agendar Montagem", icon: Package, color: "amber", onClick: () => toast("Agenda de montadores aberta") },
+                    { id: "cli", label: "Clientes & Pós-Venda", icon: Users, color: "blue", onClick: () => toast("Central de atendimento") },
+                    { id: "filiais", label: "Lojas RO & AM", icon: MapPin, color: "teal", onClick: () => toast("Porto Velho, Ji-Paraná e Manaus") },
+                    { id: "sac", label: "WhatsApp (69)/(92)", icon: Phone, color: "violet", onClick: () => toast("Canal WhatsApp conectado") },
+                  ]}
+                />
+
+                <SwitchesCard
+                  title="Preferências da Filial"
+                  description="Configure notificações automáticas de estoque, entregas e montagem."
+                  icon={Bell}
+                  items={[
+                    {
+                      id: "alerta-estoque",
+                      title: "Alerta de Estoque Mínimo (Colchões & Eletro)",
+                      description: "Notifica compras quando itens curva A atingirem o ponto de reposição.",
+                      badge: "Recomendado",
+                      defaultChecked: true,
+                    },
+                    {
+                      id: "rota-auto",
+                      title: "Confirmação de Entrega via WhatsApp",
+                      description: "Dispara lembrete automático para clientes DDD (69) e (92) no dia da rota.",
+                      defaultChecked: true,
+                    },
+                    {
+                      id: "montagem-expressa",
+                      title: "Agendamento Automático de Montador",
+                      description: "Reserva equipe de montagem assim que a NF-e de móveis for faturada.",
+                      defaultChecked: false,
+                    },
+                  ]}
+                />
+              </div>
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Callout, Spoiler & HighlightText ─────────────────────── */}
+          <section id="callout-spoiler-highlight" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Conteúdo & Leitura"
+              title="Callout, Spoiler & HighlightText"
+              description="Blocos editoriais semânticos recolhíveis (Callout), truncamento suave de altura com gradiente (Mantine Spoiler) e realce de texto insensível a acentos para português brasileiro (HighlightText)."
+            />
+
+            <DemoCard id="callout-spoiler-demo" title="Callouts Semânticos, Spoiler de Ficha Técnica & Busca sem Acentos">
+              <CalloutSpoilerHighlightDemo />
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── ImageLightbox ────────────────────────────────────────── */}
+          <section id="image-lightbox" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Mídia & Documentos"
+              title="ImageLightbox"
+              description="Visualizador modal e inline de imagens e PDFs com zoom de 25% a 400% (roda do mouse ou duplo clique), arraste panorâmico (pan 2D), rotação 90°, espelhamento, filmstrip de miniaturas e atalhos de teclado."
+            />
+
+            <DemoCard id="image-lightbox-demo" title="Galeria de Ambientes — Clique em uma foto para abrir o Lightbox">
+              <ImageLightboxShowcaseDemo />
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── QRCode (ISO/IEC 18004 Pure TS Encoder) ───────────────── */}
+          <section id="qrcode" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Ant Design & Pagamentos"
+              title="QRCode (ISO/IEC 18004 Vetorial + PNG)"
+              description="Codificador QR Code puro em TypeScript (zero dependências externas) com correção Reed-Solomon (L, M, Q, H), 3 estilos de módulo (squares, rounded, dots), logo central com zona de silêncio automática, estados de ciclo de vida (active, expired, loading, scanned) e exportação PNG."
+            />
+
+            <DemoCard id="qrcode-demo" title="PIX Copia-e-Cola & Etiqueta Digital de Showroom (Interativo)">
+              <QRCodeShowcaseDemo />
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Watermark ────────────────────────────────────────────── */}
+          <section id="watermark" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Segurança Documental"
+              title="Watermark (Marca d'Água Anti-Adulteração)"
+              description="Container com estampa diagonal em malha alternada (2×2 brick grid), adaptação automática de contraste Light/Dark e proteção MutationObserver que restaura a marca d'água caso removida via DevTools."
+            />
+
+            <DemoCard id="watermark-demo" title="Termo de Entrega & Garantia Protegido por Marca d'Água">
+              <WatermarkShowcaseDemo />
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Skeleton Compound Suite ──────────────────────────────── */}
+          <section id="skeleton-suite" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Ant Design Placeholders"
+              title="Skeleton (Suite Composta: Avatar, Input, Button, Image, Card & Table)"
+              description="Wrapper declarativo <Skeleton loading={...}> que alterna suavemente entre o wireframe animado (pulse ou wave shimmer) e o conteúdo real, além de subcomponentes dedicados."
+            />
+
+            <DemoCard id="skeleton-suite-demo" title="Alternância ao Vivo (loading) & Subcomponentes Wave Shimmer">
+              <SkeletonShowcaseDemo />
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── Masonry Waterfall Layout ─────────────────────────────── */}
+          <section id="masonry" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Layout em Cascata"
+              title="Masonry"
+              description="Grade multi-colunas balanceada dinamicamente por altura (shortest-column waterfall), ideal para vitrines de ambientes, cartões de tamanhos variados e galerias editoriais."
+            />
+
+            <DemoCard id="masonry-demo" title="Vitrine de Ambientes em Cascata Multi-Colunas">
+              <MasonryAndRibbonShowcaseDemo />
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
       </div>
     </main>
+  );
+}
+
+
+function CalloutSpoilerHighlightDemo() {
+  const [query, setQuery] = useState("sofa rondonia colchao");
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Callout variant="info" title="Conforto e qualidade para o seu lar">
+          Entregas agendadas com montagem própria para toda a rede em{" "}
+          <strong>Porto Velho, Ji-Paraná (RO)</strong> e <strong>Manaus (AM)</strong>.
+        </Callout>
+
+        <Callout
+          variant="warning"
+          title="Verificação de Voltagem (Recolhível)"
+          collapsible
+          defaultOpen
+        >
+          Confirme a tensão elétrica do imóvel (127V em Manaus e Porto Velho) antes de finalizar o pedido de refrigeradores, lava e seca ou micro-ondas.
+        </Callout>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+        {/* Spoiler */}
+        <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-surface p-4 space-y-2">
+          <p className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+            Spoiler — Especificação Técnica Expansível
+          </p>
+          <Spoiler maxHeight={78} showLabel="Ler ficha técnica completa" hideLabel="Recolher ficha">
+            <div className="space-y-2 text-xs leading-relaxed text-zinc-600 dark:text-zinc-300">
+              <p>
+                <strong>Conjunto Sala &amp; Quarto Premium:</strong> Estrutura em madeira de reflorestamento tratada e seca em estufa, percintas elásticas italianas de alta resistência e espuma D-33 Soft certificada.
+              </p>
+              <p>
+                <strong>Dimensões &amp; Montagem:</strong> Largura 2,30m × Profundidade aberto 1,75m × Altura 1,05m. Módulos bipartidos que facilitam o acesso em elevadores residenciais e escadas.
+              </p>
+              <p>
+                <strong>Garantia &amp; Assistência:</strong> 12 meses de cobertura estrutural nas praças de Rondônia e Amazonas com atendimento direto pelo SAC (69) e (92).
+              </p>
+            </div>
+          </Spoiler>
+        </div>
+
+        {/* HighlightText */}
+        <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-surface p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+              HighlightText — Busca sem Acentos (pt-BR)
+            </p>
+          </div>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Digite termos (ex: sofa rondonia eletro)..."
+            className="w-full rounded-lg border border-input-border bg-input px-3 py-1.5 text-xs text-input-foreground focus:outline-none focus:border-ring"
+          />
+          <HighlightText
+            as="p"
+            tone="amber"
+            className="text-xs sm:text-sm leading-relaxed text-zinc-700 dark:text-zinc-300"
+            highlight={query.split(/\s+/).filter(Boolean)}
+            text="Nosso showroom de Móveis & Eletro oferece Sofá Retrátil, Colchão de Molas Ensacadas, Guarda-Roupa e Eletrodomésticos com entrega rápida em Rondônia (Porto Velho e Ji-Paraná) e no Amazonas (Manaus)."
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const SHOWROOM_GALLERY: LightboxMediaItem[] = [
+  {
+    id: "sala",
+    title: "Showroom Sala de Estar — Sofá Retrátil & Painel Ripado",
+    caption: "Unidade Flagship Porto Velho (RO) · Linha Conforto",
+    src:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600"><defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1e1b4b"/><stop offset="100%" stop-color="#4338ca"/></linearGradient></defs><rect width="960" height="600" fill="url(#g1)"/><rect x="110" y="130" width="740" height="240" rx="28" fill="#e0e7ff" opacity="0.16"/><rect x="180" y="310" width="600" height="145" rx="24" fill="#f8fafc"/><rect x="155" y="340" width="60" height="115" rx="18" fill="#cbd5e1"/><rect x="745" y="340" width="60" height="115" rx="18" fill="#cbd5e1"/><text x="480" y="210" fill="#ffffff" font-family="system-ui,sans-serif" font-size="34" font-weight="800" text-anchor="middle">Sala de Estar &amp; Estofados</text><text x="480" y="255" fill="#c7d2fe" font-family="system-ui,sans-serif" font-size="18" text-anchor="middle">Sofá Retrátil Imperial 3 Lugares · Porto Velho - RO</text></svg>`,
+      ),
+  },
+  {
+    id: "quarto",
+    title: "Ambiente Quarto Casal — Colchão Pocket & Guarda-Roupa",
+    caption: "Showroom Manaus (AM) · Conforto e qualidade para o seu lar",
+    src:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600"><defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#064e3b"/><stop offset="100%" stop-color="#0d9488"/></linearGradient></defs><rect width="960" height="600" fill="url(#g2)"/><rect x="200" y="280" width="560" height="180" rx="22" fill="#f0fdfa"/><rect x="235" y="245" width="215" height="55" rx="14" fill="#ccfbf1"/><rect x="510" y="245" width="215" height="55" rx="14" fill="#ccfbf1"/><text x="480" y="165" fill="#ffffff" font-family="system-ui,sans-serif" font-size="34" font-weight="800" text-anchor="middle">Colchões &amp; Dormitórios</text><text x="480" y="208" fill="#99f6e4" font-family="system-ui,sans-serif" font-size="18" text-anchor="middle">Molas Ensacadas &amp; Guarda-Roupa 6 Portas · Manaus - AM</text></svg>`,
+      ),
+  },
+  {
+    id: "cozinha",
+    title: "Linha Branca & Eletrodomésticos Inverter",
+    caption: "Refrigeradores Frost Free, Fogões e Lavanderia · RO & AM",
+    src:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600"><defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0f172a"/><stop offset="100%" stop-color="#334155"/></linearGradient></defs><rect width="960" height="600" fill="url(#g3)"/><rect x="270" y="190" width="180" height="310" rx="18" fill="#e2e8f0"/><line x1="270" y1="315" x2="450" y2="315" stroke="#94a3b8" stroke-width="4"/><rect x="500" y="290" width="190" height="210" rx="18" fill="#f1f5f9"/><circle cx="595" cy="400" r="56" fill="#334155"/><text x="480" y="115" fill="#ffffff" font-family="system-ui,sans-serif" font-size="34" font-weight="800" text-anchor="middle">Cozinha &amp; Eletrodomésticos</text><text x="480" y="155" fill="#cbd5e1" font-family="system-ui,sans-serif" font-size="18" text-anchor="middle">Geladeira Inverter 450L + Lava &amp; Seca 11kg</text></svg>`,
+      ),
+  },
+];
+
+function ImageLightboxShowcaseDemo() {
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  return (
+    <div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {SHOWROOM_GALLERY.map((item, idx) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => {
+              setActiveIndex(idx);
+              setOpen(true);
+            }}
+            className="group relative overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-900 text-left shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={item.src}
+              alt={item.title}
+              className="h-44 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="bg-white dark:bg-zinc-900 p-3">
+              <p className="truncate text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                {item.title}
+              </p>
+              <p className="mt-0.5 truncate text-[11px] text-zinc-500">{item.caption}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <ImageLightbox
+        open={open}
+        onClose={() => setOpen(false)}
+        items={SHOWROOM_GALLERY}
+        activeIndex={activeIndex}
+        onIndexChange={setActiveIndex}
+      />
+    </div>
+  );
+}
+
+function QRCodeShowcaseDemo() {
+  const [status, setStatus] = useState<QRCodeStatus>("active");
+  const [moduleStyle, setModuleStyle] = useState<QRCodeModuleStyle>("rounded");
+  const [payload, setPayload] = useState("https://lopes-ui.com.br/showroom/PED-69042-RO");
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-xs font-semibold text-zinc-500 mr-1">Status:</span>
+          {(["active", "expired", "loading", "scanned"] as const).map((st) => (
+            <Button
+              key={st}
+              size="sm"
+              variant={status === st ? "primary" : "outline"}
+              onClick={() => setStatus(st)}
+            >
+              {st}
+            </Button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-xs font-semibold text-zinc-500 mr-1">Módulos:</span>
+          {(["squares", "rounded", "dots"] as const).map((ms) => (
+            <Button
+              key={ms}
+              size="sm"
+              variant={moduleStyle === ms ? "tonal" : "outline"}
+              onClick={() => setModuleStyle(ms)}
+            >
+              {ms}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div className="max-w-md">
+        <input
+          type="text"
+          value={payload}
+          onChange={(e) => setPayload(e.target.value || "https://lopes-ui.com.br")}
+          placeholder="Digite URL, código PIX ou SKU..."
+          className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-indigo-500"
+        />
+      </div>
+
+      <div className="flex flex-wrap items-start gap-6">
+        <QRCode
+          value={payload}
+          size={176}
+          status={status}
+          onRefresh={() => {
+            setStatus("loading");
+            setTimeout(() => setStatus("active"), 550);
+          }}
+          moduleStyle={moduleStyle}
+          title="PIX / Pedido #PED-69042"
+          caption="Porto Velho (RO) · R$ 3.490,00"
+          icon={
+            <span className="flex h-full w-full items-center justify-center rounded-md bg-indigo-600 text-[11px] font-black text-white">
+              LP
+            </span>
+          }
+          copyable
+          downloadable
+          downloadFileName="qrcode-pedido-69042"
+          printable
+        />
+
+        <QRCode
+          value="SHOWROOM-AM-COLCHAO-POCKET-KING-92115"
+          size={176}
+          moduleStyle="dots"
+          color="#0f766e"
+          title="Etiqueta Showroom Manaus"
+          caption="Colchão Pocket King · (92)"
+          copyable
+          downloadable
+        />
+      </div>
+    </div>
+  );
+}
+
+function WatermarkShowcaseDemo() {
+  const [stamp, setStamp] = useState("LOPES MÓVEIS & ELETRO");
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-xs font-medium text-zinc-500">Texto da marca d&apos;água:</span>
+        <input
+          type="text"
+          value={stamp}
+          onChange={(e) => setStamp(e.target.value)}
+          className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1 text-xs text-zinc-800 dark:text-zinc-200"
+        />
+      </div>
+
+      <Watermark
+        content={[stamp || "CONFIDENCIAL", "RO (69) · AM (92)"]}
+        className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8"
+      >
+        <div className="max-w-2xl space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <Badge variant="primary" size="xs" label="Documento Oficial" />
+            <span className="font-mono text-xs text-zinc-400">PROTOCOLO #RO-69042</span>
+          </div>
+          <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+            Certificado de Entrega Técnica & Montagem — Lopes Distribuidora Ltda.
+          </h4>
+          <p className="text-xs sm:text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
+            Declaramos que os móveis (Sofá Retrátil Imperial 3 Lugares e Guarda-Roupa Casal 6 Portas) foram montados e nivelados conforme padrão técnico de qualidade — <em>&ldquo;Conforto e qualidade para o seu lar&rdquo;</em> — com garantia integral assistida nas unidades de Rondônia e Amazonas.
+          </p>
+        </div>
+      </Watermark>
+    </div>
+  );
+}
+
+function SkeletonShowcaseDemo() {
+  const [loading, setLoading] = useState(true);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-zinc-500">
+          Wrapper &lt;Skeleton loading=&#123;loading&#125; avatar active animation=&quot;wave&quot;&gt;
+        </span>
+        <Button
+          size="sm"
+          variant={loading ? "primary" : "outline"}
+          onClick={() => setLoading((l) => !l)}
+        >
+          {loading ? "Exibir Conteúdo Real" : "Voltar para Skeleton"}
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
+          <Skeleton loading={loading} avatar={{ size: "lg" }} animation="wave" paragraph={{ rows: 3 }}>
+            <div className="flex items-start gap-3.5">
+              <Avatar name="Mariana Costa" size="lg" status="online" />
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                  Mariana Costa — Consultora Showroom Porto Velho (RO)
+                </p>
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Especialista em projetos de Salas de Estar, Colchões de Molas Ensacadas e Eletrodomésticos Inverter. Atendimento WhatsApp (69) 99245-1820.
+                </p>
+              </div>
+            </div>
+          </Skeleton>
+        </div>
+
+        <Skeleton.Table rows={3} columns={4} animation="wave" />
+      </div>
+    </div>
+  );
+}
+
+function MasonryAndRibbonShowcaseDemo() {
+  const cards = [
+    {
+      key: "c1",
+      ribbon: "Mais Vendido RO",
+      ribbonVariant: "primary" as const,
+      status: "processing" as const,
+      statusText: "Montagem inclusa em Porto Velho e Ji-Paraná",
+      title: "Sofá Retrátil & Reclinável Imperial 3 Lugares",
+      desc: "Molas ensacadas no assento, espuma D-33 Soft, abertura de 1,80m e revestimento em linho macio.",
+      price: "R$ 3.490,00",
+    },
+    {
+      key: "c2",
+      ribbon: "Inverter 127V",
+      ribbonVariant: "success" as const,
+      status: "success" as const,
+      statusText: "Pronta entrega CD Manaus (AM)",
+      title: "Geladeira Frost Free Duplex 450L",
+      desc: "Painel eletrônico externo, turbo freezer e economia de até 35% de energia para sua cozinha.",
+      price: "R$ 4.299,90",
+    },
+    {
+      key: "c3",
+      ribbon: "10x Sem Juros",
+      ribbonVariant: "warning" as const,
+      status: "default" as const,
+      statusText: "Linha Conforto & Dormitórios",
+      title: "Conjunto Box King Molas Ensacadas Pocket",
+      desc: "Tampo em malha belga respirável com pillow top de alta densidade e tratamento antiácaro. Conforto e qualidade para o seu lar.",
+      price: "R$ 2.990,00",
+    },
+    {
+      key: "c4",
+      ribbon: "Novidade",
+      ribbonVariant: "teal" as const,
+      status: "processing" as const,
+      statusText: "Disponível em RO (69) e AM (92)",
+      title: "Guarda-Roupa Casal 6 Portas c/ Espelho",
+      desc: "Corrediças telescópicas, cabideiros em alumínio e divisão interna ele & ela.",
+      price: "R$ 2.190,00",
+    },
+    {
+      key: "c5",
+      ribbon: "Lavanderia",
+      ribbonVariant: "info" as const,
+      status: "success" as const,
+      statusText: "Garantia oficial 10 anos no motor",
+      title: "Lava e Seca 11kg Smart Inverter",
+      desc: "Lavagem a vapor higienizadora e ciclo rápido de 15 minutos.",
+      price: "R$ 3.890,00",
+    },
+    {
+      key: "c6",
+      ribbon: "Sala de Jantar",
+      ribbonVariant: "violet" as const,
+      status: "warning" as const,
+      statusText: "Últimas 4 peças no showroom",
+      title: "Mesa de Jantar 6 Cadeiras Tampo Vidro Off-White",
+      desc: "Cadeiras estofadas ergonômicas em veludo e base estrutural em MDF chanfrado.",
+      price: "R$ 2.650,00",
+    },
+  ];
+
+  return (
+    <Masonry
+      columns={{ base: 1, sm: 2, lg: 3 }}
+      gap={18}
+      items={cards.map((c) => ({
+        key: c.key,
+        children: (
+          <BadgeRibbon text={c.ribbon} variant={c.ribbonVariant}>
+            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 pt-5 space-y-2.5 shadow-2xs">
+              <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 pr-20">
+                {c.title}
+              </p>
+              <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                {c.desc}
+              </p>
+              <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2">
+                <Badge status={c.status} text={c.statusText} />
+                <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
+                  {c.price}
+                </span>
+              </div>
+            </div>
+          </BadgeRibbon>
+        ),
+      }))}
+    />
   );
 }
