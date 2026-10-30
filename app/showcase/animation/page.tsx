@@ -5,14 +5,13 @@ import CodeBlock from "@/components/CodeBlock";
 import TextRotate, { type TextRotateItem, type TextRotateHandle } from "@/components/TextRotate";
 import Stepper from "@/components/Stepper";
 import Timeline from "@/components/Timeline";
-import CodeEditor from "@/components/CodeEditor";
+import CodeEditor, { type CodeEditorLanguage } from "@/components/CodeEditor";
 import Marquee from "@/components/Marquee";
 import Snippet, { CopyButton } from "@/components/Snippet";
 import Tour from "@/components/Tour";
-import Badge from "@/components/Badge";
 import Button from "@/components/Button";
 import toast from "@/components/Toast";
-import { Sparkles, Terminal, Shield, Zap, CheckCircle2 } from "lucide-react";
+import { Terminal, CheckCircle2 } from "lucide-react";
 import { SectionHeader, DemoCard, PropsTable } from "@/app/showcase/_shared";
 
 export default function Page() {
@@ -60,174 +59,51 @@ export default function Page() {
               code={`@import "tailwindcss";\n\n:root {\n  --background: #ffffff;\n  --foreground: #171717;\n}\n\n@theme inline {\n  --color-background: var(--background);\n  --color-foreground: var(--foreground);\n  --font-sans: var(--font-geist-sans);\n  --font-mono: var(--font-geist-mono);\n}\n\nbody {\n  background: var(--background);\n  color: var(--foreground);\n  overflow-x: hidden;\n}`}
             />
           </DemoCard>
-
-          <DemoCard id="codeblock-tabs" title="Abas (múltiplos arquivos)">
-            <CodeBlock
-              tabs={[
-                {
-                  label: "page.tsx",
-                  language: "tsx",
-                  code: `import CodeBlock from "@/components/CodeBlock";\n\nexport default function Page() {\n  return (\n    <CodeBlock\n      filename="example.ts"\n      language="ts"\n      lineNumbers\n      code={myCode}\n    />\n  );\n}`,
-                },
-                {
-                  label: "terminal",
-                  language: "bash",
-                  code: `npm install shiki`,
-                },
-                {
-                  label: "tsconfig.json",
-                  language: "json",
-                  code: `{\n  "compilerOptions": {\n    "target": "ES2022",\n    "lib": ["dom", "ES2022"],\n    "strict": true,\n    "moduleResolution": "bundler",\n    "paths": { "@/*": ["./*"] }\n  }\n}`,
-                },
-              ]}
-            />
-          </DemoCard>
-
-          <div id="codeblock-props" className="space-y-4">
-            <PropsTable
-              rows={[
-                ["code", "string", "''", "Código a exibir (modo single-file)"],
-                ["language", "string", "'tsx'", "Linguagem para highlight (tsx, ts, bash, css, json…)"],
-                ["filename", "string", "—", "Nome do arquivo exibido no cabeçalho"],
-                ["showCopy", "boolean", "true", "Mostra botão de copiar"],
-                ["lineNumbers", "boolean", "false", "Exibe números de linha"],
-                ["maxLines", "number", "—", "Recolhe o bloco após N linhas com botão 'Expandir'"],
-                ["tabs", "CodeBlockTab[]", "—", "Modo multi-arquivo com abas"],
-              ]}
-            />
-          </div>
         </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-        {/* ── Snippet & CopyButton ──────────────────────────────────── */}
+        {/* ── Snippet & CopyButton ─────────────────────────────────── */}
         <section id="snippet" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
-            label="Comandos & Chaves"
+            label="CLI & Cópia Rápida"
             title="Snippet & CopyButton"
-            description="Componente inline para comandos de terminal, chaves de API e tokens com botão de cópia animado e modo secreto (maskSecret)."
+            description="Componente de linha de comando copiável em um clique e botão autônomo de cópia com feedback visual animado."
           />
 
-          <DemoCard id="snippet-demo" title="Variantes, Multilinha e Chave Secreta">
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <Snippet code="npx lopes-ui init" variant="default" />
-                <Snippet code="npm run build:lib" variant="dark" />
-                <Snippet code="pnpm dlx lopes-ui doctor" variant="indigo" symbol=">" />
-              </div>
-
-              <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 space-y-2">
-                <p className="text-xs font-medium text-zinc-500">
-                  Modo Chave de API (maskSecret) + CopyButton standalone:
-                </p>
-                <div className="flex flex-wrap items-center gap-3">
-                  <Snippet
-                    code="sk_test_EXEMPLO_NAO_REAL"
-                    symbol="KEY"
-                    maskSecret
-                    onCopyCode={() => toast.success("Chave copiada para a área de transferência!")}
-                  />
-                  <CopyButton
-                    value="https://api.lopes-ui.dev/v1/webhooks"
-                    label="Copiar Webhook URL"
-                    variant="outline"
-                    size="md"
-                  />
-                </div>
-              </div>
+          <DemoCard id="snippet-demo" title="Variantes de Snippet e CopyButton">
+            <div className="flex flex-wrap items-center gap-3">
+              <Snippet code="npx lopes-ui init --all" />
+              <Snippet code="npm run build:lib" variant="dark" />
+              <CopyButton value="https://lopes-ui.com.br" label="Copiar URL" />
             </div>
           </DemoCard>
-
-          <PropsTable
-            rows={[
-              ["code", "string | string[]", "—", "Texto ou linhas do comando/token"],
-              ["symbol", "string | false", "'$'", "Prefixo exibido antes da linha"],
-              ["variant", "'default' | 'dark' | 'bordered' | 'indigo'", "'default'", "Estilo visual do container"],
-              ["maskSecret", "boolean", "false", "Oculta o texto com caracteres • e botão de olho"],
-            ]}
-          />
         </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-        {/* ── Marquee ──────────────────────────────────────────────── */}
-        <section id="marquee" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+        {/* ── CodeEditor ──────────────────────────────────────────── */}
+        <section id="code-editor" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
-            label="Movimento Contínuo"
-            title="Marquee"
-            description="Faixa de rolagem contínua infinita (horizontal ou vertical) com pausa automática no hover, inversão de direção e máscara de fade nas bordas."
+            label="IDE Interativa Next-Gen"
+            title="CodeEditor"
+            description="Editor de código com realce de sintaxe em tempo real sem latência (JSON, SQL, TypeScript, HTML, CSS, YAML, Bash), auto-fechamento de chaves/aspas, seletor de linguagem, botão Executar (Ctrl+Enter), validação ao vivo, busca case-sensitive e modo tela cheia."
           />
 
-          <DemoCard id="marquee-demo" title="Ticker Horizontal Duplo (Pause on Hover)">
-            <div className="space-y-3">
-              <Marquee duration={25}>
-                {[
-                  { icon: Zap, title: "Next.js 16 Ready", badge: "SSR" },
-                  { icon: Shield, title: "RBAC Controle de Acesso", badge: "Segurança" },
-                  { icon: Sparkles, title: "80+ Componentes", badge: "Design System" },
-                  { icon: Terminal, title: "CLI Automatizada", badge: "DX" },
-                  { icon: CheckCircle2, title: "WCAG 2.1 AA Acessível", badge: "Radix UI" },
-                ].map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div
-                      key={item.title}
-                      className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/50 px-4 py-2.5"
-                    >
-                      <Icon size={16} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
-                      <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap">
-                        {item.title}
-                      </span>
-                      <Badge label={item.badge} variant="default" size="xs" />
-                    </div>
-                  );
-                })}
-              </Marquee>
-
-              <Marquee duration={30} reverse>
-                {[
-                  "Tailwind CSS v4",
-                  "TypeScript Strict",
-                  "Tree-Shakeable ESM/CJS",
-                  "Dark Mode Nativo",
-                  "Zero Runtime Overhead",
-                  "ZodForm Validation",
-                ].map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-lg border border-zinc-200/80 dark:border-zinc-800 px-3.5 py-1.5 text-xs font-mono text-zinc-600 dark:text-zinc-400"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </Marquee>
-            </div>
+          <DemoCard id="code-editor-demo" title="Realce de Sintaxe ao Vivo, Troca de Linguagem & Execução (Ctrl+Enter)">
+            <CodeEditorDemo />
           </DemoCard>
 
           <PropsTable
             rows={[
-              ["reverse", "boolean", "false", "Inverte o sentido da rolagem"],
-              ["pauseOnHover", "boolean", "true", "Pausa a animação quando o cursor está sobre a faixa"],
-              ["orientation", "'horizontal' | 'vertical'", "'horizontal'", "Eixo da animação"],
-              ["duration", "number", "28", "Duração de um ciclo em segundos"],
-              ["fadeEdges", "boolean", "true", "Aplica máscara de transparência nas extremidades"],
+              ["language", "CodeEditorLanguage", "'plaintext'", "Linguagem ativa (json, sql, typescript, html, css, yaml, bash...)"],
+              ["syntaxHighlight", "boolean", "true", "Ativa camada de realce de sintaxe sincronizada em tempo real"],
+              ["allowLanguageChange", "boolean", "false", "Exibe seletor de linguagem no cabeçalho do editor"],
+              ["autoCloseBrackets", "boolean", "true", "Auto-completa pares (), [], {}, aspas e indentação inteligente"],
+              ["variant", "'default' | 'dark' | 'minimal'", "'default'", "Tema visual do editor (inclui modo IDE escuro permanente)"],
+              ["onExecute", "(code: string) => void | Promise<void>", "—", "Habilita botão Executar e atalho Ctrl+Enter / Cmd+Enter"],
             ]}
           />
-        </section>
-
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
-
-        {/* ── Tour (Onboarding Spotlight) ──────────────────────────── */}
-        <section id="tour" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
-          <SectionHeader
-            label="Onboarding Guiado"
-            title="Tour"
-            description="Guia interativo passo a passo para apresentação de novos recursos (Product Tour / Onboarding), com indicador de progresso, mídia e callbacks."
-          />
-
-          <DemoCard id="tour-demo" title="Tour Interativo de Onboarding">
-            <TourShowcaseDemo />
-          </DemoCard>
         </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
@@ -235,55 +111,50 @@ export default function Page() {
         {/* ── Stepper ──────────────────────────────────────────────── */}
         <section id="stepper" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
-            label="Fluxo em Etapas"
+            label="Fluxo Multi-etapas"
             title="Stepper"
-            description="Indicador de progresso em etapas, com suporte a orientação horizontal/vertical, variantes e estados por passo."
+            description="Indicador de progresso por etapas nas orientações horizontal e vertical com 5 variantes visuais: default, outlined, minimal (barra segmentada), navigation (barra clicável com chevron) e dot (pontos de progresso)."
           />
 
-          <DemoCard id="stepper-horizontal" title="Horizontal">
-            <div className="space-y-8">
-              {([0, 1, 2, 3] as const).map((active) => (
-                <div key={active}>
-                  <p className="text-xs font-mono text-zinc-400 mb-3">activeStep={active}</p>
-                  <Stepper
-                    activeStep={active}
-                    steps={[
-                      { title: "Conta", description: "Dados de login" },
-                      { title: "Endereço", description: "Onde te encontrar" },
-                      { title: "Pagamento", description: "Forma de cobrança" },
-                      { title: "Revisão", description: "Confirmar pedido" },
-                    ]}
-                  />
-                </div>
-              ))}
-            </div>
+          <DemoCard id="stepper-horizontal" title="5 Variantes Visuais Interativas (Default, Outlined, Minimal, Navigation & Dot)">
+            <StepperShowcaseDemo />
           </DemoCard>
+        </section>
 
-          <DemoCard id="stepper-vertical" title="Vertical & Variantes">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Stepper
-                orientation="vertical"
-                activeStep={1}
-                steps={[
-                  { title: "Pedido confirmado", description: "Recebemos seu pedido", status: "completed" },
-                  { title: "Em separação", description: "Preparando o envio", status: "current" },
-                  { title: "Enviado", description: "A caminho de você" },
-                  { title: "Entregue", description: "Pedido entregue" },
-                ]}
-              />
-              <div className="space-y-6">
-                {(["default", "outlined", "minimal"] as const).map((variant) => (
-                  <div key={variant}>
-                    <p className="text-xs font-mono text-zinc-400 mb-2">variant=&quot;{variant}&quot;</p>
-                    <Stepper
-                      variant={variant}
-                      activeStep={1}
-                      steps={[{ title: "Passo 1" }, { title: "Passo 2" }, { title: "Passo 3" }]}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── Timeline ─────────────────────────────────────────────── */}
+        <section id="timeline" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Cronologia"
+            title="Timeline"
+            description="Lista cronológica de eventos com suporte a ícones, cores semânticas, badges e layout alternado."
+          />
+
+          <DemoCard id="timeline-left" title="Rastreamento de Entrega & Montagem">
+            <Timeline
+              items={[
+                { title: "Pedido aprovado", description: "Sofá Retrátil 3L + Geladeira Inverter reservados no CD Porto Velho (RO).", date: "08:30", color: "primary", badge: "Faturado" },
+                { title: "NF-e emitida", description: "Nota fiscal autorizada e etiqueta de volume gerada.", date: "09:15", color: "info" },
+                { title: "Em rota de entrega", description: "Caminhão baú saiu para entrega no bairro Embratel.", date: "11:00", color: "warning", badge: "Em trânsito" },
+                { title: "Entregue & Montado", description: "Montagem concluída e canhoto digital assinado pelo cliente.", date: "14:40", color: "success", badge: "Concluído" },
+              ]}
+            />
+          </DemoCard>
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── Tour ─────────────────────────────────────────────────── */}
+        <section id="tour" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Onboarding Guiado"
+            title="Tour"
+            description="Cartão interativo de onboarding passo a passo com indicadores de progresso, badges contextuais e navegação por etapas."
+          />
+
+          <DemoCard id="tour-demo" title="Demonstração Interativa de Onboarding">
+            <TourShowcaseDemo />
           </DemoCard>
         </section>
 
@@ -300,15 +171,15 @@ export default function Page() {
           <DemoCard id="text-rotate-inline" title="Inline numa frase & Stagger do centro">
             <div className="space-y-8">
               <p className="text-2xl font-semibold text-zinc-800 dark:text-zinc-200">
-                Criamos soluções para{" "}
+                Conforto e qualidade para{" "}
                 <TextRotate
                   inline
                   staggerDuration={0.04}
                   items={[
-                    { content: "Designers", className: "bg-teal-100 text-teal-700 px-2 rounded" },
-                    { content: "Devs", className: "bg-indigo-100 text-indigo-700 px-2 rounded" },
-                    { content: "Gestores", className: "bg-amber-100 text-amber-700 px-2 rounded" },
-                    { content: "Startups", className: "bg-rose-100 text-rose-700 px-2 rounded" },
+                    { content: "sua Sala", className: "bg-teal-100 text-teal-700 px-2 rounded" },
+                    { content: "seu Quarto", className: "bg-indigo-100 text-indigo-700 px-2 rounded" },
+                    { content: "sua Cozinha", className: "bg-amber-100 text-amber-700 px-2 rounded" },
+                    { content: "seu Lar", className: "bg-rose-100 text-rose-700 px-2 rounded" },
                   ] satisfies TextRotateItem[]}
                 />
               </p>
@@ -320,69 +191,115 @@ export default function Page() {
                   duration={2200}
                   staggerFrom="center"
                   staggerDuration={0.06}
-                  items={["DESIGN", "DEVELOP", "DEPLOY", "SCALE", "REPEAT"]}
+                  items={["MÓVEIS", "ESTOFADOS", "COLCHÕES", "ELETRO", "CONFORTO"]}
                 />
               </div>
             </div>
           </DemoCard>
 
-          <DemoCard id="text-rotate-manual" title="Presets (rise, discrete, emojis) & Controle Manual">
+          <DemoCard id="text-rotate-manual" title="Controle Manual via Ref">
             <TextRotateManualDemo />
           </DemoCard>
         </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-        {/* ── Timeline ─────────────────────────────────────────────── */}
-        <section id="timeline" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+        {/* ── Marquee ──────────────────────────────────────────────── */}
+        <section id="marquee" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
-            label="Cronologia"
-            title="Timeline"
-            description="Lista cronológica de eventos com suporte a ícones, cores semânticas, badges e layout alternado."
+            label="Movimento Contínuo"
+            title="Marquee"
+            description="Faixa de rolagem infinita suave (horizontal ou vertical) com pausa automática ao passar o mouse e máscaras de gradiente nas bordas."
           />
 
-          <DemoCard id="timeline-left" title="Layout esquerdo (padrão)">
-            <Timeline
-              items={[
-                { title: "Empresa fundada", description: "Início da jornada com apenas 3 pessoas.", date: "Jan 2020", color: "primary", badge: "Marco" },
-                { title: "Primeiro produto", description: "Lançamos a versão Alpha para clientes selecionados.", date: "Jun 2020", color: "success" },
-                { title: "Expansão da equipe", description: "Time cresceu para 25 colaboradores.", date: "Mar 2021", color: "info" },
-                { title: "Rodada de investimento", description: "Série A: R$ 8 milhões captados.", date: "Out 2021", color: "warning", badge: "Destaque" },
-                { title: "Produto em produção", description: "Deploy global concluído com sucesso.", date: "Fev 2022", color: "success", badge: "Release" },
-              ]}
-            />
-          </DemoCard>
-
-          <DemoCard id="timeline-alternate" title="Layout alternado & Cores">
-            <Timeline
-              layout="alternate"
-              items={[
-                { title: "Sprint 1", description: "Setup do projeto e design system.", date: "Semana 1", color: "primary" },
-                { title: "Sprint 2", description: "Módulo de autenticação.", date: "Semana 2", color: "info" },
-                { title: "Sprint 3", description: "Dashboard e relatórios.", date: "Semana 3", color: "success" },
-                { title: "Sprint 4", description: "Testes e estabilização.", date: "Semana 4", color: "warning" },
-                { title: "Release", description: "Deploy para produção.", date: "Semana 5", color: "success", badge: "v1.0" },
-              ]}
-            />
-          </DemoCard>
-        </section>
-
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
-
-        {/* ── CodeEditor ──────────────────────────────────────────── */}
-        <section id="code-editor" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
-          <SectionHeader
-            label="IDE Interativa"
-            title="CodeEditor"
-            description="Editor de código interativo com realce de sintaxe, validação JSON/SQL em tempo real, busca e substituição, formatação automática e modo tela cheia."
-          />
-
-          <DemoCard id="code-editor-demo" title="Editor JSON com validação ao vivo">
-            <CodeEditorDemo />
+          <DemoCard id="marquee-demo" title="Faixa Infinita de Departamentos & Praças">
+            <Marquee duration={26} pauseOnHover>
+              {[
+                "Sofás Retráteis & Salas",
+                "Colchões Molas Ensacadas",
+                "Refrigeradores Inverter",
+                "Guarda-Roupas & Dormitórios",
+                "Porto Velho — RO (69)",
+                "Manaus — AM (92)",
+                "Ji-Paraná — RO (69)",
+                "Lavadoras & Lava e Seca",
+              ].map((tag) => (
+                <div
+                  key={tag}
+                  className="flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-200 shadow-2xs"
+                >
+                  <CheckCircle2 size={14} className="text-emerald-500" />
+                  <span>{tag}</span>
+                </div>
+              ))}
+            </Marquee>
           </DemoCard>
         </section>
       </div>
     </main>
+  );
+}
+
+function StepperShowcaseDemo() {
+  const [active, setActive] = useState(1);
+  const steps = [
+    { title: "Pedido & Itens", description: "Móveis e Eletro selecionados" },
+    { title: "Frete & Montagem", description: "Agendamento RO / AM" },
+    { title: "Pagamento", description: "Aprovação financeira" },
+    { title: "Concluído", description: "Pronto para expedição" },
+  ];
+
+  return (
+    <div className="space-y-8">
+      <Stepper activeStep={active} onStepClick={setActive} steps={steps} />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+        <div>
+          <p className="text-xs font-mono text-zinc-400 mb-3">variant=&quot;outlined&quot;</p>
+          <Stepper
+            variant="outlined"
+            activeStep={active}
+            onStepClick={setActive}
+            steps={[{ title: "Separação" }, { title: "Rota" }, { title: "Montagem" }]}
+          />
+        </div>
+        <div>
+          <p className="text-xs font-mono text-zinc-400 mb-3">variant=&quot;minimal&quot; (Barra Segmentada)</p>
+          <Stepper
+            variant="minimal"
+            activeStep={active}
+            onStepClick={setActive}
+            steps={steps}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-6 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+        <div>
+          <p className="text-xs font-mono text-zinc-400 mb-3">
+            variant=&quot;navigation&quot; (Ant Design Steps Navigation Bar)
+          </p>
+          <Stepper
+            variant="navigation"
+            activeStep={active}
+            onStepClick={setActive}
+            steps={steps}
+          />
+        </div>
+
+        <div>
+          <p className="text-xs font-mono text-zinc-400 mb-3">
+            variant=&quot;dot&quot; (Ant Design Progress Dot)
+          </p>
+          <Stepper
+            variant="dot"
+            activeStep={active}
+            onStepClick={setActive}
+            steps={steps}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -406,19 +323,19 @@ function TourShowcaseDemo() {
               title: "Busca Global Instantânea (⌘K)",
               badge: "Atalho",
               description:
-                "Pressione Ctrl+K ou Cmd+K a qualquer momento para navegar entre mais de 80 componentes, páginas exemplo e ações rápidas.",
+                "Pressione Ctrl+K ou Cmd+K a qualquer momento para navegar entre mais de 110 componentes, páginas exemplo e ações rápidas.",
             },
             {
               title: "Controle de Acesso RBAC Nativo",
               badge: "Enterprise",
               description:
-                "Passe as props permission ou role diretamente em qualquer botão, campo de formulário, aba ou tabela para ocultar ou desabilitar sem código boilerplate.",
+                "Passe componentId diretamente em qualquer botão, campo, editor ou cartão para gerenciar visibilidade e bloqueio via AccessControlProvider.",
             },
             {
-              title: "5 Páginas Exemplo Prontas",
+              title: "Editores Next-Gen & Padrões Mantine UI",
               badge: "Novo",
               description:
-                "Explore dashboards executivos, pipeline CRM, central Helpdesk, configurações RBAC e vitrine e-commerce na seção Templates.",
+                "Experimente o novo RichTextEditor com Slash Commands (/), CodeEditor com syntax highlight ao vivo, SegmentedControl e FileDropzone.",
             },
           ]}
         />
@@ -450,7 +367,7 @@ function TextRotateManualDemo() {
           align="center"
           staggerFrom="center"
           staggerDuration={0.05}
-          items={["Primeiro", "Segundo", "Terceiro", "Quarto", "Quinto"]}
+          items={["Porto Velho (RO)", "Manaus (AM)", "Ji-Paraná (RO)", "Ariquemes (RO)", "Itacoatiara (AM)"]}
         />
       </div>
       <div className="flex justify-center gap-2">
@@ -468,29 +385,61 @@ function TextRotateManualDemo() {
   );
 }
 
+const CODE_SAMPLES: Record<string, string> = {
+  sql: `-- Consulta de Vendas por Praça (Rondônia & Amazonas)\nSELECT\n  f.uf,\n  f.cidade,\n  p.departamento,\n  COUNT(v.id) AS total_pedidos,\n  SUM(v.valor_liquido) AS receita_brl\nFROM vendas v\nJOIN filiais f ON f.id = v.filial_id\nJOIN produtos p ON p.id = v.produto_id\nWHERE f.uf IN ('RO', 'AM')\n  AND v.status = 'FATURADO'\nGROUP BY f.uf, f.cidade, p.departamento\nORDER BY receita_brl DESC;`,
+  json: JSON.stringify(
+    {
+      library: "lopes-ui",
+      version: "1.4.0",
+      empresa: "Lopes Distribuidora Ltda.",
+      pracas: ["Rondônia (69)", "Amazonas (92)"],
+      editors: ["RichTextEditor", "RichTextField", "CodeEditor", "EmailComposer", "ChatComposer"],
+      treeShakeable: true,
+    },
+    null,
+    2,
+  ),
+  typescript: `import { RichTextEditor } from "lopes-ui/rich-text";\nimport { SegmentedControl, StatsSegmentsCard } from "lopes-ui";\n\nexport function PainelFilial() {\n  const pracas = ["Porto Velho - RO", "Manaus - AM"] as const;\n  return pracas.map((p) => p.toUpperCase());\n}`,
+};
+
 function CodeEditorDemo() {
-  const [code, setCode] = React.useState(
-    JSON.stringify(
-      {
-        name: "lopes-ui",
-        version: "1.3.0",
-        theme: "system",
-        subpaths: ["primitives", "rich-text", "spreadsheet", "code-block", "hooks", "utils"],
-        accessibility: "WCAG 2.1 AA",
-        treeShakeable: true,
-      },
-      null,
-      2
-    )
-  );
+  const [lang, setLang] = useState<CodeEditorLanguage>("sql");
+  const [code, setCode] = useState<string>(CODE_SAMPLES.sql);
+  const [darkMode, setDarkMode] = useState(true);
 
   return (
-    <CodeEditor
-      title="lopes-ui.config.json"
-      language="json"
-      value={code}
-      onChange={setCode}
-      height={280}
-    />
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <Terminal size={14} />
+          <span>Experimente trocar a linguagem ou pressionar Ctrl+Enter para executar</span>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setDarkMode((d) => !d)}
+        >
+          {darkMode ? "Tema: Dark IDE" : "Tema: Adaptativo"}
+        </Button>
+      </div>
+
+      <CodeEditor
+        title={lang === "sql" ? "relatorio_vendas_ro_am.sql" : lang === "json" ? "config.json" : "PainelFilial.tsx"}
+        language={lang}
+        allowLanguageChange
+        onLanguageChange={(next) => {
+          setLang(next);
+          if (CODE_SAMPLES[next]) setCode(CODE_SAMPLES[next]);
+        }}
+        variant={darkMode ? "dark" : "default"}
+        value={code}
+        onChange={setCode}
+        onExecute={async (src) => {
+          await new Promise((r) => setTimeout(r, 400));
+          toast.success(`Executado com sucesso (${src.split("\n").length} linhas processadas)!`);
+        }}
+        height={290}
+      />
+    </div>
   );
 }
