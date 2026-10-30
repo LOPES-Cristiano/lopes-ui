@@ -15,6 +15,8 @@ export type RadioOption = {
   hideIfDenied?: boolean;
 };
 
+export type RadioGroupVariant = "default" | "cards" | "buttons" | "buttons-solid";
+
 export type RadioGroupFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   id?: string;
   name?: string;
@@ -25,8 +27,15 @@ export type RadioGroupFieldProps = Omit<FieldWrapperProps, "children" | "id"> & 
   disabled?: boolean;
   /** Layout direction of the radio options */
   direction?: "vertical" | "horizontal";
-  /** default = classic radio circles; cards = rich selectable cards (shadcn/ui ChoiceCard pattern) */
-  variant?: "default" | "cards";
+  /**
+   * - `default`: classic radio circles
+   * - `cards`: rich selectable cards (shadcn/ui ChoiceCard pattern)
+   * - `buttons`: Ant Design `Radio.Button` joined outline group (`buttonStyle="outline"`)
+   * - `buttons-solid`: Ant Design `Radio.Button` joined solid-active group (`buttonStyle="solid"`)
+   */
+  variant?: RadioGroupVariant;
+  /** Size for `buttons` / `buttons-solid` variants */
+  size?: "sm" | "md" | "lg";
   /** Grid columns when variant="cards" */
   columns?: 1 | 2 | 3;
   componentId?: string;
@@ -83,6 +92,7 @@ export default function RadioGroupField({
   disabled = false,
   direction = "vertical",
   variant = "default",
+  size = "md",
   columns,
   componentId,
   hideIfDenied = false,
@@ -135,12 +145,14 @@ export default function RadioGroupField({
         aria-invalid={error ? true : undefined}
         data-component-id={componentId}
         className={cn(
-          variant === "cards" && resolvedColumns > 1
-            ? cn("grid gap-3.5", CARD_COLS[resolvedColumns])
-            : cn(
-                "flex",
-                direction === "horizontal" ? "flex-row flex-wrap gap-x-6 gap-y-3" : "flex-col gap-2.5"
-              )
+          variant === "buttons" || variant === "buttons-solid"
+            ? "inline-flex max-w-full flex-wrap sm:flex-nowrap items-stretch rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden divide-x divide-zinc-200 dark:divide-zinc-800"
+            : variant === "cards" && resolvedColumns > 1
+              ? cn("grid gap-3.5", CARD_COLS[resolvedColumns])
+              : cn(
+                  "flex",
+                  direction === "horizontal" ? "flex-row flex-wrap gap-x-6 gap-y-3" : "flex-col gap-2.5"
+                )
         )}
       >
         {visibleOptions.map((option) => {
@@ -149,6 +161,46 @@ export default function RadioGroupField({
           const isOptionDisabled = Boolean(effectiveDisabled || option.disabled || !optAllowed);
           const optId = `${id}-${option.value}`;
           const optComponentId = option.componentId ?? (componentId ? `${componentId}.${option.value}` : undefined);
+
+          if (variant === "buttons" || variant === "buttons-solid") {
+            const isSolid = variant === "buttons-solid";
+            const btnSizeCls =
+              size === "sm"
+                ? "px-3 py-1.5 text-xs gap-1.5"
+                : size === "lg"
+                  ? "px-5 py-2.5 text-sm gap-2"
+                  : "px-3.5 py-2 text-xs sm:text-sm gap-1.5";
+            return (
+              <label
+                key={option.value}
+                htmlFor={optId}
+                className={cn(
+                  "relative inline-flex cursor-pointer items-center justify-center font-medium transition-all duration-150 select-none",
+                  btnSizeCls,
+                  isChecked
+                    ? isSolid
+                      ? "bg-primary text-primary-foreground font-semibold shadow-2xs"
+                      : "bg-primary/10 text-primary font-semibold ring-1 ring-inset ring-primary"
+                    : "bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/70 hover:text-primary",
+                  isOptionDisabled && "opacity-45 pointer-events-none cursor-not-allowed"
+                )}
+              >
+                <input
+                  id={optId}
+                  data-component-id={optComponentId}
+                  type="radio"
+                  name={groupName}
+                  value={option.value}
+                  checked={isChecked}
+                  disabled={isOptionDisabled}
+                  onChange={() => !isOptionDisabled && selectOption(option.value)}
+                  className="peer sr-only"
+                />
+                {option.icon && <span className="shrink-0">{option.icon}</span>}
+                <span className="whitespace-nowrap">{option.label}</span>
+              </label>
+            );
+          }
 
           if (variant === "cards") {
             return (
