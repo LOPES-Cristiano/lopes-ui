@@ -20,18 +20,39 @@ import {
   WrapText,
   Maximize2,
   Minimize2,
+  Play,
+  Loader2,
 } from 'lucide-react';
 import Button from './Button';
 import toast from './Toast';
 import { cn } from '@/utils/cn';
+import { useAccessControl } from './useAccessControl';
 
-export type CodeEditorLanguage = 'json' | 'sql' | 'javascript' | 'typescript' | 'html' | 'css' | 'plaintext';
+export type CodeEditorLanguage =
+  | 'json'
+  | 'sql'
+  | 'javascript'
+  | 'typescript'
+  | 'html'
+  | 'css'
+  | 'yaml'
+  | 'markdown'
+  | 'xml'
+  | 'bash'
+  | 'plaintext';
+
+export type CodeEditorVariant = 'default' | 'dark' | 'minimal';
 
 export interface CodeEditorProps {
-  value: string;
+  value?: string;
   onChange?: (value: string) => void;
   defaultValue?: string;
   language?: CodeEditorLanguage;
+  allowLanguageChange?: boolean;
+  onLanguageChange?: (language: CodeEditorLanguage) => void;
+  variant?: CodeEditorVariant;
+  syntaxHighlight?: boolean;
+  autoCloseBrackets?: boolean;
   readOnly?: boolean;
   disabled?: boolean;
   height?: string | number;
@@ -50,9 +71,12 @@ export interface CodeEditorProps {
   showFullscreen?: boolean;
   onReset?: () => void;
   onSave?: (code: string) => void;
+  onExecute?: (code: string) => void | Promise<void>;
+  executeLabel?: string;
   onApply?: () => void;
   applyLabel?: string;
   componentId?: string;
+  hideIfDenied?: boolean;
   filename?: string;
 }
 
@@ -62,6 +86,20 @@ export interface SyntaxDiagnostic {
   column?: number;
   message?: string;
 }
+
+const ALL_LANGUAGES: { value: CodeEditorLanguage; label: string }[] = [
+  { value: 'json', label: 'JSON' },
+  { value: 'sql', label: 'SQL' },
+  { value: 'typescript', label: 'TypeScript' },
+  { value: 'javascript', label: 'JavaScript' },
+  { value: 'html', label: 'HTML' },
+  { value: 'xml', label: 'XML' },
+  { value: 'css', label: 'CSS' },
+  { value: 'yaml', label: 'YAML' },
+  { value: 'markdown', label: 'Markdown' },
+  { value: 'bash', label: 'Bash' },
+  { value: 'plaintext', label: 'Texto' },
+];
 
 // ── Formatador Inteligente ──────────────────────────────────────────────────
 export function formatCode(code: string, language: CodeEditorLanguage = 'json'): string {
@@ -80,7 +118,7 @@ export function formatCode(code: string, language: CodeEditorLanguage = 'json'):
     const keywords = [
       'SELECT', 'FROM', 'LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'CROSS JOIN',
       'JOIN', 'WHERE', 'GROUP BY', 'ORDER BY', 'HAVING', 'LIMIT', 'OFFSET',
-      'UNION ALL', 'UNION', 'WITH', 'SET', 'VALUES',
+      'UNION ALL', 'UNION', 'WITH', 'SET', 'VALUES', 'INSERT INTO', 'UPDATE', 'DELETE FROM',
     ];
     let formatted = code.trim().replace(/\r\n/g, '\n').replace(/\t/g, '  ');
     keywords.forEach((kw) => {
@@ -116,13 +154,11 @@ export function validateCode(code: string, language: CodeEditorLanguage = 'json'
     try {
       JSON.parse(code);
       return { isValid: true };
-    } catch (err: any) {
-      const msg = err?.message || 'Erro de sintaxe JSON';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro de sintaxe JSON';
       let line = 1;
       let column = 1;
 
-      // Extrai linha e coluna da mensagem de erro do motor V8/SpiderMonkey
-      // Ex: "Unexpected token } in JSON at position 123" ou "at line 5 column 12"
       const lineColMatch = msg.match(/line (\d+) column (\d+)/i);
       if (lineColMatch) {
         line = parseInt(lineColMatch[1], 10);
@@ -137,7 +173,6 @@ export function validateCode(code: string, language: CodeEditorLanguage = 'json'
         }
       }
 
-      // Traduz erros comuns para português amigável
       let friendlyMsg = msg;
       if (msg.includes('Unexpected token')) {
         friendlyMsg = msg.replace('Unexpected token', 'Caractere inesperado');
@@ -154,18 +189,32 @@ export function validateCode(code: string, language: CodeEditorLanguage = 'json'
     }
   }
 
-  // Validador de pares de delimitadores para outras linguagens
+  if (language === 'plaintext' || language === 'markdown') {
+    return { isValid: true };
+  }
+
+  // Validador de pares de delimitadores (ignorando conteúdo dentro de strings básicas)
   const pairs: Record<string, string> = { '(': ')', '{': '}', '[': ']' };
+  const closingSet = new Set(Object.values(pairs));
   const stack: { char: string; line: number; col: number }[] = [];
   const lines = code.split('\n');
+  let inQuote: string | null = null;
 
   for (let l = 0; l < lines.length; l++) {
     const curLine = lines[l];
     for (let c = 0; c < curLine.length; c++) {
       const char = curLine[c];
+      const prev = c > 0 ? curLine[c - 1] : '';
+      if ((char === '"' || char === "'" || char === '`') && prev !== '\\') {
+        if (inQuote === char) inQuote = null;
+        else if (!inQuote) inQuote = char;
+        continue;
+      }
+      if (inQuote) continue;
+
       if (pairs[char]) {
         stack.push({ char, line: l + 1, col: c + 1 });
-      } else if (Object.values(pairs).includes(char)) {
+      } else if (closingSet.has(char)) {
         if (stack.length === 0) {
           return {
             isValid: false,
@@ -200,12 +249,212 @@ export function validateCode(code: string, language: CodeEditorLanguage = 'json'
   return { isValid: true };
 }
 
+// ── Lightweight Zero-Lag Syntax Highlighter ────────────────────────────────
+
+const SQL_KW = new Set([
+  'SELECT', 'FROM', 'WHERE', 'JOIN', 'LEFT', 'RIGHT', 'INNER', 'OUTER', 'CROSS', 'ON',
+  'AS', 'AND', 'OR', 'NOT', 'IN', 'IS', 'NULL', 'LIKE', 'ILIKE', 'BETWEEN', 'EXISTS',
+  'GROUP', 'BY', 'ORDER', 'ASC', 'DESC', 'HAVING', 'LIMIT', 'OFFSET', 'UNION', 'ALL',
+  'INSERT', 'INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'CREATE', 'ALTER', 'DROP',
+  'TABLE', 'VIEW', 'INDEX', 'PRIMARY', 'KEY', 'FOREIGN', 'REFERENCES', 'DISTINCT',
+  'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'COALESCE', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END',
+  'WITH', 'RETURNING', 'TRUE', 'FALSE',
+]);
+
+const JS_TS_KW = new Set([
+  'const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while', 'do',
+  'switch', 'case', 'break', 'continue', 'default', 'try', 'catch', 'finally', 'throw',
+  'new', 'class', 'extends', 'implements', 'interface', 'type', 'enum', 'import', 'from',
+  'export', 'async', 'await', 'typeof', 'instanceof', 'in', 'of', 'void', 'true', 'false',
+  'null', 'undefined', 'this', 'super', 'readonly', 'public', 'private', 'protected',
+]);
+
+const BASH_KW = new Set([
+  'if', 'then', 'else', 'elif', 'fi', 'for', 'in', 'do', 'done', 'case', 'esac',
+  'while', 'function', 'export', 'local', 'echo', 'exit', 'return', 'cd', 'npm', 'npx', 'git',
+]);
+
+function renderHighlightedCode(
+  code: string,
+  language: CodeEditorLanguage,
+  forceDark: boolean
+): React.ReactNode {
+  if (!code) return null;
+  if (language === 'plaintext') return code;
+
+  const cls = {
+    comment: forceDark ? 'text-zinc-500 italic' : 'text-zinc-400 dark:text-zinc-500 italic',
+    key: forceDark ? 'text-sky-300' : 'text-sky-700 dark:text-sky-300',
+    string: forceDark ? 'text-emerald-300' : 'text-emerald-700 dark:text-emerald-300',
+    number: forceDark ? 'text-amber-300' : 'text-amber-700 dark:text-amber-300',
+    keyword: forceDark
+      ? 'text-violet-300 font-semibold'
+      : 'text-violet-700 dark:text-violet-300 font-semibold',
+    bool: forceDark
+      ? 'text-orange-300 font-semibold'
+      : 'text-orange-600 dark:text-orange-300 font-semibold',
+    tag: forceDark ? 'text-rose-300' : 'text-rose-700 dark:text-rose-300',
+    punct: forceDark ? 'text-zinc-400' : 'text-zinc-500 dark:text-zinc-400',
+  };
+
+  if (language === 'json') {
+    const tokenRe =
+      /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|([{}\[\],:])/g;
+    const out: React.ReactNode[] = [];
+    let last = 0;
+    let m: RegExpExecArray | null;
+    let k = 0;
+    while ((m = tokenRe.exec(code)) !== null) {
+      if (m.index > last) out.push(code.slice(last, m.index));
+      if (m[1] !== undefined) {
+        if (m[2] !== undefined) {
+          out.push(
+            <span key={k++} className={cls.key}>
+              {m[1]}
+            </span>
+          );
+          out.push(
+            <span key={k++} className={cls.punct}>
+              {m[2]}
+            </span>
+          );
+        } else {
+          out.push(
+            <span key={k++} className={cls.string}>
+              {m[1]}
+            </span>
+          );
+        }
+      } else if (m[3] !== undefined) {
+        out.push(
+          <span key={k++} className={cls.bool}>
+            {m[3]}
+          </span>
+        );
+      } else if (m[4] !== undefined) {
+        out.push(
+          <span key={k++} className={cls.number}>
+            {m[4]}
+          </span>
+        );
+      } else if (m[5] !== undefined) {
+        out.push(
+          <span key={k++} className={cls.punct}>
+            {m[5]}
+          </span>
+        );
+      }
+      last = tokenRe.lastIndex;
+    }
+    if (last < code.length) out.push(code.slice(last));
+    return out;
+  }
+
+  if (language === 'html' || language === 'xml') {
+    const tokenRe = /(<!--[\s\S]*?-->)|(<\/?[a-zA-Z0-9_:-]+|\/>|>)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/g;
+    const out: React.ReactNode[] = [];
+    let last = 0;
+    let m: RegExpExecArray | null;
+    let k = 0;
+    while ((m = tokenRe.exec(code)) !== null) {
+      if (m.index > last) out.push(code.slice(last, m.index));
+      if (m[1]) {
+        out.push(
+          <span key={k++} className={cls.comment}>
+            {m[1]}
+          </span>
+        );
+      } else if (m[2]) {
+        out.push(
+          <span key={k++} className={cls.tag}>
+            {m[2]}
+          </span>
+        );
+      } else if (m[3]) {
+        out.push(
+          <span key={k++} className={cls.string}>
+            {m[3]}
+          </span>
+        );
+      }
+      last = tokenRe.lastIndex;
+    }
+    if (last < code.length) out.push(code.slice(last));
+    return out;
+  }
+
+  // General tokenizer for SQL, JS, TS, CSS, YAML, Bash, Markdown
+  const tokenRe =
+    /(\/\/[^\n]*|--[^\n]*|#[^\n]*|\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(-?\b\d+(?:\.\d+)?\b)|(\b[A-Za-z_][A-Za-z0-9_]*\b)/g;
+  const out: React.ReactNode[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let k = 0;
+
+  while ((m = tokenRe.exec(code)) !== null) {
+    if (m.index > last) out.push(code.slice(last, m.index));
+    if (m[1] !== undefined) {
+      out.push(
+        <span key={k++} className={cls.comment}>
+          {m[1]}
+        </span>
+      );
+    } else if (m[2] !== undefined) {
+      out.push(
+        <span key={k++} className={cls.string}>
+          {m[2]}
+        </span>
+      );
+    } else if (m[3] !== undefined) {
+      out.push(
+        <span key={k++} className={cls.number}>
+          {m[3]}
+        </span>
+      );
+    } else if (m[4] !== undefined) {
+      const word = m[4];
+      const isKw =
+        language === 'sql'
+          ? SQL_KW.has(word.toUpperCase())
+          : language === 'bash'
+            ? BASH_KW.has(word)
+            : JS_TS_KW.has(word);
+      if (isKw) {
+        out.push(
+          <span key={k++} className={cls.keyword}>
+            {word}
+          </span>
+        );
+      } else {
+        out.push(word);
+      }
+    }
+    last = tokenRe.lastIndex;
+  }
+  if (last < code.length) out.push(code.slice(last));
+  return out;
+}
+
+const BRACKET_PAIRS: Record<string, string> = {
+  '(': ')',
+  '[': ']',
+  '{': '}',
+  '"': '"',
+  "'": "'",
+  '`': '`',
+};
+
 // ── Componente CodeEditor ──────────────────────────────────────────────────
 export default function CodeEditor({
   value,
   onChange,
   defaultValue = '',
-  language = 'json',
+  language: languageProp = 'json',
+  allowLanguageChange = false,
+  onLanguageChange,
+  variant = 'default',
+  syntaxHighlight = true,
+  autoCloseBrackets = true,
   readOnly = false,
   disabled = false,
   height,
@@ -224,14 +473,44 @@ export default function CodeEditor({
   showFullscreen = true,
   onReset,
   onSave,
+  onExecute,
+  executeLabel = 'Executar',
   onApply,
   applyLabel,
   componentId,
+  hideIfDenied = false,
   filename,
 }: CodeEditorProps) {
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+  const effectiveDisabled = disabled || (!hasPermission && !hideIfDenied);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const gutterRef = useRef<HTMLDivElement>(null);
+  const highlightRef = useRef<HTMLPreElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const [prevLangProp, setPrevLangProp] = useState<CodeEditorLanguage>(languageProp);
+  const [internalLang, setInternalLang] = useState<CodeEditorLanguage>(languageProp);
+  const [executing, setExecuting] = useState(false);
+
+  if (prevLangProp !== languageProp) {
+    setPrevLangProp(languageProp);
+    setInternalLang(languageProp);
+  }
+
+  const language = internalLang;
+  const isControlled = value !== undefined;
+  const currentValue = isControlled ? value : internalValue;
+
+  const updateValue = useCallback(
+    (next: string) => {
+      if (!isControlled) setInternalValue(next);
+      onChange?.(next);
+    },
+    [isControlled, onChange]
+  );
 
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
   const [wordWrap, setWordWrap] = useState(false);
@@ -258,26 +537,56 @@ export default function CodeEditor({
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [replaceTerm, setReplaceTerm] = useState('');
-  const [searchMatches, setSearchMatches] = useState<number[]>([]);
-  const [currentMatchIdx, setCurrentMatchIdx] = useState<number>(-1);
+  const [caseSensitive, setCaseSensitive] = useState(false);
+  const [rawMatchIdx, setCurrentMatchIdx] = useState<number>(0);
 
-  // Valor atual controlado ou fallback
-  const currentValue = value !== undefined ? value : defaultValue;
+  const searchMatches = useMemo(() => {
+    if (!searchTerm || !searchOpen) return [];
+    const matches: number[] = [];
+    const hay = caseSensitive ? currentValue : currentValue.toLowerCase();
+    const needle = caseSensitive ? searchTerm : searchTerm.toLowerCase();
+    let pos = 0;
 
-  // Linhas do código
+    while ((pos = hay.indexOf(needle, pos)) !== -1) {
+      matches.push(pos);
+      pos += Math.max(1, needle.length);
+    }
+    return matches;
+  }, [searchTerm, currentValue, searchOpen, caseSensitive]);
+
+  const currentMatchIdx =
+    searchMatches.length === 0
+      ? -1
+      : Math.min(Math.max(0, rawMatchIdx), searchMatches.length - 1);
+
   const lines = useMemo(() => currentValue.split('\n'), [currentValue]);
   const totalLines = lines.length;
 
-  // Diagnóstico sintático em tempo real
-  const diagnostic = useMemo(() => validateCode(currentValue, language), [currentValue, language]);
+  const diagnostic = useMemo(
+    () => validateCode(currentValue, language),
+    [currentValue, language]
+  );
 
-  // Sincroniza o Scroll vertical entre o Textarea e a régua de números de linha
+  const forceDark = variant === 'dark';
+
+  const highlightedNodes = useMemo(
+    () => (syntaxHighlight ? renderHighlightedCode(currentValue, language, forceDark) : null),
+    [currentValue, language, syntaxHighlight, forceDark]
+  );
+
+  // Sincroniza o Scroll entre Textarea, Gutter e Highlight Overlay
   const handleScroll = useCallback(() => {
-    if (!textareaRef.current || !gutterRef.current) return;
-    gutterRef.current.scrollTop = textareaRef.current.scrollTop;
+    const ta = textareaRef.current;
+    if (!ta) return;
+    if (gutterRef.current) {
+      gutterRef.current.scrollTop = ta.scrollTop;
+    }
+    if (highlightRef.current) {
+      highlightRef.current.scrollTop = ta.scrollTop;
+      highlightRef.current.scrollLeft = ta.scrollLeft;
+    }
   }, []);
 
-  // Atualiza posição do cursor (Linha e Coluna)
   const updateCursorPosition = useCallback(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -291,7 +600,6 @@ export default function CodeEditor({
     setCursorPos({ line, col });
   }, [currentValue]);
 
-  // Pula para a linha do erro ou linha clicada
   const jumpToLine = useCallback(
     (lineNum: number) => {
       const textarea = textareaRef.current;
@@ -304,25 +612,53 @@ export default function CodeEditor({
 
       textarea.focus();
       textarea.setSelectionRange(charPos, charPos + (lines[lineNum - 1]?.length || 0));
-      // Estima a altura da linha (22px)
       textarea.scrollTop = Math.max(0, (lineNum - 4) * 22);
-      if (gutterRef.current) {
-        gutterRef.current.scrollTop = textarea.scrollTop;
-      }
+      handleScroll();
     },
-    [lines]
+    [lines, handleScroll]
   );
 
-  // Teclas de atalho e indentação
+  const handleRunExecute = useCallback(async () => {
+    if (!onExecute || executing) return;
+    setExecuting(true);
+    try {
+      await onExecute(currentValue);
+    } finally {
+      setExecuting(false);
+    }
+  }, [onExecute, executing, currentValue]);
+
+  // Formatação com feedback
+  const handleFormat = useCallback(() => {
+    if (!diagnostic.isValid) {
+      toast.error('Corrija os erros de sintaxe antes de formatar.');
+      return;
+    }
+    const formatted = formatCode(currentValue, language);
+    updateValue(formatted);
+    toast.success('Código formatado e indentado!');
+  }, [diagnostic.isValid, currentValue, language, updateValue]);
+
+  const handleMinify = useCallback(() => {
+    if (!diagnostic.isValid) {
+      toast.error('Corrija os erros de sintaxe antes de minificar.');
+      return;
+    }
+    const minified = minifyCode(currentValue, language);
+    updateValue(minified);
+    toast.info('Código minificado.');
+  }, [diagnostic.isValid, currentValue, language, updateValue]);
+
+  // Teclas de atalho, auto-close brackets e indentação
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const textarea = textareaRef.current;
-    if (!textarea || readOnly || disabled) return;
+    if (!textarea || readOnly || effectiveDisabled) return;
 
     const { selectionStart, selectionEnd } = textarea;
-    const isMac = typeof window !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const isMac =
+      typeof window !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
     const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
 
-    // 1. Escape / Ctrl+M: permite que o próximo Tab / Shift+Tab mova o foco para fora do editor (WCAG 2.1.2)
     if (e.key === 'Escape') {
       if (searchOpen) {
         e.preventDefault();
@@ -339,28 +675,35 @@ export default function CodeEditor({
       return;
     }
 
-    // 2. Salvar: Ctrl + S / Cmd + S
-    if (ctrlOrCmd && (e.key === 's' || e.key === 'S')) {
+    // Executar: Ctrl + Enter
+    if (ctrlOrCmd && e.key === 'Enter' && onExecute) {
       e.preventDefault();
-      if (onSave) onSave(currentValue);
+      void handleRunExecute();
       return;
     }
 
-    // 3. Formatar: Ctrl + Shift + F / Cmd + Shift + F
+    // Salvar: Ctrl + S
+    if (ctrlOrCmd && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      onSave?.(currentValue);
+      return;
+    }
+
+    // Formatar: Ctrl + Shift + F
     if (ctrlOrCmd && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
       e.preventDefault();
       handleFormat();
       return;
     }
 
-    // 4. Buscar: Ctrl + F
+    // Buscar: Ctrl + F
     if (ctrlOrCmd && (e.key === 'f' || e.key === 'F') && !e.shiftKey) {
       e.preventDefault();
       setSearchOpen(true);
       return;
     }
 
-    // 5. Substituir: Ctrl + H
+    // Substituir: Ctrl + H
     if (ctrlOrCmd && (e.key === 'h' || e.key === 'H')) {
       e.preventDefault();
       setSearchOpen(true);
@@ -368,7 +711,70 @@ export default function CodeEditor({
       return;
     }
 
-    // 6. Indentação Inteligente com Tab e Shift + Tab (salvo quando tabMovesFocus está ativo)
+    // Auto-fechamento de delimitadores e envolvimento de seleção
+    if (autoCloseBrackets && !ctrlOrCmd && !e.altKey && BRACKET_PAIRS[e.key]) {
+      const openChar = e.key;
+      const closeChar = BRACKET_PAIRS[openChar];
+      const selected = currentValue.substring(selectionStart, selectionEnd);
+
+      // Se digitar o caractere de fechamento que já está logo à frente (para aspas)
+      if (
+        selectionStart === selectionEnd &&
+        (openChar === '"' || openChar === "'" || openChar === '`') &&
+        currentValue[selectionStart] === openChar
+      ) {
+        e.preventDefault();
+        textarea.setSelectionRange(selectionStart + 1, selectionStart + 1);
+        return;
+      }
+
+      e.preventDefault();
+      const nextVal =
+        currentValue.substring(0, selectionStart) +
+        openChar +
+        selected +
+        closeChar +
+        currentValue.substring(selectionEnd);
+      updateValue(nextVal);
+      requestAnimationFrame(() => {
+        if (selected.length > 0) {
+          textarea.setSelectionRange(selectionStart + 1, selectionEnd + 1);
+        } else {
+          textarea.setSelectionRange(selectionStart + 1, selectionStart + 1);
+        }
+      });
+      return;
+    }
+
+    // Auto-indentação inteligente ao pressionar Enter
+    if (e.key === 'Enter' && !ctrlOrCmd && !e.shiftKey) {
+      const before = currentValue.substring(0, selectionStart);
+      const after = currentValue.substring(selectionEnd);
+      const currentLine = before.split('\n').pop() ?? '';
+      const indentMatch = /^(\s*)/.exec(currentLine);
+      const baseIndent = indentMatch ? indentMatch[1] : '';
+      const prevChar = before[before.length - 1];
+      const nextChar = after[0];
+
+      if (
+        (prevChar === '{' && nextChar === '}') ||
+        (prevChar === '[' && nextChar === ']') ||
+        (prevChar === '(' && nextChar === ')')
+      ) {
+        e.preventDefault();
+        const inner = `\n${baseIndent}  `;
+        const outer = `\n${baseIndent}`;
+        updateValue(before + inner + outer + after);
+        requestAnimationFrame(() => {
+          const pos = before.length + inner.length;
+          textarea.setSelectionRange(pos, pos);
+          updateCursorPosition();
+        });
+        return;
+      }
+    }
+
+    // Indentação com Tab e Shift + Tab
     if (e.key === 'Tab') {
       if (tabMovesFocus) {
         setTabMovesFocus(false);
@@ -376,12 +782,14 @@ export default function CodeEditor({
       }
 
       e.preventDefault();
-      const indentStr = '  '; // 2 espaços
+      const indentStr = '  ';
 
       if (selectionStart !== selectionEnd) {
         const textBefore = currentValue.substring(0, selectionStart);
         const startLineIdx = textBefore.split('\n').length - 1;
-        const endLineIdx = (textBefore + currentValue.substring(selectionStart, selectionEnd)).split('\n').length - 1;
+        const endLineIdx =
+          (textBefore + currentValue.substring(selectionStart, selectionEnd)).split('\n').length -
+          1;
 
         const allLines = currentValue.split('\n');
         for (let i = startLineIdx; i <= endLineIdx; i++) {
@@ -391,48 +799,53 @@ export default function CodeEditor({
             allLines[i] = indentStr + allLines[i];
           }
         }
-
-        const newValue = allLines.join('\n');
-        onChange?.(newValue);
-      } else {
-        if (e.shiftKey) {
-          const textBefore = currentValue.substring(0, selectionStart);
-          if (textBefore.endsWith('  ')) {
-            const newValue = currentValue.substring(0, selectionStart - 2) + currentValue.substring(selectionStart);
-            onChange?.(newValue);
-            setTimeout(() => textarea.setSelectionRange(selectionStart - 2, selectionStart - 2), 0);
-          }
-        } else {
-          const newValue = currentValue.substring(0, selectionStart) + indentStr + currentValue.substring(selectionEnd);
-          onChange?.(newValue);
-          setTimeout(() => textarea.setSelectionRange(selectionStart + 2, selectionStart + 2), 0);
+        updateValue(allLines.join('\n'));
+      } else if (e.shiftKey) {
+        const textBefore = currentValue.substring(0, selectionStart);
+        if (textBefore.endsWith('  ')) {
+          const newValue =
+            currentValue.substring(0, selectionStart - 2) + currentValue.substring(selectionStart);
+          updateValue(newValue);
+          setTimeout(() => textarea.setSelectionRange(selectionStart - 2, selectionStart - 2), 0);
         }
+      } else {
+        const newValue =
+          currentValue.substring(0, selectionStart) +
+          indentStr +
+          currentValue.substring(selectionEnd);
+        updateValue(newValue);
+        setTimeout(() => textarea.setSelectionRange(selectionStart + 2, selectionStart + 2), 0);
       }
       return;
     }
 
-    // Qualquer outra tecla não-modificadora volta o Tab ao modo de indentação
     if (tabMovesFocus && !['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) {
       setTabMovesFocus(false);
     }
 
-    // 7. Mover Linhas: Alt + ArrowUp / ArrowDown
+    // Mover Linhas: Alt + ArrowUp / ArrowDown
     if (e.altKey && !e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
       e.preventDefault();
       const textBefore = currentValue.substring(0, selectionStart);
       const startLineIdx = textBefore.split('\n').length - 1;
-      const endLineIdx = (textBefore + currentValue.substring(selectionStart, selectionEnd)).split('\n').length - 1;
+      const endLineIdx =
+        (textBefore + currentValue.substring(selectionStart, selectionEnd)).split('\n').length - 1;
 
       const allLines = currentValue.split('\n');
       if (e.key === 'ArrowUp') {
         if (startLineIdx === 0) return;
         const lineAbove = allLines[startLineIdx - 1];
         const movingBlock = allLines.slice(startLineIdx, endLineIdx + 1);
-        allLines.splice(startLineIdx - 1, endLineIdx - startLineIdx + 2, ...movingBlock, lineAbove);
-        const newValue = allLines.join('\n');
-        onChange?.(newValue);
+        allLines.splice(
+          startLineIdx - 1,
+          endLineIdx - startLineIdx + 2,
+          ...movingBlock,
+          lineAbove
+        );
+        updateValue(allLines.join('\n'));
         setTimeout(() => {
-          const newStart = allLines.slice(0, startLineIdx - 1).join('\n').length + (startLineIdx > 1 ? 1 : 0);
+          const newStart =
+            allLines.slice(0, startLineIdx - 1).join('\n').length + (startLineIdx > 1 ? 1 : 0);
           const newEnd = newStart + movingBlock.join('\n').length;
           textarea.setSelectionRange(newStart, newEnd);
         }, 0);
@@ -441,8 +854,7 @@ export default function CodeEditor({
         const lineBelow = allLines[endLineIdx + 1];
         const movingBlock = allLines.slice(startLineIdx, endLineIdx + 1);
         allLines.splice(startLineIdx, endLineIdx - startLineIdx + 2, lineBelow, ...movingBlock);
-        const newValue = allLines.join('\n');
-        onChange?.(newValue);
+        updateValue(allLines.join('\n'));
         setTimeout(() => {
           const newStart = allLines.slice(0, startLineIdx + 1).join('\n').length + 1;
           const newEnd = newStart + movingBlock.join('\n').length;
@@ -452,43 +864,20 @@ export default function CodeEditor({
       return;
     }
 
-    // 8. Duplicar Linha: Alt + Shift + ArrowDown
+    // Duplicar Linha: Alt + Shift + ArrowDown
     if (e.altKey && e.shiftKey && e.key === 'ArrowDown') {
       e.preventDefault();
       const textBefore = currentValue.substring(0, selectionStart);
       const startLineIdx = textBefore.split('\n').length - 1;
-      const endLineIdx = (textBefore + currentValue.substring(selectionStart, selectionEnd)).split('\n').length - 1;
+      const endLineIdx =
+        (textBefore + currentValue.substring(selectionStart, selectionEnd)).split('\n').length - 1;
       const allLines = currentValue.split('\n');
       const movingBlock = allLines.slice(startLineIdx, endLineIdx + 1);
       allLines.splice(endLineIdx + 1, 0, ...movingBlock);
-      onChange?.(allLines.join('\n'));
-      return;
+      updateValue(allLines.join('\n'));
     }
   };
 
-  // Formatação com feedback
-  const handleFormat = () => {
-    if (!diagnostic.isValid) {
-      toast.error('Corrija os erros de sintaxe antes de formatar.');
-      return;
-    }
-    const formatted = formatCode(currentValue, language);
-    onChange?.(formatted);
-    toast.success('Código formatado e indentado!');
-  };
-
-  // Minificação
-  const handleMinify = () => {
-    if (!diagnostic.isValid) {
-      toast.error('Corrija os erros de sintaxe antes de minificar.');
-      return;
-    }
-    const minified = minifyCode(currentValue, language);
-    onChange?.(minified);
-    toast.info('Código minificado.');
-  };
-
-  // Copiar
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(currentValue);
@@ -500,10 +889,22 @@ export default function CodeEditor({
     }
   };
 
-  // Exportar / Download
   const handleDownload = () => {
-    const ext = language === 'json' ? 'json' : language === 'sql' ? 'sql' : 'txt';
-    const name = filename || `codigo_${new Date().toISOString().slice(0, 10)}.${ext}`;
+    const extMap: Record<CodeEditorLanguage, string> = {
+      json: 'json',
+      sql: 'sql',
+      javascript: 'js',
+      typescript: 'ts',
+      html: 'html',
+      xml: 'xml',
+      css: 'css',
+      yaml: 'yaml',
+      markdown: 'md',
+      bash: 'sh',
+      plaintext: 'txt',
+    };
+    const ext = extMap[language] || 'txt';
+    const name = filename || `codigo.${ext}`;
     const blob = new Blob([currentValue], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -514,7 +915,6 @@ export default function CodeEditor({
     toast.success(`Arquivo baixado: ${name}`);
   };
 
-  // Importar / Upload
   const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -522,7 +922,7 @@ export default function CodeEditor({
     reader.onload = (event) => {
       try {
         const text = event.target?.result as string;
-        onChange?.(text);
+        updateValue(text);
         toast.success(`Arquivo "${file.name}" carregado com sucesso!`);
       } catch {
         toast.error('Erro ao ler o arquivo.');
@@ -532,28 +932,7 @@ export default function CodeEditor({
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // ── Lógica de Busca e Substituição ──────────────────────────────────────────
-  useEffect(() => {
-    if (!searchTerm || !searchOpen) {
-      setSearchMatches([]);
-      setCurrentMatchIdx(-1);
-      return;
-    }
-
-    const matches: number[] = [];
-    const lowerValue = currentValue.toLowerCase();
-    const lowerTerm = searchTerm.toLowerCase();
-    let pos = 0;
-
-    while ((pos = lowerValue.indexOf(lowerTerm, pos)) !== -1) {
-      matches.push(pos);
-      pos += lowerTerm.length;
-    }
-
-    setSearchMatches(matches);
-    setCurrentMatchIdx(matches.length > 0 ? 0 : -1);
-  }, [searchTerm, currentValue, searchOpen]);
-
+  // Busca e Substituição
   const nextMatch = () => {
     if (searchMatches.length === 0) return;
     const nextIdx = (currentMatchIdx + 1) % searchMatches.length;
@@ -561,7 +940,10 @@ export default function CodeEditor({
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.focus();
-      textarea.setSelectionRange(searchMatches[nextIdx], searchMatches[nextIdx] + searchTerm.length);
+      textarea.setSelectionRange(
+        searchMatches[nextIdx],
+        searchMatches[nextIdx] + searchTerm.length
+      );
     }
   };
 
@@ -572,35 +954,51 @@ export default function CodeEditor({
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.focus();
-      textarea.setSelectionRange(searchMatches[prevIdx], searchMatches[prevIdx] + searchTerm.length);
+      textarea.setSelectionRange(
+        searchMatches[prevIdx],
+        searchMatches[prevIdx] + searchTerm.length
+      );
     }
   };
 
   const handleReplaceOne = () => {
-    if (currentMatchIdx < 0 || searchMatches.length === 0 || !textareaRef.current) return;
+    if (currentMatchIdx < 0 || searchMatches.length === 0) return;
     const matchPos = searchMatches[currentMatchIdx];
-    const newValue = currentValue.substring(0, matchPos) + replaceTerm + currentValue.substring(matchPos + searchTerm.length);
-    onChange?.(newValue);
+    const newValue =
+      currentValue.substring(0, matchPos) +
+      replaceTerm +
+      currentValue.substring(matchPos + searchTerm.length);
+    updateValue(newValue);
   };
 
   const handleReplaceAll = () => {
     if (!searchTerm || searchMatches.length === 0) return;
-    const regex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    const flags = caseSensitive ? 'g' : 'gi';
+    const regex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
     const newValue = currentValue.replace(regex, replaceTerm);
-    onChange?.(newValue);
+    updateValue(newValue);
     toast.success(`${searchMatches.length} ocorrência(s) substituída(s).`);
   };
+
+  if (!hasPermission && hideIfDenied) return null;
 
   const editorContent = (
     <div
       data-component-id={componentId}
       className={cn(
-        'flex flex-col bg-card text-foreground transition-all duration-150',
-        'select-text relative font-sans overflow-hidden',
+        'flex flex-col transition-all duration-150 select-text relative font-sans overflow-hidden',
+        forceDark
+          ? 'bg-zinc-950 text-zinc-100 border-zinc-800'
+          : 'bg-card text-foreground border-border',
         isFullscreen
           ? 'fixed inset-0 z-[12000] w-screen h-screen rounded-none border-0 shadow-none m-0 p-0'
-          : cn('rounded-xl border border-border shadow-xs', className),
-        disabled && 'opacity-60 pointer-events-none'
+          : cn(
+              variant === 'minimal'
+                ? 'rounded-xl border border-border/60'
+                : 'rounded-xl border shadow-xs',
+              className
+            ),
+        effectiveDisabled && 'opacity-60 pointer-events-none'
       )}
       style={{
         width: isFullscreen ? '100vw' : undefined,
@@ -619,21 +1017,86 @@ export default function CodeEditor({
 
       {/* ── TOOLBAR SUPERIOR ──────────────────────────────────────────────── */}
       {showToolbar && (
-        <div className="min-h-10 px-2.5 sm:px-3 py-1 border-b border-border/80 bg-surface/70 flex flex-wrap items-center justify-between gap-2 shrink-0 select-none">
+        <div
+          className={cn(
+            'min-h-10 px-2.5 sm:px-3 py-1 border-b flex flex-wrap items-center justify-between gap-2 shrink-0 select-none',
+            forceDark ? 'border-zinc-800 bg-zinc-900/90' : 'border-border/80 bg-surface/70'
+          )}
+        >
           <div className="flex items-center gap-2 min-w-0">
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+            <div
+              className={cn(
+                'flex h-6 w-6 items-center justify-center rounded-lg shrink-0',
+                forceDark ? 'bg-zinc-800 text-zinc-100' : 'bg-primary/10 text-primary'
+              )}
+            >
               <Code2 size={13} strokeWidth={2.5} />
             </div>
-            <span className="font-semibold text-xs text-foreground truncate">
-              {title || (language === 'json' ? 'Editor JSON' : language === 'sql' ? 'Editor SQL' : 'Editor de Código')}
+            <span
+              className={cn(
+                'font-semibold text-xs truncate',
+                forceDark ? 'text-zinc-100' : 'text-foreground'
+              )}
+            >
+              {title ||
+                (language === 'json'
+                  ? 'Editor JSON'
+                  : language === 'sql'
+                    ? 'Editor SQL'
+                    : 'Editor de Código')}
             </span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium uppercase bg-muted text-muted-foreground border border-border/60">
-              {language}
-            </span>
+
+            {allowLanguageChange ? (
+              <select
+                aria-label="Selecionar linguagem"
+                value={language}
+                onChange={(e) => {
+                  const nextLang = e.target.value as CodeEditorLanguage;
+                  setInternalLang(nextLang);
+                  onLanguageChange?.(nextLang);
+                }}
+                className={cn(
+                  'h-6 rounded px-1.5 text-[10px] font-mono font-semibold uppercase border focus:outline-none cursor-pointer',
+                  forceDark
+                    ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
+                    : 'bg-muted text-muted-foreground border-border/60'
+                )}
+              >
+                {ALL_LANGUAGES.map((l) => (
+                  <option key={l.value} value={l.value}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span
+                className={cn(
+                  'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium uppercase border',
+                  forceDark
+                    ? 'bg-zinc-800 text-zinc-300 border-zinc-700'
+                    : 'bg-muted text-muted-foreground border-border/60'
+                )}
+              >
+                {language}
+              </span>
+            )}
           </div>
 
           {/* Ações da Toolbar */}
           <div className="flex items-center gap-1 shrink-0">
+            {onExecute && (
+              <button
+                type="button"
+                onClick={() => void handleRunExecute()}
+                disabled={executing || readOnly}
+                title={`${executeLabel} (Ctrl + Enter)`}
+                className="h-7 px-2.5 rounded-md inline-flex items-center gap-1 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {executing ? <Loader2 size={12} className="animate-spin" /> : <Play size={11} />}
+                <span>{executeLabel}</span>
+              </button>
+            )}
+
             {showSearch && (
               <button
                 type="button"
@@ -642,8 +1105,11 @@ export default function CodeEditor({
                   setReplaceOpen(false);
                 }}
                 className={cn(
-                  'h-7 px-2 rounded-md inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer',
-                  searchOpen && 'bg-muted text-foreground'
+                  'h-7 px-2 rounded-md inline-flex items-center gap-1 text-xs transition-colors cursor-pointer',
+                  forceDark
+                    ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80',
+                  searchOpen && (forceDark ? 'bg-zinc-800 text-zinc-100' : 'bg-muted text-foreground')
                 )}
                 title="Buscar (Ctrl + F)"
               >
@@ -652,11 +1118,16 @@ export default function CodeEditor({
               </button>
             )}
 
-            {showFormat && (
+            {showFormat && !readOnly && (
               <button
                 type="button"
                 onClick={handleFormat}
-                className="h-7 px-2 rounded-md inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                className={cn(
+                  'h-7 px-2 rounded-md inline-flex items-center gap-1 text-xs transition-colors cursor-pointer',
+                  forceDark
+                    ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                )}
                 title="Formatar Código (Ctrl + Shift + F)"
               >
                 <Sparkles size={12} className="text-amber-500" />
@@ -664,11 +1135,16 @@ export default function CodeEditor({
               </button>
             )}
 
-            {language === 'json' && (
+            {language === 'json' && !readOnly && (
               <button
                 type="button"
                 onClick={handleMinify}
-                className="h-7 px-1.5 rounded-md inline-flex items-center text-xs text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                className={cn(
+                  'h-7 px-1.5 rounded-md inline-flex items-center text-xs transition-colors cursor-pointer',
+                  forceDark
+                    ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                )}
                 title="Minificar JSON"
               >
                 <span className="text-[10px] font-mono font-semibold">Min</span>
@@ -679,8 +1155,11 @@ export default function CodeEditor({
               type="button"
               onClick={() => setWordWrap((p) => !p)}
               className={cn(
-                'h-7 px-1.5 rounded-md inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer',
-                wordWrap && 'bg-muted text-primary'
+                'h-7 px-1.5 rounded-md inline-flex items-center gap-1 text-xs transition-colors cursor-pointer',
+                forceDark
+                  ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/80',
+                wordWrap && (forceDark ? 'bg-zinc-800 text-white' : 'bg-muted text-primary')
               )}
               title={wordWrap ? 'Desativar quebra de linha' : 'Ativar quebra de linha'}
             >
@@ -691,28 +1170,47 @@ export default function CodeEditor({
               <button
                 type="button"
                 onClick={handleCopy}
-                className="h-7 px-2 rounded-md inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                className={cn(
+                  'h-7 px-2 rounded-md inline-flex items-center gap-1 text-xs transition-colors cursor-pointer',
+                  forceDark
+                    ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                )}
                 title="Copiar Código"
               >
                 {copied ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
-                <span className="hidden sm:inline text-[11px]">{copied ? 'Copiado!' : 'Copiar'}</span>
+                <span className="hidden sm:inline text-[11px]">
+                  {copied ? 'Copiado!' : 'Copiar'}
+                </span>
               </button>
             )}
 
             {showImportExport && (
               <>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="h-7 w-7 rounded-md inline-flex items-center justify-center text-xs text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
-                  title="Importar Arquivo"
-                >
-                  <Upload size={12} />
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                      'h-7 w-7 rounded-md inline-flex items-center justify-center text-xs transition-colors cursor-pointer',
+                      forceDark
+                        ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                    )}
+                    title="Importar Arquivo"
+                  >
+                    <Upload size={12} />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleDownload}
-                  className="h-7 w-7 rounded-md inline-flex items-center justify-center text-xs text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                  className={cn(
+                    'h-7 w-7 rounded-md inline-flex items-center justify-center text-xs transition-colors cursor-pointer',
+                    forceDark
+                      ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                  )}
                   title="Exportar Arquivo"
                 >
                   <Download size={12} />
@@ -720,11 +1218,16 @@ export default function CodeEditor({
               </>
             )}
 
-            {onReset && (
+            {onReset && !readOnly && (
               <button
                 type="button"
                 onClick={onReset}
-                className="h-7 w-7 rounded-md inline-flex items-center justify-center text-xs text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                className={cn(
+                  'h-7 w-7 rounded-md inline-flex items-center justify-center text-xs transition-colors cursor-pointer',
+                  forceDark
+                    ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                )}
                 title="Restaurar valor inicial"
               >
                 <RotateCcw size={12} />
@@ -752,7 +1255,9 @@ export default function CodeEditor({
                   'h-7 px-2 rounded-md inline-flex items-center gap-1 text-xs transition-colors cursor-pointer',
                   isFullscreen
                     ? 'bg-primary/10 text-primary font-semibold hover:bg-primary/20'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                    : forceDark
+                      ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
                 )}
                 title={isFullscreen ? 'Restaurar Janela (Esc)' : 'Maximizar'}
               >
@@ -766,8 +1271,8 @@ export default function CodeEditor({
 
       {/* ── BARRA FLUTUANTE DE BUSCA E SUBSTITUIÇÃO ───────────────────────── */}
       {searchOpen && (
-        <div className="absolute top-11 left-3 right-3 sm:left-auto z-30 p-2 rounded-xl bg-card border border-border shadow-xl space-y-2 sm:max-w-sm sm:w-full animate-in fade-in slide-in-from-top-2 duration-150">
-          <div className="flex items-center gap-1.5">
+        <div className="absolute top-11 left-3 right-3 sm:left-auto z-30 p-2 rounded-xl bg-card text-foreground border border-border shadow-xl space-y-2 sm:max-w-sm sm:w-full animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="flex items-center gap-1">
             <div className="relative flex-1">
               <input
                 type="text"
@@ -795,6 +1300,20 @@ export default function CodeEditor({
 
             <button
               type="button"
+              onClick={() => setCaseSensitive((p) => !p)}
+              title="Diferenciar maiúsculas/minúsculas"
+              className={cn(
+                'h-7 px-1.5 rounded-md font-mono text-[10px] font-bold cursor-pointer',
+                caseSensitive
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              )}
+            >
+              Aa
+            </button>
+
+            <button
+              type="button"
               onClick={prevMatch}
               disabled={searchMatches.length === 0}
               className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 cursor-pointer"
@@ -811,17 +1330,19 @@ export default function CodeEditor({
             >
               <ChevronDown size={14} />
             </button>
-            <button
-              type="button"
-              onClick={() => setReplaceOpen((p) => !p)}
-              className={cn(
-                'p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer',
-                replaceOpen && 'bg-primary/10 text-primary'
-              )}
-              title="Alternar Substituição (Ctrl + H)"
-            >
-              <Replace size={14} />
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={() => setReplaceOpen((p) => !p)}
+                className={cn(
+                  'p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer',
+                  replaceOpen && 'bg-primary/10 text-primary'
+                )}
+                title="Alternar Substituição (Ctrl + H)"
+              >
+                <Replace size={14} />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setSearchOpen(false)}
@@ -832,7 +1353,7 @@ export default function CodeEditor({
             </button>
           </div>
 
-          {replaceOpen && (
+          {replaceOpen && !readOnly && (
             <div className="flex items-center gap-1.5 pt-1 border-t border-border/50">
               <input
                 type="text"
@@ -866,13 +1387,22 @@ export default function CodeEditor({
         </div>
       )}
 
-      {/* ── ÁREA CENTRAL DO EDITOR (RÉGUA DE NÚMEROS + TEXTAREA) ───────────── */}
-      <div className="flex-1 relative flex overflow-hidden min-h-0 bg-card text-foreground font-mono text-xs leading-[22px]">
-        {/* Calha de Numeração de Linhas Sincronizada com Scroll */}
+      {/* ── ÁREA CENTRAL DO EDITOR (RÉGUA + HIGHLIGHT OVERLAY + TEXTAREA) ── */}
+      <div
+        className={cn(
+          'flex-1 relative flex overflow-hidden min-h-0 font-mono text-xs leading-[22px]',
+          forceDark ? 'bg-zinc-950 text-zinc-100' : 'bg-card text-foreground'
+        )}
+      >
         {showLineNumbers && (
           <div
             ref={gutterRef}
-            className="w-12 py-3 bg-muted/30 border-r border-border/70 select-none text-right pr-2 text-muted-foreground/60 overflow-hidden shrink-0 font-mono text-[11px] leading-[22px]"
+            className={cn(
+              'w-12 py-3 border-r select-none text-right pr-2 overflow-hidden shrink-0 font-mono text-[11px] leading-[22px]',
+              forceDark
+                ? 'bg-zinc-900/60 border-zinc-800 text-zinc-500'
+                : 'bg-muted/30 border-border/70 text-muted-foreground/60'
+            )}
           >
             {lines.map((_, i) => {
               const lineNum = i + 1;
@@ -888,12 +1418,18 @@ export default function CodeEditor({
                     isError
                       ? 'text-red-500 font-bold bg-red-500/10 -mr-2 pr-2'
                       : isCurrent
-                      ? 'text-primary font-bold bg-primary/10 -mr-2 pr-2'
-                      : 'hover:text-foreground'
+                        ? forceDark
+                          ? 'text-zinc-100 font-bold bg-white/10 -mr-2 pr-2'
+                          : 'text-primary font-bold bg-primary/10 -mr-2 pr-2'
+                        : forceDark
+                          ? 'hover:text-zinc-300'
+                          : 'hover:text-foreground'
                   )}
                   title={isError ? diagnostic.message : `Linha ${lineNum}`}
                 >
-                  {isError && <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />}
+                  {isError && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                  )}
                   <span>{lineNum}</span>
                 </div>
               );
@@ -901,13 +1437,28 @@ export default function CodeEditor({
           </div>
         )}
 
-        {/* Textarea Interativo Principal */}
         <div className="flex-1 relative h-full overflow-hidden">
+          {syntaxHighlight && currentValue.length > 0 && (
+            <pre
+              ref={highlightRef}
+              aria-hidden="true"
+              className={cn(
+                'pointer-events-none absolute inset-0 m-0 h-full w-full overflow-hidden p-3 font-mono text-xs sm:text-[12.5px] leading-[22px]',
+                forceDark ? 'text-zinc-100' : 'text-foreground',
+                wordWrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre',
+                editorClassName
+              )}
+            >
+              {highlightedNodes}
+              {currentValue.endsWith('\n') ? ' ' : null}
+            </pre>
+          )}
+
           <textarea
             ref={textareaRef}
             value={currentValue}
             onChange={(e) => {
-              onChange?.(e.target.value);
+              updateValue(e.target.value);
               updateCursorPosition();
             }}
             onKeyUp={updateCursorPosition}
@@ -915,7 +1466,7 @@ export default function CodeEditor({
             onScroll={handleScroll}
             onKeyDown={handleKeyDown}
             readOnly={readOnly}
-            disabled={disabled}
+            disabled={effectiveDisabled}
             spellCheck={false}
             autoCapitalize="off"
             autoComplete="off"
@@ -923,8 +1474,13 @@ export default function CodeEditor({
             wrap={wordWrap ? 'on' : 'off'}
             className={cn(
               'absolute inset-0 w-full h-full p-3 font-mono text-xs sm:text-[12.5px] leading-[22px]',
-              'bg-transparent text-foreground resize-none outline-none border-none overflow-auto z-10 selection:bg-primary/25',
-              wordWrap ? 'whitespace-pre-wrap' : 'whitespace-pre',
+              'bg-transparent resize-none outline-none border-none overflow-auto z-10 selection:bg-primary/25',
+              syntaxHighlight && currentValue.length > 0
+                ? cn('text-transparent', forceDark ? 'caret-zinc-100' : 'caret-foreground')
+                : forceDark
+                  ? 'text-zinc-100'
+                  : 'text-foreground',
+              wordWrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre',
               editorClassName
             )}
             placeholder="Digite ou cole seu código aqui..."
@@ -934,8 +1490,14 @@ export default function CodeEditor({
 
       {/* ── BARRA DE STATUS INFERIOR ──────────────────────────────────────── */}
       {showStatusBar && (
-        <div className="h-7 px-3 border-t border-border/80 bg-surface/70 flex items-center justify-between text-[11px] text-muted-foreground shrink-0 select-none font-mono">
-          {/* Status Sintático */}
+        <div
+          className={cn(
+            'h-7 px-3 border-t flex items-center justify-between text-[11px] shrink-0 select-none font-mono',
+            forceDark
+              ? 'border-zinc-800 bg-zinc-900/90 text-zinc-400'
+              : 'border-border/80 bg-surface/70 text-muted-foreground'
+          )}
+        >
           <div className="flex items-center gap-2 min-w-0">
             {diagnostic.isValid ? (
               <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
@@ -946,7 +1508,7 @@ export default function CodeEditor({
               <button
                 type="button"
                 onClick={() => diagnostic.line && jumpToLine(diagnostic.line)}
-                className="flex items-center gap-1 text-red-600 dark:text-red-400 font-medium truncate hover:underline text-left cursor-pointer"
+                className="flex items-center gap-1 text-red-500 font-medium truncate hover:underline text-left cursor-pointer"
                 title="Clique para ir até a linha do erro"
               >
                 <AlertCircle size={13} className="shrink-0" />
@@ -958,8 +1520,7 @@ export default function CodeEditor({
             )}
           </div>
 
-          {/* Posição do Cursor e Estatísticas */}
-          <div className="flex items-center gap-3 text-muted-foreground/80 shrink-0 text-[10.5px]">
+          <div className="flex items-center gap-2.5 shrink-0 text-[10.5px]">
             {tabMovesFocus && (
               <>
                 <span className="text-primary font-semibold">Tab move foco</span>
@@ -971,10 +1532,8 @@ export default function CodeEditor({
             </span>
             <span>•</span>
             <span>{totalLines} lin</span>
-            <span>•</span>
+            <span className="hidden sm:inline">•</span>
             <span className="hidden sm:inline">{currentValue.length} car • UTF-8</span>
-            <span>•</span>
-
           </div>
         </div>
       )}
