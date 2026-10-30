@@ -941,6 +941,142 @@ input::-webkit-search-results-decoration {
   line-height: 0;
 }
 
+/* Table column resize handle */
+.rte-content .ProseMirror .column-resize-handle,
+.tiptap .column-resize-handle {
+  background-color: var(--primary);
+  bottom: -2px;
+  pointer-events: none;
+  position: absolute;
+  right: -2px;
+  top: 0;
+  width: 3px;
+  z-index: 20;
+}
+.rte-content .ProseMirror .tableWrapper,
+.tiptap .tableWrapper {
+  overflow-x: auto;
+  margin: 0.75em 0;
+}
+
+/* Rich Text Callouts / Admonitions */
+.rte-content .ProseMirror div[data-callout],
+.tiptap div[data-callout] {
+  border-radius: 0.625rem;
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  padding: 0.75rem 0.95rem;
+  margin: 0.85em 0;
+  background: var(--surface-muted);
+}
+.rte-content .ProseMirror div[data-callout-type="info"],
+.tiptap div[data-callout-type="info"] {
+  border-left-color: #2563eb;
+  background: rgba(37, 99, 235, 0.06);
+}
+.dark .rte-content .ProseMirror div[data-callout-type="info"],
+.dark .tiptap div[data-callout-type="info"] {
+  border-left-color: #60a5fa;
+  background: rgba(37, 99, 235, 0.14);
+}
+.rte-content .ProseMirror div[data-callout-type="success"],
+.tiptap div[data-callout-type="success"] {
+  border-left-color: #16a34a;
+  background: rgba(22, 163, 74, 0.06);
+}
+.dark .rte-content .ProseMirror div[data-callout-type="success"],
+.dark .tiptap div[data-callout-type="success"] {
+  border-left-color: #4ade80;
+  background: rgba(22, 163, 74, 0.14);
+}
+.rte-content .ProseMirror div[data-callout-type="warning"],
+.tiptap div[data-callout-type="warning"] {
+  border-left-color: #d97706;
+  background: rgba(217, 119, 6, 0.07);
+}
+.dark .rte-content .ProseMirror div[data-callout-type="warning"],
+.dark .tiptap div[data-callout-type="warning"] {
+  border-left-color: #fbbf24;
+  background: rgba(217, 119, 6, 0.15);
+}
+.rte-content .ProseMirror div[data-callout-type="danger"],
+.tiptap div[data-callout-type="danger"] {
+  border-left-color: #dc2626;
+  background: rgba(220, 38, 38, 0.06);
+}
+.dark .rte-content .ProseMirror div[data-callout-type="danger"],
+.dark .tiptap div[data-callout-type="danger"] {
+  border-left-color: #f87171;
+  background: rgba(220, 38, 38, 0.15);
+}
+
+/* Rich Text Dynamic Variable / Merge Tag Pill */
+.rte-content .ProseMirror span[data-merge-tag],
+.tiptap span[data-merge-tag] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border-strong);
+  background: var(--primary-soft);
+  color: var(--foreground);
+  padding: 0.05rem 0.42rem;
+  margin: 0 0.1rem;
+  font-size: 0.78em;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  line-height: 1.45;
+  vertical-align: baseline;
+  user-select: all;
+}
+
+/* Rich Text Page Break */
+.rte-content .ProseMirror div[data-page-break],
+.tiptap div[data-page-break] {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem 0;
+  user-select: none;
+}
+.rte-content .ProseMirror div[data-page-break]::before,
+.tiptap div[data-page-break]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1.5px dashed var(--border-strong);
+}
+.rte-content .ProseMirror div[data-page-break] > span,
+.tiptap div[data-page-break] > span {
+  position: relative;
+  z-index: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  padding: 0.125rem 0.65rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-foreground);
+}
+
+@media print {
+  .rte-content .ProseMirror div[data-page-break],
+  .tiptap div[data-page-break] {
+    page-break-after: always;
+    break-after: page;
+    margin: 0;
+    height: 0;
+    border: none;
+    overflow: hidden;
+    visibility: hidden;
+  }
+}
+
 /* ── Shiki syntax highlight ──────────────────────────────────────────────── */
 .shiki-wrap pre, .shiki-wrap code {
   background: transparent !important;
