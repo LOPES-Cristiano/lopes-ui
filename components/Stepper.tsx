@@ -9,7 +9,7 @@ import { useAccessControl } from "./useAccessControl";
 
 export type StepStatus = "upcoming" | "current" | "completed" | "error" | "loading";
 export type StepperOrientation = "horizontal" | "vertical";
-export type StepperVariant = "default" | "outlined" | "minimal" | "subtle";
+export type StepperVariant = "default" | "outlined" | "minimal" | "subtle" | "navigation" | "dot";
 export type StepperSize = "sm" | "md" | "lg";
 
 export type StepItem = {
@@ -256,6 +256,72 @@ export default function Stepper({
     }
   };
 
+  // ── MINIMAL PROGRESS BAR VARIANT (Mantine / Linear compact progress stepper) ──
+  if (variant === "minimal") {
+    const active = steps[Math.min(Math.max(activeStep, 0), Math.max(steps.length - 1, 0))];
+    return (
+      <div
+        role="group"
+        aria-label="Progresso das etapas"
+        data-component-id={componentId}
+        className={twMerge(
+          "flex w-full flex-col gap-2 select-none",
+          !hasRootPermission && "opacity-50 pointer-events-none",
+          className
+        )}
+      >
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <div className="min-w-0 flex items-center gap-1.5">
+            <span className="font-semibold text-foreground truncate">
+              {active?.title ?? "Etapa"}
+            </span>
+            {active?.description && (
+              <span className="hidden sm:inline truncate text-muted-foreground">
+                · {active.description}
+              </span>
+            )}
+          </div>
+          <span className="shrink-0 font-mono text-[11px] font-medium text-muted-foreground">
+            {Math.min(activeStep + 1, steps.length)} / {steps.length}
+          </span>
+        </div>
+        <div className="flex w-full items-center gap-1.5" role="tablist">
+          {steps.map((step, i) => {
+            const status = resolveStatus(step, i, activeStep);
+            const isCompleted = status === "completed";
+            const isCurrent = i === activeStep || status === "loading";
+            const isError = status === "error";
+            const canClick = !step.disabled && (clickable || Boolean(onStepClick));
+            return (
+              <button
+                key={i}
+                type="button"
+                role="tab"
+                title={step.title}
+                aria-label={`${i + 1}. ${step.title}`}
+                aria-selected={isCurrent}
+                disabled={!canClick}
+                onClick={canClick ? () => onStepClick?.(i) : undefined}
+                onKeyDown={canClick ? (e) => handleStepKeyDown(e, i) : undefined}
+                className={twMerge(
+                  "h-2 flex-1 rounded-full transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  canClick ? "cursor-pointer" : "cursor-default",
+                  isError
+                    ? "bg-danger"
+                    : isCurrent
+                      ? "bg-primary"
+                      : isCompleted
+                        ? "bg-primary/65 hover:bg-primary"
+                        : "bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700"
+                )}
+              />
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   // ── SUBTLE / COMPACT INLINE VARIANT (Ideal for headers & drawers) ──
   if (variant === "subtle") {
     return (
@@ -367,6 +433,243 @@ export default function Stepper({
     );
   }
 
+  // ── NAVIGATION BAR VARIANT (Ant Design Steps type="navigation") ──
+  if (variant === "navigation") {
+    return (
+      <div
+        role="tablist"
+        aria-label="Navegação por etapas"
+        data-component-id={componentId}
+        className={twMerge(
+          "flex items-stretch w-full overflow-x-auto no-scrollbar border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 select-none",
+          !hasRootPermission && "opacity-50 pointer-events-none",
+          className
+        )}
+      >
+        {steps.map((step, i) => {
+          const status = resolveStatus(step, i, activeStep);
+          const isCurrent = i === activeStep || status === "loading";
+          const isCompleted = status === "completed";
+          const isError = status === "error";
+          const isLast = i === steps.length - 1;
+          const Icon = step.icon;
+          const canClick = !step.disabled && (clickable || Boolean(onStepClick));
+
+          return (
+            <React.Fragment key={i}>
+              <button
+                type="button"
+                role="tab"
+                data-component-id={step.componentId ?? (componentId ? `${componentId}.step-${i}` : undefined)}
+                aria-selected={isCurrent}
+                disabled={!canClick}
+                onClick={canClick ? () => onStepClick?.(i) : undefined}
+                onKeyDown={canClick ? (e) => handleStepKeyDown(e, i) : undefined}
+                className={twMerge(
+                  "group relative flex-1 min-w-fit inline-flex items-center justify-center gap-3 px-4 py-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
+                  canClick ? "cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/40" : "cursor-default",
+                  step.disabled && "opacity-40 cursor-not-allowed",
+                  isCurrent &&
+                    "after:content-[''] after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-t-full after:bg-indigo-600 dark:after:bg-indigo-400"
+                )}
+              >
+                <span
+                  className={twMerge(
+                    "inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 border transition-colors",
+                    isCurrent
+                      ? "bg-indigo-600 border-indigo-600 text-white shadow-xs"
+                      : isError
+                        ? "bg-red-500 border-red-500 text-white"
+                        : isCompleted
+                          ? "bg-white dark:bg-zinc-900 border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                          : "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400"
+                  )}
+                >
+                  {status === "loading" ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : Icon ? (
+                    <Icon size={13} />
+                  ) : isCompleted ? (
+                    <Check size={13} strokeWidth={2.5} />
+                  ) : isError ? (
+                    <X size={13} strokeWidth={2.5} />
+                  ) : (
+                    <span>{i + 1}</span>
+                  )}
+                </span>
+
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={twMerge(
+                        "text-xs sm:text-sm font-semibold truncate",
+                        isCurrent
+                          ? "text-indigo-600 dark:text-indigo-400"
+                          : isError
+                            ? "text-red-600 dark:text-red-400"
+                            : isCompleted
+                              ? "text-zinc-800 dark:text-zinc-200"
+                              : "text-zinc-500 dark:text-zinc-400"
+                      )}
+                    >
+                      {step.title}
+                    </span>
+                    {step.badge !== undefined && step.badge !== null && (
+                      <span className="inline-flex items-center rounded-full bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-zinc-600 dark:text-zinc-300">
+                        {step.badge}
+                      </span>
+                    )}
+                  </div>
+                  {step.description && (
+                    <p className="text-[11px] text-zinc-400 dark:text-zinc-500 truncate mt-0.5">
+                      {step.description}
+                    </p>
+                  )}
+                </div>
+              </button>
+
+              {!isLast && (
+                <div className="flex items-center shrink-0 text-zinc-300 dark:text-zinc-700 px-0.5" aria-hidden="true">
+                  <ChevronRight size={16} />
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // ── PROGRESS DOT VARIANT (Ant Design Steps progressDot) ──
+  if (variant === "dot") {
+    return (
+      <div
+        role="list"
+        aria-label="Progresso em pontos"
+        data-component-id={componentId}
+        className={twMerge(
+          isHorizontal ? "flex items-start w-full py-1" : "flex flex-col py-1",
+          !hasRootPermission && "opacity-50 pointer-events-none",
+          className
+        )}
+      >
+        {steps.map((step, i) => {
+          const status = resolveStatus(step, i, activeStep);
+          const colors = STATUS_COLORS[status];
+          const isCurrent = status === "current" || status === "loading";
+          const isCompleted = status === "completed";
+          const isError = status === "error";
+          const isLast = i === steps.length - 1;
+          const canClick = !step.disabled && (clickable || Boolean(onStepClick));
+
+          const dotCls = twMerge(
+            "rounded-full shrink-0 transition-all duration-200",
+            isCurrent
+              ? "w-3 h-3 bg-indigo-600 dark:bg-indigo-400 ring-4 ring-indigo-500/20"
+              : isError
+                ? "w-2.5 h-2.5 bg-red-500 ring-3 ring-red-500/20"
+                : isCompleted
+                  ? "w-2.5 h-2.5 bg-indigo-500 dark:bg-indigo-400"
+                  : "w-2.5 h-2.5 bg-zinc-300 dark:bg-zinc-700",
+            status === "loading" && "animate-pulse"
+          );
+
+          if (isHorizontal) {
+            return (
+              <div
+                key={i}
+                role="listitem"
+                tabIndex={canClick ? 0 : undefined}
+                aria-current={isCurrent ? "step" : undefined}
+                onClick={canClick ? () => onStepClick?.(i) : undefined}
+                onKeyDown={canClick ? (e) => handleStepKeyDown(e, i) : undefined}
+                className={twMerge(
+                  "flex-1 min-w-0 flex flex-col items-center text-center outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 rounded-lg",
+                  canClick && "cursor-pointer",
+                  step.disabled && "opacity-45 cursor-not-allowed"
+                )}
+              >
+                <div className="flex items-center w-full">
+                  <div
+                    className={twMerge(
+                      "h-0.5 flex-1 transition-colors",
+                      i === 0
+                        ? "bg-transparent"
+                        : i <= activeStep
+                          ? "bg-indigo-500 dark:bg-indigo-500"
+                          : "bg-zinc-200 dark:bg-zinc-800"
+                    )}
+                  />
+                  <span className={twMerge("mx-2", dotCls)} aria-hidden="true" />
+                  <div
+                    className={twMerge(
+                      "h-0.5 flex-1 transition-colors",
+                      isLast
+                        ? "bg-transparent"
+                        : isCompleted
+                          ? "bg-indigo-500 dark:bg-indigo-500"
+                          : "bg-zinc-200 dark:bg-zinc-800"
+                    )}
+                  />
+                </div>
+                <div className="mt-2 px-1.5 min-w-0 w-full">
+                  <p className={twMerge("text-xs font-semibold truncate", colors.title)}>
+                    {step.title}
+                  </p>
+                  {step.description && (
+                    <p className={twMerge("text-[11px] mt-0.5 line-clamp-2", colors.description)}>
+                      {step.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={i} role="listitem" className="flex gap-3">
+              <div className="flex flex-col items-center pt-1.5">
+                <button
+                  type="button"
+                  disabled={!canClick}
+                  onClick={canClick ? () => onStepClick?.(i) : undefined}
+                  onKeyDown={canClick ? (e) => handleStepKeyDown(e, i) : undefined}
+                  aria-label={`${i + 1}. ${step.title}`}
+                  className={twMerge(
+                    dotCls,
+                    canClick ? "cursor-pointer" : "cursor-default",
+                    "outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  )}
+                />
+                {!isLast && connector && (
+                  <div
+                    className={twMerge(
+                      "w-0.5 flex-1 my-1.5 min-h-[20px] transition-colors",
+                      isCompleted ? "bg-indigo-500" : "bg-zinc-200 dark:bg-zinc-800"
+                    )}
+                  />
+                )}
+              </div>
+              <div className={twMerge("pb-5 min-w-0", isLast && "pb-0")}>
+                <p className={twMerge("text-xs sm:text-sm font-semibold leading-snug", colors.title)}>
+                  {step.title}
+                </p>
+                {step.description && (
+                  <p className={twMerge("text-xs mt-0.5", colors.description)}>
+                    {step.description}
+                  </p>
+                )}
+                {step.content && (isCurrent || isCompleted) && (
+                  <div className="mt-2.5">{step.content}</div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   const wrapCls = twMerge(
     isHorizontal ? "flex items-start w-full py-1" : "flex flex-col py-1",
     !hasRootPermission && "opacity-50 pointer-events-none",
@@ -395,7 +698,7 @@ export default function Stepper({
                 data-component-id={step.componentId ?? (componentId ? `${componentId}.step-${i}` : undefined)}
                 tabIndex={isClick ? 0 : undefined}
                 aria-current={status === "current" || status === "loading" ? "step" : undefined}
-                aria-disabled={step.disabled || undefined}
+                data-disabled={step.disabled ? "true" : undefined}
                 className={twMerge(
                   "flex flex-col items-center gap-1 sm:gap-2 flex-1 min-w-0 text-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
                   isClick && "cursor-pointer",
