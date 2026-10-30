@@ -12,6 +12,20 @@ function fmtSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function toFileList(files: File[]): FileList | null {
+  if (files.length === 0) return null;
+  if (typeof DataTransfer !== "undefined") {
+    try {
+      const dt = new DataTransfer();
+      files.forEach((f) => dt.items.add(f));
+      return dt.files;
+    } catch {
+      // Fallback below
+    }
+  }
+  return files as unknown as FileList;
+}
+
 export type FileFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   id?: string;
   name?: string;
@@ -21,6 +35,7 @@ export type FileFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   /** Max file size in bytes */
   maxSize?: number;
   onChange?: (files: FileList | null) => void;
+  onFilesChange?: (files: File[]) => void;
   disabled?: boolean;
   size?: "sm" | "md" | "lg";
   placeholder?: string;
@@ -33,7 +48,6 @@ export type FileFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   /** Allows pasting files from clipboard when focused (default: true) */
   allowPaste?: boolean;
   componentId?: string;
-  /** If true, hides the component when access is denied instead of disabling it */
   hideIfDenied?: boolean;
 };
 
@@ -44,10 +58,27 @@ const BTN_H = {
 } as const;
 
 export default function FileField({
-  label, labelInline, orientation, labelWidth, required, tooltip, labelAction, error: errorProp, helpText, hint, width, className,
-  id: idProp, name,
-  accept, multiple = false, maxSize,
-  onChange, disabled, size = "md",
+  label,
+  labelInline,
+  orientation,
+  labelWidth,
+  required,
+  tooltip,
+  labelAction,
+  error: errorProp,
+  helpText,
+  hint,
+  width,
+  className,
+  id: idProp,
+  name,
+  accept,
+  multiple = false,
+  maxSize,
+  onChange,
+  onFilesChange,
+  disabled,
+  size = "md",
   placeholder = "Nenhum arquivo selecionado",
   buttonLabel = "Escolher arquivo",
   variant = "compact",
@@ -84,28 +115,42 @@ export default function FileField({
     };
   }, [previews]);
 
+  const emitFiles = (nextFiles: File[]) => {
+    setFiles(nextFiles);
+    onFilesChange?.(nextFiles);
+    onChange?.(toFileList(nextFiles));
+  };
+
   const processFiles = (list: FileList | null) => {
     if (effectiveDisabled) return;
-    if (!list || list.length === 0) {
-      setFiles([]);
-      setSizeError(null);
-      onChange?.(null);
-      return;
-    }
-    const arr = Array.from(list);
+    if (!list || list.length === 0) return;
+    const incoming = Array.from(list);
     if (maxSize) {
-      const big = arr.find((f) => f.size > maxSize);
+      const big = incoming.find((f) => f.size > maxSize);
       if (big) {
         setSizeError(`"${big.name}" excede ${fmtSize(maxSize)}`);
         return;
       }
     }
     setSizeError(null);
-    setFiles(arr);
-    onChange?.(list);
+    if (multiple) {
+      const existingKeys = new Set(
+        files.map((f) => `${f.name}-${f.size}-${f.lastModified}`)
+      );
+      const merged = [
+        ...files,
+        ...incoming.filter((f) => !existingKeys.has(`${f.name}-${f.size}-${f.lastModified}`)),
+      ];
+      emitFiles(merged);
+    } else {
+      emitFiles(incoming.slice(0, 1));
+    }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => processFiles(e.target.files);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    processFiles(e.target.files);
+    if (inputRef.current) inputRef.current.value = "";
+  };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -122,13 +167,19 @@ export default function FileField({
     }
   };
 
+  const removeSingleFile = (idx: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (effectiveDisabled) return;
+    const next = files.filter((_, i) => i !== idx);
+    emitFiles(next);
+  };
+
   const clear = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (effectiveDisabled) return;
-    setFiles([]);
     setSizeError(null);
     if (inputRef.current) inputRef.current.value = "";
-    onChange?.(null);
+    emitFiles([]);
   };
 
   if (!hasPermission && hideIfDenied) return null;
@@ -140,16 +191,29 @@ export default function FileField({
       ? `${files[0].name} (${fmtSize(files[0].size)})`
       : `${files.length} arquivos selecionados`;
 
-  const autoHelp = helpText ?? (accept ? `Aceita: ${accept}${maxSize ? ` · máx. ${fmtSize(maxSize)}` : ""}` : undefined);
+  const autoHelp =
+    helpText ??
+    (accept
+      ? `Aceita: ${accept}${maxSize ? ` · máx. ${fmtSize(maxSize)}` : ""}`
+      : undefined);
   const firstImagePreview = previews.find((p) => p.url)?.url;
 
   return (
     <FieldWrapper
-      id={id} label={label} labelInline={labelInline} orientation={orientation} labelWidth={labelWidth}
-      required={required} tooltip={tooltip} labelAction={labelAction} error={error} helpText={autoHelp} hint={hint}
-      width={width} className={className}
+      id={id}
+      label={label}
+      labelInline={labelInline}
+      orientation={orientation}
+      labelWidth={labelWidth}
+      required={required}
+      tooltip={tooltip}
+      labelAction={labelAction}
+      error={error}
+      helpText={autoHelp}
+      hint={hint}
+      width={width}
+      className={className}
     >
-      {/* Hidden native input */}
       <input
         data-component-id={componentId ? `${componentId}.input` : "erp.filefield.input"}
         ref={inputRef}
@@ -158,7 +222,7 @@ export default function FileField({
         type="file"
         accept={accept}
         multiple={multiple}
-        required={required}
+        required={required && !hasFiles}
         disabled={effectiveDisabled}
         onChange={handleInputChange}
         className="sr-only"
@@ -167,130 +231,181 @@ export default function FileField({
       />
 
       {variant === "compact" ? (
-        <div
-          onPaste={handlePaste}
-          className={twMerge(
-            "flex w-full items-center overflow-hidden rounded-lg border transition-all duration-150",
-            error ? "border-red-400 hover:border-red-500" : "border-zinc-300 hover:border-zinc-400 dark:border-zinc-700 dark:hover:border-zinc-600",
-            effectiveDisabled && "opacity-60 pointer-events-none",
-          )}
-        >
-          <button
-            data-component-id={componentId ? `${componentId}.browse` : "erp.filefield.browse"}
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            disabled={effectiveDisabled}
+        <div className="space-y-1.5">
+          <div
+            onPaste={handlePaste}
             className={twMerge(
-              "flex shrink-0 items-center gap-1.5 border-r border-zinc-200 bg-zinc-50 px-3 font-medium text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:active:bg-zinc-600 transition-colors",
-              BTN_H[size],
+              "flex w-full items-center overflow-hidden rounded-lg border bg-surface transition-all duration-150",
+              error ? "border-danger" : "border-input-border hover:border-border-strong",
+              effectiveDisabled && "opacity-60 pointer-events-none"
             )}
           >
-            <Upload size={size === "lg" ? 15 : 13} />
-            {buttonLabel}
-          </button>
-
-          {firstImagePreview && (
-            <img
-              src={firstImagePreview}
-              alt={files[0]?.name ?? "Preview"}
-              className="ml-2.5 h-6 w-6 shrink-0 rounded object-cover border border-zinc-200 dark:border-zinc-700"
-            />
-          )}
-
-          <span
-            className={twMerge(
-              "flex-1 min-w-0 truncate px-3",
-              size === "sm" ? "text-xs" : size === "lg" ? "text-base" : "text-sm",
-              hasFiles ? "text-zinc-700 dark:text-zinc-300" : "text-zinc-400 dark:text-zinc-500",
-            )}
-          >
-            {displayName}
-          </span>
-
-          {hasFiles && !effectiveDisabled && (
             <button
+              data-component-id={componentId ? `${componentId}.browse` : "erp.filefield.browse"}
               type="button"
-              data-component-id={componentId ? `${componentId}.clear` : "erp.file.clear"}
-              aria-label="Remover arquivo"
-              onClick={clear}
-              className="flex shrink-0 items-center justify-center px-2 text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors"
+              onClick={() => inputRef.current?.click()}
+              disabled={effectiveDisabled}
+              className={twMerge(
+                "flex shrink-0 items-center gap-1.5 border-r border-border bg-surface-muted px-3 font-medium text-foreground hover:bg-surface-hover transition-colors cursor-pointer",
+                BTN_H[size]
+              )}
             >
-              <X size={14} />
+              <Upload size={size === "lg" ? 15 : 13} />
+              {buttonLabel}
             </button>
+
+            {firstImagePreview && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={firstImagePreview}
+                alt={files[0]?.name ?? "Preview"}
+                className="ml-2.5 h-6 w-6 shrink-0 rounded object-cover border border-border"
+              />
+            )}
+
+            <span
+              className={twMerge(
+                "flex-1 min-w-0 truncate px-3",
+                size === "sm" ? "text-xs" : size === "lg" ? "text-base" : "text-sm",
+                hasFiles ? "text-foreground" : "text-muted-foreground"
+              )}
+            >
+              {displayName}
+            </span>
+
+            {hasFiles && !effectiveDisabled && (
+              <button
+                type="button"
+                data-component-id={componentId ? `${componentId}.clear` : "erp.file.clear"}
+                aria-label="Remover todos os arquivos"
+                onClick={clear}
+                className="flex shrink-0 items-center justify-center px-2 text-muted-foreground hover:text-danger transition-colors cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {multiple && files.length > 1 && (
+            <div className="flex flex-wrap gap-1.5">
+              {files.map((f, idx) => (
+                <span
+                  key={`${f.name}-${idx}`}
+                  className="inline-flex max-w-[220px] items-center gap-1.5 rounded-md border border-border bg-surface-muted/60 px-2 py-0.5 text-xs"
+                >
+                  <span className="truncate text-foreground">{f.name}</span>
+                  <span className="shrink-0 text-[10px] text-muted-foreground">
+                    {fmtSize(f.size)}
+                  </span>
+                  {!effectiveDisabled && (
+                    <button
+                      type="button"
+                      aria-label={`Remover ${f.name}`}
+                      onClick={(e) => removeSingleFile(idx, e)}
+                      className="rounded p-0.5 text-muted-foreground hover:text-danger cursor-pointer"
+                    >
+                      <X size={11} />
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
           )}
         </div>
       ) : (
-        /* Drop zone */
         <div
           role="button"
           tabIndex={effectiveDisabled ? -1 : 0}
           onClick={() => !effectiveDisabled && inputRef.current?.click()}
-          onKeyDown={(e) => !effectiveDisabled && (e.key === "Enter" || e.key === " ") && inputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onKeyDown={(e) =>
+            !effectiveDisabled &&
+            (e.key === "Enter" || e.key === " ") &&
+            inputRef.current?.click()
+          }
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           onPaste={handlePaste}
           className={twMerge(
-            "flex w-full cursor-pointer select-none flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition-all duration-150",
+            "flex w-full cursor-pointer select-none flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-7 text-center transition-all duration-150",
             dragOver
-              ? "border-indigo-400 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-950/40"
+              ? "border-primary bg-primary/8"
               : error
-                ? "border-red-300 bg-red-50/30 hover:border-red-400 dark:border-red-800 dark:bg-red-950/30 dark:hover:border-red-700"
-                : "border-zinc-300 bg-zinc-50 hover:border-indigo-400 hover:bg-indigo-50/30 dark:border-zinc-700 dark:bg-zinc-800/40 dark:hover:border-indigo-500 dark:hover:bg-indigo-950/30",
-            effectiveDisabled && "opacity-60 pointer-events-none",
+                ? "border-danger/60 bg-danger/5 hover:border-danger"
+                : "border-border-strong bg-surface-muted/40 hover:border-primary/60 hover:bg-surface-hover/60",
+            effectiveDisabled && "opacity-60 pointer-events-none"
           )}
         >
           {hasFiles ? (
             <>
-              {previews.some((p) => p.url) ? (
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  {previews.map((p, idx) =>
-                    p.url ? (
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {previews.map((p, idx) => (
+                  <div
+                    key={`${p.file.name}-${idx}`}
+                    className="group/file relative flex items-center gap-2 rounded-lg border border-border bg-surface px-2.5 py-1.5 shadow-2xs"
+                  >
+                    {p.url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        key={`${p.file.name}-${idx}`}
                         src={p.url}
                         alt={p.file.name}
-                        className="h-16 w-16 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700 shadow-xs"
+                        className="h-9 w-9 rounded object-cover border border-border"
                       />
                     ) : (
-                      <div
-                        key={`${p.file.name}-${idx}`}
-                        className="flex h-16 w-16 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900"
+                      <FileIcon size={18} className="text-primary shrink-0" />
+                    )}
+                    <div className="max-w-[160px] text-left">
+                      <p className="truncate text-xs font-medium text-foreground">
+                        {p.file.name}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {fmtSize(p.file.size)}
+                      </p>
+                    </div>
+                    {!effectiveDisabled && (
+                      <button
+                        type="button"
+                        aria-label={`Remover ${p.file.name}`}
+                        onClick={(e) => removeSingleFile(idx, e)}
+                        className="ml-1 rounded p-0.5 text-muted-foreground hover:bg-danger/10 hover:text-danger cursor-pointer"
                       >
-                        <FileIcon size={24} className="text-indigo-500" />
-                      </div>
-                    ),
-                  )}
-                </div>
-              ) : (
-                <FileIcon size={30} className="text-indigo-500" />
-              )}
-              <div className="space-y-0.5">
-                {files.map((f) => (
-                  <p key={f.name} className="max-w-xs truncate text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    {f.name}
-                    <span className="ml-1.5 text-xs text-zinc-400 dark:text-zinc-500">({fmtSize(f.size)})</span>
-                  </p>
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
-              <button
-                data-component-id={componentId ? `${componentId}.remove` : "erp.filefield.remove"}
-                type="button"
-                onClick={clear}
-                className="text-xs text-zinc-400 hover:text-red-500 dark:text-zinc-500 transition-colors"
-              >
-                Remover
-              </button>
+              <div className="flex items-center gap-3 pt-1">
+                {multiple && (
+                  <span className="text-xs font-medium text-primary hover:underline">
+                    + Adicionar mais arquivos
+                  </span>
+                )}
+                <button
+                  data-component-id={componentId ? `${componentId}.remove` : "erp.filefield.remove"}
+                  type="button"
+                  onClick={clear}
+                  className="text-xs text-muted-foreground hover:text-danger transition-colors cursor-pointer"
+                >
+                  Limpar todos
+                </button>
+              </div>
             </>
           ) : (
             <>
-              <Upload size={30} className={dragOver ? "text-indigo-500" : "text-zinc-400 dark:text-zinc-500"} />
+              <Upload
+                size={28}
+                className={dragOver ? "text-primary" : "text-muted-foreground"}
+              />
               <div>
-                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  {dragOver ? "Solte aqui" : "Arraste, cole ou clique para enviar"}
+                <p className="text-sm font-medium text-foreground">
+                  {dragOver ? "Solte os arquivos aqui" : "Arraste, cole ou clique para enviar"}
                 </p>
                 {(accept || maxSize) && (
-                  <p className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {accept && `Aceita ${accept}`}
                     {accept && maxSize && " · "}
                     {maxSize && `máx. ${fmtSize(maxSize)}`}
