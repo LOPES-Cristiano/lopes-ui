@@ -32,19 +32,28 @@ import RatingField, { Rating } from "@/components/form/RatingField";
 import FilterChips from "@/components/form/FilterChips";
 import ColorPickerField from "@/components/form/ColorPickerField";
 import TagInputField from "@/components/form/TagInputField";
+import CascaderField, { type CascaderOption } from "@/components/form/CascaderField";
+import TreeSelectField, { type TreeSelectNode } from "@/components/form/TreeSelectField";
+import MentionsField from "@/components/form/MentionsField";
+import TagsInput, { CheckableTagGroup } from "@/components/form/TagsInput";
 import {
   FieldSet,
   FieldLegend,
   FieldGroup,
 } from "@/components/form/FieldWrapper";
-import ZodForm, { ZodFormField } from "@/components/form/ZodForm";
+import ZodForm from "@/components/form/ZodForm";
 import { z } from "zod";
 
 import LoginForm from "@/components/LoginForm";
 import OTPInput from "@/components/OTPInput";
 import PasswordStrength from "@/components/PasswordStrength";
-import PriceInput from "@/components/PriceInput";
+import PriceInput, { CurrencyField } from "@/components/PriceInput";
 import RichTextEditor from "@/components/RichTextEditor";
+import RichTextField from "@/components/RichTextField";
+import SegmentedControl from "@/components/SegmentedControl";
+import FileDropzone, { type FileDropzoneItem } from "@/components/FileDropzone";
+import { SignatureField } from "@/components/SignaturePad";
+import InlineEdit from "@/components/InlineEdit";
 import CodeBlock from "@/components/CodeBlock";
 import Button from "@/components/Button";
 import toast from "@/components/Toast";
@@ -223,14 +232,14 @@ export default function Page() {
             description="Campos altamente configuráveis com suporte a labels, tooltips, ícones, afixos, validação e layout em colunas."
           />
 
-          <DemoCard id="fields-text" title="TextField — tamanhos e variantes">
-            <div className="space-y-4">
+          <DemoCard id="fields-text" title="TextField — tamanhos e 6 variantes visuais">
+            <div className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <TextField size="sm" label="Small" placeholder="Tamanho sm" />
                 <TextField size="md" label="Medium" placeholder="Tamanho md" />
                 <TextField size="lg" label="Large" placeholder="Tamanho lg" />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
                 <TextField
                   variant="default"
                   label="Default (outline)"
@@ -241,34 +250,78 @@ export default function Page() {
                   label="Filled"
                   placeholder="Estilo preenchido"
                 />
+                <TextField
+                  variant="underlined"
+                  label="Underlined"
+                  defaultValue="Av. Sete de Setembro — RO"
+                />
+                <div className="rounded-xl bg-zinc-50 dark:bg-zinc-800/50 px-3 py-1 border border-dashed border-zinc-200 dark:border-zinc-700">
+                  <TextField
+                    variant="borderless"
+                    label="Borderless"
+                    defaultValue="Conforto e qualidade para o seu lar"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
+                <TextField
+                  variant="contained"
+                  label="Contained (Label interno ao card)"
+                  defaultValue="Showroom Cidade Nova — Manaus (AM)"
+                />
+                <TextField
+                  variant="floating"
+                  label="Floating Label (Rótulo flutuante)"
+                  defaultValue="Rafael Nascimento — Consultor Sênior"
+                />
               </div>
             </div>
           </DemoCard>
 
-          <DemoCard id="fields-addons" title="Ícones, prefixos e sufixos">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <TextField
-                label="Ícone esquerdo"
-                leftIcon={<Search />}
-                placeholder="Buscar..."
-              />
-              <TextField
-                label="Ícone direito"
-                type="email"
-                rightIcon={<Mail />}
-                placeholder="email@exemplo.com"
-              />
-              <TextField
-                label="Prefixo"
-                prefix="https://"
-                placeholder="meusite.com"
-              />
-              <TextField
-                label="Sufixo"
-                suffix=".com.br"
-                placeholder="dominio"
-              />
+          <DemoCard id="fields-addons" title="Ícones, prefixos, sufixos e addons acoplados">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <TextField
+                  label="Ícone esquerdo"
+                  leftIcon={<Search />}
+                  placeholder="Buscar estofados, colchões ou eletro..."
+                />
+                <TextField
+                  label="Ícone direito"
+                  type="email"
+                  rightIcon={<Mail />}
+                  placeholder="atendimento@empresa.com.br"
+                />
+                <TextField
+                  label="Prefixo interno"
+                  prefix="https://"
+                  placeholder="meusite.com"
+                />
+                <TextField
+                  label="Sufixo interno"
+                  suffix=".com.br"
+                  placeholder="dominio"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
+                <TextField
+                  label="Addons externos acoplados (addonBefore & addonAfter)"
+                  addonBefore="https://"
+                  addonAfter=".empresa.com.br"
+                  defaultValue="catalogo-norte"
+                />
+                <TextField
+                  label="Código de Rastreio c/ Addon"
+                  addonBefore="ROTA-NORTE"
+                  addonAfter="RO/AM"
+                  defaultValue="69042"
+                />
+              </div>
             </div>
+          </DemoCard>
+
+          <DemoCard id="fields-masks" title="TextField — Máscaras Progressivas Brasileiras (CPF/CNPJ, Telefone, CEP e Placa)">
+            <TextFieldMasksDemo />
           </DemoCard>
 
           <DemoCard id="fields-states" title="Estados e validação">
@@ -476,7 +529,24 @@ export default function Page() {
                   "Classe Tailwind de largura do wrapper",
                 ],
                 ["size", "string", "md", "sm | md | lg"],
-                ["variant", "string", "default", "default (outline) | filled"],
+                [
+                  "variant",
+                  "string",
+                  "default",
+                  "default | filled | contained | floating | underlined | borderless",
+                ],
+                [
+                  "mask",
+                  "string | function",
+                  "—",
+                  "cpf | cnpj | cpf-cnpj | phone | cep | plate | ((raw) => string)",
+                ],
+                [
+                  "addonBefore / addonAfter",
+                  "ReactNode",
+                  "—",
+                  "Blocos externos acoplados à borda esquerda/direita do TextField",
+                ],
                 [
                   "leftIcon",
                   "ReactElement",
@@ -1456,17 +1526,19 @@ import FileField   from "@/components/form/FileField";
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
-
-        <section id="price-input" className="scroll-mt-20">
+        <section id="price-input" className="space-y-8 scroll-mt-20">
           <SectionHeader
-            label="Componente"
-            title="Price Input"
-            description="Campo monetário com máscara de centavos, símbolo de moeda e suporte a múltiplas localidades."
+            label="Campos Monetários"
+            title="PriceInput & CurrencyField"
+            description="Campos monetários com máscara automática de centavos, símbolo de moeda, formatação localizada e seletor multi-moedas integrado (CurrencyField com variantes default e contained)."
           />
 
-          <DemoCard id="price-input-demo" title="Demo interativo">
+          <DemoCard id="price-input-demo" title="PriceInput — Máscara Monetária por Centavos">
             <PriceInputDemo />
+          </DemoCard>
+
+          <DemoCard id="currency-field-demo" title="CurrencyField — Multi-Moedas (BRL, USD, EUR) & Variante Contained">
+            <CurrencyFieldShowcaseDemo />
           </DemoCard>
 
           <div id="price-input-props" className="space-y-4">
@@ -1488,8 +1560,11 @@ import FileField   from "@/components/form/FileField";
                   "Callback com novo valor",
                 ],
                 ["currency", "string", '"BRL"', "Código ISO 4217 da moeda"],
+                ["currencies", "CurrencyOption[]", "—", "Lista de moedas selecionáveis no CurrencyField"],
+                ["onCurrencyChange", "(code: string) => void", "—", "Callback ao trocar a moeda no CurrencyField"],
+                ["variant", "'default' | 'contained'", '"default"', "Estilo visual do CurrencyField"],
                 ["locale", "string", '"pt-BR"', "Locale para formatação"],
-                ["error", "boolean", "false", "Anel de erro vermelho"],
+                ["error", "boolean | string", "false", "Anel de erro vermelho / mensagem no CurrencyField"],
                 ["disabled", "boolean", "false", "Campo desabilitado"],
               ]}
             />
@@ -1498,21 +1573,43 @@ import FileField   from "@/components/form/FileField";
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
-
-        <section id="rich-text-editor" className="space-y-10 pb-10 sm:pb-14">
+        <section id="rich-text-editor" className="space-y-10 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
-            label="Editor"
-            title="Rich Text Editor"
-            description="Editor de texto rico baseado em Tiptap. Suporta formatação completa, links, tabelas, imagens e contagem de caracteres."
+            label="Editor Next-Gen"
+            title="Rich Text Editor & RichTextField"
+            description="Editor corporativo baseado em Tiptap v3 + padrões @mantine/tiptap: Slash Commands (/), Bubble Menu flutuante ao selecionar texto, blocos de Callout, variáveis dinâmicas ({{...}}), modo Documento A4 imprimível, busca e substituição (Ctrl+F), código-fonte HTML e wrapper RichTextField para formulários."
           />
 
-          <DemoCard id="rte-demo" title="Editor completo">
+          <DemoCard
+            id="rte-demo"
+            title="Editor Completo — Digite '/' para comandos ou '{{' para variáveis dinâmicas"
+          >
+            <RichTextNextGenDemo />
+          </DemoCard>
+
+          <DemoCard
+            id="rte-document"
+            title="Modo Documento A4 (variant='document') — Zoom, Quebra de Página e Impressão"
+          >
             <RichTextEditor
+              variant="document"
+              toolbarPreset="document"
               showCount
-              defaultValue="<h2>Bem-vindo ao editor</h2><p>Experimente a barra de ferramentas acima. Você pode <strong>negrito</strong>, <em>itálico</em>, <u>sublinhado</u> e muito mais.</p><ul><li>Listas com marcadores</li><li>Listas numeradas</li><li>Citações</li></ul>"
-              onChange={(html) => console.log(html)}
-              placeholder="Comece a escrever..."
+              allowSourceView
+              defaultValue="<h2>Termo de Entrega e Montagem — Móveis &amp; Eletro</h2><p>Confirmamos o agendamento da entrega e montagem especializada para <span data-merge-tag='cliente_nome'>{{cliente_nome}}</span> na unidade <strong>Porto Velho — RO</strong>.</p><div data-callout='' data-type='info'><p><strong>Conforto e qualidade para o seu lar:</strong> Nossa equipe técnica realizará a montagem completa dos móveis e o teste funcional dos eletrodomésticos no ato da entrega.</p></div><table><tbody><tr><th>Item do Pedido</th><th>Ambiente</th><th>Prazo</th></tr><tr><td>Sofá Retrátil &amp; Reclinável 3 Lugares</td><td>Sala de Estar</td><td>Imediato</td></tr><tr><td>Guarda-Roupa Casal 6 Portas c/ Espelho</td><td>Quarto</td><td>Montagem inclusa</td></tr></tbody></table>"
+            />
+          </DemoCard>
+
+          <DemoCard id="rte-field" title="RichTextField (Integrado a FieldWrapper / ZodForm)">
+            <RichTextField
+              label="Instruções Técnicas para a Equipe de Montagem"
+              required
+              toolbarPreset="standard"
+              minHeight="7rem"
+              showCount
+              maxLength={800}
+              defaultValue="<p>Verificar nivelamento do piso antes de instalar o <strong>Guarda-Roupa Casal</strong> e confirmar tensão 127V da lavanderia em <em>Manaus - AM</em>.</p>"
+              helpText="Normaliza HTML vazio (<p></p>) automaticamente para validação obrigatória no ZodForm."
             />
           </DemoCard>
 
@@ -1623,10 +1720,22 @@ import FileField   from "@/components/form/FileField";
                 ],
                 [
                   "variant",
-                  "'default' | 'borderless'",
+                  "'default' | 'borderless' | 'filled' | 'minimal' | 'notion' | 'document'",
                   "'default'",
-                  "Estilo visual da borda",
+                  "Estilo visual do editor (inclui folha A4 em 'document')",
                 ],
+                [
+                  "toolbarPreset",
+                  "'full' | 'standard' | 'compact' | 'minimal' | 'document'",
+                  "'full'",
+                  "Preset rápido de ferramentas",
+                ],
+                ["bubbleMenu", "boolean", "true", "Exibe barra flutuante ao selecionar texto"],
+                ["slashCommands", "boolean", "true", "Ativa paleta de comandos ao digitar '/'"],
+                ["variables", "RichTextVariable[]", "[]", "Variáveis dinâmicas inseríveis via '{{' ou toolbar"],
+                ["snippets", "RichTextSnippet[]", "[]", "Blocos/cláusulas prontas na toolbar e menu '/'"],
+                ["allowSourceView", "boolean", "false", "Permite alternar e editar o código HTML bruto"],
+                ["stickyToolbar", "boolean", "false", "Mantém a toolbar fixa no topo durante a rolagem"],
                 ["className", "string", "—", "Classe extra no container"],
               ]}
             />
@@ -1684,15 +1793,41 @@ import FileField   from "@/components/form/FileField";
           <SectionHeader
             label="Seleção Exclusiva"
             title="RadioGroupField"
-            description="Grupo de botões de rádio com variantes em lista padrão (default), cartões clicáveis com descrição (cards) e orientação horizontal."
+            description="Grupo de botões de rádio com 4 variantes visuais: lista padrão (default), cartões clicáveis com descrição (cards), botões acoplados estilo Radio.Button (buttons e buttons-solid) e orientação horizontal."
           />
 
           <DemoCard
             id="radio-group-demo"
-            title="Variantes: Cards em Grade e Lista Horizontal"
+            title="Variantes: Cards em Grade, Radio.Button (Outline & Solid) e Lista Horizontal"
           >
             <RadioGroupShowcaseDemo />
           </DemoCard>
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── SegmentedControl ─────────────────────────────────────────── */}
+        <section id="segmented-control" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Seletor Deslizante"
+            title="SegmentedControl"
+            description="Controle segmentado com indicador deslizante animado (ResizeObserver), suporte a ícones, contadores/badges, larguras proporcionais (fullWidth) e navegação completa por setas do teclado."
+          />
+
+          <DemoCard id="segmented-control-demo" title="Departamentos & Visualizações com Indicador Animado">
+            <SegmentedControlShowcaseDemo />
+          </DemoCard>
+
+          <PropsTable
+            rows={[
+              ["data", "(string | SegmentedControlItem)[]", "—", "Lista de opções com value, label, icon e badge"],
+              ["value / defaultValue", "string", "primeira opção", "Valor selecionado controlado ou inicial"],
+              ["variant", "'default' | 'primary' | 'outline'", "'default'", "Estilo visual do indicador ativo"],
+              ["size", "'xs' | 'sm' | 'md' | 'lg'", "'md'", "Dimensão e tipografia do controle"],
+              ["fullWidth", "boolean", "false", "Distribui os segmentos igualmente em 100% da largura"],
+              ["orientation", "'horizontal' | 'vertical'", "'horizontal'", "Orientação dos segmentos e animação"],
+            ]}
+          />
         </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
@@ -1826,7 +1961,7 @@ import FileField   from "@/components/form/FileField";
           <SectionHeader
             label="Filtros Rápidos"
             title="FilterChips"
-            description="Pílulas de filtro interativas (estilo daisyUI Filter) com modo de seleção única (com colapso elegante das opções não selecionadas e botão ×) ou seleção múltipla com contadores."
+            description="Pílulas de filtro interativas com modo de seleção única (com colapso elegante das opções não selecionadas e botão ×) ou seleção múltipla com contadores."
           />
 
           <DemoCard
@@ -1834,6 +1969,126 @@ import FileField   from "@/components/form/FileField";
             title="Filtro por Categoria e Região"
           >
             <FilterChipsShowcaseDemo />
+          </DemoCard>
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── TagsInput, TagInputField & CheckableTagGroup ─────────────── */}
+        <section id="tags-input" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Tags & Etiquetas"
+            title="TagsInput, TagInputField & CheckableTagGroup"
+            description="Família unificada de tags: entrada por digitação com sugestões (TagInputField / mode='input'), adição in-loco com botão '+ Nova Etiqueta' e renomeação por duplo-clique (mode='inline-add'), e pílulas de marcação rápida (CheckableTagGroup)."
+          />
+
+          <DemoCard id="tags-input-demo" title="Modos Input com Sugestões, '+ Nova Etiqueta' Editável & CheckableTags">
+            <TagsInputShowcaseDemo />
+          </DemoCard>
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── MentionsField ────────────────────────────────────────────── */}
+        <section id="mentions-field" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Menções Contextuais"
+            title="MentionsField"
+            description="Campo de texto com múltiplos gatilhos configuráveis (ex.: '@' para consultores e '#' para pedidos), busca sem acentos em tempo real, navegação por teclado e contador de caracteres."
+          />
+
+          <DemoCard id="mentions-field-demo" title="Digite '@' para mencionar consultores ou '#' para vincular pedidos">
+            <MentionsShowcaseDemo />
+          </DemoCard>
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── ColorPickerField ─────────────────────────────────────────── */}
+        <section id="color-picker-field" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Seletor de Cor"
+            title="ColorPickerField"
+            description="Seletor de cores com paleta de swatches rápidos, input HEX validado, seletor nativo e botão de cópia rápida."
+          />
+
+          <DemoCard id="color-picker-demo" title="Personalização de Cor de Destaque & Paleta">
+            <ColorPickerShowcaseDemo />
+          </DemoCard>
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── CascaderField ────────────────────────────────────────────── */}
+        <section id="cascader-field" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Seleção Hierárquica"
+            title="CascaderField (Colunas Encadeadas)"
+            description="Seletor multi-nível em colunas encadeadas com suporte a seleção única ou múltipla (checkboxes), busca instantânea sem acentos em toda a árvore e abertura por clique ou hover."
+          />
+
+          <DemoCard id="cascader-demo" title="Praça → Cidade → Filial (RO/AM) & Seleção Múltipla de Ambientes">
+            <CascaderShowcaseDemo />
+          </DemoCard>
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── TreeSelectField ──────────────────────────────────────────── */}
+        <section id="tree-select-field" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Seleção Hierárquica"
+            title="TreeSelectField (Árvore em Dropdown)"
+            description="Dropdown em árvore expansível com busca que revela ancestrais automaticamente, ícones de pasta, seleção única ou múltipla com checkboxes em cascata (treeCheckable) e estado indeterminado."
+          />
+
+          <DemoCard id="tree-select-demo" title="Centro de Custo / Departamentos & Seleção Múltipla em Cascata">
+            <TreeSelectShowcaseDemo />
+          </DemoCard>
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── FileDropzone ─────────────────────────────────────────────── */}
+        <section id="file-dropzone" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Upload Avançado"
+            title="FileDropzone"
+            description="Zona de arrastar e soltar arquivos/pastas com colagem da área de transferência (Ctrl+V), validação de formato e tamanho máximo, miniaturas de imagem e fila de upload com barra de progresso individual e retentativa."
+          />
+
+          <DemoCard id="file-dropzone-demo" title="Fila de Upload com Progresso Simulado & Miniaturas">
+            <FileDropzoneShowcaseDemo />
+          </DemoCard>
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── SignaturePad & SignatureField ────────────────────────────── */}
+        <section id="signature-pad" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Captura Digital"
+            title="SignaturePad & SignatureField"
+            description="Quadro de assinatura manuscrita em HTML5 Canvas de alta densidade (Retina/DPR) com suavização por curvas quadráticas de Bézier, seleção de cor/espessura da caneta, desfazer traço e exportação em PNG ou SVG."
+          />
+
+          <DemoCard id="signature-pad-demo" title="Canhoto Digital de Entrega e Montagem">
+            <SignaturePadShowcaseDemo />
+          </DemoCard>
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── InlineEdit ───────────────────────────────────────────────── */}
+        <section id="inline-edit" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Edição Rápida"
+            title="InlineEdit"
+            description="Edição in-loco com um clique (ou duplo clique) para títulos, preços, observações e seletores de status, com suporte a salvamento assíncrono, spinner e confirmação por Enter / cancelamento por Esc."
+          />
+
+          <DemoCard id="inline-edit-demo" title="Clique em qualquer valor abaixo para editar in-loco">
+            <InlineEditShowcaseDemo />
           </DemoCard>
         </section>
 
@@ -1879,30 +2134,6 @@ import FileField   from "@/components/form/FileField";
             </FieldSet>
           </DemoCard>
         </section>
-
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
-
-        {/* ── ColorPickerField & TagInputField ─────────────────────────── */}
-        <section id="color-tag-fields" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
-          <SectionHeader
-            label="Seletores Avançados"
-            title="ColorPickerField & TagInputField"
-            description="Seletor de cores com paleta de swatches, input HEX validado e cópia rápida, acompanhado do campo de múltiplas tags com suporte a teclado (Enter, vírgula, Backspace), limite máximo e sugestões clicáveis."
-          />
-
-          <DemoCard id="color-tag-demo" title="Personalização de Marca e Tags de Projeto">
-            <ColorAndTagShowcaseDemo />
-          </DemoCard>
-
-          <PropsTable
-            rows={[
-              ["ColorPickerField", "value, onChange, swatches, showCopy", "Seletor de cor HEX com paleta rápida e seletor nativo"],
-              ["TagInputField", "value, onChange, suggestions, maxTags", "Campo de chips/tags com sugestões e prevenção de duplicatas"],
-            ]}
-          />
-        </section>
-
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
       </div>
     </main>
   );
@@ -1910,12 +2141,14 @@ import FileField   from "@/components/form/FileField";
 
 function RadioGroupShowcaseDemo() {
   const [plano, setPlano] = React.useState("pro");
+  const [modalidade, setModalidade] = React.useState("entrega-montagem");
+  const [voltagem, setVoltagem] = React.useState("127v");
   const [ciclo, setCiclo] = React.useState("anual");
 
   return (
     <div className="space-y-6">
       <RadioGroupField
-        label="Plano de Infraestrutura (Variante Cards)"
+        label="Plano de Infraestrutura (variant='cards')"
         variant="cards"
         columns={3}
         value={plano}
@@ -1942,9 +2175,35 @@ function RadioGroupShowcaseDemo() {
         ]}
       />
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-zinc-100 dark:border-zinc-800/80">
+        <RadioGroupField
+          variant="buttons"
+          label="Modalidade Logística (variant='buttons' · Outline)"
+          value={modalidade}
+          onChange={setModalidade}
+          options={[
+            { value: "retirada", label: "Retirar na Loja" },
+            { value: "entrega", label: "Apenas Entrega" },
+            { value: "entrega-montagem", label: "Entrega + Montagem" },
+          ]}
+        />
+
+        <RadioGroupField
+          variant="buttons-solid"
+          label="Tensão do Eletrodoméstico (variant='buttons-solid' · Solid)"
+          value={voltagem}
+          onChange={setVoltagem}
+          options={[
+            { value: "127v", label: "127V (RO / AM)" },
+            { value: "220v", label: "220V" },
+            { value: "bivolt", label: "Bivolt Automático" },
+          ]}
+        />
+      </div>
+
       <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800/80">
         <RadioGroupField
-          label="Ciclo de Faturamento (Horizontal)"
+          label="Ciclo de Faturamento (direction='horizontal')"
           direction="horizontal"
           value={ciclo}
           onChange={setCiclo}
@@ -2108,30 +2367,641 @@ function FilterChipsShowcaseDemo() {
 }
 
 
-function ColorAndTagShowcaseDemo() {
+function TextFieldMasksDemo() {
+  const [doc, setDoc] = React.useState("04821953210");
+  const [foneRo, setFoneRo] = React.useState("69992451820");
+  const [foneAm, setFoneAm] = React.useState("92981143300");
+  const [cep, setCep] = React.useState("76801084");
+  const [placa, setPlaca] = React.useState("NDE4B92");
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <TextField
+        variant="contained"
+        label="CPF ou CNPJ (Auto)"
+        mask="cpf-cnpj"
+        value={doc}
+        onValueChange={(formatted) => setDoc(formatted)}
+        placeholder="000.000.000-00"
+      />
+      <TextField
+        variant="contained"
+        label="WhatsApp Rondônia"
+        mask="phone"
+        value={foneRo}
+        onValueChange={(formatted) => setFoneRo(formatted)}
+        placeholder="(69) 99999-9999"
+      />
+      <TextField
+        variant="contained"
+        label="WhatsApp Amazonas"
+        mask="phone"
+        value={foneAm}
+        onValueChange={(formatted) => setFoneAm(formatted)}
+        placeholder="(92) 99999-9999"
+      />
+      <TextField
+        variant="contained"
+        label="CEP de Entrega (RO)"
+        mask="cep"
+        value={cep}
+        onValueChange={(formatted) => setCep(formatted)}
+        placeholder="76800-000"
+      />
+      <TextField
+        variant="contained"
+        label="Placa Caminhão Baú"
+        mask="plate"
+        value={placa}
+        onValueChange={(formatted) => setPlaca(formatted)}
+        placeholder="ABC1D23"
+      />
+    </div>
+  );
+}
+
+function CurrencyFieldShowcaseDemo() {
+  const [valorEstofado, setValorEstofado] = React.useState<number | null>(3490.0);
+  const [valorEletro, setValorEletro] = React.useState<number | null>(4299.9);
+  const [moeda, setMoeda] = React.useState("BRL");
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      <CurrencyField
+        label="Valor do Conjunto de Estofados (Multi-Moedas)"
+        value={valorEstofado}
+        onChange={setValorEstofado}
+        currency={moeda}
+        onCurrencyChange={setMoeda}
+        currencies={[
+          { code: "BRL", label: "R$ BRL" },
+          { code: "USD", label: "$ USD" },
+          { code: "EUR", label: "€ EUR" },
+        ]}
+        helpText="Troque a moeda no seletor integrado à esquerda."
+      />
+
+      <CurrencyField
+        variant="contained"
+        label="Geladeira Frost Free Inverter 450L (variant='contained')"
+        value={valorEletro}
+        onChange={setValorEletro}
+        currency="BRL"
+        helpText="Variante Contained com rótulo interno."
+      />
+    </div>
+  );
+}
+
+function ColorPickerShowcaseDemo() {
   const [accentColor, setAccentColor] = React.useState("#4f46e5");
-  const [projectTags, setProjectTags] = React.useState<string[]>([
-    "Design System",
-    "Next.js 16",
-    "Tailwind v4",
-  ]);
+  const [badgeColor, setBadgeColor] = React.useState("#059669");
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <ColorPickerField
-        label="Cor de Destaque do Workspace"
+        label="Cor Primária do Catálogo Digital"
         value={accentColor}
         onChange={setAccentColor}
         helpText="Clique nos swatches rápidos ou no conta-gotas para escolher uma cor customizada."
       />
+      <ColorPickerField
+        label="Cor do Selo de Pronta Entrega (RO / AM)"
+        value={badgeColor}
+        onChange={setBadgeColor}
+        helpText="Validação HEX automática e botão de cópia rápida."
+      />
+    </div>
+  );
+}
 
-      <TagInputField
-        label="Tecnologias & Escopos do Projeto"
-        value={projectTags}
-        onChange={setProjectTags}
-        maxTags={6}
-        suggestions={["TypeScript", "Radix UI", "RBAC", "Shiki", "ZodForm"]}
-        helpText="Digite e pressione Enter ou vírgula para adicionar."
+function TagsInputShowcaseDemo() {
+  const [projectTags, setProjectTags] = React.useState<string[]>([
+    "Sala de Estar",
+    "Molas Ensacadas",
+    "Inverter 127V",
+  ]);
+  const [tags, setTags] = React.useState<string[]>([
+    "Montagem Inclusa",
+    "Entrega Agendada",
+    "127V Conferido",
+  ]);
+  const [ambientes, setAmbientes] = React.useState<string[]>(["sala", "cozinha"]);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TagInputField
+          label="Modo Input c/ Sugestões (TagInputField / mode='input')"
+          value={projectTags}
+          onChange={setProjectTags}
+          maxTags={6}
+          suggestions={["Porto Velho (RO)", "Manaus (AM)", "Pronta Entrega", "Garantia 12m", "Frete Próprio"]}
+          helpText="Digite e pressione Enter ou vírgula, ou clique nas sugestões abaixo."
+        />
+
+        <TagsInput
+          mode="inline-add"
+          color="primary"
+          label="Modo Inline-Add ('+ Nova Etiqueta' + Duplo-clique para editar)"
+          addButtonLabel="Nova Etiqueta"
+          value={tags}
+          onChange={setTags}
+          helpText="Clique em '+ Nova Etiqueta' ou dê duplo-clique em qualquer tag para renomeá-la."
+        />
+      </div>
+
+      <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-2">
+        <span className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          Filtro Rápido por Ambiente (CheckableTagGroup)
+        </span>
+        <CheckableTagGroup
+          color="primary"
+          value={ambientes}
+          onChange={setAmbientes}
+          options={[
+            { value: "sala", label: "Sala de Estar" },
+            { value: "quarto", label: "Quarto & Colchões" },
+            { value: "cozinha", label: "Cozinha" },
+            { value: "lavanderia", label: "Lavanderia" },
+            { value: "eletro", label: "Eletroportáteis" },
+          ]}
+        />
+        <p className="text-xs text-zinc-500">
+          Ambientes ativos: {ambientes.length > 0 ? ambientes.join(", ") : "Nenhum"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function MentionsShowcaseDemo() {
+  const [note, setNote] = React.useState(
+    "Favor priorizar agendamento de montagem com @rafael.manaus referente ao pedido #PED-69042 (Sofá Retrátil + Geladeira 127V)."
+  );
+
+  return (
+    <MentionsField
+      label="Observação Interna do Pedido — Digite '@' para consultores ou '#' para pedidos"
+      prefix={["@", "#"]}
+      value={note}
+      onChange={setNote}
+      showCount
+      maxLength={280}
+      options={{
+        "@": [
+          { value: "rafael.manaus", label: "Rafael Nascimento", description: "Consultor Sênior · Manaus (AM)", badge: "DDD 92" },
+          { value: "mariana.pvh", label: "Mariana Costa", description: "Supervisora Showroom · Porto Velho (RO)", badge: "DDD 69" },
+          { value: "equipe.montagem", label: "Equipe de Montagem", description: "Rota Norte RO/AM", badge: "Logística" },
+        ],
+        "#": [
+          { value: "PED-69042", label: "PED-69042 — Sofá Retrátil 3L + Geladeira 450L", description: "Porto Velho (RO) · R$ 7.789,90" },
+          { value: "PED-92115", label: "PED-92115 — Colchão King Pocket + Guarda-Roupa", description: "Manaus (AM) · R$ 6.190,00" },
+          { value: "PED-69055", label: "PED-69055 — Cozinha Modulada + Fogão 5 Bocas", description: "Ji-Paraná (RO) · R$ 4.580,00" },
+        ],
+      }}
+    />
+  );
+}
+
+function RichTextNextGenDemo() {
+  return (
+    <RichTextEditor
+      showCount
+      allowSourceView
+      stickyToolbar
+      variables={[
+        { key: "cliente_nome", label: "Nome do Cliente", category: "Cliente", example: "Mariana Oliveira" },
+        { key: "filial_praça", label: "Filial / Praça", category: "Unidade", example: "Porto Velho - RO" },
+        { key: "pedido_codigo", label: "Código do Pedido", category: "Pedido", example: "PED-69042" },
+        { key: "data_entrega", label: "Data da Entrega", category: "Logística", example: "05/11/2026" },
+      ]}
+      snippets={[
+        {
+          id: "garantia-estofado",
+          title: "Cláusula de Garantia — Estofados & Colchões",
+          category: "Pós-Venda",
+          description: "Cobertura estrutural e orientações de conservação",
+          html: "<div data-callout='' data-type='success'><p><strong>Garantia Oficial Móveis &amp; Eletro:</strong> Cobertura integral de estrutura e espuma conforme certificado do fabricante, com assistência técnica dedicada em Rondônia e Amazonas.</p></div>",
+        },
+        {
+          id: "checklist-eletro",
+          title: "Checklist de Entrega — Eletrodomésticos",
+          category: "Logística",
+          description: "Conferência de voltagem e desembalagem assistida",
+          html: "<ul data-type='taskList'><li data-type='taskItem' data-checked='true'><p>Conferir integridade da embalagem no ato do recebimento</p></li><li data-type='taskItem' data-checked='false'><p>Validar tensão elétrica local (127V / 220V) antes de ligar</p></li></ul>",
+        },
+      ]}
+      defaultValue="<h2>Proposta Comercial — Ambientes Planejados &amp; Eletro</h2><p>Olá <span data-merge-tag='cliente_nome'>{{cliente_nome}}</span>, preparamos o orçamento completo para renovar sua sala e cozinha na unidade <span data-merge-tag='filial_praça'>{{filial_praça}}</span>.</p><div data-callout='' data-type='info'><p><strong>Dica interativa:</strong> Selecione qualquer palavra para abrir o <em>Bubble Menu</em> flutuante, digite <code>/</code> em uma nova linha para abrir os <em>Slash Commands</em> ou digite <code>{{</code> para inserir variáveis dinâmicas.</p></div><ul><li><strong>Sala de Estar:</strong> Sofá Retrátil 3 Lugares em Veludo + Painel Ripado para TV 75&quot;</li><li><strong>Cozinha &amp; Lavanderia:</strong> Geladeira Frost Free Inverter 450L + Lava e Seca 11kg</li></ul>"
+      placeholder="Digite '/' para inserir blocos ou '{{' para variáveis..."
+    />
+  );
+}
+
+function SegmentedControlShowcaseDemo() {
+  const [depto, setDepto] = React.useState("estofados");
+  const [periodo, setPeriodo] = React.useState("30d");
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <span className="text-xs font-semibold text-zinc-500">
+          Departamentos da Loja (fullWidth + badges)
+        </span>
+        <SegmentedControl
+          fullWidth
+          value={depto}
+          onChange={setDepto}
+          data={[
+            { value: "estofados", label: "Salas & Estofados", badge: "48" },
+            { value: "quartos", label: "Colchões & Quartos", badge: "36" },
+            { value: "eletro", label: "Eletrodomésticos", badge: "64" },
+            { value: "cozinhas", label: "Cozinhas & Lavanderia", badge: "29" },
+          ]}
+        />
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
+        <div className="space-y-1.5">
+          <span className="block text-xs font-semibold text-zinc-500">
+            Variante Primary (Pill arredondado)
+          </span>
+          <SegmentedControl
+            variant="primary"
+            radius="full"
+            size="sm"
+            value={periodo}
+            onChange={setPeriodo}
+            data={[
+              { value: "7d", label: "7 dias" },
+              { value: "30d", label: "30 dias" },
+              { value: "90d", label: "Trimestre" },
+              { value: "12m", label: "Anual" },
+            ]}
+          />
+        </div>
+
+        <p className="text-xs text-zinc-500">
+          Filtro ativo: <strong className="text-zinc-800 dark:text-zinc-200">{depto}</strong> ·{" "}
+          <strong className="text-zinc-800 dark:text-zinc-200">{periodo}</strong>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function FileDropzoneShowcaseDemo() {
+  const [count, setCount] = React.useState(0);
+
+  const simulateUpload = async (_file: File, onProgress: (pct: number) => void) => {
+    for (const step of [20, 45, 75, 100]) {
+      await new Promise((r) => setTimeout(r, 220));
+      onProgress(step);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <FileDropzone
+        accept="image/*,.pdf,.xml"
+        maxSize={10 * 1024 * 1024}
+        maxFiles={6}
+        onUpload={simulateUpload}
+        onChange={(_files: File[], items: FileDropzoneItem[]) => setCount(items.length)}
+        title="Arraste fotos da entrega/montagem, DANFE (.pdf) ou XML da NF-e"
+        description="Suporta imagens PNG/JPG, PDF e XML até 10 MB cada (ou cole com Ctrl+V)"
+      />
+      {count > 0 && (
+        <p className="text-xs text-zinc-500">
+          {count} arquivo(s) na fila de conferência logística.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function SignaturePadShowcaseDemo() {
+  const [assinatura, setAssinatura] = React.useState<string | null>(null);
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      <SignatureField
+        label="Assinatura do Recebedor no Ato da Montagem"
+        required
+        value={assinatura}
+        onChange={setAssinatura}
+        signerName="Mariana Oliveira"
+        signerDocument="Pedido #PED-69042 · Porto Velho - RO"
+        helpText="Assine utilizando o mouse, caneta stylus ou tela sensível ao toque."
+      />
+
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 p-5 space-y-3">
+        <p className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+          Comprovante Capturado (Tempo Real)
+        </p>
+        {assinatura ? (
+          <div className="space-y-2">
+            <div className="rounded-xl bg-white p-3 border border-zinc-200 flex items-center justify-center min-h-[120px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={assinatura}
+                alt="Prévia da assinatura capturada"
+                className="max-h-28 object-contain"
+              />
+            </div>
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+              ✓ Assinatura digital validada e pronta para anexar ao canhoto de entrega.
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center min-h-[140px] text-center text-xs text-zinc-400">
+            Desenhe uma rubrica no quadro ao lado para visualizar o PNG exportado em alta definição.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function InlineEditShowcaseDemo() {
+  const [produto, setProduto] = React.useState("Sofá Retrátil & Reclinável Imperial 3 Lugares — Linho Bege");
+  const [preco, setPreco] = React.useState("3490");
+  const [filial, setFilial] = React.useState("pvh");
+  const [obs, setObs] = React.useState("Entrega agendada para sábado pela manhã com montagem inclusa.");
+
+  const filialLabels: Record<string, string> = {
+    pvh: "Porto Velho — Centro (RO)",
+    jpr: "Ji-Paraná — Dom Bosco (RO)",
+    mao: "Manaus — Cidade Nova (AM)",
+    itc: "Itacoatiara — Centro (AM)",
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-1">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+          Título do Produto (Texto c/ salvamento assíncrono)
+        </span>
+        <InlineEdit
+          size="lg"
+          value={produto}
+          onSave={async (next) => {
+            await new Promise((r) => setTimeout(r, 350));
+            setProduto(next);
+            toast.success("Título atualizado!");
+          }}
+        />
+      </div>
+
+      <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-1">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+          Preço à Vista (Numérico c/ formatDisplay)
+        </span>
+        <InlineEdit
+          type="number"
+          size="lg"
+          value={preco}
+          formatDisplay={(v) =>
+            Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+          }
+          onSave={(next) => {
+            setPreco(next);
+            toast.success("Preço atualizado!");
+          }}
+        />
+      </div>
+
+      <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-1">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+          CD / Filial de Expedição (Select)
+        </span>
+        <InlineEdit
+          type="select"
+          value={filial}
+          options={[
+            { value: "pvh", label: "Porto Velho — Centro (RO)" },
+            { value: "jpr", label: "Ji-Paraná — Dom Bosco (RO)" },
+            { value: "mao", label: "Manaus — Cidade Nova (AM)" },
+            { value: "itc", label: "Itacoatiara — Centro (AM)" },
+          ]}
+          formatDisplay={(v) => filialLabels[v] ?? v}
+          onSave={setFilial}
+        />
+      </div>
+
+      <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-1">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+          Instrução Logística (Textarea)
+        </span>
+        <InlineEdit type="textarea" value={obs} onSave={setObs} />
+      </div>
+    </div>
+  );
+}
+
+const REGIONAL_BRANCH_OPTIONS: CascaderOption[] = [
+  {
+    value: "ro",
+    label: "Rondônia (RO · DDD 69)",
+    children: [
+      {
+        value: "pvh",
+        label: "Porto Velho",
+        children: [
+          { value: "pvh-centro", label: "Showroom Centro — Sete de Setembro", description: "Móveis & Eletro Completo" },
+          { value: "pvh-jatuarana", label: "Unidade Sul — Jatuarana", description: "Estofados & Colchões" },
+          { value: "cd-pvh", label: "CD Logístico Porto Velho", description: "Expedição & Montagem" },
+        ],
+      },
+      {
+        value: "jpr",
+        label: "Ji-Paraná",
+        children: [
+          { value: "jpr-centro", label: "Filial Centro — 1º Distrito" },
+          { value: "jpr-dombosco", label: "Filial Dom Bosco — 2º Distrito" },
+        ],
+      },
+      {
+        value: "ari",
+        label: "Ariquemes",
+        children: [
+          { value: "ari-jamari", label: "Filial Av. Jamari" },
+        ],
+      },
+    ],
+  },
+  {
+    value: "am",
+    label: "Amazonas (AM · DDD 92)",
+    children: [
+      {
+        value: "mao",
+        label: "Manaus",
+        children: [
+          { value: "mao-cidadenova", label: "Megaloja Cidade Nova", description: "Showroom 2 Andares" },
+          { value: "mao-centro", label: "Filial Eduardo Ribeiro" },
+          { value: "cd-mao", label: "CD Distrital Manaus", description: "Linha Branca & Dormitórios" },
+        ],
+      },
+      {
+        value: "itc",
+        label: "Itacoatiara",
+        children: [
+          { value: "itc-centro", label: "Filial Centro — Av. Parque" },
+        ],
+      },
+    ],
+  },
+];
+
+const CATALOG_CASCADER_OPTIONS: CascaderOption[] = [
+  {
+    value: "moveis",
+    label: "Móveis & Ambientes",
+    children: [
+      {
+        value: "salas",
+        label: "Sala de Estar",
+        children: [
+          { value: "sofa-retratil", label: "Sofá Retrátil & Reclinável" },
+          { value: "painel-tv", label: "Painel Ripado & Rack TV" },
+        ],
+      },
+      {
+        value: "quartos",
+        label: "Quarto & Colchões",
+        children: [
+          { value: "colchao-molas", label: "Colchão Molas Ensacadas" },
+          { value: "guarda-roupa", label: "Guarda-Roupa 6 Portas" },
+        ],
+      },
+    ],
+  },
+  {
+    value: "eletro",
+    label: "Eletrodomésticos",
+    children: [
+      {
+        value: "cozinha",
+        label: "Cozinha",
+        children: [
+          { value: "geladeira-inverter", label: "Geladeira Frost Free Inverter" },
+          { value: "fogao-5bocas", label: "Fogão 5 Bocas Mesa de Vidro" },
+        ],
+      },
+      {
+        value: "lavanderia",
+        label: "Lavanderia",
+        children: [
+          { value: "lava-seca", label: "Lava e Seca 11kg Inverter" },
+        ],
+      },
+    ],
+  },
+];
+
+function CascaderShowcaseDemo() {
+  const [filialPath, setFilialPath] = React.useState<string[]>(["ro", "pvh", "pvh-centro"]);
+  const [linhas, setLinhas] = React.useState<string[][]>([
+    ["moveis", "salas", "sofa-retratil"],
+    ["eletro", "cozinha", "geladeira-inverter"],
+  ]);
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      <CascaderField
+        label="Unidade de Faturamento & Expedição (Single)"
+        options={REGIONAL_BRANCH_OPTIONS}
+        value={filialPath}
+        onChange={(next) => setFilialPath(next)}
+        helpText="Navegue pelas colunas ou pesquise sem acentos (ex: 'manaus', 'jatuarana')."
+      />
+
+      <CascaderField
+        multiple
+        expandTrigger="hover"
+        maxTagCount={2}
+        label="Linhas em Campanha Promocional (Multiple + Hover)"
+        options={CATALOG_CASCADER_OPTIONS}
+        value={linhas}
+        onChange={(next) => setLinhas(next)}
+        helpText="Passe o mouse sobre as categorias e marque múltiplos itens."
+      />
+    </div>
+  );
+}
+
+const COST_CENTER_TREE_DATA: TreeSelectNode[] = [
+  {
+    value: "comercial",
+    label: "Diretoria Comercial — Varejo Casa",
+    selectable: false,
+    children: [
+      {
+        value: "dept-estofados",
+        label: "Salas & Estofados",
+        children: [
+          { value: "cc-sofas", label: "CC-101 · Sofás Retráteis & Poltronas" },
+          { value: "cc-paineis", label: "CC-102 · Painéis Ripados & Mesas de Jantar" },
+        ],
+      },
+      {
+        value: "dept-dormitorios",
+        label: "Colchões & Dormitórios",
+        children: [
+          { value: "cc-colchoes", label: "CC-201 · Colchões Pocket & Box Conjugado" },
+          { value: "cc-roupeiros", label: "CC-202 · Guarda-Roupas & Cômodas" },
+        ],
+      },
+      {
+        value: "dept-eletro",
+        label: "Eletrodomésticos & Linha Branca",
+        children: [
+          { value: "cc-refrigeracao", label: "CC-301 · Refrigeradores & Freezers" },
+          { value: "cc-lavanderia", label: "CC-302 · Lavadoras & Lava e Seca" },
+        ],
+      },
+    ],
+  },
+  {
+    value: "logistica",
+    label: "Operações & Montagem (RO / AM)",
+    selectable: false,
+    children: [
+      { value: "frota-ro", label: "CC-401 · Frota & Montadores Rondônia (69)" },
+      { value: "frota-am", label: "CC-402 · Frota & Montadores Amazonas (92)" },
+    ],
+  },
+];
+
+function TreeSelectShowcaseDemo() {
+  const [singleNode, setSingleNode] = React.useState("cc-sofas");
+  const [checkedNodes, setCheckedNodes] = React.useState<string[]>([
+    "cc-sofas",
+    "cc-paineis",
+    "frota-ro",
+  ]);
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      <TreeSelectField
+        label="Centro de Custo Principal (Single + Pastas)"
+        treeData={COST_CENTER_TREE_DATA}
+        value={singleNode}
+        onChange={(val) => setSingleNode(val)}
+        treeDefaultExpandedKeys={["comercial", "dept-estofados"]}
+        helpText="Pastas intermediárias com selectable=false expandem ao clicar."
+      />
+
+      <TreeSelectField
+        treeCheckable
+        maxTagCount={2}
+        label="Escopo do Relatório Gerencial (treeCheckable em Cascata)"
+        treeData={COST_CENTER_TREE_DATA}
+        value={checkedNodes}
+        onChange={(vals) => setCheckedNodes(vals)}
+        treeDefaultExpandedKeys={["comercial", "logistica"]}
+        helpText="Marcar um departamento seleciona todos os seus centros de custo automaticamente."
       />
     </div>
   );
