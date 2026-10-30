@@ -1,13 +1,16 @@
 // ─── Top-level components ────────────────────────────────────────────────────
 // Note: Heavy optional widgets live in dedicated subpath exports so core
 // consumers don't need Tiptap, TanStack, or Shiki installed:
-//   - RichTextEditor, EmailComposer -> "lopes-ui/rich-text"
-//   - Spreadsheet    -> "lopes-ui/spreadsheet"
-//   - CodeBlock      -> "lopes-ui/code-block"
-//   - Radix/CVA      -> "lopes-ui/primitives"
+//   - RichTextEditor, RichTextField, EmailComposer -> "lopes-ui/rich-text"
+//   - Spreadsheet                                  -> "lopes-ui/spreadsheet"
+//   - CodeBlock                                    -> "lopes-ui/code-block"
+//   - Radix/CVA                                    -> "lopes-ui/primitives"
 
 export { default as Accordion } from "./Accordion";
 export * from "./Accordion";
+
+export { default as ActionGridCard, SwitchesCard } from "./ActionGridCard";
+export * from "./ActionGridCard";
 
 export { default as ActivityFeed } from "./ActivityFeed";
 export * from "./ActivityFeed";
@@ -30,6 +33,9 @@ export * from "./Avatar";
 export { default as Badge } from "./Badge";
 export * from "./Badge";
 
+export { default as Barcode } from "./Barcode";
+export * from "./Barcode";
+
 export { default as BentoGrid, BentoCard } from "./BentoGrid";
 export * from "./BentoGrid";
 
@@ -44,6 +50,9 @@ export * from "./ButtonGroup";
 
 export { default as Calendar } from "./Calendar";
 export * from "./Calendar";
+
+export { default as Callout } from "./Callout";
+export * from "./Callout";
 
 export { default as CameraCaptureModal } from "./CameraCaptureModal";
 export * from "./CameraCaptureModal";
@@ -110,8 +119,14 @@ export * from "./EmojiPicker";
 export { default as EmptyState } from "./EmptyState";
 export * from "./EmptyState";
 
+export { default as FileDropzone } from "./FileDropzone";
+export * from "./FileDropzone";
+
 export { default as FilterBar } from "./FilterBar";
 export * from "./FilterBar";
+
+export { default as FloatButton, FloatButtonGroup, BackTop } from "./FloatButton";
+export * from "./FloatButton";
 
 export { default as Footer } from "./Footer";
 export * from "./Footer";
@@ -135,11 +150,17 @@ export * from "./Header";
 export { default as HeaderWrapper } from "./HeaderWrapper";
 export * from "./HeaderWrapper";
 
+export { default as HighlightText } from "./HighlightText";
+export * from "./HighlightText";
+
 export { default as HoverCard } from "./HoverCard";
 export * from "./HoverCard";
 
 export { default as HoverGallery } from "./HoverGallery";
 export * from "./HoverGallery";
+
+export { default as ImageLightbox } from "./ImageLightbox";
+export * from "./ImageLightbox";
 
 export { default as InboxList } from "./InboxList";
 export * from "./InboxList";
@@ -147,8 +168,14 @@ export * from "./InboxList";
 export { default as Indicator } from "./Indicator";
 export * from "./Indicator";
 
+export { default as InlineEdit } from "./InlineEdit";
+export * from "./InlineEdit";
+
 export { default as Item } from "./Item";
 export * from "./Item";
+
+export { default as JsonViewer } from "./JsonViewer";
+export * from "./JsonViewer";
 
 export { default as KanbanBoard } from "./KanbanBoard";
 export * from "./KanbanBoard";
@@ -164,6 +191,9 @@ export * from "./LoginForm";
 
 export { default as Marquee } from "./Marquee";
 export * from "./Marquee";
+
+export { default as Masonry } from "./Masonry";
+export * from "./Masonry";
 
 export { default as Mask } from "./Mask";
 export * from "./Mask";
@@ -186,13 +216,19 @@ export * from "./PageHeader";
 export { default as Pagination } from "./Pagination";
 export * from "./Pagination";
 
+export { default as PasswordConfirmDialog } from "./PasswordConfirmDialog";
+export * from "./PasswordConfirmDialog";
+
 export { default as PasswordStrength } from "./PasswordStrength";
 export * from "./PasswordStrength";
 
 export { default as PingIndicator } from "./PingIndicator";
 export * from "./PingIndicator";
 
-export { default as PriceInput } from "./PriceInput";
+export { default as Popconfirm } from "./Popconfirm";
+export * from "./Popconfirm";
+
+export { default as PriceInput, CurrencyField } from "./PriceInput";
 export * from "./PriceInput";
 
 export { default as Progress } from "./Progress";
@@ -201,11 +237,20 @@ export * from "./Progress";
 export { default as PullToRefresh } from "./PullToRefresh";
 export * from "./PullToRefresh";
 
+export { default as QRCode } from "./QRCode";
+export * from "./QRCode";
+
 export { default as QuickActions } from "./QuickActions";
 export * from "./QuickActions";
 
+export { default as Result } from "./Result";
+export * from "./Result";
+
 export { default as ScrollArea } from "./ScrollArea";
 export * from "./ScrollArea";
+
+export { default as SegmentedControl } from "./SegmentedControl";
+export * from "./SegmentedControl";
 
 export { default as Separator } from "./Separator";
 export * from "./Separator";
@@ -222,11 +267,28 @@ export * from "./ShortcutHint";
 export { default as Sidebar } from "./Sidebar";
 export * from "./Sidebar";
 
+export { default as SignaturePad, SignatureField } from "./SignaturePad";
+export * from "./SignaturePad";
+
+export {
+  default as Skeleton,
+  SkeletonAvatar,
+  SkeletonButton,
+  SkeletonInput,
+  SkeletonImage,
+  SkeletonCard,
+  SkeletonTable,
+} from "./Skeleton";
+export * from "./Skeleton";
+
 export { default as SmartObject } from "./SmartObject";
 export * from "./SmartObject";
 
 export { default as Snippet, CopyButton } from "./Snippet";
 export * from "./Snippet";
+
+export { default as SortableList } from "./SortableList";
+export * from "./SortableList";
 
 export { default as SpeedDial } from "./SpeedDial";
 export * from "./SpeedDial";
@@ -234,10 +296,13 @@ export * from "./SpeedDial";
 export { default as SplitPane } from "./SplitPane";
 export * from "./SplitPane";
 
+export { default as Spoiler } from "./Spoiler";
+export * from "./Spoiler";
+
 export { default as Stack } from "./Stack";
 export * from "./Stack";
 
-export { default as StatCard } from "./StatCard";
+export { default as StatCard, StatsSegmentsCard, StatsRingCard } from "./StatCard";
 export * from "./StatCard";
 
 export { default as StatusBadge } from "./StatusBadge";
@@ -254,6 +319,9 @@ export * from "./Swap";
 
 export { default as Table } from "./Table";
 export * from "./Table";
+
+export { default as TableOfContents } from "./TableOfContents";
+export * from "./TableOfContents";
 
 export { default as Tabs } from "./Tabs";
 export * from "./Tabs";
@@ -284,6 +352,9 @@ export * from "./TransferList";
 
 export { default as TreeView } from "./TreeView";
 export * from "./TreeView";
+
+export { default as Watermark } from "./Watermark";
+export * from "./Watermark";
 
 // ─── Access Control / RBAC ───────────────────────────────────────────────────
 
@@ -336,6 +407,9 @@ export * from "./header/SearchInput";
 export { default as AutocompleteField } from "./form/AutocompleteField";
 export * from "./form/AutocompleteField";
 
+export { default as CascaderField, Cascader } from "./form/CascaderField";
+export * from "./form/CascaderField";
+
 export { default as Checkbox } from "./form/Checkbox";
 export * from "./form/Checkbox";
 
@@ -369,6 +443,9 @@ export * from "./form/Form";
 export { default as InputGroup } from "./form/InputGroup";
 export * from "./form/InputGroup";
 
+export { default as MentionsField, Mentions } from "./form/MentionsField";
+export * from "./form/MentionsField";
+
 export { default as MonthPickerField } from "./form/MonthPickerField";
 export * from "./form/MonthPickerField";
 
@@ -399,6 +476,9 @@ export * from "./form/Switch";
 export { default as TagInputField } from "./form/TagInputField";
 export * from "./form/TagInputField";
 
+export { default as TagsInput, CheckableTag, CheckableTagGroup } from "./form/TagsInput";
+export * from "./form/TagsInput";
+
 export { default as TextareaField } from "./form/TextareaField";
 export * from "./form/TextareaField";
 
@@ -410,6 +490,9 @@ export * from "./form/TimeField";
 
 export { default as TimePickerField } from "./form/TimePickerField";
 export * from "./form/TimePickerField";
+
+export { default as TreeSelectField, TreeSelect } from "./form/TreeSelectField";
+export * from "./form/TreeSelectField";
 
 export { default as ZodForm, useFormContext } from "./form/ZodForm";
 export * from "./form/ZodForm";
