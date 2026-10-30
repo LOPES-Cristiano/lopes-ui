@@ -21,7 +21,7 @@ import Separator from "@/components/Separator";
 import ScrollArea from "@/components/ScrollArea";
 import Kbd, { KbdGroup } from "@/components/Kbd";
 import Dock from "@/components/Dock";
-import { Command } from "@/components/CommandMenu";
+import TableOfContents from "@/components/TableOfContents";
 import { SectionHeader, DemoCard, PropsTable } from "@/app/showcase/_shared";
 import Footer from "@/components/Footer";
 
@@ -816,6 +816,42 @@ const COMMANDS: CommandItem[] = [
               />
             </DemoCard>
 
+            <DemoCard id="splitter-collapse" title="Ant Design Splitter — Botões de Colapso em 1 Clique (showCollapseButtons)">
+              <SplitPane
+                direction="horizontal"
+                defaultSplit={38}
+                showCollapseButtons
+                className="h-56 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
+                first={
+                  <div className="h-full p-4 bg-zinc-50 dark:bg-zinc-900/80 space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                      Departamentos do Showroom
+                    </p>
+                    <ul className="space-y-1.5 text-xs text-zinc-600 dark:text-zinc-300">
+                      <li className="rounded-lg bg-white dark:bg-zinc-800 px-2.5 py-1.5 font-medium shadow-2xs">Salas & Estofados Retráteis</li>
+                      <li className="px-2.5 py-1">Colchões & Guarda-Roupas</li>
+                      <li className="px-2.5 py-1">Refrigeradores & Lavanderia</li>
+                    </ul>
+                  </div>
+                }
+                second={
+                  <div className="h-full p-5 bg-white dark:bg-zinc-950 flex flex-col justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                        Showroom Porto Velho (RO) & Manaus (AM)
+                      </p>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        Clique nas setas na barra divisória para recolher instantaneamente qualquer painel para 0% e restaurar a proporção anterior com um clique.
+                      </p>
+                    </div>
+                    <p className="text-[11px] font-mono text-zinc-400">
+                      Conforto e qualidade para o seu lar · DDDs (69) e (92)
+                    </p>
+                  </div>
+                }
+              />
+            </DemoCard>
+
             <div id="split-pane-props" className="space-y-4">
               <h3 className="text-base font-semibold text-zinc-800 dark:text-zinc-200">Props</h3>
               <PropsTable rows={[
@@ -934,6 +970,13 @@ const COMMANDS: CommandItem[] = [
                     ]}
                   />
                 </div>
+
+                <div id="tabs-editable-card" className="space-y-2.5 pt-4 border-t border-zinc-100 dark:border-zinc-800/80">
+                  <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                    Variante Ant Design Editable-Card (+ Nova Aba, × Fechar & tabBarExtraContent)
+                  </p>
+                  <EditableTabsShowcaseDemo />
+                </div>
               </div>
             </DemoCard>
           </section>
@@ -1043,6 +1086,21 @@ const COMMANDS: CommandItem[] = [
           </section>
 
           <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+          {/* ── TableOfContents (Mantine UI Scroll-Spy) ──────────────── */}
+          <section id="table-of-contents" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+            <SectionHeader
+              label="Mantine UI Navigation"
+              title="TableOfContents"
+              description="Sumário lateral (scroll-spy) com barra deslizante animada (variant='rail') ou destaque preenchido (variant='filled'), indentação por nível hierárquico e varredura automática de cabeçalhos DOM."
+            />
+
+            <DemoCard id="table-of-contents-demo" title="Variantes Rail (Indicador Deslizante) & Filled">
+              <TableOfContentsShowcaseDemo />
+            </DemoCard>
+          </section>
+
+          <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
       </div>
     </main>
   );
@@ -1085,6 +1143,111 @@ function DockShowcaseDemo() {
         { id: "usuarios", label: "Usuários", icon: <Users size={18} /> },
         { id: "config", label: "Configurações", icon: <Settings size={18} /> },
       ]}
+    />
+  );
+}
+
+
+function TableOfContentsShowcaseDemo() {
+  const [active, setActive] = React.useState("estofados");
+
+  const tocItems = [
+    { id: "visao-geral", label: "1. Visão Geral do Catálogo", level: 2 as const },
+    { id: "estofados", label: "1.1 Salas & Estofados Retráteis", level: 3 as const, badge: "48" },
+    { id: "colchoes", label: "1.2 Colchões & Dormitórios", level: 3 as const, badge: "36" },
+    { id: "eletro", label: "2. Linha Branca & Eletrodomésticos", level: 2 as const, badge: "64" },
+    { id: "logistica-norte", label: "3. Entregas em Rondônia & Amazonas", level: 2 as const },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-surface p-5">
+        <TableOfContents
+          title="Variante Rail (Barra Deslizante)"
+          variant="rail"
+          items={tocItems}
+          activeId={active}
+          onActiveChange={setActive}
+        />
+      </div>
+
+      <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-surface p-5">
+        <TableOfContents
+          title="Variante Filled"
+          variant="filled"
+          items={tocItems}
+          activeId={active}
+          onActiveChange={setActive}
+        />
+      </div>
+    </div>
+  );
+}
+
+function EditableTabsShowcaseDemo() {
+  const [counter, setCounter] = React.useState(3);
+  const [activeTab, setActiveTab] = React.useState("orc-1");
+  const [tabs, setTabs] = React.useState([
+    {
+      value: "orc-1",
+      label: "Orçamento #1 · Sala",
+      closable: false,
+      detail: "Sofá Retrátil 3 Lugares + Painel Ripado TV 75\" — Porto Velho (RO)",
+    },
+    {
+      value: "orc-2",
+      label: "Orçamento #2 · Quarto",
+      closable: true,
+      detail: "Colchão Molas Ensacadas Queen + Guarda-Roupa 6 Portas — Manaus (AM)",
+    },
+  ]);
+
+  const handleAdd = () => {
+    const nextId = `orc-${counter}`;
+    const nextNum = counter;
+    setCounter((c) => c + 1);
+    setTabs((prev) => [
+      ...prev,
+      {
+        value: nextId,
+        label: `Orçamento #${nextNum} · Eletro`,
+        closable: true,
+        detail: `Geladeira Frost Free Inverter 450L + Lava e Seca 11kg (127V) — Cotação #${nextNum}`,
+      },
+    ]);
+    setActiveTab(nextId);
+  };
+
+  const handleRemove = (target: string) => {
+    setTabs((prev) => {
+      const next = prev.filter((t) => t.value !== target);
+      if (activeTab === target && next.length > 0) {
+        setActiveTab(next[next.length - 1].value);
+      }
+      return next;
+    });
+  };
+
+  return (
+    <Tabs
+      variant="editable-card"
+      value={activeTab}
+      onValueChange={setActiveTab}
+      onAdd={handleAdd}
+      onRemove={handleRemove}
+      tabBarExtraContent={
+        <Badge variant="info" size="xs" label={`${tabs.length} abas abertas`} />
+      }
+      items={tabs.map((t) => ({
+        value: t.value,
+        label: t.label,
+        closable: t.closable,
+        content: (
+          <div className="rounded-b-xl border border-t-0 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 text-sm text-zinc-600 dark:text-zinc-300">
+            {t.detail}
+          </div>
+        ),
+      }))}
     />
   );
 }
