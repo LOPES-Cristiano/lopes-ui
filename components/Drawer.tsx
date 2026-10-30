@@ -37,6 +37,9 @@ export type DrawerProps = {
   resizable?: boolean;
   /** Additional class names for the panel */
   className?: string;
+  /** Additional class names for the scrollable body content area */
+  contentClassName?: string;
+  componentId?: string;
 };
 
 // ── Size maps ─────────────────────────────────────────────────────────────────
@@ -97,6 +100,8 @@ export default function Drawer({
   showHandle,
   resizable = false,
   className,
+  contentClassName,
+  componentId,
 }: DrawerProps) {
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -105,10 +110,20 @@ export default function Drawer({
   const dragStartY = useRef<number | null>(null);
   const [rendered, setRendered] = useState(open);
   const [visible, setVisible] = useState(false);
+  const [prevOpen, setPrevOpen] = useState(open);
+
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (open) {
+      setRendered(true);
+    } else {
+      setVisible(false);
+      setDragOffsetY(0);
+    }
+  }
 
   useEffect(() => {
     if (open) {
-      setRendered(true);
       let raf2 = 0;
       const raf1 = requestAnimationFrame(() => {
         raf2 = requestAnimationFrame(() => {
@@ -120,7 +135,6 @@ export default function Drawer({
         cancelAnimationFrame(raf2);
       };
     } else {
-      setVisible(false);
       const timer = setTimeout(() => {
         setRendered(false);
       }, 300);
@@ -136,10 +150,7 @@ export default function Drawer({
   });
 
   useEffect(() => {
-    if (!open) {
-      setDragOffsetY(0);
-      return;
-    }
+    if (!open) return;
     const handleClose = () => onCloseRef.current();
     registerModal(handleClose);
     return () => unregisterModal(handleClose);
@@ -263,6 +274,7 @@ export default function Drawer({
       {/* Panel */}
       <div
         ref={panelRef}
+        {...(componentId ? { "data-component-id": componentId } : {})}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
@@ -343,7 +355,7 @@ export default function Drawer({
         )}
 
         {/* Content */}
-        <div className="min-w-0 flex-1 overflow-y-auto bg-[var(--surface)] px-4 sm:px-5 py-4 sm:py-5">
+        <div className={cn("min-w-0 flex-1 overflow-y-auto bg-[var(--surface)] px-4 sm:px-5 py-4 sm:py-5", contentClassName)}>
           {children}
         </div>
 
