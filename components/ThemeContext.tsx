@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useSyncExternalStore } fro
 import { flushSync } from 'react-dom';
 
 export type ResolvedTheme = 'light' | 'dark';
+export type Theme = ResolvedTheme;
 export type ThemeMode = ResolvedTheme | 'system';
 
 export type ThemeCtx = {
