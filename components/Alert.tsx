@@ -28,6 +28,10 @@ export type AlertProps = {
   icon?: LucideIcon | null;
   /** Show × dismiss button */
   dismissible?: boolean;
+  /** Ant Design custom close text button (e.g. "Entendi" or "Ocultar") instead of × icon */
+  closeText?: React.ReactNode;
+  /** Ant Design edge-to-edge top banner mode (no side borders or border-radius) */
+  banner?: boolean;
   /** Called when dismissed */
   onDismiss?: () => void;
   /** Automatically call onDismiss/onClose after N milliseconds */
@@ -137,10 +141,11 @@ const DEFAULT_ICON: Record<AlertVariant, LucideIcon> = {
 // ── Inner content ─────────────────────────────────────────────────────────────
 
 function AlertContent({
-  title, description, children, variant = "neutral", accent = "none", icon, dismissible, onDismiss, actions,
+  title, description, children, variant = "neutral", accent = "none", icon, dismissible, closeText, banner = false, onDismiss, actions,
   dialog, s, className, componentId,
 }: AlertProps & { s: S }) {
   const IconComponent = icon === null ? null : (icon ?? DEFAULT_ICON[variant ?? "neutral"]);
+  const showDismiss = Boolean(dismissible || closeText);
 
   if (dialog) {
     return (
@@ -213,19 +218,28 @@ function AlertContent({
     <div
       {...(componentId ? { "data-component-id": componentId } : {})}
       className={twMerge(
-        "flex gap-3 rounded-xl border p-4",
+        "flex gap-3 border",
+        banner
+          ? "w-full rounded-none border-x-0 border-t-0 px-4 py-2.5 items-center"
+          : "rounded-xl p-4",
         s.bg,
         s.border,
-        accent === "left" && s.accentLeft,
-        accent === "top" && s.accentTop,
+        !banner && accent === "left" && s.accentLeft,
+        !banner && accent === "top" && s.accentTop,
         className,
       )}
       role="alert"
       aria-live="polite"
     >
       {IconComponent && (
-        <span className={twMerge("mt-0.5 shrink-0 flex h-8 w-8 items-center justify-center rounded-lg", s.iconBg)}>
-          <IconComponent size={16} strokeWidth={2} className={s.icon} />
+        <span
+          className={twMerge(
+            "shrink-0 flex items-center justify-center rounded-lg",
+            banner ? "h-6 w-6" : "mt-0.5 h-8 w-8",
+            s.iconBg,
+          )}
+        >
+          <IconComponent size={banner ? 14 : 16} strokeWidth={2} className={s.icon} />
         </span>
       )}
 
@@ -259,15 +273,19 @@ function AlertContent({
         )}
       </div>
 
-      {dismissible && (
+      {showDismiss && (
         <button
           data-component-id="erp.alert.banner-dismiss"
           type="button"
-          aria-label="Fechar"
+          aria-label={typeof closeText === "string" ? closeText : "Fechar"}
           onClick={onDismiss}
-          className={twMerge("shrink-0 rounded-lg p-1 transition-colors duration-150 cursor-pointer", s.dismiss)}
+          className={twMerge(
+            "shrink-0 rounded-lg transition-colors duration-150 cursor-pointer",
+            closeText ? "px-2 py-1 text-xs font-semibold" : "p-1",
+            s.dismiss,
+          )}
         >
-          <X size={14} />
+          {closeText ?? <X size={14} />}
         </button>
       )}
     </div>
@@ -277,7 +295,8 @@ function AlertContent({
 // ── Alert (main export) ───────────────────────────────────────────────────────
 
 export default function Alert({
-  variant = "neutral",
+  variant,
+  banner = false,
   dialog = false,
   open,
   onClose,
@@ -285,7 +304,8 @@ export default function Alert({
   onDismiss,
   ...rest
 }: AlertProps) {
-  const s = STYLES[variant];
+  const resolvedVariant: AlertVariant = variant ?? (banner ? "warning" : "neutral");
+  const s = STYLES[resolvedVariant];
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useBodyScrollLock(!!dialog && !!open);
@@ -316,7 +336,7 @@ export default function Alert({
   }, [dialog, open, onClose]);
 
   if (!dialog) {
-    return <AlertContent {...rest} onDismiss={onDismiss} variant={variant} s={s} dialog={false} />;
+    return <AlertContent {...rest} banner={banner} onDismiss={onDismiss} variant={resolvedVariant} s={s} dialog={false} />;
   }
 
   if (!open || typeof document === "undefined") return null;
@@ -339,15 +359,15 @@ export default function Alert({
         tabIndex={-1}
         className={twMerge(
           "relative z-10 w-full sm:min-w-[480px] max-w-lg rounded-2xl bg-surface border border-border p-6 shadow-2xl outline-none",
-          variant === "info" && "border-l-4 border-l-blue-500",
-          variant === "success" && "border-l-4 border-l-emerald-500",
-          variant === "warning" && "border-l-4 border-l-amber-500",
-          variant === "danger" && "border-l-4 border-l-red-500",
-          variant === "neutral" && "border-l-4 border-l-zinc-400 dark:border-l-zinc-600",
+          resolvedVariant === "info" && "border-l-4 border-l-blue-500",
+          resolvedVariant === "success" && "border-l-4 border-l-emerald-500",
+          resolvedVariant === "warning" && "border-l-4 border-l-amber-500",
+          resolvedVariant === "danger" && "border-l-4 border-l-red-500",
+          resolvedVariant === "neutral" && "border-l-4 border-l-zinc-400 dark:border-l-zinc-600",
         )}
         aria-modal="true"
       >
-        <AlertContent {...rest} variant={variant} s={s} dialog dismissible={rest.dismissible} onDismiss={onClose} />
+        <AlertContent {...rest} variant={resolvedVariant} s={s} dialog dismissible={rest.dismissible} onDismiss={onClose} />
       </div>
     </div>,
     document.body,
