@@ -243,3 +243,123 @@ export default function Loading({
 
   return content;
 }
+
+// ── Spin (Ant Design <Spin spinning tip>{children}</Spin> container wrapper) ──
+
+export type SpinProps = {
+  /** Whether the loading overlay is active (default: true) */
+  spinning?: boolean;
+  /** Descriptive text shown beneath the loader indicator */
+  tip?: React.ReactNode;
+  /** Optional delay in milliseconds before showing the spinner to prevent flicker */
+  delay?: number;
+  variant?: LoadingVariant;
+  size?: LoadingSize;
+  tone?: LoadingTone;
+  /** Apply subtle backdrop blur over wrapped content while spinning (default: true) */
+  blur?: boolean;
+  /** Render full-screen overlay instead of scoped container overlay */
+  fullscreen?: boolean;
+  children?: React.ReactNode;
+  className?: string;
+  wrapperClassName?: string;
+};
+
+export function Spin({
+  spinning = true,
+  tip,
+  delay = 0,
+  variant = "spinner",
+  size = "md",
+  tone = "primary",
+  blur = true,
+  fullscreen = false,
+  children,
+  className,
+  wrapperClassName,
+}: SpinProps) {
+  const [delayedReady, setDelayedReady] = React.useState(() => spinning && delay <= 0);
+  const [prevSpinning, setPrevSpinning] = React.useState(spinning);
+
+  if (spinning !== prevSpinning) {
+    setPrevSpinning(spinning);
+    if (!spinning) {
+      setDelayedReady(false);
+    } else if (delay <= 0) {
+      setDelayedReady(true);
+    }
+  }
+
+  React.useEffect(() => {
+    if (!spinning || delay <= 0) return;
+    const id = window.setTimeout(() => {
+      setDelayedReady(true);
+    }, delay);
+    return () => window.clearTimeout(id);
+  }, [spinning, delay]);
+
+  const showSpinner = delay > 0 ? spinning && delayedReady : spinning;
+
+  if (fullscreen) {
+    if (!showSpinner) return <>{children}</>;
+    return (
+      <>
+        {children}
+        <Loading
+          variant={variant}
+          size={size}
+          tone={tone}
+          label={tip}
+          labelPosition="bottom"
+          fullScreenOverlay
+          className={className}
+        />
+      </>
+    );
+  }
+
+  if (children === undefined || children === null) {
+    if (!showSpinner) return null;
+    return (
+      <Loading
+        variant={variant}
+        size={size}
+        tone={tone}
+        label={tip}
+        labelPosition="bottom"
+        className={className}
+      />
+    );
+  }
+
+  return (
+    <div className={cn("relative", wrapperClassName)} aria-busy={showSpinner || undefined}>
+      <div
+        className={cn(
+          "transition-opacity duration-200",
+          showSpinner && "opacity-45 pointer-events-none select-none",
+        )}
+      >
+        {children}
+      </div>
+
+      {showSpinner && (
+        <div
+          className={cn(
+            "absolute inset-0 z-20 flex items-center justify-center rounded-[inherit] bg-white/55 dark:bg-zinc-950/55",
+            blur && "backdrop-blur-[1.5px]",
+            className,
+          )}
+        >
+          <Loading
+            variant={variant}
+            size={size}
+            tone={tone}
+            label={tip}
+            labelPosition="bottom"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
