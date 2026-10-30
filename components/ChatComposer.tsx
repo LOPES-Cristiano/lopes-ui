@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
-import { Send, Paperclip, Smile, X, Mic, Reply } from "lucide-react";
+import { Send, Paperclip, Smile, X, Mic, Reply, Zap } from "lucide-react";
+import EmojiPicker from "./EmojiPicker";
+import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -15,111 +17,221 @@ export type ComposerReplyTo = {
   onCancel: () => void;
 };
 
-/** A suggestabl entity e.g. { ref_id: "VENDA123", label: "Venda #123 – Loja Centro" } */
+/** A suggestable entity e.g. { ref_id: "VENDA123", label: "Venda #123 – Filial Porto Velho" } */
 export type EntitySuggestion = {
   ref_id: string;
   label: string;
   meta?: string;
 };
 
+export type ChatQuickReply = {
+  command: string;
+  label: string;
+  text: string;
+};
+
 export type ChatComposerProps = {
+  value?: string;
+  onChange?: (value: string) => void;
   placeholder?: string;
-  onSend?: (value: string) => void;
+  onSend?: (value: string, attachments?: File[]) => void;
   onAttach?: () => void;
   onEmoji?: () => void;
   onVoice?: () => void;
+  /** Enables built-in file attachment picker & clipboard paste staging */
+  allowAttachments?: boolean;
+  /** Enables built-in EmojiPicker popover on Smile button (default: true in toolbar mode) */
+  enableEmojiPicker?: boolean;
+  /** Quick canned responses triggered by typing `/` at the start of the message */
+  quickReplies?: ChatQuickReply[];
   replyTo?: ComposerReplyTo;
   disabled?: boolean;
-  /**
-   * "toolbar" (default) — shows attach + emoji left of textarea
-   * "minimal" — just textarea + send/mic
-   */
   variant?: ComposerVariant;
-  /**
-   * If provided, typing @ will trigger a suggestion dropdown
-   * from this list (filtered by what the user types after @).
-   */
   entitySuggestions?: EntitySuggestion[];
   className?: string;
   componentId?: string;
+  hideIfDenied?: boolean;
 };
 
-// ── Detect @-mention query ────────────────────────────────────────────────────
+// ── Detect @-mention query (Portuguese accents, hyphens, dots supported) ────
 
-/** Returns the current @query being typed, or null if cursor isn't inside one */
 function getMentionQuery(text: string, cursor: number): string | null {
   const before = text.slice(0, cursor);
-  const match = before.match(/@([A-Za-z0-9]*)$/);
+  const match = before.match(/@([\wÀ-ÿ.-]*)$/);
+  return match ? match[1] : null;
+}
+
+function getSlashQuery(text: string, cursor: number): string | null {
+  const before = text.slice(0, cursor);
+  const match = before.match(/^\/([\wÀ-ÿ-]*)$/);
   return match ? match[1] : null;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function ChatComposer({
+  value: controlledValue,
+  onChange,
   placeholder = "Escreva uma mensagem…",
   onSend,
   onAttach,
   onEmoji,
   onVoice,
+  allowAttachments = false,
+  enableEmojiPicker = true,
+  quickReplies = [],
   replyTo,
   disabled = false,
   variant = "toolbar",
   entitySuggestions = [],
   className,
   componentId,
+  hideIfDenied = false,
 }: ChatComposerProps) {
-  const [value, setValue] = useState("");
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+  const effectiveDisabled = disabled || (!hasPermission && !hideIfDenied);
+
+  const [internalValue, setInternalValue] = useState("");
+  const isControlled = controlledValue !== undefined;
+  const value = isControlled ? controlledValue : internalValue;
+
+  const setText = useCallback(
+    (next: string) => {
+      if (!isControlled) setInternalValue(next);
+      onChange?.(next);
+    },
+    [isControlled, onChange]
+  );
+
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionStart, setMentionStart] = useState<number>(0);
+  const [slashQuery, setSlashQuery] = useState<string | null>(null);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [stagedFiles, setStagedFiles] = useState<File[]>([]);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const canSend = value.trim().length > 0;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const emojiContainerRef = useRef<HTMLDivElement>(null);
 
-  // Filtered suggestions
-  const filtered = mentionQuery !== null && entitySuggestions.length > 0
-    ? entitySuggestions.filter((s) =>
-        s.ref_id.toLowerCase().includes(mentionQuery.toLowerCase()) ||
-        s.label.toLowerCase().includes(mentionQuery.toLowerCase())
-      ).slice(0, 8)
-    : [];
+  useEffect(() => {
+    if (!emojiOpen) return;
+    const onDocDown = (e: MouseEvent) => {
+      if (emojiContainerRef.current && !emojiContainerRef.current.contains(e.target as Node)) {
+        setEmojiOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocDown);
+    return () => document.removeEventListener("mousedown", onDocDown);
+  }, [emojiOpen]);
 
-  const showSuggestions = filtered.length > 0;
-  const clampedActiveIdx = filtered.length > 0 ? Math.min(activeIdx, filtered.length - 1) : 0;
+  const canSend = value.trim().length > 0 || stagedFiles.length > 0;
+
+  const filteredMentions =
+    mentionQuery !== null && entitySuggestions.length > 0
+      ? entitySuggestions
+          .filter(
+            (s) =>
+              s.ref_id.toLowerCase().includes(mentionQuery.toLowerCase()) ||
+              s.label.toLowerCase().includes(mentionQuery.toLowerCase())
+          )
+          .slice(0, 8)
+      : [];
+
+  const filteredQuickReplies =
+    slashQuery !== null && quickReplies.length > 0
+      ? quickReplies
+          .filter(
+            (q) =>
+              q.command.toLowerCase().includes(slashQuery.toLowerCase()) ||
+              q.label.toLowerCase().includes(slashQuery.toLowerCase())
+          )
+          .slice(0, 8)
+      : [];
+
+  const showMentions = filteredMentions.length > 0;
+  const showQuickReplies = !showMentions && filteredQuickReplies.length > 0;
+  const activeListLen = showMentions
+    ? filteredMentions.length
+    : showQuickReplies
+      ? filteredQuickReplies.length
+      : 0;
+  const clampedActiveIdx = activeListLen > 0 ? Math.min(activeIdx, activeListLen - 1) : 0;
 
   const handleSend = useCallback(() => {
     const trimmed = value.trim();
-    if (!trimmed || disabled) return;
-    onSend?.(trimmed);
-    setValue("");
+    if ((!trimmed && stagedFiles.length === 0) || effectiveDisabled) return;
+    if (stagedFiles.length > 0) {
+      onSend?.(trimmed, stagedFiles);
+    } else {
+      onSend?.(trimmed);
+    }
+    setText("");
+    setStagedFiles([]);
     setMentionQuery(null);
+    setSlashQuery(null);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
-  }, [value, disabled, onSend]);
+  }, [value, stagedFiles, effectiveDisabled, onSend, setText]);
 
-  const pickSuggestion = useCallback((suggestion: EntitySuggestion) => {
-    const el = textareaRef.current;
-    if (!el) return;
-    const cursor = el.selectionStart ?? value.length;
-    const before = value.slice(0, mentionStart);
-    const after = value.slice(cursor);
-    const inserted = `@${suggestion.ref_id} `;
-    const next = before + inserted + after;
-    setValue(next);
-    setMentionQuery(null);
-    // Restore focus + move cursor
-    requestAnimationFrame(() => {
-      el.focus();
-      const pos = (before + inserted).length;
-      el.setSelectionRange(pos, pos);
-    });
-  }, [value, mentionStart]);
+  const pickSuggestion = useCallback(
+    (suggestion: EntitySuggestion) => {
+      const el = textareaRef.current;
+      if (!el) return;
+      const cursor = el.selectionStart ?? value.length;
+      const before = value.slice(0, mentionStart);
+      const after = value.slice(cursor);
+      const inserted = `@${suggestion.ref_id} `;
+      const next = before + inserted + after;
+      setText(next);
+      setMentionQuery(null);
+      requestAnimationFrame(() => {
+        el.focus();
+        const pos = (before + inserted).length;
+        el.setSelectionRange(pos, pos);
+      });
+    },
+    [value, mentionStart, setText]
+  );
+
+  const pickQuickReply = useCallback(
+    (reply: ChatQuickReply) => {
+      setText(reply.text);
+      setSlashQuery(null);
+      requestAnimationFrame(() => {
+        const el = textareaRef.current;
+        if (!el) return;
+        el.focus();
+        el.setSelectionRange(reply.text.length, reply.text.length);
+      });
+    },
+    [setText]
+  );
+
+  const insertEmojiAtCursor = useCallback(
+    (emoji: string) => {
+      const el = textareaRef.current;
+      const start = el?.selectionStart ?? value.length;
+      const end = el?.selectionEnd ?? value.length;
+      const next = value.slice(0, start) + emoji + value.slice(end);
+      setText(next);
+      requestAnimationFrame(() => {
+        if (!el) return;
+        el.focus();
+        const pos = start + emoji.length;
+        el.setSelectionRange(pos, pos);
+      });
+    },
+    [value, setText]
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (showSuggestions) {
+    if (showMentions || showQuickReplies) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setActiveIdx((i) => Math.min(i + 1, filtered.length - 1));
+        setActiveIdx((i) => Math.min(i + 1, activeListLen - 1));
         return;
       }
       if (e.key === "ArrowUp") {
@@ -129,11 +241,13 @@ export default function ChatComposer({
       }
       if (e.key === "Tab" || e.key === "Enter") {
         e.preventDefault();
-        pickSuggestion(filtered[clampedActiveIdx]);
+        if (showMentions) pickSuggestion(filteredMentions[clampedActiveIdx]);
+        else pickQuickReply(filteredQuickReplies[clampedActiveIdx]);
         return;
       }
       if (e.key === "Escape") {
         setMentionQuery(null);
+        setSlashQuery(null);
         return;
       }
     }
@@ -146,75 +260,106 @@ export default function ChatComposer({
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const next = e.target.value;
-    setValue(next);
+    setText(next);
 
-    // Auto-resize
     const el = e.target;
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
 
-    // Detect @-mention
     const cursor = el.selectionStart ?? next.length;
-    const query = getMentionQuery(next, cursor);
-    if (query !== null) {
-      // Find the start of the @ in the text
+    const mQuery = getMentionQuery(next, cursor);
+    if (mQuery !== null) {
       const before = next.slice(0, cursor);
-      const atIdx = before.lastIndexOf("@");
-      setMentionStart(atIdx);
-      setMentionQuery(query);
+      setMentionStart(before.lastIndexOf("@"));
+      setMentionQuery(mQuery);
+      setSlashQuery(null);
+      return;
+    }
+    setMentionQuery(null);
+
+    const sQuery = getSlashQuery(next, cursor);
+    if (sQuery !== null) {
+      setSlashQuery(sQuery);
     } else {
-      setMentionQuery(null);
+      setSlashQuery(null);
     }
   };
+
+  if (!hasPermission && hideIfDenied) return null;
+
+  const showAttachButton = Boolean(onAttach || allowAttachments);
+  const showEmojiButton = Boolean(onEmoji || enableEmojiPicker);
 
   return (
     <div
       {...(componentId ? { "data-component-id": componentId } : {})}
-      className={twMerge("relative flex flex-col bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800", className)}
+      className={twMerge(
+        "relative flex flex-col border-t border-border bg-surface text-foreground",
+        className
+      )}
     >
-      {/* @-mention suggestions popover */}
-      {showSuggestions && (
+      {/* @-mention or /-quick-reply suggestions popover */}
+      {(showMentions || showQuickReplies) && (
         <div
-          className={clsx(
-            "absolute bottom-full left-2 right-2 mb-1 z-50",
-            "rounded-xl border border-zinc-200 dark:border-zinc-700",
-            "bg-white dark:bg-zinc-900 shadow-xl shadow-zinc-900/15",
-            "overflow-hidden",
-          )}
+          className="absolute bottom-full left-2 right-2 mb-1 z-50 overflow-hidden rounded-xl border border-border bg-surface shadow-xl"
           role="listbox"
-          aria-label="Sugestões de entidade"
+          aria-label={showMentions ? "Sugestões de entidade" : "Respostas rápidas"}
         >
-          <div className="px-3 py-1.5 border-b border-zinc-100 dark:border-zinc-800">
-            <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
-              Objetos correspondentes
+          <div className="border-b border-border px-3 py-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {showMentions ? "Objetos correspondentes" : "Respostas rápidas (/)"}
             </span>
           </div>
-          {filtered.map((s, i) => (
-            <button
-              key={s.ref_id}
-              type="button"
-              role="option"
-              aria-selected={i === clampedActiveIdx}
-              onMouseDown={(e) => { e.preventDefault(); pickSuggestion(s); }}
-              onMouseEnter={() => setActiveIdx(i)}
-              className={clsx(
-                "w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors",
-                i === clampedActiveIdx
-                  ? "bg-indigo-50 dark:bg-indigo-900/30"
-                  : "hover:bg-zinc-50 dark:hover:bg-zinc-800",
-              )}
-            >
-              <code className="text-[11px] font-mono font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.5 rounded">
-                @{s.ref_id}
-              </code>
-              <span className="flex-1 text-sm text-zinc-700 dark:text-zinc-300 truncate">{s.label}</span>
-              {s.meta && (
-                <span className="text-xs text-zinc-400 dark:text-zinc-500 shrink-0">{s.meta}</span>
-              )}
-            </button>
-          ))}
-          <div className="px-3 py-1 border-t border-zinc-100 dark:border-zinc-800">
-            <span className="text-[9px] text-zinc-300 dark:text-zinc-600">
+          {showMentions
+            ? filteredMentions.map((s, i) => (
+                <button
+                  key={s.ref_id}
+                  type="button"
+                  role="option"
+                  aria-selected={i === clampedActiveIdx}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    pickSuggestion(s);
+                  }}
+                  onMouseEnter={() => setActiveIdx(i)}
+                  className={clsx(
+                    "flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer",
+                    i === clampedActiveIdx ? "bg-primary/10" : "hover:bg-surface-hover"
+                  )}
+                >
+                  <code className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[11px] font-bold text-primary">
+                    @{s.ref_id}
+                  </code>
+                  <span className="flex-1 truncate text-sm text-foreground">{s.label}</span>
+                  {s.meta && (
+                    <span className="shrink-0 text-xs text-muted-foreground">{s.meta}</span>
+                  )}
+                </button>
+              ))
+            : filteredQuickReplies.map((q, i) => (
+                <button
+                  key={q.command}
+                  type="button"
+                  role="option"
+                  aria-selected={i === clampedActiveIdx}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    pickQuickReply(q);
+                  }}
+                  onMouseEnter={() => setActiveIdx(i)}
+                  className={clsx(
+                    "flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer",
+                    i === clampedActiveIdx ? "bg-primary/10" : "hover:bg-surface-hover"
+                  )}
+                >
+                  <span className="inline-flex items-center gap-1 rounded bg-surface-muted px-1.5 py-0.5 font-mono text-[11px] font-semibold text-foreground">
+                    <Zap size={10} />/{q.command}
+                  </span>
+                  <span className="flex-1 truncate text-xs text-muted-foreground">{q.label}</span>
+                </button>
+              ))}
+          <div className="border-t border-border px-3 py-1">
+            <span className="text-[10px] text-muted-foreground">
               ↑↓ navegar · Enter confirmar · Esc fechar
             </span>
           </div>
@@ -223,15 +368,16 @@ export default function ChatComposer({
 
       {/* Reply preview */}
       {replyTo && (
-        <div className="flex items-start gap-2 px-3 pt-2.5 pb-1.5 border-b border-zinc-100 dark:border-zinc-800">
-          <Reply size={14} className="text-indigo-500 mt-0.5 shrink-0" />
-          <div className="flex-1 min-w-0 border-l-2 border-indigo-400 pl-2">
-            <p className="text-xs font-semibold text-indigo-600 truncate">{replyTo.senderName}</p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{replyTo.content}</p>
+        <div className="flex items-start gap-2 border-b border-border px-3 pt-2.5 pb-1.5">
+          <Reply size={14} className="mt-0.5 shrink-0 text-primary" />
+          <div className="min-w-0 flex-1 border-l-2 border-primary pl-2">
+            <p className="truncate text-xs font-semibold text-foreground">{replyTo.senderName}</p>
+            <p className="truncate text-xs text-muted-foreground">{replyTo.content}</p>
           </div>
           <button
+            type="button"
             onClick={replyTo.onCancel}
-            className="p-0.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+            className="rounded-md p-0.5 text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors cursor-pointer"
             aria-label="Cancelar resposta"
           >
             <X size={14} />
@@ -239,68 +385,134 @@ export default function ChatComposer({
         </div>
       )}
 
+      {/* Staged file chips */}
+      {stagedFiles.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 border-b border-border px-3 py-2">
+          {stagedFiles.map((f, idx) => (
+            <span
+              key={`${f.name}-${idx}`}
+              className="inline-flex max-w-[200px] items-center gap-1.5 rounded-lg border border-border bg-surface-muted px-2 py-1 text-xs"
+            >
+              <Paperclip size={11} className="shrink-0 text-muted-foreground" />
+              <span className="truncate text-foreground">{f.name}</span>
+              <button
+                type="button"
+                aria-label={`Remover ${f.name}`}
+                onClick={() => setStagedFiles((prev) => prev.filter((_, i) => i !== idx))}
+                className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-danger cursor-pointer"
+              >
+                <X size={11} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="flex items-end gap-1.5 px-2.5 py-2.5">
-        {/* Left toolbar (attach + emoji) */}
         {variant === "toolbar" && (
-          <div className="flex gap-0.5 shrink-0 pb-0.5">
-            {onAttach && (
-              <button
-                onClick={onAttach}
-                disabled={disabled}
-                className="p-1.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors disabled:opacity-40"
-                aria-label="Anexar arquivo"
-              >
-                <Paperclip size={18} />
-              </button>
+          <div className="flex shrink-0 gap-0.5 pb-0.5">
+            {showAttachButton && (
+              <>
+                {allowAttachments && (
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files ?? []);
+                      if (files.length > 0) setStagedFiles((prev) => [...prev, ...files]);
+                      e.target.value = "";
+                    }}
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onAttach?.();
+                    if (allowAttachments) fileInputRef.current?.click();
+                  }}
+                  disabled={effectiveDisabled}
+                  className="rounded-xl p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors disabled:opacity-40 cursor-pointer"
+                  aria-label="Anexar arquivo"
+                >
+                  <Paperclip size={18} />
+                </button>
+              </>
             )}
-            {onEmoji && (
-              <button
-                onClick={onEmoji}
-                disabled={disabled}
-                className="p-1.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors disabled:opacity-40"
-                aria-label="Inserir emoji"
-              >
-                <Smile size={18} />
-              </button>
+
+            {showEmojiButton && (
+              <div ref={emojiContainerRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onEmoji?.();
+                    if (enableEmojiPicker) setEmojiOpen((o) => !o);
+                  }}
+                  disabled={effectiveDisabled}
+                  className="rounded-xl p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors disabled:opacity-40 cursor-pointer"
+                  aria-label="Inserir emoji"
+                >
+                  <Smile size={18} />
+                </button>
+                {enableEmojiPicker && emojiOpen && (
+                  <div className="absolute bottom-full left-0 mb-2 z-50">
+                    <EmojiPicker
+                      onSelectEmoji={(em) => {
+                        insertEmojiAtCursor(em);
+                        setEmojiOpen(false);
+                      }}
+                      onClose={() => setEmojiOpen(false)}
+                    />
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}
 
-        {/* Textarea */}
         <textarea
           ref={textareaRef}
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          onPaste={(e) => {
+            if (!allowAttachments) return;
+            const pastedFiles = Array.from(e.clipboardData?.files ?? []);
+            if (pastedFiles.length > 0) {
+              setStagedFiles((prev) => [...prev, ...pastedFiles]);
+            }
+          }}
           placeholder={placeholder}
-          disabled={disabled}
+          disabled={effectiveDisabled}
           rows={1}
           aria-autocomplete={entitySuggestions.length > 0 ? "list" : undefined}
           className={twMerge(
-            "flex-1 resize-none rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3.5 py-2",
-            "text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-500",
-            "focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300",
+            "flex-1 resize-none rounded-2xl border border-input-border bg-surface-muted/60 px-3.5 py-2",
+            "text-sm text-foreground placeholder:text-muted-foreground",
+            "focus:bg-surface focus:outline-none focus:ring-2 focus:ring-ring/25 focus:border-ring",
             "min-h-[38px] max-h-[120px] transition-colors leading-relaxed",
-            disabled && "opacity-50 cursor-not-allowed"
+            effectiveDisabled && "opacity-50 cursor-not-allowed"
           )}
         />
 
-        {/* Right: send or mic */}
         <div className="shrink-0 pb-0.5">
           {canSend ? (
             <button
+              type="button"
               onClick={handleSend}
-              disabled={disabled}
-              className="flex items-center justify-center p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-colors disabled:opacity-40"
+              disabled={effectiveDisabled}
+              className="flex items-center justify-center rounded-xl bg-primary p-2 text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-40 cursor-pointer"
               aria-label="Enviar mensagem"
             >
               <Send size={16} />
             </button>
           ) : onVoice ? (
             <button
+              type="button"
               onClick={onVoice}
-              disabled={disabled}
-              className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors disabled:opacity-40"
+              disabled={effectiveDisabled}
+              className="rounded-xl p-2 text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors disabled:opacity-40 cursor-pointer"
               aria-label="Gravar áudio"
             >
               <Mic size={18} />
@@ -311,4 +523,3 @@ export default function ChatComposer({
     </div>
   );
 }
-
