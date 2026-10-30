@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
-import { Search, ExternalLink, X, type LucideIcon } from "lucide-react";
+import { Search, ExternalLink, X, Star, type LucideIcon } from "lucide-react";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useAccessControl } from "./useAccessControl";
 
@@ -46,6 +46,8 @@ export type AppItem = {
   disabled?: boolean;
   /** Opens link in new tab (default true when href is set) */
   external?: boolean;
+  /** Marks app as pinned/favorite */
+  favorite?: boolean;
   componentId?: string;
   /** If false, disables the app card instead of hiding it when access is denied (default: true) */
   hideIfDenied?: boolean;
@@ -73,6 +75,8 @@ export type AppLauncherProps = {
   onOpenChange?: (open: boolean) => void;
   /** Alias callback when modal closes */
   onClose?: () => void;
+  /** Optional callback to toggle favorite state on an app card */
+  onToggleFavorite?: (appId: string, nextFavorite: boolean) => void;
   className?: string;
   componentId?: string;
   /** If true, hides the launcher when access is denied (default: true) */
@@ -153,10 +157,12 @@ function AppCard({
   app,
   size = "md",
   showDescription = false,
+  onToggleFavorite,
 }: {
   app: AppItem;
   size?: "sm" | "md" | "lg";
   showDescription?: boolean;
+  onToggleFavorite?: (appId: string, nextFavorite: boolean) => void;
 }) {
   const color = app.color ?? "zinc";
   const Icon = app.icon;
@@ -195,6 +201,28 @@ function AppCard({
           : "cursor-pointer hover:border-border-strong hover:bg-surface-hover hover:shadow-md hover:shadow-zinc-900/5 dark:hover:shadow-black/20 hover:-translate-y-0.5 active:translate-y-0 active:shadow-none",
       )}
     >
+      {/* Favorite toggle / indicator */}
+      {(onToggleFavorite || app.favorite) && (
+        <button
+          type="button"
+          aria-label={app.favorite ? "Remover dos favoritos" : "Fixar nos favoritos"}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleFavorite?.(app.id, !app.favorite);
+          }}
+          className={twMerge(
+            "absolute top-2 left-2 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full transition-all",
+            app.favorite
+              ? "text-amber-500 opacity-100"
+              : "text-muted-foreground opacity-0 group-hover/card:opacity-80 hover:text-amber-500",
+            onToggleFavorite ? "cursor-pointer hover:bg-muted/80" : "pointer-events-none",
+          )}
+        >
+          <Star size={13} className={app.favorite ? "fill-amber-400 text-amber-500" : undefined} />
+        </button>
+      )}
+
       {/* Badge */}
       {app.badge && (
         <span
@@ -272,16 +300,24 @@ function AppGrid({
   columns = "auto",
   size,
   showDescription,
+  onToggleFavorite,
 }: {
   apps: AppItem[];
   columns?: AppLauncherProps["columns"];
   size?: AppLauncherProps["size"];
   showDescription?: boolean;
+  onToggleFavorite?: AppLauncherProps["onToggleFavorite"];
 }) {
   return (
     <div className={twMerge("grid gap-3", COLS_CLS[columns ?? "auto"])}>
       {apps.map((app) => (
-        <AppCard key={app.id} app={app} size={size} showDescription={showDescription} />
+        <AppCard
+          key={app.id}
+          app={app}
+          size={size}
+          showDescription={showDescription}
+          onToggleFavorite={onToggleFavorite}
+        />
       ))}
     </div>
   );
@@ -301,6 +337,7 @@ export function AppLauncher({
   open,
   onOpenChange,
   onClose,
+  onToggleFavorite,
   className,
   componentId,
   hideIfDenied = true,
@@ -431,11 +468,23 @@ export function AppLauncher({
               <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
                 {cat}
               </p>
-              <AppGrid apps={items} columns={columns} size={size} showDescription={showDescription} />
+              <AppGrid
+                apps={items}
+                columns={columns}
+                size={size}
+                showDescription={showDescription}
+                onToggleFavorite={onToggleFavorite}
+              />
             </div>
           ))
         : filtered.length > 0 && (
-            <AppGrid apps={filtered} columns={columns} size={size} showDescription={showDescription} />
+            <AppGrid
+              apps={filtered}
+              columns={columns}
+              size={size}
+              showDescription={showDescription}
+              onToggleFavorite={onToggleFavorite}
+            />
           )
       }
     </div>
