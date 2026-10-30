@@ -40,8 +40,14 @@ export type ButtonProps = {
   variant?:
     | 'solid'
     | 'outline'
+    | 'dashed'
+    | 'tonal'
+    | 'filled'
     | 'ghost'
     | 'destructive'
+    | 'danger-outline'
+    | 'danger-dashed'
+    | 'danger-ghost'
     | 'primary'
     | 'secondary'
     | 'default'
@@ -61,8 +67,8 @@ export type ButtonProps = {
   pill?: boolean;
   /** Icon-only mode — equal square padding, no min-w */
   square?: boolean;
-  /** Button geometry preset (daisyUI btn-circle / btn-square support) */
-  shape?: 'default' | 'circle' | 'square';
+  /** Button geometry preset (daisyUI btn-circle / btn-square + Ant Design round support) */
+  shape?: 'default' | 'circle' | 'square' | 'round';
   /** Extra horizontal width preset (daisyUI btn-wide support) */
   wide?: boolean;
   /** Hover/focus tooltip rendered via Portal (never clipped by overflow-hidden) */
@@ -87,8 +93,20 @@ const variantClasses: Record<string, string> = {
   primary: 'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active',
   secondary: 'bg-surface-muted text-surface-foreground hover:bg-surface-hover',
   outline: 'bg-transparent border border-border text-surface-foreground hover:bg-surface-hover',
+  dashed:
+    'bg-transparent border border-dashed border-border text-surface-foreground hover:border-primary hover:text-primary',
+  tonal:
+    'bg-primary/12 text-primary hover:bg-primary/20 border border-transparent',
+  filled:
+    'bg-primary/12 text-primary hover:bg-primary/20 border border-transparent',
   ghost: 'bg-transparent hover:bg-surface-hover text-surface-foreground',
   destructive: 'bg-red-600 text-white hover:bg-red-500',
+  'danger-outline':
+    'bg-transparent border border-red-500 text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-950/40',
+  'danger-dashed':
+    'bg-transparent border border-dashed border-red-400 text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-950/40',
+  'danger-ghost':
+    'bg-transparent text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40',
   success: 'bg-emerald-600 text-white hover:bg-emerald-500',
   'success-outline':
     'bg-transparent border border-emerald-500 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-600 dark:text-emerald-400 dark:hover:bg-emerald-950/40',
@@ -198,12 +216,23 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
 
   const isDisabled = loading || disabled || !hasPermission;
   const isLink = variant === 'link';
+  const isFlat =
+    isLink ||
+    variant === 'ghost' ||
+    variant === 'danger-ghost' ||
+    variant === 'tonal' ||
+    variant === 'filled';
+  const isDangerVariant =
+    variant === 'destructive' ||
+    variant === 'danger-outline' ||
+    variant === 'danger-dashed' ||
+    variant === 'danger-ghost';
   const iconLeft = leftIcon ?? leading;
   const iconRight = rightIcon ?? trailing;
   const isFull = fullWidth || full;
 
   const isIconBox = square || shape === 'square' || shape === 'circle';
-  const isCircleOrPill = pill || shape === 'circle';
+  const isCircleOrPill = pill || shape === 'circle' || shape === 'round';
 
   const resolvedSizeClass = isIconBox
     ? squareSizeClasses[size]
@@ -249,7 +278,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       className={cn(
         'transition-colors duration-150 whitespace-nowrap',
         'inline-flex items-center justify-center',
-        !isLink && 'shadow-sm shadow-zinc-900/10',
+        !isFlat && 'shadow-sm shadow-zinc-900/10',
         isCircleOrPill ? 'rounded-full' : 'rounded-md',
         wide && !isIconBox && 'min-w-[180px] px-8',
         'active:not-disabled:translate-y-[2px]',
@@ -311,7 +340,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
           description: 'Tem certeza de que deseja prosseguir?',
           confirmLabel: 'Confirmar',
           cancelLabel: 'Cancelar',
-          variant: variant === 'destructive' ? 'danger' : 'info',
+          variant: isDangerVariant ? 'danger' : 'info',
         };
 
   return (
@@ -325,7 +354,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
         description={confirmOpts.description ?? 'Tem certeza de que deseja prosseguir?'}
         confirmLabel={confirmOpts.confirmLabel ?? 'Confirmar'}
         cancelLabel={confirmOpts.cancelLabel ?? 'Cancelar'}
-        variant={confirmOpts.variant ?? (variant === 'destructive' ? 'danger' : 'info')}
+        variant={confirmOpts.variant ?? (isDangerVariant ? 'danger' : 'info')}
       />
     </>
   );
