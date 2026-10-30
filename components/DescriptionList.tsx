@@ -28,9 +28,9 @@ export interface DescriptionListProps extends React.HTMLAttributes<HTMLDListElem
   subtitle?: string;
   /** Ações no cabeçalho */
   extra?: React.ReactNode;
-  /** Layout de distribuição */
-  layout?: "horizontal" | "grid" | "stacked";
-  /** Colunas quando layout="grid" */
+  /** Layout de distribuição ("table" replica o Descriptions bordered do Ant Design) */
+  layout?: "horizontal" | "grid" | "stacked" | "table";
+  /** Colunas quando layout="grid" ou layout="table" */
   columns?: 2 | 3 | 4;
   /** Adiciona borda externa e divisórias */
   bordered?: boolean;
@@ -103,7 +103,44 @@ export default function DescriptionList({
         </div>
       )}
 
-      {layout === "grid" ? (
+      {layout === "table" ? (
+        <dl
+          className={cn(
+            "grid",
+            GRID_COLS[columns],
+            "gap-px bg-zinc-200 dark:bg-zinc-800"
+          )}
+          {...props}
+        >
+          {items.map((item, idx) => (
+            <div
+              key={item.key ?? idx}
+              className={cn(
+                "flex items-stretch bg-white dark:bg-zinc-900 min-w-0",
+                item.span && SPAN_CLASSES[item.span]
+              )}
+            >
+              <dt
+                className={cn(
+                  "flex items-center shrink-0 w-36 sm:w-44 bg-zinc-50 dark:bg-zinc-800/70 border-r border-zinc-200 dark:border-zinc-800 font-medium text-zinc-600 dark:text-zinc-300",
+                  padClasses
+                )}
+              >
+                <span className="break-words">{item.label}</span>
+              </dt>
+              <dd
+                className={cn(
+                  "flex flex-1 min-w-0 items-center justify-between gap-2 font-medium text-zinc-900 dark:text-zinc-100",
+                  padClasses
+                )}
+              >
+                <span className="min-w-0 break-words">{item.value}</span>
+                {item.copyValue && <CopyButton value={item.copyValue} size="xs" />}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : layout === "grid" ? (
         <dl
           className={cn(
             "grid",
