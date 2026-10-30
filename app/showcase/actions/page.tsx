@@ -15,7 +15,12 @@ import ButtonGroup from "@/components/ButtonGroup";
 import ToggleGroup, { Toggle } from "@/components/ToggleGroup";
 import SpeedDial from "@/components/SpeedDial";
 import Swap from "@/components/Swap";
-import Loading from "@/components/Loading";
+import Loading, { Spin } from "@/components/Loading";
+import PasswordConfirmDialog from "@/components/PasswordConfirmDialog";
+import SortableList from "@/components/SortableList";
+import Popconfirm from "@/components/Popconfirm";
+import Result, { type ResultStatus } from "@/components/Result";
+import FloatButton, { FloatButtonGroup, BackTop } from "@/components/FloatButton";
 import TextField from "@/components/form/TextField";
 import SelectField from "@/components/form/SelectField";
 import NumberField from "@/components/form/NumberField";
@@ -240,7 +245,7 @@ function FormDrawerAndCameraDemo() {
                 Cliente: Marcos Oliveira
               </p>
               <p className="text-zinc-500">
-                Contato: (11) 99214-8800 · Atualização de Cluster v2.4
+                Contato: (69) 99214-8800 · Porto Velho - RO · Montagem & Entrega
               </p>
             </div>
             <StatusBadge tone="info" label="Agendado" />
@@ -746,6 +751,29 @@ export default function Page() {
             </div>
           </DemoCard>
 
+          <DemoCard id="button-dashed-tonal" title="Variantes Dashed, Tonal (Filled), Shape Round & Danger Outline/Ghost">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button variant="dashed" leftIcon={<Plus size={15} />} onClick={() => toast("Novo ambiente adicionado")}>
+                Adicionar Ambiente (Dashed)
+              </Button>
+              <Button variant="tonal" onClick={() => toast("Filtro aplicado")}>
+                Tonal / Filled
+              </Button>
+              <Button variant="primary" shape="round" leftIcon={<Check size={15} />}>
+                Shape Round
+              </Button>
+              <Button variant="danger-outline" leftIcon={<Trash2 size={15} />}>
+                Danger Outline
+              </Button>
+              <Button variant="danger-dashed">
+                Danger Dashed
+              </Button>
+              <Button variant="danger-ghost">
+                Danger Ghost
+              </Button>
+            </div>
+          </DemoCard>
+
           <div id="button-props" className="mt-6">
             <PropsTable
               rows={[
@@ -753,10 +781,11 @@ export default function Page() {
                   "variant",
                   "string",
                   "default",
-                  "solid | outline | ghost | primary | secondary | destructive | success | success-outline | warning | warning-outline | info | info-outline | link",
+                  "solid | outline | ghost | dashed | tonal | filled | primary | secondary | destructive | danger-outline | danger-dashed | danger-ghost | success | success-outline | warning | warning-outline | info | info-outline | link",
                 ],
                 ["size", "string", "md", "sm | md | lg"],
-                ["pill", "boolean", "false", "Forma pill — rounded-full"],
+                ["shape", "string", "default", "default | round | circle | square"],
+                ["pill", "boolean", "false", "Forma pill — rounded-full (atalho para shape='round')"],
                 [
                   "square",
                   "boolean",
@@ -790,8 +819,6 @@ export default function Page() {
             />
           </div>
         </section>
-
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
@@ -888,6 +915,153 @@ export default function Page() {
         </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── ButtonGroup ──────────────────────────────────────────────── */}
+        <section id="button-group" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="ButtonGroup"
+            title="ButtonGroup"
+            description="Agrupamento coeso de botões com fusão automática de bordas (attached) ou espaçamento uniforme, ideal para barras de ações, paginação compacta e split-buttons."
+          />
+
+          <DemoCard
+            id="button-group-demo"
+            title="Horizontal (Attached), Split Button e Vertical"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+              <div className="rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-4 space-y-3">
+                <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                  Ações de Documento (Attached)
+                </p>
+                <ButtonGroup>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<FilePlus size={14} />}
+                    onClick={() => toast("Novo documento")}
+                  >
+                    Novo
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<Printer size={14} />}
+                    onClick={() => toast("Imprimindo...")}
+                  >
+                    Imprimir
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<Share2 size={14} />}
+                    onClick={() => toast("Link copiado")}
+                  >
+                    Compartilhar
+                  </Button>
+                </ButtonGroup>
+              </div>
+
+              <div className="rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-4 space-y-3">
+                <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                  Split Button (Ação Principal + Menu)
+                </p>
+                <ButtonGroup>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    leftIcon={<Send size={14} />}
+                    onClick={() =>
+                      toast.success("Deploy iniciado com sucesso!")
+                    }
+                  >
+                    Publicar Release
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    shape="square"
+                    aria-label="Mais opções"
+                    onClick={() => toast("Opções de publicação")}
+                  >
+                    <ChevronDown size={14} />
+                  </Button>
+                </ButtonGroup>
+              </div>
+
+              <div className="rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-4 space-y-3">
+                <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                  Orientação Vertical
+                </p>
+                <ButtonGroup orientation="vertical">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<Copy size={14} />}
+                  >
+                    Duplicar Registro
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<Download size={14} />}
+                  >
+                    Exportar JSON
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    leftIcon={<Trash2 size={14} />}
+                  >
+                    Arquivar Projeto
+                  </Button>
+                </ButtonGroup>
+              </div>
+            </div>
+          </DemoCard>
+
+          <CodeBlock
+            filename="ButtonGroup.tsx"
+            language="tsx"
+            code={`<ButtonGroup>
+  <Button variant="outline" size="sm">Novo</Button>
+  <Button variant="outline" size="sm">Imprimir</Button>
+  <Button variant="outline" size="sm">Compartilhar</Button>
+</ButtonGroup>`}
+          />
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── Toggle & ToggleGroup ─────────────────────────────────────── */}
+        <section id="toggle-group" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="ToggleGroup"
+            title="Toggle & ToggleGroup"
+            description="Botões de alternância de estado (pressionado/não pressionado) individuais ou em grupo com seleção única (single) ou múltipla (multiple)."
+          />
+
+          <DemoCard
+            id="toggle-group-demo"
+            title="Seleção Única (Visualização) e Múltipla (Formatação)"
+          >
+            <ToggleGroupShowcaseDemo />
+          </DemoCard>
+
+          <CodeBlock
+            filename="ToggleGroup.tsx"
+            language="tsx"
+            code={`<ToggleGroup
+  type="single"
+  value={view}
+  onValueChange={(val) => val && setView(val)}
+  options={[
+    { value: "grid", label: "Grade", icon: <LayoutGrid size={14} /> },
+    { value: "list", label: "Lista", icon: <List size={14} /> },
+    { value: "table", label: "Tabela", icon: <Table2 size={14} /> },
+  ]}
+/>`}
+          />
+        </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
@@ -1044,6 +1218,14 @@ export default function Page() {
             />
           </div>
 
+          {/* Banner mode + closeText */}
+          <div id="alert-banner" className="space-y-4">
+            <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">
+              Modo Banner Edge-to-Edge &amp; <code className="text-sm font-mono">closeText</code>
+            </h3>
+            <AlertBannerShowcaseDemo />
+          </div>
+
           <div id="alert-props" className="space-y-4">
             <PropsTable
               rows={[
@@ -1054,6 +1236,18 @@ export default function Page() {
                   "'info'|'success'|'warning'|'danger'|'neutral'",
                   "'info'",
                   "Estilo semântico",
+                ],
+                [
+                  "banner",
+                  "boolean",
+                  "false",
+                  "Modo faixa de aviso edge-to-edge (sem arredondamento lateral)",
+                ],
+                [
+                  "closeText",
+                  "ReactNode",
+                  "—",
+                  "Substitui o ícone × por botão textual de fechamento (ex.: 'Entendi')",
                 ],
                 [
                   "icon",
@@ -1125,8 +1319,6 @@ const [open, setOpen] = useState(false);
             />
           </div>
         </section>
-
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
@@ -1261,8 +1453,6 @@ const [open, setOpen] = useState(false);
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
-
         <section id="drawer" className="scroll-mt-20">
           <SectionHeader
             label="Componente"
@@ -1314,6 +1504,22 @@ const [open, setOpen] = useState(false);
         </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        <section id="modals" className="space-y-8 scroll-mt-20">
+          <SectionHeader
+            label="Modais & Painéis"
+            title="Modal, FormModal, FormDrawer & CameraCaptureModal"
+            description="Modais empilháveis com controle global de ESC, formulários CRUD em abas, gavetas laterais de agendamento e captura de câmera integrada."
+          />
+
+          <DemoCard id="modal-formmodal-demo" title="Modal & FormModal em Abas">
+            <ModalAndFormModalDemo />
+          </DemoCard>
+
+          <DemoCard id="formdrawer-camera-demo" title="FormDrawer & CameraCaptureModal">
+            <FormDrawerAndCameraDemo />
+          </DemoCard>
+        </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
@@ -1456,8 +1662,6 @@ const [open, setOpen] = useState(false);
             </p>
           </div>
         </section>
-
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
@@ -1696,151 +1900,47 @@ toast.promise(salvarConfiguracoes(), {
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-        {/* ── ButtonGroup ──────────────────────────────────────────────── */}
-        <section id="button-group" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+        {/* ── Popconfirm ───────────────────────────────────────────────── */}
+        <section id="popconfirm" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
-            label="ButtonGroup"
-            title="ButtonGroup"
-            description="Agrupamento coeso de botões com fusão automática de bordas (attached) ou espaçamento uniforme, ideal para barras de ações, paginação compacta e split-buttons."
+            label="Confirmação Contextual"
+            title="Popconfirm (Confirmação Leve Ancorada)"
+            description="Popover ancorado ao botão acionador para confirmações rápidas sem bloquear toda a tela com um modal, suportando promessas assíncronas com spinner automático e 4 variantes semânticas."
           />
 
-          <DemoCard
-            id="button-group-demo"
-            title="Horizontal (Attached), Split Button e Vertical"
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-              <div className="rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-4 space-y-3">
-                <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
-                  Ações de Documento (Attached)
-                </p>
-                <ButtonGroup>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<FilePlus size={14} />}
-                    onClick={() => toast("Novo documento")}
-                  >
-                    Novo
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<Printer size={14} />}
-                    onClick={() => toast("Imprimindo...")}
-                  >
-                    Imprimir
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<Share2 size={14} />}
-                    onClick={() => toast("Link copiado")}
-                  >
-                    Compartilhar
-                  </Button>
-                </ButtonGroup>
-              </div>
-
-              <div className="rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-4 space-y-3">
-                <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
-                  Split Button (Ação Principal + Menu)
-                </p>
-                <ButtonGroup>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    leftIcon={<Send size={14} />}
-                    onClick={() =>
-                      toast.success("Deploy iniciado com sucesso!")
-                    }
-                  >
-                    Publicar Release
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    shape="square"
-                    aria-label="Mais opções"
-                    onClick={() => toast("Opções de publicação")}
-                  >
-                    <ChevronDown size={14} />
-                  </Button>
-                </ButtonGroup>
-              </div>
-
-              <div className="rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-900/40 p-4 space-y-3">
-                <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
-                  Orientação Vertical
-                </p>
-                <ButtonGroup orientation="vertical">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<Copy size={14} />}
-                  >
-                    Duplicar Registro
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<Download size={14} />}
-                  >
-                    Exportar JSON
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    leftIcon={<Trash2 size={14} />}
-                  >
-                    Arquivar Projeto
-                  </Button>
-                </ButtonGroup>
-              </div>
-            </div>
+          <DemoCard id="popconfirm-demo" title="Confirmações Rápidas Assíncronas & Variantes Semânticas">
+            <PopconfirmShowcaseDemo />
           </DemoCard>
-
-          <CodeBlock
-            filename="ButtonGroup.tsx"
-            language="tsx"
-            code={`<ButtonGroup>
-  <Button variant="outline" size="sm">Novo</Button>
-  <Button variant="outline" size="sm">Imprimir</Button>
-  <Button variant="outline" size="sm">Compartilhar</Button>
-</ButtonGroup>`}
-          />
         </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-        {/* ── Toggle & ToggleGroup ─────────────────────────────────────── */}
-        <section id="toggle-group" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+        {/* ── PasswordConfirmDialog ────────────────────────────────────── */}
+        <section id="password-confirm" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
-            label="ToggleGroup"
-            title="Toggle & ToggleGroup"
-            description="Botões de alternância de estado (pressionado/não pressionado) individuais ou em grupo com seleção única (single) ou múltipla (multiple)."
+            label="Autorização & Auditoria"
+            title="PasswordConfirmDialog"
+            description="Modal reutilizável de autenticação de senha do operador ou liberação gerencial por supervisor, com detecção de Caps Lock, justificativa obrigatória para trilha de auditoria e tratamento de erro inline."
           />
 
-          <DemoCard
-            id="toggle-group-demo"
-            title="Seleção Única (Visualização) e Múltipla (Formatação)"
-          >
-            <ToggleGroupShowcaseDemo />
+          <DemoCard id="password-confirm-demo" title="Confirmação do Operador & Liberação de Supervisor (Dica: senha '123456')">
+            <PasswordConfirmShowcaseDemo />
           </DemoCard>
+        </section>
 
-          <CodeBlock
-            filename="ToggleGroup.tsx"
-            language="tsx"
-            code={`<ToggleGroup
-  type="single"
-  value={view}
-  onValueChange={(val) => val && setView(val)}
-  options={[
-    { value: "grid", label: "Grade", icon: <LayoutGrid size={14} /> },
-    { value: "list", label: "Lista", icon: <List size={14} /> },
-    { value: "table", label: "Tabela", icon: <Table2 size={14} /> },
-  ]}
-/>`}
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── Result ───────────────────────────────────────────────────── */}
+        <section id="result" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Desfecho de Fluxos"
+            title="Result (Sucesso, Aviso, Erro & HTTP 403/404/500)"
+            description="Painel estruturado para conclusão de pedidos, confirmações de pagamento, alertas fiscais e estados HTTP (success, info, warning, error, 403, 404, 500) com halo ilustrado, ações e bloco de recibo."
           />
+
+          <DemoCard id="result-demo" title="Alterne o Status ao Vivo — Pedido Móveis & Eletro">
+            <ResultShowcaseDemo />
+          </DemoCard>
         </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
@@ -1848,9 +1948,9 @@ toast.promise(salvarConfiguracoes(), {
         {/* ── SpeedDial (FAB) ──────────────────────────────────────────── */}
         <section id="speed-dial" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
-            label="SpeedDial"
+            label="Ações Flutuantes"
             title="SpeedDial (Floating Action Menu)"
-            description="Botão de ação flutuante expansível (estilo daisyUI FAB) com animações suaves, suporte a direções (up, down, left, right), tooltips e atalhos rápidos de operação."
+            description="Botão de ação flutuante expansível com animações suaves, suporte a direções (up, down, left, right), tooltips e atalhos rápidos de operação."
           />
 
           <DemoCard
@@ -1930,27 +2030,27 @@ toast.promise(salvarConfiguracoes(), {
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-        {/* ── Swap ─────────────────────────────────────────────────────── */}
-        <section id="swap" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+        {/* ── FloatButton, FloatButtonGroup & BackTop ──────────────────── */}
+        <section id="float-button" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
-            label="Swap"
-            title="Swap (Transição de Estado)"
-            description="Alternador visual de dois estados (on/off) com transições fluídas de rotação (rotate), giro 3D (flip) ou opacidade (fade)."
+            label="Ações Flutuantes"
+            title="FloatButton, FloatButtonGroup & BackTop"
+            description="Botões de ação flutuantes individuais ou agrupados (menu expansível por clique ou hover, formas circle/square e contadores badge) acompanhados do botão BackTop com anel radial SVG de progresso de rolagem."
           />
 
-          <DemoCard id="swap-demo" title="Efeitos: Rotate, Flip e Fade">
-            <SwapShowcaseDemo />
+          <DemoCard id="float-button-demo" title="Grupos Flutuantes (Click / Hover / Square) & BackTop Radial">
+            <FloatButtonShowcaseDemo />
           </DemoCard>
         </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-        {/* ── Loading ──────────────────────────────────────────────────── */}
+        {/* ── Loading & Spin ───────────────────────────────────────────── */}
         <section id="loading" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
-            label="Loading"
-            title="Loading Indicators"
-            description="6 variantes de indicadores de carregamento (spinner, dots, ring, ball, bars, infinity) em 5 tamanhos e cores semânticas."
+            label="Carregamento"
+            title="Loading & Spin Overlay"
+            description="6 variantes de indicadores de carregamento (spinner, dots, ring, ball, bars, infinity) em 5 tamanhos, cores semânticas e wrapper Spin para bloquear containers durante chamadas assíncronas."
           />
 
           <DemoCard id="loading-variants" title="Variantes e Cores Semânticas">
@@ -1983,6 +2083,25 @@ toast.promise(salvarConfiguracoes(), {
               </div>
             </div>
           </DemoCard>
+
+          <DemoCard id="spin-overlay" title="Spin — Container Overlay (<Spin spinning tip>)">
+            <SpinContainerShowcaseDemo />
+          </DemoCard>
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── SortableList ─────────────────────────────────────────────── */}
+        <section id="sortable-list" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Drag & Drop"
+            title="SortableList"
+            description="Lista reordenável com alça de arraste (grip handle), indicador visual de posição, botões opcionais de subida/descida e suporte acessível via teclado (Alt + Setas)."
+          />
+
+          <DemoCard id="sortable-list-demo" title="Roteirização de Entregas & Montagens — Arraste para reordenar paradas">
+            <SortableListShowcaseDemo />
+          </DemoCard>
         </section>
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
@@ -2000,6 +2119,21 @@ toast.promise(salvarConfiguracoes(), {
             title="Arraste para baixo em dispositivos touch (ou clique em Atualizar) para recarregar"
           >
             <PullToRefreshShowcaseDemo />
+          </DemoCard>
+        </section>
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── Swap ─────────────────────────────────────────────────────── */}
+        <section id="swap" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+          <SectionHeader
+            label="Swap"
+            title="Swap (Transição de Estado)"
+            description="Alternador visual de dois estados (on/off) com transições fluídas de rotação (rotate), giro 3D (flip) ou opacidade (fade)."
+          />
+
+          <DemoCard id="swap-demo" title="Efeitos: Rotate, Flip e Fade">
+            <SwapShowcaseDemo />
           </DemoCard>
         </section>
       </div>
@@ -2252,6 +2386,382 @@ function PullToRefreshShowcaseDemo() {
             <StatusBadge label={o.status} tone="success" />
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+
+function PasswordConfirmShowcaseDemo() {
+  const [mode, setMode] = React.useState<"operator" | "supervisor" | null>(null);
+
+  return (
+    <div className="flex flex-wrap gap-3">
+      <Button
+        variant="primary"
+        leftIcon={<Lock size={15} />}
+        onClick={() => setMode("operator")}
+      >
+        Confirmar Identidade do Operador
+      </Button>
+
+      <Button
+        variant="outline"
+        leftIcon={<AlertTriangle size={15} />}
+        onClick={() => setMode("supervisor")}
+      >
+        Liberação de Desconto por Supervisor
+      </Button>
+
+      <PasswordConfirmDialog
+        open={mode === "operator"}
+        onClose={() => setMode(null)}
+        title="Confirmar emissão de nota"
+        description="Digite sua senha operacional para assinar e transmitir o lote de entregas."
+        userBadge="Carlos Mendes · Gerente Filial Porto Velho (RO)"
+        onConfirm={async ({ password }) => {
+          await new Promise((r) => setTimeout(r, 450));
+          if (password !== "123456") {
+            throw new Error("Senha incorreta. Para testar o demo, digite 123456.");
+          }
+          setMode(null);
+          toast.success("Operação autenticada com sucesso!");
+        }}
+      />
+
+      <PasswordConfirmDialog
+        open={mode === "supervisor"}
+        onClose={() => setMode(null)}
+        tone="warning"
+        title="Autorização Gerencial de Desconto"
+        description="Descontos acima da alçada comercial em Estofados & Eletro exigem matrícula do supervisor e justificativa."
+        requireUsername
+        defaultUsername="sup.manaus"
+        requireReason
+        confirmLabel="Autorizar Desconto"
+        onConfirm={async ({ password, username }) => {
+          await new Promise((r) => setTimeout(r, 500));
+          if (password !== "123456") {
+            throw new Error("Credencial inválida. Digite a senha de demonstração 123456.");
+          }
+          setMode(null);
+          toast.success(`Desconto autorizado por ${username}!`);
+        }}
+      />
+    </div>
+  );
+}
+
+function SortableListShowcaseDemo() {
+  const [paradas, setParadas] = React.useState([
+    {
+      id: "rt-1",
+      pedido: "PED-69042",
+      produto: "Sofá Retrátil 3 Lugares + Painel TV",
+      destino: "Bairro Embratel · Porto Velho (RO)",
+      tipo: "Entrega + Montagem",
+    },
+    {
+      id: "rt-2",
+      pedido: "PED-69048",
+      produto: "Geladeira Frost Free Inverter 450L",
+      destino: "Av. Sete de Setembro · Porto Velho (RO)",
+      tipo: "Entrega Expressa",
+    },
+    {
+      id: "rt-3",
+      pedido: "PED-92115",
+      produto: "Colchão King Molas Ensacadas + Base Box",
+      destino: "Cidade Nova · Manaus (AM)",
+      tipo: "Entrega Agendada",
+    },
+    {
+      id: "rt-4",
+      pedido: "PED-69055",
+      produto: "Guarda-Roupa Casal 6 Portas c/ Espelho",
+      destino: "Centro · Ji-Paraná (RO)",
+      tipo: "Entrega + Montagem",
+    },
+  ]);
+
+  return (
+    <SortableList
+      items={paradas}
+      onChange={setParadas}
+      keyExtractor={(item) => item.id}
+      showIndex
+      showMoveButtons
+      renderItem={(item) => (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              <span className="font-mono text-xs text-indigo-600 dark:text-indigo-400 mr-2">
+                #{item.pedido}
+              </span>
+              {item.produto}
+            </p>
+            <p className="text-xs text-zinc-500">{item.destino}</p>
+          </div>
+          <StatusBadge label={item.tipo} tone="info" />
+        </div>
+      )}
+    />
+  );
+}
+
+function SpinContainerShowcaseDemo() {
+  const [spinning, setSpinning] = React.useState(true);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs text-zinc-500">
+          Envolve qualquer card, tabela ou formulário com véu translúcido + indicador centralizado:
+        </span>
+        <Button
+          size="sm"
+          variant={spinning ? "outline" : "primary"}
+          onClick={() => setSpinning((s) => !s)}
+        >
+          {spinning ? "Concluir Carregamento" : "Simular <Spin spinning />"}
+        </Button>
+      </div>
+
+      <Spin
+        spinning={spinning}
+        tip="Consultando saldo no CD Porto Velho (RO) e Manaus (AM)..."
+        variant="ring"
+      >
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+              Disponibilidade Imediata — Sofá Retrátil Imperial 3 Lugares
+            </p>
+            <StatusBadge label="Em Estoque" tone="success" />
+          </div>
+          <p className="text-xs text-zinc-500">
+            14 unidades disponíveis em Porto Velho (RO) · 19 unidades em Manaus (AM) · Montagem especializada inclusa.
+          </p>
+        </div>
+      </Spin>
+    </div>
+  );
+}
+
+function AlertBannerShowcaseDemo() {
+  const [bannerVisible, setBannerVisible] = React.useState(true);
+
+  return (
+    <div className="space-y-3">
+      {bannerVisible ? (
+        <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <Alert
+            banner
+            variant="warning"
+            title="Rota Expressa Norte: Entregas agendadas para hoje em Porto Velho (69) e Manaus (92)."
+            closeText="Entendi"
+            onDismiss={() => setBannerVisible(false)}
+          />
+        </div>
+      ) : (
+        <Button size="sm" variant="outline" onClick={() => setBannerVisible(true)}>
+          Reexibir Alert Banner
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function PopconfirmShowcaseDemo() {
+  return (
+    <div className="flex flex-wrap items-center gap-4">
+      <Popconfirm
+        variant="danger"
+        title="Cancelar agendamento de montagem?"
+        description="A equipe técnica de Porto Velho (RO) liberará este horário na rota."
+        confirmLabel="Sim, cancelar"
+        cancelLabel="Manter"
+        onConfirm={async () => {
+          await new Promise((r) => setTimeout(r, 650));
+          toast.success("Agendamento cancelado com sucesso!");
+        }}
+      >
+        <Button variant="danger-outline" size="sm" leftIcon={<Trash2 size={14} />}>
+          Cancelar Montagem (Async)
+        </Button>
+      </Popconfirm>
+
+      <Popconfirm
+        variant="warning"
+        title="Reemitir etiqueta de volume?"
+        description="Uma nova etiqueta será enviada para a impressora térmica do CD Manaus (AM)."
+        confirmLabel="Reimprimir"
+        onConfirm={() => toast.info("Etiqueta enviada para impressão!")}
+      >
+        <Button variant="outline" size="sm" leftIcon={<Printer size={14} />}>
+          Reimprimir Etiqueta
+        </Button>
+      </Popconfirm>
+
+      <Popconfirm
+        variant="primary"
+        side="right"
+        title="Liberar pedido para expedição?"
+        description="Confirma que a voltagem 127V dos eletrodomésticos foi validada com o cliente?"
+        confirmLabel="Liberar Rota"
+        onConfirm={() => toast.success("Pedido #PED-69042 liberado para expedição!")}
+      >
+        <Button variant="tonal" size="sm" leftIcon={<Send size={14} />}>
+          Liberar Expedição
+        </Button>
+      </Popconfirm>
+    </div>
+  );
+}
+
+function ResultShowcaseDemo() {
+  const [status, setStatus] = React.useState<ResultStatus>("success");
+
+  const metaByStatus: Record<ResultStatus, { title: string; sub: string }> = {
+    success: {
+      title: "Pedido #PED-69042 Aprovado e Agendado!",
+      sub: "Pagamento confirmado. Nossa equipe realizará a entrega e montagem dos móveis em Porto Velho (RO).",
+    },
+    info: {
+      title: "Separação Iniciada no Centro de Distribuição",
+      sub: "Seus móveis e eletrodomésticos estão sendo conferidos na expedição Manaus (AM).",
+    },
+    warning: {
+      title: "Confirmação de Voltagem Pendente (127V / 220V)",
+      sub: "Confirme a tensão elétrica do endereço antes da saída do caminhão baú.",
+    },
+    error: {
+      title: "Falha na Autorização da Transação",
+      sub: "Verifique o limite disponível no cartão ou gere um código PIX Copia-e-Cola.",
+    },
+    "403": {
+      title: "Alçada Gerencial Necessária (403)",
+      sub: "Seu perfil não possui permissão para aprovar descontos acima da tabela regional.",
+    },
+    "404": {
+      title: "Romaneio Não Localizado (404)",
+      sub: "Verifique o número do pedido ou consulte a filial de origem em Rondônia ou Amazonas.",
+    },
+    "500": {
+      title: "Serviço SEFAZ Temporariamente Indisponível (500)",
+      sub: "A emissão da NF-e entrou em fila automática de contingência.",
+    },
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-1.5">
+        {(["success", "info", "warning", "error", "403", "404", "500"] as const).map((st) => (
+          <Button
+            key={st}
+            size="sm"
+            variant={status === st ? "primary" : "outline"}
+            onClick={() => setStatus(st)}
+          >
+            {st}
+          </Button>
+        ))}
+      </div>
+
+      <Result
+        bordered
+        size="sm"
+        status={status}
+        title={metaByStatus[status].title}
+        subTitle={metaByStatus[status].sub}
+        extra={
+          <>
+            <Button variant="primary" size="sm" onClick={() => toast.success("Acompanhando entrega")}>
+              Acompanhar Rota
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => toast("Imprimindo comprovante")}>
+              Imprimir Comprovante
+            </Button>
+          </>
+        }
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <span>
+            <strong>Unidade:</strong> Lopes Móveis & Eletro — Porto Velho (RO · DDD 69)
+          </span>
+          <span>
+            <strong>Itens:</strong> Sofá Retrátil 3L + Geladeira Inverter 450L
+          </span>
+        </div>
+      </Result>
+    </div>
+  );
+}
+
+function FloatButtonShowcaseDemo() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="flex flex-col items-center justify-end min-h-[220px] rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 p-6 gap-3">
+        <FloatButtonGroup
+          floating={false}
+          trigger="click"
+          type="primary"
+          tooltip="Atendimento Rápido"
+        >
+          <FloatButton
+            floating={false}
+            icon={Printer}
+            tooltip="Imprimir Orçamento"
+            onClick={() => toast("Imprimindo orçamento...")}
+          />
+          <FloatButton
+            floating={false}
+            icon={Bell}
+            badge={{ count: 3, color: "danger" }}
+            tooltip="3 entregas em rota"
+            onClick={() => toast("3 entregas ativas em RO/AM")}
+          />
+        </FloatButtonGroup>
+        <span className="text-xs font-medium text-zinc-500">
+          FloatButton.Group (trigger=&quot;click&quot;)
+        </span>
+      </div>
+
+      <div className="flex flex-col items-center justify-end min-h-[220px] rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 p-6 gap-3">
+        <FloatButtonGroup floating={false} shape="square">
+          <FloatButton
+            floating={false}
+            shape="square"
+            icon={FilePlus}
+            description="Cotar"
+            tooltip="Nova cotação de móveis"
+            onClick={() => toast("Nova cotação iniciada")}
+          />
+          <FloatButton
+            floating={false}
+            shape="square"
+            type="primary"
+            icon={Share2}
+            description="Enviar"
+            tooltip="Enviar pelo WhatsApp"
+            onClick={() => toast.success("Enviado ao cliente!")}
+          />
+        </FloatButtonGroup>
+        <span className="text-xs font-medium text-zinc-500">
+          Pilha Square c/ Descrição
+        </span>
+      </div>
+
+      <div className="flex flex-col items-center justify-end min-h-[220px] rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 p-6 gap-3">
+        <BackTop
+          floating={false}
+          visibilityHeight={0}
+          showProgress
+          tooltip="Voltar ao topo da página"
+        />
+        <span className="text-xs font-medium text-zinc-500 text-center">
+          BackTop c/ Anel Radial de Rolagem (role a página e clique)
+        </span>
       </div>
     </div>
   );
