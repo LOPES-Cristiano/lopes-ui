@@ -2,7 +2,7 @@
 
 import React, { useState, useId } from "react";
 import { twMerge } from "tailwind-merge";
-import { Eye, EyeOff, Loader2, type LucideIcon } from "lucide-react";
+import { Eye, EyeOff, Loader2, ShieldCheck, type LucideIcon } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -21,7 +21,12 @@ export type LoginFormValues = {
 
 export type LoginFormProps = {
   /** App logo / branding slot */
+  /** App logo / branding slot */
   logo?: React.ReactNode;
+  /** Render a built-in rounded header icon when `logo` is omitted */
+  showHeaderIcon?: boolean;
+  /** Custom LucideIcon for `showHeaderIcon`. Default: ShieldCheck */
+  headerIcon?: LucideIcon;
   title?: string;
   subtitle?: string;
   /** OAuth buttons shown above the divider */
@@ -111,6 +116,8 @@ function InputBase({
 
 export default function LoginForm({
   logo,
+  showHeaderIcon = false,
+  headerIcon: HeaderIcon = ShieldCheck,
   title = "Entrar na conta",
   subtitle = "Use seu e-mail e senha para acessar o sistema.",
   oauthProviders,
@@ -161,7 +168,15 @@ export default function LoginForm({
       {/* Header */}
       {(logo || title) && (
         <div className="text-center space-y-2">
-          {logo && <div className="flex justify-center mb-3">{logo}</div>}
+          {logo ? (
+            <div className="flex justify-center mb-3">{logo}</div>
+          ) : showHeaderIcon ? (
+            <div className="flex justify-center mb-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <HeaderIcon size={24} />
+              </div>
+            </div>
+          ) : null}
           {title && <h1 className="text-xl font-bold text-surface-foreground">{title}</h1>}
           {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
         </div>
