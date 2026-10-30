@@ -27,9 +27,16 @@ export type BadgeAppearance = "soft" | "solid" | "outline";
 
 export type BadgeSize = "xs" | "sm" | "md" | "lg";
 
+/** Ant Design status indicator preset */
+export type BadgeStatus = "processing" | "success" | "error" | "warning" | "default";
+
 export type BadgeProps = {
   label?: React.ReactNode;
   children?: React.ReactNode;
+  /** Status indicator mode (Ant Design <Badge status="processing" text="..." />) */
+  status?: BadgeStatus;
+  /** Text displayed beside the status indicator dot */
+  text?: React.ReactNode;
   /** Numeric badge value (supports maxCount formatting like 99+) */
   count?: number;
   /** Maximum numeric count before showing "{maxCount}+" (default: 99) */
@@ -148,11 +155,21 @@ const SIZES: Record<BadgeSize, { base: string; text: string; dot: string; icon: 
   lg: { base: "h-7",   text: "text-sm",     dot: "h-2.5 w-2.5", icon: 13, x: 13, px: "px-3 gap-1.5"   },
 };
 
+const STATUS_DOTS: Record<BadgeStatus, { dot: string; ring?: string }> = {
+  processing: { dot: "bg-indigo-500", ring: "bg-indigo-400" },
+  success:    { dot: "bg-emerald-500" },
+  error:      { dot: "bg-red-500" },
+  warning:    { dot: "bg-amber-500" },
+  default:    { dot: "bg-zinc-400" },
+};
+
 // ── Badge ─────────────────────────────────────────────────────────────────────
 
 export default function Badge({
   label,
   children,
+  status,
+  text,
   count,
   maxCount = 99,
   variant = "default",
@@ -168,6 +185,35 @@ export default function Badge({
   style,
   componentId,
 }: BadgeProps) {
+  if (status) {
+    const st = STATUS_DOTS[status] ?? STATUS_DOTS.default;
+    const statusText = text ?? children ?? label;
+    return (
+      <span
+        {...(componentId ? { "data-component-id": componentId } : {})}
+        style={style}
+        className={cn(
+          "inline-flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 select-none",
+          className,
+        )}
+      >
+        <span className="relative inline-flex h-2 w-2 shrink-0">
+          {st.ring && (
+            <span
+              className={cn(
+                "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
+                st.ring,
+              )}
+              aria-hidden="true"
+            />
+          )}
+          <span className={cn("relative inline-flex h-2 w-2 rounded-full", st.dot)} aria-hidden="true" />
+        </span>
+        {statusText !== undefined && statusText !== null && <span>{statusText}</span>}
+      </span>
+    );
+  }
+
   const v = VARIANTS[variant] ?? VARIANTS.default;
   const s = SIZES[size] ?? SIZES.sm;
 
@@ -231,5 +277,94 @@ export default function Badge({
         </>
       )}
     </Comp>
+  );
+}
+
+// ── BadgeRibbon (Ant Design Badge.Ribbon) ─────────────────────────────────────
+
+export type BadgeRibbonProps = {
+  /** Text or node rendered inside the corner ribbon */
+  text: React.ReactNode;
+  /** Corner side where the ribbon overhangs (default: "end") */
+  placement?: "end" | "start";
+  /** Color theme matching BadgeVariant (default: "primary") */
+  variant?: BadgeVariant;
+  /** Wrapped card or container content */
+  children: React.ReactNode;
+  className?: string;
+  ribbonClassName?: string;
+  componentId?: string;
+};
+
+const RIBBON_COLORS: Record<BadgeVariant, { bg: string; fold: string }> = {
+  default:   { bg: "bg-zinc-700 text-white",    fold: "text-zinc-900" },
+  neutral:   { bg: "bg-zinc-700 text-white",    fold: "text-zinc-900" },
+  secondary: { bg: "bg-zinc-700 text-white",    fold: "text-zinc-900" },
+  outline:   { bg: "bg-zinc-800 text-white",    fold: "text-zinc-950" },
+  primary:   { bg: "bg-indigo-600 text-white",  fold: "text-indigo-900" },
+  success:   { bg: "bg-emerald-600 text-white", fold: "text-emerald-900" },
+  warning:   { bg: "bg-amber-500 text-white",   fold: "text-amber-800" },
+  danger:    { bg: "bg-red-600 text-white",     fold: "text-red-900" },
+  info:      { bg: "bg-sky-500 text-white",     fold: "text-sky-800" },
+  violet:    { bg: "bg-violet-600 text-white",  fold: "text-violet-900" },
+  pink:      { bg: "bg-pink-600 text-white",    fold: "text-pink-900" },
+  orange:    { bg: "bg-orange-500 text-white",  fold: "text-orange-800" },
+  teal:      { bg: "bg-teal-600 text-white",    fold: "text-teal-900" },
+};
+
+export function BadgeRibbon({
+  text,
+  placement = "end",
+  variant = "primary",
+  children,
+  className,
+  ribbonClassName,
+  componentId,
+}: BadgeRibbonProps) {
+  const c = RIBBON_COLORS[variant] ?? RIBBON_COLORS.primary;
+  const isStart = placement === "start";
+
+  return (
+    <div
+      {...(componentId ? { "data-component-id": componentId } : {})}
+      className={cn("relative", className)}
+    >
+      {children}
+      <div
+        className={cn(
+          "pointer-events-none absolute top-3 z-10 select-none",
+          isStart ? "-left-2" : "-right-2",
+        )}
+      >
+        <div
+          className={cn(
+            "px-2.5 py-1 text-[11px] font-semibold leading-none tracking-tight shadow-sm",
+            isStart ? "rounded-r-md rounded-tl-sm" : "rounded-l-md rounded-tr-sm",
+            c.bg,
+            ribbonClassName,
+          )}
+        >
+          {text}
+        </div>
+        {/* 3D folded corner triangle */}
+        <svg
+          width="8"
+          height="6"
+          viewBox="0 0 8 6"
+          aria-hidden="true"
+          className={cn(
+            "block",
+            isStart ? "mr-auto" : "ml-auto",
+            c.fold,
+          )}
+        >
+          {isStart ? (
+            <polygon points="0,0 8,0 8,6" fill="currentColor" />
+          ) : (
+            <polygon points="0,0 8,0 0,6" fill="currentColor" />
+          )}
+        </svg>
+      </div>
+    </div>
   );
 }
