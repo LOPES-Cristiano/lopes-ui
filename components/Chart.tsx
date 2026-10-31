@@ -179,7 +179,7 @@ export default function Chart({
   return (
     <div
       className={cn(
-        "flex flex-col min-w-0",
+        "@container flex flex-col min-w-0",
         bordered && "rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 sm:p-5",
         className
       )}
@@ -294,7 +294,7 @@ function BarChartBody({
       {/* Bars container */}
       <div
         className={cn(
-          "relative h-full flex items-end justify-between gap-1 sm:gap-2 pb-6 pt-2",
+          "relative h-full flex items-end justify-between gap-1 sm:gap-2 pt-2",
           showGrid ? "pl-12 sm:pl-16" : "pl-0"
         )}
       >
@@ -316,9 +316,9 @@ function BarChartBody({
                   className={cn(
                     "absolute -top-2 -translate-y-full z-20 pointer-events-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 sm:px-3 py-2 shadow-lg min-w-[120px] sm:min-w-[130px] whitespace-nowrap",
                     isFirst
-                      ? "left-0 translate-x-0 sm:left-1/2 sm:-translate-x-1/2"
+                      ? "left-0 translate-x-0"
                       : isLast
-                        ? "right-0 translate-x-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2"
+                        ? "right-0 translate-x-0"
                         : "left-1/2 -translate-x-1/2"
                   )}
                 >
@@ -348,7 +348,7 @@ function BarChartBody({
               {/* Bars */}
               <div
                 className={cn(
-                  "w-full max-w-[44px] h-full flex items-end justify-center gap-1 px-0.5 rounded-t-md transition-colors",
+                  "w-full max-w-[44px] flex-1 min-h-0 flex items-end justify-center gap-1 px-0.5 rounded-t-md transition-colors",
                   isHovered && "bg-zinc-100/60 dark:bg-zinc-800/40"
                 )}
               >
@@ -388,7 +388,7 @@ function BarChartBody({
               </div>
 
               {/* X-axis label */}
-              <span className="absolute bottom-0 text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-full px-0.5">
+              <span className="h-6 shrink-0 flex items-center justify-center text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-full px-0.5">
                 {item.label}
               </span>
             </div>
@@ -545,9 +545,9 @@ function AreaLineChartBody({
                     className={cn(
                       "absolute top-0 z-20 pointer-events-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 sm:px-3 py-2 shadow-lg min-w-[125px] sm:min-w-[135px] whitespace-nowrap",
                       isFirst
-                        ? "left-0 translate-x-0 sm:left-1/2 sm:-translate-x-1/2"
+                        ? "left-0 translate-x-0"
                         : isLast
-                          ? "right-0 translate-x-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2"
+                          ? "right-0 translate-x-0"
                           : "left-1/2 -translate-x-1/2"
                     )}
                   >
@@ -644,7 +644,7 @@ function DonutChartBody({
   const activeSegment = hoveredIndex !== null ? segments[hoveredIndex] : null;
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-center gap-6 py-2">
+    <div className="flex flex-col @md:flex-row items-center justify-center gap-5 @md:gap-6 py-2">
       <div className="relative flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
           <circle
@@ -692,7 +692,7 @@ function DonutChartBody({
 
       {/* Legend */}
       {showLegend && (
-        <div className="flex flex-col gap-2 w-full max-w-xs">
+        <div className="flex flex-col gap-1.5 w-full min-w-0 @md:flex-1 @md:max-w-sm">
           {segments.map((seg, idx) => (
             <div
               key={seg.label + idx}

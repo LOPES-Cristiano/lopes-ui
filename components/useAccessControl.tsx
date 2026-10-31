@@ -36,7 +36,7 @@ export interface AccessControlProviderProps {
 
 const PERMISSIVE_FALLBACK: AccessControlData = {
   tasks: [],
-  isAdmin: true,
+  isAdmin: false,
   loading: false,
   hasTask: () => true,
   hasAnyTask: () => true,
@@ -72,7 +72,6 @@ export function AccessControlProvider({
   const hasTask = useCallback(
     (taskCode: string): boolean => {
       if (!taskCode) return true;
-      if (isAdmin) return true;
       if (tasks.includes(taskCode)) return true;
       // Full module permission (e.g. "FINANCEIRO") implies read permission ("FINANCEIRO.VIEW"),
       // NEVER the reverse ("FINANCEIRO.VIEW" must NOT grant "FINANCEIRO").
@@ -81,32 +80,29 @@ export function AccessControlProvider({
       }
       return false;
     },
-    [tasks, isAdmin],
+    [tasks],
   );
 
   const hasAnyTask = useCallback(
     (taskCodes: string[]): boolean => {
       if (!taskCodes || taskCodes.length === 0) return true;
-      if (isAdmin) return true;
       return taskCodes.some((code) => hasTask(code));
     },
-    [hasTask, isAdmin],
+    [hasTask],
   );
 
   const hasAllTasks = useCallback(
     (taskCodes: string[]): boolean => {
       if (!taskCodes || taskCodes.length === 0) return true;
-      if (isAdmin) return true;
       return taskCodes.every((code) => hasTask(code));
     },
-    [hasTask, isAdmin],
+    [hasTask],
   );
 
   const canAccess = useCallback(
     (componentIdOrTask: string): boolean => {
       if (!componentIdOrTask) return true;
       if (canAccessFn) return canAccessFn(componentIdOrTask);
-      if (isAdmin) return true;
 
       if (permissionsMap && componentIdOrTask in permissionsMap) {
         const mapped = permissionsMap[componentIdOrTask];
@@ -119,7 +115,7 @@ export function AccessControlProvider({
 
       return defaultAllow;
     },
-    [canAccessFn, isAdmin, permissionsMap, hasAnyTask, hasTask, defaultAllow],
+    [canAccessFn, permissionsMap, hasAnyTask, hasTask, defaultAllow],
   );
 
   const refresh = useCallback(async () => {
