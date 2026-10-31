@@ -38,12 +38,12 @@ export function SidebarNavGroup({
           className={
             effectiveCollapsed
               ? 'my-1.5 mx-auto w-5 border-t border-[var(--sidebar-border)] opacity-30'
-              : 'my-2 mx-2 border-t border-[var(--sidebar-border)] opacity-20'
+              : 'mt-3 mb-2 mx-2 border-t border-[var(--sidebar-border)] opacity-35'
           }
         />
       )}
       {!effectiveCollapsed && group.label ? (
-        <div>
+        <div className="mb-1">
           {canCollapse ? (
             <button
               data-component-id={`erp.sidebar.nav-group-${groupId}`}
@@ -53,12 +53,12 @@ export function SidebarNavGroup({
               onClick={() => toggleGroup(groupId)}
               className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer select-none group/grp text-left focus:outline-none hover:bg-[var(--sidebar-item-hover-background)] transition-all duration-150"
             >
-              <span className="flex items-center gap-2 text-[13.5px] font-normal text-[var(--sidebar-foreground)] group-hover/grp:text-[var(--sidebar-group-hover-foreground)] transition-colors tracking-tight">
+              <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[var(--sidebar-group-foreground)] group-hover/grp:text-[var(--sidebar-group-hover-foreground)] transition-colors">
                 {GroupIcon && (
                   <GroupIcon
-                    size={16}
+                    size={13.5}
                     strokeWidth={2}
-                    className="shrink-0 text-[var(--sidebar-icon-foreground)] opacity-90 group-hover/grp:opacity-100 group-hover/grp:scale-105 transition-transform"
+                    className="shrink-0 text-[var(--sidebar-group-foreground)] opacity-80 group-hover/grp:opacity-100 group-hover/grp:text-[var(--sidebar-group-hover-foreground)] transition-all"
                   />
                 )}
                 {group.label}
@@ -68,20 +68,20 @@ export function SidebarNavGroup({
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--sidebar-foreground)] shadow-sm animate-pulse" />
                 )}
                 <ChevronDown
-                  size={14}
-                  className={`text-[var(--sidebar-icon-foreground)] opacity-70 group-hover/grp:opacity-100 group-hover/grp:text-[var(--sidebar-icon-hover-foreground)] transition-transform duration-200 ${
+                  size={13}
+                  className={`text-[var(--sidebar-group-foreground)] opacity-70 group-hover/grp:opacity-100 group-hover/grp:text-[var(--sidebar-group-hover-foreground)] transition-transform duration-200 ${
                     open ? 'rotate-0' : '-rotate-90'
                   }`}
                 />
               </div>
             </button>
           ) : (
-            <div className="flex items-center px-2.5 py-1.5 text-[13.5px] font-bold text-[var(--sidebar-foreground)] tracking-tight">
+            <div className="flex items-center px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[var(--sidebar-group-foreground)]">
               {GroupIcon && (
                 <GroupIcon
-                  size={16}
+                  size={13.5}
                   strokeWidth={2}
-                  className="shrink-0 mr-2 text-[var(--sidebar-icon-foreground)] opacity-90"
+                  className="shrink-0 mr-2 text-[var(--sidebar-group-foreground)] opacity-80"
                 />
               )}
               {group.label}

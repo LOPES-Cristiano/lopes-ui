@@ -220,14 +220,13 @@ export default function FileDropzone({
 
   const syncItems = useCallback(
     (updater: (prev: FileDropzoneItem[]) => FileDropzoneItem[]) => {
-      setItems((prev) => {
-        const next = updater(prev);
-        onChange?.(
-          next.map((i) => i.file),
-          next
-        );
-        return next;
-      });
+      const next = updater(itemsRef.current);
+      itemsRef.current = next;
+      setItems(next);
+      onChange?.(
+        next.map((i) => i.file),
+        next
+      );
     },
     [onChange]
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { useShell } from '../ShellContext';
 import { useAccessControl } from '../useAccessControl';
@@ -24,6 +24,44 @@ import { SidebarUserMenu } from './SidebarUserMenu';
 import { useSidebarAutoCollapse } from './hooks/useSidebarAutoCollapse';
 import { useSidebarGroups } from './hooks/useSidebarGroups';
 import { useSidebarPins } from './hooks/useSidebarPins';
+
+function resolveActiveGroups(
+  groups: SidebarNavGroupType[],
+  pathname: string | null,
+  currentHash = '',
+): SidebarNavGroupType[] {
+  if (!pathname) return groups;
+
+  const isHrefActive = (href?: string): boolean => {
+    if (!href) return false;
+    const [pathPart, hashPart] = href.split('#');
+    const cleanHref = pathPart?.split('?')[0] ?? '';
+    if (!cleanHref) return false;
+
+    if (hashPart) {
+      if (pathname !== cleanHref) return false;
+      return currentHash === `#${hashPart}`;
+    }
+
+    if (cleanHref === '/') return pathname === '/' && !currentHash;
+    return pathname === cleanHref || pathname.startsWith(`${cleanHref}/`);
+  };
+
+  const mapItem = (item: SidebarNavItemType): SidebarNavItemType => {
+    const children = item.children?.map(mapItem);
+    const active = item.active !== undefined ? item.active : isHrefActive(item.href);
+    return {
+      ...item,
+      active,
+      ...(children ? { children } : {}),
+    };
+  };
+
+  return groups.map((group) => ({
+    ...group,
+    items: group.items.map(mapItem),
+  }));
+}
 
 function filterGroupsBySearch(groups: SidebarNavGroupType[], query: string): SidebarNavGroupType[] {
   const q = query.toLowerCase().trim();
@@ -111,14 +149,30 @@ export function Sidebar({
   showItemIcons = true,
 }: SidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
 
   const accessControl = useAccessControl();
   const effectiveCanAccess = canAccess ?? accessControl.canAccess;
 
+  const [currentHash, setCurrentHash] = useState('');
+
+  useEffect(() => {
+    if (isolated || typeof window === 'undefined') return;
+    const updateHash = () => setCurrentHash(window.location.hash);
+    updateHash();
+    window.addEventListener('hashchange', updateHash);
+    return () => window.removeEventListener('hashchange', updateHash);
+  }, [isolated, pathname]);
+
   const visibleGroups = useMemo(
-    () => filterNavGroups(groups, effectiveCanAccess),
-    [groups, effectiveCanAccess],
+    () =>
+      resolveActiveGroups(
+        filterNavGroups(groups, effectiveCanAccess),
+        isolated ? null : pathname,
+        isolated ? '' : currentHash,
+      ),
+    [groups, effectiveCanAccess, isolated, pathname, currentHash],
   );
   const filteredGroups = useMemo(
     () => filterGroupsBySearch(visibleGroups, searchQuery),
@@ -215,6 +269,7 @@ export function Sidebar({
               if (targetEl) {
                 targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 window.history.pushState(window.history.state, '', href);
+                setCurrentHash(url.hash);
               } else {
                 void router.push(href);
               }

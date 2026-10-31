@@ -82,15 +82,17 @@ export function FormModal({
   hideNavigationButtons = false,
   headerActions,
   footerExtra,
-  componentIdPrefix = 'erp.form-modal',
+  componentIdPrefix,
   size = 'xlVertical',
   children,
 }: FormModalProps) {
   const { canAccess } = useAccessControl();
+  const domIdPrefix = componentIdPrefix || 'erp.form-modal';
 
-  const accessibleTabs = (tabs ?? []).filter((t) =>
-    canAccess(t.componentId || `${componentIdPrefix}.tab.${t.id}`)
-  );
+  const accessibleTabs = (tabs ?? []).filter((t) => {
+    const checkId = t.componentId || (componentIdPrefix ? `${componentIdPrefix}.tab.${t.id}` : undefined);
+    return !checkId || canAccess(checkId);
+  });
   const hasTabs = accessibleTabs.length > 0;
   const currentIndex =
     propTabIndex !== undefined
@@ -163,7 +165,8 @@ export function FormModal({
             <div className="flex items-center gap-2">
               {hasTabs && onBack && (
                 <Button
-                  componentId={`${componentIdPrefix}.btn.passo-anterior`}
+                  componentId={componentIdPrefix ? `${componentIdPrefix}.btn.passo-anterior` : undefined}
+                  data-component-id={`${domIdPrefix}.btn.passo-anterior`}
                   type="button"
                   variant="secondary"
                   disabled={isFirstTab || loading || saving}
@@ -182,7 +185,8 @@ export function FormModal({
             <div className="flex items-center gap-2">
               {hasTabs && !isLastTab && onNext && (
                 <Button
-                  componentId={`${componentIdPrefix}.btn.avancar`}
+                  componentId={componentIdPrefix ? `${componentIdPrefix}.btn.avancar` : undefined}
+                  data-component-id={`${domIdPrefix}.btn.avancar`}
                   type="button"
                   variant="primary"
                   disabled={loading || saving}
@@ -196,7 +200,8 @@ export function FormModal({
 
               {onSave && (
                 <Button
-                  componentId={`${componentIdPrefix}.btn.salvar`}
+                  componentId={componentIdPrefix ? `${componentIdPrefix}.btn.salvar` : undefined}
+                  data-component-id={`${domIdPrefix}.btn.salvar`}
                   type="button"
                   loading={saving}
                   disabled={loading}
@@ -239,7 +244,7 @@ export function FormModal({
         <div className="flex items-center gap-1.5 shrink-0">
           {headerActions}
           <button
-            data-component-id={`${componentIdPrefix}.btn.fechar`}
+            data-component-id={`${domIdPrefix}.btn.fechar`}
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer shrink-0"
             title="Fechar"
@@ -272,7 +277,7 @@ export function FormModal({
       >
         {/* Anti-autofill dummy inputs */}
         <input
-          data-component-id={`${componentIdPrefix}.fake-username`}
+          data-component-id={`${domIdPrefix}.fake-username`}
           type="text"
           name="fake_username_ignore"
           tabIndex={-1}
@@ -281,7 +286,7 @@ export function FormModal({
           autoComplete="off"
         />
         <input
-          data-component-id={`${componentIdPrefix}.fake-password`}
+          data-component-id={`${domIdPrefix}.fake-password`}
           type="password"
           name="fake_password_ignore"
           tabIndex={-1}
@@ -314,7 +319,7 @@ export function FormModal({
                   <button
                     key={tab.id}
                     type="button"
-                    data-component-id={tab.componentId || `${componentIdPrefix}.tab.${tab.id}`}
+                    data-component-id={tab.componentId || `${domIdPrefix}.tab.${tab.id}`}
                     onClick={() => onTabChange?.(tab.id)}
                     aria-current={selected ? 'page' : undefined}
                     className={`flex items-center justify-center lg:justify-start gap-2 px-3 py-2.5 rounded-lg text-xs font-medium cursor-pointer transition-colors shrink-0 lg:w-full relative ${

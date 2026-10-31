@@ -271,7 +271,8 @@ export default function ConfirmDialog({
         >
           <AlertDialogCancel asChild>
             <Button
-              componentId="erp.components.confirm-dialog.btn.cancellabel"
+              componentId={componentId ? `${componentId}.cancel` : undefined}
+              data-component-id={componentId ? `${componentId}.cancel` : 'erp.components.confirm-dialog.btn.cancellabel'}
               type="button"
               variant="outline"
               size="md"
@@ -284,7 +285,8 @@ export default function ConfirmDialog({
 
           <AlertDialogAction asChild>
             <Button
-              componentId="erp.components.confirm-dialog.btn.confirmlabel"
+              componentId={componentId ? `${componentId}.confirm` : undefined}
+              data-component-id={componentId ? `${componentId}.confirm` : 'erp.components.confirm-dialog.btn.confirmlabel'}
               type="button"
               variant={cfg.buttonVariant}
               size="md"

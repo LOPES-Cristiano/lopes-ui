@@ -60,7 +60,15 @@ function SidebarBadge({
  * for maior que a largura disponível e o usuário estiver com o mouse sobre o item.
  * Textos curtos não realizam animação.
  */
-function SidebarMarqueeLabel({ label, isHovered }: { label: string; isHovered: boolean }) {
+function SidebarMarqueeLabel({
+  label,
+  isHovered,
+  active,
+}: {
+  label: string;
+  isHovered: boolean;
+  active?: boolean;
+}) {
   const containerRef = useRef<HTMLSpanElement | null>(null);
   const textRef = useRef<HTMLSpanElement | null>(null);
   const [offset, setOffset] = useState(0);
@@ -92,7 +100,10 @@ function SidebarMarqueeLabel({ label, isHovered }: { label: string; isHovered: b
     >
       <span
         ref={textRef}
-        className="app-chrome-text inline-block leading-snug whitespace-nowrap will-change-transform"
+        className={[
+          'inline-block leading-snug whitespace-nowrap will-change-transform',
+          active ? 'font-semibold' : 'app-chrome-text',
+        ].join(' ')}
         style={{
           transform: offset > 0 ? `translateX(-${offset}px)` : 'translateX(0px)',
           transition:
@@ -174,20 +185,20 @@ export function SidebarNavItem({
       : isTopItem
         ? 'w-full px-2.5 py-1.5 gap-2 text-[13.5px] font-bold tracking-tight'
         : depth > 0
-          ? 'w-full pl-8 pr-2.5 py-1 gap-2 text-[12.5px] opacity-85 hover:opacity-100'
+          ? 'w-full px-2.5 py-1.5 gap-2 text-[12.5px] opacity-90 hover:opacity-100'
           : isPinnedMode
             ? 'w-full px-2.5 py-1.5 gap-2 text-[13px]'
             : !showItemIcons
-              ? 'w-full pl-6 pr-2.5 py-1.5 gap-2 text-[13px] text-[var(--sidebar-item-foreground)]'
-              : 'w-full px-2.5 py-1.5 gap-2 text-[13px] text-[var(--sidebar-item-foreground)]',
+              ? 'w-full pl-6 pr-2.5 py-1.5 gap-2 text-[13px]'
+              : 'w-full px-2.5 py-1.5 gap-2 text-[13px]',
     item.disabled ? 'cursor-not-allowed opacity-40 pointer-events-none' : 'cursor-pointer',
     item.active
-      ? isPinnedMode
-        ? 'bg-[var(--sidebar-item-active-background)] text-[var(--sidebar-item-active-foreground)] shadow-xs font-semibold'
-        : 'bg-[var(--sidebar-item-active-background)] text-[var(--sidebar-item-active-foreground)] shadow-xs font-semibold'
-      : isPinnedMode
-        ? 'text-[var(--sidebar-item-foreground)] hover:bg-[var(--sidebar-item-hover-background)] hover:text-[var(--sidebar-item-hover-foreground)]'
-        : 'hover:bg-[var(--sidebar-item-hover-background)] hover:text-[var(--sidebar-item-hover-foreground)]',
+      ? 'bg-[var(--sidebar-item-active-background)] text-[var(--sidebar-item-active-foreground)] shadow-xs font-semibold'
+      : hasActiveChild
+        ? 'text-[var(--sidebar-foreground)] font-medium hover:bg-[var(--sidebar-item-hover-background)]'
+        : isTopItem
+          ? 'text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-item-hover-background)] hover:text-[var(--sidebar-item-hover-foreground)]'
+          : 'text-[var(--sidebar-item-foreground)] hover:bg-[var(--sidebar-item-hover-background)] hover:text-[var(--sidebar-item-hover-foreground)]',
   ]
     .filter(Boolean)
     .join(' ');
@@ -202,10 +213,12 @@ export function SidebarNavItem({
       className={`shrink-0 transition-all duration-150 flex items-center justify-center ${
         item.active
           ? 'text-[var(--sidebar-item-active-foreground)]'
-          : 'text-[var(--sidebar-icon-foreground)] group-hover/nav:text-[var(--sidebar-icon-hover-foreground)]'
+          : hasActiveChild
+            ? 'text-[var(--sidebar-foreground)]'
+            : 'text-[var(--sidebar-icon-foreground)] group-hover/nav:text-[var(--sidebar-icon-hover-foreground)]'
       }`}
     >
-      <Icon size={effectiveCollapsed ? 18 : isTopItem ? 16 : 15} strokeWidth={1.8} />
+      <Icon size={effectiveCollapsed ? 18 : isTopItem ? 16 : 15} strokeWidth={item.active || hasActiveChild ? 2.1 : 1.8} />
     </span>
   ) : effectiveCollapsed && !showItemIcons ? (
     // Fallback no modo colapsado para itens fixados/isolados
@@ -240,7 +253,7 @@ export function SidebarNavItem({
       ].join(' ')}
     >
       <span className="flex flex-col min-w-0 flex-1 overflow-hidden">
-        <SidebarMarqueeLabel label={item.label} isHovered={isHovered} />
+        <SidebarMarqueeLabel label={item.label} isHovered={isHovered} active={item.active} />
         {item.description && (
           <span
             className={`app-chrome-muted-text truncate leading-snug mt-0.5 ${
@@ -401,7 +414,7 @@ export function SidebarNavItem({
       >
         {wrappedRow}
       </SidebarTooltip>
-      {/* Sub-items accordion */}
+          {/* Sub-items accordion */}
       {hasChildren && (
         <div
           id={submenuContentId}
@@ -409,7 +422,7 @@ export function SidebarNavItem({
           style={{ gridTemplateRows: subOpen && !effectiveCollapsed ? '1fr' : '0fr' }}
         >
           <div className="overflow-hidden">
-            <div className="pt-0.5 pb-1 space-y-0.5">
+            <div className="relative ml-4 pl-2.5 my-0.5 border-l border-[var(--sidebar-border)] space-y-0.5">
               {item.children!.map((child, ci) => (
                 <SidebarNavItem
                   key={child.id ?? `${child.label}-${ci}`}

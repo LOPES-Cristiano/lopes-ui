@@ -28,7 +28,7 @@ export function CameraCaptureModal({
   idealWidth = 1280,
   idealHeight = 720,
   facingMode = 'user',
-  componentId = 'erp.camera-capture-modal',
+  componentId,
 }: CameraCaptureModalProps) {
   const titleId = useId();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -273,7 +273,8 @@ export function CameraCaptureModal({
         {/* Rodapé com Botões Padrão do Sistema */}
         <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-muted/40 border-t border-border">
           <Button
-            componentId={`${componentId}.cancelar`}
+            componentId={componentId ? `${componentId}.cancelar` : undefined}
+            data-component-id={componentId ? `${componentId}.cancelar` : 'erp.camera-capture-modal.cancelar'}
             type="button"
             variant="secondary"
             size="md"
@@ -283,7 +284,8 @@ export function CameraCaptureModal({
             Cancelar
           </Button>
           <Button
-            componentId={`${componentId}.capturar`}
+            componentId={componentId ? `${componentId}.capturar` : undefined}
+            data-component-id={componentId ? `${componentId}.capturar` : 'erp.camera-capture-modal.capturar'}
             type="button"
             variant="primary"
             size="md"
