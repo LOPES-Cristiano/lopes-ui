@@ -54,11 +54,11 @@ export default function Header({
   }, []);
 
   const headerClass = [
-    "z-40 w-full border-b shadow-[var(--header-shadow)] transition-colors duration-150",
+    "z-40 w-full border-b transition-[background-color,box-shadow,border-color] duration-150",
     sticky ? "sticky top-0" : "relative",
     scrolled
-      ? "bg-header/95 text-header-foreground backdrop-blur-md max-md:backdrop-blur-none border-header-border"
-      : "bg-header text-header-foreground backdrop-blur-sm max-md:backdrop-blur-none border-header-border",
+      ? "bg-header/95 text-header-foreground backdrop-blur-md max-md:backdrop-blur-none border-header-border shadow-[var(--shadow-control)]"
+      : "bg-header text-header-foreground backdrop-blur-sm max-md:backdrop-blur-none border-header-border shadow-[var(--header-shadow)]",
   ].join(" ");
 
   return (
@@ -76,7 +76,7 @@ export default function Header({
                   type="button"
                   aria-label="Abrir menu"
                   onClick={toggleMobile}
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-header-control-border bg-header-control text-header-control-foreground hover:bg-header-control-hover hover:text-header-control-hover-foreground transition-colors cursor-pointer"
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-header-control-border bg-header-control text-header-control-foreground hover:bg-header-control-hover hover:text-header-control-hover-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-header-ring transition-colors cursor-pointer"
                 >
                   {isMobileOpen ? <X size={18} /> : <Menu size={18} />}
                 </button>
@@ -139,7 +139,7 @@ export default function Header({
                 aria-label="Abrir menu"
                 aria-expanded={mobileOpen}
                 onClick={toggleMobile}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-header-control-border bg-header-control text-header-control-foreground transition-colors hover:bg-header-control-hover hover:text-header-control-hover-foreground md:hidden"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-header-control-border bg-header-control text-header-control-foreground transition-colors hover:bg-header-control-hover hover:text-header-control-hover-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-header-ring md:hidden"
               >
                 {mobileOpen ? <X size={18} /> : <Menu size={18} />}
               </button>
@@ -151,7 +151,7 @@ export default function Header({
       {!useDrawer && (nav?.length || search) && (
         <div
           className={[
-            "overflow-hidden border-t border-header-mobile-border bg-header-mobile backdrop-blur-sm transition-[max-height,opacity,transform] duration-300 ease-out md:hidden",
+            "overflow-hidden border-t border-header-mobile-border bg-header-mobile backdrop-blur-sm transition-[max-height,opacity,transform] duration-300 ease-out motion-reduce:transition-none md:hidden",
             mobileOpen ? "max-h-[480px] translate-y-0 opacity-100" : "max-h-0 -translate-y-1 opacity-0 pointer-events-none",
           ].join(" ")}
         >
