@@ -69,58 +69,58 @@ type V = { soft: string; solid: string; outline: string; dot: string };
 
 const VARIANTS: Record<BadgeVariant, V> = {
   default: {
-    soft:    "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-    solid:   "bg-zinc-700 text-white dark:bg-zinc-200 dark:text-zinc-900",
-    outline: "bg-transparent border border-zinc-300 text-zinc-700 dark:border-zinc-700 dark:text-zinc-300",
-    dot:     "bg-zinc-400",
+    soft:    "bg-surface-muted text-surface-foreground border border-border/60",
+    solid:   "bg-primary text-primary-foreground",
+    outline: "bg-transparent border border-border-strong text-surface-foreground",
+    dot:     "bg-muted-foreground",
   },
   neutral: {
-    soft:    "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-    solid:   "bg-zinc-700 text-white dark:bg-zinc-200 dark:text-zinc-900",
-    outline: "bg-transparent border border-zinc-300 text-zinc-700 dark:border-zinc-700 dark:text-zinc-300",
-    dot:     "bg-zinc-400",
+    soft:    "bg-surface-muted text-surface-foreground border border-border/60",
+    solid:   "bg-primary text-primary-foreground",
+    outline: "bg-transparent border border-border-strong text-surface-foreground",
+    dot:     "bg-muted-foreground",
   },
   secondary: {
-    soft:    "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-    solid:   "bg-zinc-700 text-white dark:bg-zinc-200 dark:text-zinc-900",
-    outline: "bg-transparent border border-zinc-300 text-zinc-700 dark:border-zinc-700 dark:text-zinc-300",
-    dot:     "bg-zinc-400",
+    soft:    "bg-secondary text-secondary-foreground",
+    solid:   "bg-primary text-primary-foreground",
+    outline: "bg-transparent border border-border-strong text-secondary-foreground",
+    dot:     "bg-muted-foreground",
   },
   outline: {
-    soft:    "bg-transparent border border-zinc-300 text-zinc-700 dark:border-zinc-700 dark:text-zinc-300",
-    solid:   "bg-transparent border border-zinc-500 text-zinc-900 dark:border-zinc-400 dark:text-zinc-100",
-    outline: "bg-transparent border border-zinc-300 text-zinc-700 dark:border-zinc-700 dark:text-zinc-300",
-    dot:     "bg-zinc-400",
+    soft:    "bg-transparent border border-border-strong text-surface-foreground",
+    solid:   "bg-transparent border border-foreground text-foreground",
+    outline: "bg-transparent border border-border-strong text-surface-foreground",
+    dot:     "bg-muted-foreground",
   },
   primary: {
-    soft:    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300",
-    solid:   "bg-indigo-600 text-white",
-    outline: "bg-transparent border border-indigo-400 text-indigo-700 dark:border-indigo-500/60 dark:text-indigo-300",
-    dot:     "bg-indigo-500",
+    soft:    "bg-brand-soft text-brand-soft-foreground border border-brand-border/60",
+    solid:   "bg-brand text-brand-foreground",
+    outline: "bg-transparent border border-brand-border text-brand-soft-foreground",
+    dot:     "bg-brand",
   },
   success: {
-    soft:    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
-    solid:   "bg-emerald-600 text-white",
-    outline: "bg-transparent border border-emerald-400 text-emerald-700 dark:border-emerald-500/60 dark:text-emerald-300",
-    dot:     "bg-emerald-500",
+    soft:    "bg-success-soft text-success-soft-foreground border border-success-border/60",
+    solid:   "bg-success text-success-foreground",
+    outline: "bg-transparent border border-success-border text-success-soft-foreground",
+    dot:     "bg-success",
   },
   warning: {
-    soft:    "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300",
-    solid:   "bg-amber-500 text-white",
-    outline: "bg-transparent border border-amber-400 text-amber-700 dark:border-amber-500/60 dark:text-amber-300",
-    dot:     "bg-amber-400",
+    soft:    "bg-warning-soft text-warning-soft-foreground border border-warning-border/60",
+    solid:   "bg-warning text-warning-foreground",
+    outline: "bg-transparent border border-warning-border text-warning-soft-foreground",
+    dot:     "bg-warning",
   },
   danger: {
-    soft:    "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
-    solid:   "bg-red-600 text-white",
-    outline: "bg-transparent border border-red-400 text-red-700 dark:border-red-500/60 dark:text-red-300",
-    dot:     "bg-red-500",
+    soft:    "bg-danger-soft text-danger-soft-foreground border border-danger-border/60",
+    solid:   "bg-destructive text-destructive-foreground",
+    outline: "bg-transparent border border-danger-border text-danger-soft-foreground",
+    dot:     "bg-danger",
   },
   info: {
-    soft:    "bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300",
-    solid:   "bg-sky-500 text-white",
-    outline: "bg-transparent border border-sky-400 text-sky-700 dark:border-sky-500/60 dark:text-sky-300",
-    dot:     "bg-sky-400",
+    soft:    "bg-info-soft text-info-soft-foreground border border-info-border/60",
+    solid:   "bg-info text-info-foreground",
+    outline: "bg-transparent border border-info-border text-info-soft-foreground",
+    dot:     "bg-info",
   },
   violet: {
     soft:    "bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300",
@@ -156,11 +156,11 @@ const SIZES: Record<BadgeSize, { base: string; text: string; dot: string; icon: 
 };
 
 const STATUS_DOTS: Record<BadgeStatus, { dot: string; ring?: string }> = {
-  processing: { dot: "bg-indigo-500", ring: "bg-indigo-400" },
-  success:    { dot: "bg-emerald-500" },
-  error:      { dot: "bg-red-500" },
-  warning:    { dot: "bg-amber-500" },
-  default:    { dot: "bg-zinc-400" },
+  processing: { dot: "bg-brand", ring: "bg-brand/70" },
+  success:    { dot: "bg-success" },
+  error:      { dot: "bg-danger" },
+  warning:    { dot: "bg-warning" },
+  default:    { dot: "bg-muted-foreground/70" },
 };
 
 // ── Badge ─────────────────────────────────────────────────────────────────────
@@ -193,7 +193,7 @@ export default function Badge({
         {...(componentId ? { "data-component-id": componentId } : {})}
         style={style}
         className={cn(
-          "inline-flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 select-none",
+          "inline-flex items-center gap-2 text-xs text-surface-foreground select-none",
           className,
         )}
       >
@@ -201,7 +201,7 @@ export default function Badge({
           {st.ring && (
             <span
               className={cn(
-                "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
+                "absolute inline-flex h-full w-full animate-ping motion-reduce:animate-none rounded-full opacity-75",
                 st.ring,
               )}
               aria-hidden="true"
@@ -209,7 +209,7 @@ export default function Badge({
           )}
           <span className={cn("relative inline-flex h-2 w-2 rounded-full", st.dot)} aria-hidden="true" />
         </span>
-        {statusText !== undefined && statusText !== null && <span>{statusText}</span>}
+        {statusText !== undefined && statusText !== null && <span className="lopes-trim-cap">{statusText}</span>}
       </span>
     );
   }
@@ -250,6 +250,7 @@ export default function Badge({
       style={style}
       className={cn(
         "inline-flex items-center font-semibold leading-none select-none whitespace-nowrap transition-colors",
+        typeof count === "number" && "tabular-nums",
         s.base, s.px, s.text, colorCls, shapeCls,
         className,
       )}
@@ -262,14 +263,16 @@ export default function Badge({
             <span className={cn("shrink-0 rounded-full", s.dot, v.dot)} aria-hidden="true" />
           )}
           {renderIcon()}
-          {content}
+          {content !== undefined && content !== null && (
+            <span className="lopes-trim-cap">{content}</span>
+          )}
           {onRemove && (
             <button
               data-component-id="erp.badge.remove"
               type="button"
               aria-label="Remover"
               onClick={(e) => { e.stopPropagation(); onRemove(); }}
-              className="shrink-0 rounded-full opacity-60 hover:opacity-100 transition-opacity ml-0.5 -mr-0.5"
+              className="shrink-0 inline-flex items-center justify-center rounded-full p-0.5 opacity-65 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-opacity ml-0.5 -mr-0.5 cursor-pointer"
             >
               <X size={s.x} strokeWidth={2.5} />
             </button>
@@ -297,19 +300,19 @@ export type BadgeRibbonProps = {
 };
 
 const RIBBON_COLORS: Record<BadgeVariant, { bg: string; fold: string }> = {
-  default:   { bg: "bg-zinc-700 text-white",    fold: "text-zinc-900" },
-  neutral:   { bg: "bg-zinc-700 text-white",    fold: "text-zinc-900" },
-  secondary: { bg: "bg-zinc-700 text-white",    fold: "text-zinc-900" },
-  outline:   { bg: "bg-zinc-800 text-white",    fold: "text-zinc-950" },
-  primary:   { bg: "bg-indigo-600 text-white",  fold: "text-indigo-900" },
-  success:   { bg: "bg-emerald-600 text-white", fold: "text-emerald-900" },
-  warning:   { bg: "bg-amber-500 text-white",   fold: "text-amber-800" },
-  danger:    { bg: "bg-red-600 text-white",     fold: "text-red-900" },
-  info:      { bg: "bg-sky-500 text-white",     fold: "text-sky-800" },
-  violet:    { bg: "bg-violet-600 text-white",  fold: "text-violet-900" },
-  pink:      { bg: "bg-pink-600 text-white",    fold: "text-pink-900" },
-  orange:    { bg: "bg-orange-500 text-white",  fold: "text-orange-800" },
-  teal:      { bg: "bg-teal-600 text-white",    fold: "text-teal-900" },
+  default:   { bg: "bg-primary text-primary-foreground",       fold: "text-zinc-900" },
+  neutral:   { bg: "bg-primary text-primary-foreground",       fold: "text-zinc-900" },
+  secondary: { bg: "bg-secondary text-secondary-foreground",   fold: "text-zinc-500" },
+  outline:   { bg: "bg-zinc-800 text-white",                   fold: "text-zinc-950" },
+  primary:   { bg: "bg-brand text-brand-foreground",           fold: "text-indigo-900" },
+  success:   { bg: "bg-success text-success-foreground",       fold: "text-emerald-900" },
+  warning:   { bg: "bg-warning text-warning-foreground",       fold: "text-amber-900" },
+  danger:    { bg: "bg-destructive text-destructive-foreground", fold: "text-red-900" },
+  info:      { bg: "bg-info text-info-foreground",             fold: "text-sky-900" },
+  violet:    { bg: "bg-violet-600 text-white",                 fold: "text-violet-900" },
+  pink:      { bg: "bg-pink-600 text-white",                   fold: "text-pink-900" },
+  orange:    { bg: "bg-orange-500 text-white",                 fold: "text-orange-800" },
+  teal:      { bg: "bg-teal-600 text-white",                   fold: "text-teal-900" },
 };
 
 export function BadgeRibbon({
