@@ -104,12 +104,12 @@ export default function Checkbox({
       disabled={effectiveDisabled}
       onClick={handleClick}
       className={twMerge(
-        'inline-flex items-center justify-center rounded-md border transition-all duration-150 cursor-pointer shrink-0 select-none',
-        'focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-1',
+        'inline-flex items-center justify-center rounded-md border transition-[background-color,border-color,color,box-shadow,transform] duration-150 cursor-pointer shrink-0 select-none active:scale-95 motion-reduce:transform-none',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         dimensions,
         selected
-          ? 'border-primary bg-primary text-primary-foreground shadow-xs shadow-primary/20'
-          : 'border-zinc-300 bg-white text-transparent hover:border-primary/60 dark:border-zinc-600 dark:bg-zinc-900',
+          ? 'border-primary bg-primary text-primary-foreground shadow-[var(--shadow-control)]'
+          : 'border-input-border bg-input text-transparent hover:border-border-strong',
         effectiveDisabled && 'cursor-not-allowed opacity-40 pointer-events-none',
         !labelText && className
       )}
@@ -136,7 +136,7 @@ export default function Checkbox({
   return (
     <label
       className={twMerge(
-        'inline-flex items-start gap-2.5 cursor-pointer select-none text-xs font-medium text-foreground',
+        'inline-flex min-h-6 items-start gap-2.5 py-0.5 cursor-pointer select-none text-xs font-medium text-foreground',
         effectiveDisabled && 'opacity-50 cursor-not-allowed pointer-events-none',
         className
       )}
