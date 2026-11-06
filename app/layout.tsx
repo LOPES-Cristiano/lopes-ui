@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/Toast";
 import SiteHeader from "@/app/_components/SiteHeader";
@@ -10,6 +10,10 @@ import { cookies } from "next/headers";
 export const metadata: Metadata = {
   title: "Lopes UI",
   description: "Biblioteca corporativa de componentes React, Next.js e Tailwind CSS v4",
+};
+
+export const viewport: Viewport = {
+  colorScheme: "light dark",
 };
 
 export default async function RootLayout({
