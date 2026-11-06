@@ -146,11 +146,11 @@ const CATEGORIES = [
 
 export default function Home() {
   return (
-    <main className="flex-1 min-w-0 overflow-x-hidden bg-zinc-50 dark:bg-zinc-950">
+    <main className="flex-1 min-w-0 overflow-x-hidden bg-background">
       {/* Hero */}
       <section
         id="overview"
-        className="relative overflow-hidden border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 px-4 sm:px-10 py-14 sm:py-20"
+        className="relative overflow-hidden border-b border-border bg-card px-4 sm:px-10 py-14 sm:py-20"
       >
         <div className="max-w-4xl">
           <div className="flex flex-wrap items-center gap-2 mb-5">
@@ -160,33 +160,33 @@ export default function Home() {
             <Badge label="RBAC Nativo" variant="info" size="sm" />
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.12] mb-4">
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-foreground leading-[1.12] text-balance mb-4">
             Design System Corporativo{" "}
-            <span className="text-indigo-600 dark:text-indigo-400">pronto para produção</span>
+            <span className="text-brand">pronto para produção</span>
           </h1>
 
-          <p className="text-base sm:text-lg text-zinc-500 dark:text-zinc-400 leading-relaxed mb-8 max-w-2xl">
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed text-pretty mb-8 max-w-2xl">
             Biblioteca React 19 + Next.js com Tailwind CSS v4. Acessível, tipada, com controle de acesso RBAC integrado em todos os componentes, gráficos interativos, planilhas analíticas e páginas exemplo completas.
           </p>
 
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/templates"
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-xs"
+              className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-brand text-brand-foreground px-5 py-2.5 text-sm font-semibold hover:bg-brand-hover transition-colors shadow-[var(--shadow-control)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
             >
               <Sparkles size={16} />
               Ver Páginas Exemplo
             </Link>
             <Link
               href="/ui-builder"
-              className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2.5 text-sm font-semibold hover:bg-zinc-700 dark:hover:bg-white transition-colors"
+              className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-primary text-primary-foreground px-4 py-2.5 text-sm font-semibold hover:bg-primary-hover transition-colors shadow-[var(--shadow-control)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
             >
               <Wrench size={15} />
               Abrir UI Builder
             </Link>
             <Link
               href="/showcase/display"
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 px-4 py-2.5 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              className="inline-flex items-center gap-2 rounded-[var(--radius-control)] border border-border bg-card text-foreground px-4 py-2.5 text-sm font-medium hover:bg-surface-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
             >
               Explorar Componentes
             </Link>
@@ -199,10 +199,10 @@ export default function Home() {
         {/* Live Bento Highlights */}
         <section>
           <div className="mb-6">
-            <span className="inline-block text-xs font-semibold uppercase tracking-widest text-indigo-500 mb-1.5">
+            <span className="inline-block text-xs font-semibold uppercase tracking-widest text-brand mb-1.5">
               Destaques da Versão
             </span>
-            <h2 className="text-2xl font-black text-zinc-900 dark:text-zinc-50">
+            <h2 className="text-2xl font-black text-foreground text-balance">
               Tudo o que aplicações modernas precisam
             </h2>
           </div>
@@ -290,7 +290,7 @@ export default function Home() {
                 ].map((name) => (
                   <span
                     key={name}
-                    className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/60 px-3 py-1 text-xs font-mono font-medium text-zinc-700 dark:text-zinc-300"
+                    className="rounded-[var(--radius-control)] border border-border bg-muted/60 px-3 py-1 text-xs font-mono font-medium text-foreground/85"
                   >
                     {`<${name} />`}
                   </span>
@@ -300,25 +300,25 @@ export default function Home() {
           </BentoGrid>
         </section>
 
-        <hr className="border-zinc-200 dark:border-zinc-800" />
+        <hr className="border-border" />
 
         {/* Example Templates Section */}
         <section id="templates">
           <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
             <div>
-              <span className="inline-block text-xs font-semibold uppercase tracking-widest text-indigo-500 mb-1.5">
+              <span className="inline-block text-xs font-semibold uppercase tracking-widest text-brand mb-1.5">
                 Páginas Exemplo
               </span>
-              <h2 className="text-2xl font-black text-zinc-900 dark:text-zinc-50">
+              <h2 className="text-2xl font-black text-foreground text-balance">
                 Templates Completos & UI Builder
               </h2>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+              <p className="text-sm text-muted-foreground mt-1 text-pretty">
                 Aplicações reais interativas com código TSX pronto para copiar.
               </p>
             </div>
             <Link
               href="/templates"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand hover:underline"
             >
               <span>Abrir central de templates</span>
               <ArrowRight size={14} />
@@ -332,27 +332,27 @@ export default function Home() {
                 <Link
                   key={tpl.href}
                   href={tpl.href}
-                  className="group flex flex-col justify-between gap-3 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-sm transition-all"
+                  className="group flex flex-col justify-between gap-3 p-5 rounded-[var(--radius-card)] border border-border bg-card shadow-[var(--shadow-card)] hover:border-brand-border hover:shadow-[var(--shadow-floating)] transition-[border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                      <div className="w-9 h-9 rounded-xl bg-brand-soft flex items-center justify-center text-brand group-hover:bg-brand group-hover:text-brand-foreground transition-colors">
                         <Icon size={18} />
                       </div>
                       <Badge label={tpl.badge} variant="default" size="xs" />
                     </div>
                     <div>
-                      <p className="font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      <p className="font-bold text-foreground group-hover:text-brand transition-colors">
                         {tpl.title}
                       </p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed text-pretty">
                         {tpl.description}
                       </p>
                     </div>
                   </div>
-                  <div className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 pt-1">
+                  <div className="inline-flex items-center gap-1 text-xs font-semibold text-brand pt-1">
                     <span>Explorar página</span>
-                    <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+                    <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0" />
                   </div>
                 </Link>
               );
@@ -360,18 +360,18 @@ export default function Home() {
           </div>
         </section>
 
-        <hr className="border-zinc-200 dark:border-zinc-800" />
+        <hr className="border-border" />
 
         {/* Category grid */}
         <section>
           <div className="mb-6">
-            <span className="inline-block text-xs font-semibold uppercase tracking-widest text-indigo-500 mb-1.5">
+            <span className="inline-block text-xs font-semibold uppercase tracking-widest text-brand mb-1.5">
               Documentação Interativa
             </span>
-            <h2 className="text-2xl font-black text-zinc-900 dark:text-zinc-50 mb-1">
+            <h2 className="text-2xl font-black text-foreground text-balance mb-1">
               Categorias de Componentes
             </h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-sm text-muted-foreground text-pretty">
               Navegue pelos componentes por categoria com exemplos ao vivo e tabelas de propriedades.
             </p>
           </div>
@@ -382,21 +382,21 @@ export default function Home() {
                 <Link
                   key={cat.href}
                   href={cat.href}
-                  className="group flex flex-col gap-3 p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-sm transition-all"
+                  className="group flex flex-col gap-3 p-5 rounded-[var(--radius-card)] border border-border bg-card shadow-[var(--shadow-card)] hover:border-brand-border hover:shadow-[var(--shadow-floating)] transition-[border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900 transition-colors">
+                    <div className="w-9 h-9 rounded-lg bg-brand-soft flex items-center justify-center text-brand group-hover:bg-brand group-hover:text-brand-foreground transition-colors">
                       <Icon size={18} />
                     </div>
-                    <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500">
+                    <span className="text-xs font-medium tabular-nums text-muted-foreground">
                       {cat.count} componentes
                     </span>
                   </div>
                   <div>
-                    <p className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    <p className="font-semibold text-foreground group-hover:text-brand transition-colors">
                       {cat.title}
                     </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed text-pretty">
                       {cat.description}
                     </p>
                   </div>
@@ -406,20 +406,20 @@ export default function Home() {
           </div>
         </section>
 
-        <hr className="border-zinc-200 dark:border-zinc-800" />
+        <hr className="border-border" />
 
         {/* Install */}
         <section id="install">
           <div className="mb-8">
-            <span className="inline-block text-xs font-semibold uppercase tracking-widest text-indigo-500 mb-2">
+            <span className="inline-block text-xs font-semibold uppercase tracking-widest text-brand mb-2">
               Instalação
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-zinc-50 mb-3">
+            <h2 className="text-2xl sm:text-3xl font-black text-foreground text-balance mb-3">
               Comece em 3 passos
             </h2>
-            <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-2xl">
+            <p className="text-muted-foreground leading-relaxed text-pretty max-w-2xl">
               Instale direto do GitHub, rode o{" "}
-              <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded font-mono">
+              <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono text-foreground">
                 init
               </code>{" "}
               para configurar dependências e o Tailwind automaticamente, e comece a importar.
@@ -428,11 +428,11 @@ export default function Home() {
 
           <div className="space-y-6">
             <div className="flex gap-4">
-              <div className="flex-none w-7 h-7 mt-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold">
+              <div className="flex-none w-7 h-7 mt-0.5 rounded-full bg-brand-soft text-brand flex items-center justify-center text-xs font-bold tabular-nums">
                 1
               </div>
               <div className="flex-1 min-w-0 space-y-2">
-                <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                <p className="text-sm font-semibold text-foreground">
                   Instale a biblioteca
                 </p>
                 <CodeBlock filename="terminal" language="bash" code={INSTALL_CODE} />
@@ -440,18 +440,18 @@ export default function Home() {
             </div>
 
             <div className="flex gap-4">
-              <div className="flex-none w-7 h-7 mt-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold">
+              <div className="flex-none w-7 h-7 mt-0.5 rounded-full bg-brand-soft text-brand flex items-center justify-center text-xs font-bold tabular-nums">
                 2
               </div>
               <div className="flex-1 min-w-0 space-y-2">
-                <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                <p className="text-sm font-semibold text-foreground">
                   Configure o projeto com a CLI
                 </p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs text-muted-foreground">
                   Instala as dependências peer que estiverem faltando e adiciona o{" "}
-                  <code className="bg-zinc-100 dark:bg-zinc-800 px-1 rounded font-mono">@source</code>{" "}
+                  <code className="bg-muted px-1 rounded font-mono text-foreground">@source</code>{" "}
                   no seu{" "}
-                  <code className="bg-zinc-100 dark:bg-zinc-800 px-1 rounded font-mono">
+                  <code className="bg-muted px-1 rounded font-mono text-foreground">
                     globals.css
                   </code>{" "}
                   automaticamente.
@@ -461,11 +461,11 @@ export default function Home() {
             </div>
 
             <div className="flex gap-4">
-              <div className="flex-none w-7 h-7 mt-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold">
+              <div className="flex-none w-7 h-7 mt-0.5 rounded-full bg-brand-soft text-brand flex items-center justify-center text-xs font-bold tabular-nums">
                 3
               </div>
               <div className="flex-1 min-w-0 space-y-2">
-                <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                <p className="text-sm font-semibold text-foreground">
                   Importe e use
                 </p>
                 <CodeBlock filename="MyPage.tsx" language="tsx" code={USAGE_CODE} />
