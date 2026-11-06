@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import React, { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/utils/cn";
@@ -103,6 +103,8 @@ export default function Drawer({
   contentClassName,
   componentId,
 }: DrawerProps) {
+  const titleId = useId();
+  const descriptionId = useId();
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const panelRef = useRef<HTMLDivElement>(null);
   const [dragOffsetY, setDragOffsetY] = useState(0);
@@ -278,22 +280,22 @@ export default function Drawer({
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={title ? "drawer-title" : undefined}
+        aria-labelledby={title ? titleId : undefined}
+        aria-describedby={description ? descriptionId : undefined}
         style={{
           ...(customWidth && isHorizontal ? { width: `${customWidth}px` } : {}),
           ...(dragOffsetY !== 0 ? { transform: `translate3d(0, ${dragOffsetY}px, 0)` } : {}),
         }}
         className={cn(
           "fixed z-[6010] flex flex-col overflow-hidden border border-border bg-card outline-none will-change-transform",
-          "shadow-2xl",
-          "dark:shadow-black/60",
-          side === "bottom" && "rounded-t-2xl",
-          side === "top" && "rounded-b-2xl",
+          "shadow-[var(--shadow-overlay)]",
+          side === "bottom" && "rounded-t-[var(--radius-overlay)]",
+          side === "top" && "rounded-b-[var(--radius-overlay)]",
           isShown ? "" : "pointer-events-none opacity-0",
           isHorizontal ? "max-h-screen" : "max-w-screen",
           panelPosition[side],
           !customWidth && sizeClass,
-          dragOffsetY === 0 && "transition-[transform,opacity,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          dragOffsetY === 0 && "transition-[transform,opacity,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
           isShown ? "translate-x-0 translate-y-0 opacity-100 pointer-events-auto" : translateClosed[side],
           className,
         )}
@@ -303,7 +305,7 @@ export default function Drawer({
           <div
             onPointerDown={handleResizePointerDown}
             className={cn(
-              "absolute inset-y-0 z-20 w-1.5 cursor-col-resize hover:bg-indigo-500/40 active:bg-indigo-500 transition-colors",
+              "absolute inset-y-0 z-20 w-1.5 cursor-col-resize hover:bg-brand/40 active:bg-brand transition-colors",
               side === "right" ? "left-0" : "right-0"
             )}
             title="Arraste para redimensionar"
@@ -318,7 +320,7 @@ export default function Drawer({
             onPointerUp={handleHandlePointerUp}
             className="flex w-full shrink-0 cursor-grab active:cursor-grabbing items-center justify-center pt-3 pb-1 bg-[var(--surface)] touch-none"
           >
-            <div className="h-1.5 w-12 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+            <div className="h-1.5 w-12 rounded-full bg-border" />
           </div>
         )}
 
@@ -329,14 +331,17 @@ export default function Drawer({
               <div className="min-w-0">
                 {title && (
                   <h2
-                    id="drawer-title"
-                    className="truncate text-base font-semibold text-[var(--surface-foreground)]"
+                    id={titleId}
+                    className="truncate text-base font-semibold text-balance text-[var(--surface-foreground)]"
                   >
                     {title}
                   </h2>
                 )}
                 {description && (
-                  <div className="mt-1 text-sm leading-relaxed text-[var(--surface-muted-foreground)]">
+                  <div
+                    id={descriptionId}
+                    className="mt-1 text-sm leading-relaxed text-pretty text-[var(--surface-muted-foreground)]"
+                  >
                     {description}
                   </div>
                 )}
@@ -346,7 +351,7 @@ export default function Drawer({
                 type="button"
                 onClick={onClose}
                 aria-label="Fechar"
-                className="shrink-0 cursor-pointer rounded-xl p-1.5 text-muted-foreground opacity-70 transition-all hover:opacity-100 hover:bg-muted focus:outline-none active:scale-95 border-none"
+                className="shrink-0 cursor-pointer rounded-[var(--radius-control)] p-1.5 text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 active:scale-95 border-none"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -355,7 +360,7 @@ export default function Drawer({
         )}
 
         {/* Content */}
-        <div className={cn("min-w-0 flex-1 overflow-y-auto bg-[var(--surface)] px-4 sm:px-5 py-4 sm:py-5", contentClassName)}>
+        <div className={cn("min-w-0 flex-1 overflow-y-auto overscroll-contain bg-[var(--surface)] px-4 sm:px-5 py-4 sm:py-5", contentClassName)}>
           {children}
         </div>
 
@@ -374,7 +379,7 @@ export default function Drawer({
             onPointerUp={handleHandlePointerUp}
             className="flex w-full shrink-0 cursor-grab active:cursor-grabbing items-center justify-center pt-1 pb-3 bg-[var(--surface)] touch-none"
           >
-            <div className="h-1.5 w-12 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+            <div className="h-1.5 w-12 rounded-full bg-border" />
           </div>
         )}
       </div>
