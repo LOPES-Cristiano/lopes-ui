@@ -41,8 +41,8 @@ export function DataTableHeader<T = Record<string, unknown>>({
   return (
     <thead
       className={twMerge(
-        'border-b border-zinc-200/80 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 font-semibold',
-        stickyHeader ? 'sticky top-0 z-10 bg-surface' : 'bg-zinc-50/80 dark:bg-zinc-800/40'
+        'border-b border-border text-muted-foreground font-semibold',
+        stickyHeader ? 'sticky top-0 z-10 bg-surface shadow-[0_1px_0_0_var(--border)]' : 'bg-muted/40'
       )}
     >
       <tr>
@@ -74,7 +74,7 @@ export function DataTableHeader<T = Record<string, unknown>>({
               }}
               onChange={onTogglePageSelected}
               className={twMerge(
-                "h-4 w-4 rounded border-border text-primary focus:ring-primary shrink-0 cursor-pointer",
+                "h-4 w-4 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 shrink-0 cursor-pointer",
                 checkboxClassName
               )}
               title="Selecionar todos os registros desta página"
@@ -85,7 +85,7 @@ export function DataTableHeader<T = Record<string, unknown>>({
         {columns.map((col) => {
           const isSorted = sortKey === col.key;
           const isSortable = col.sortable !== false;
-          const alignCls = col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left';
+          const alignCls = col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right tabular-nums' : 'text-left';
           const headerContent = col.header ?? col.label;
 
           return (
@@ -97,13 +97,13 @@ export function DataTableHeader<T = Record<string, unknown>>({
               className={twMerge('font-bold select-none min-w-0', alignCls, headerPaddingCls, col.headerClassName)}
             >
               {isSortable ? (
-                <button data-component-id={`erp.data-table.sort-${col.key}`} type="button" onClick={() => onSort(col.key)} className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer">
+                <button data-component-id={`erp.data-table.sort-${col.key}`} type="button" onClick={() => onSort(col.key)} className="inline-flex items-center gap-1.5 rounded-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer">
                   <span className="uppercase">{headerContent}</span>
                   {isSorted ? (
                     sortDir === 'asc' ? (
-                      <ArrowUp size={13} className="text-primary" />
+                      <ArrowUp size={13} className="text-brand" />
                     ) : (
-                      <ArrowDown size={13} className="text-primary" />
+                      <ArrowDown size={13} className="text-brand" />
                     )
                   ) : (
                     <ArrowUpDown size={12} className="opacity-40 hover:opacity-100" />
