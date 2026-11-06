@@ -117,6 +117,9 @@ export default function TextareaField({
   const adjustHeight = useCallback(() => {
     const el = textareaRef.current;
     if (!el || !autoResize) return;
+    if (typeof CSS !== "undefined" && CSS.supports("field-sizing", "content")) {
+      return;
+    }
     el.style.height = "auto";
     const nextHeight = Math.min(el.scrollHeight, maxAutoHeight);
     el.style.height = `${nextHeight}px`;
@@ -207,10 +210,10 @@ export default function TextareaField({
         className={twMerge(
           "relative",
           isContained && [
-            "rounded-xl border bg-surface px-3 pt-2 pb-1.5 transition-all duration-150",
+            "rounded-[var(--radius-card)] border bg-input px-3 pt-2 pb-1.5 transition-[background-color,border-color,box-shadow] duration-150",
             error
-              ? "border-danger focus-within:ring-2 focus-within:ring-danger/20"
-              : "border-input-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15",
+              ? "border-danger focus-within:ring-3 focus-within:ring-danger/15"
+              : "border-input-border hover:border-border-strong focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/12",
           ]
         )}
       >
@@ -247,29 +250,37 @@ export default function TextareaField({
           maxLength={maxLength}
           required={required}
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
+          aria-describedby={error ? `${id}-error` : (helpText || hint) ? `${id}-help` : undefined}
+          style={
+            autoResize
+              ? {
+                  minBlockSize: `${Math.max(rows, 2) * 1.5 + 1}rem`,
+                  maxBlockSize: `${maxAutoHeight}px`,
+                }
+              : undefined
+          }
           className={twMerge(
-            "w-full font-sans transition-colors duration-150 outline-none",
-            "text-foreground placeholder:text-muted-foreground/70",
+            "w-full font-sans transition-[background-color,border-color,box-shadow] duration-150 outline-none",
+            "text-input-foreground placeholder:text-input-placeholder",
             "disabled:cursor-not-allowed disabled:opacity-60",
-            autoResize && "resize-none overflow-y-auto",
+            autoResize && "[field-sizing:content] h-auto w-full resize-none overflow-y-auto",
             isContained
               ? "bg-transparent text-sm p-0"
               : [
-                  "rounded-lg",
+                  "rounded-[var(--radius-control)]",
                   SIZE[size],
                   hasCornerActions && "pr-16",
                   variant === "default" && [
-                    "border bg-surface",
+                    "border bg-input",
                     error
-                      ? "border-danger focus:border-danger focus:ring-2 focus:ring-danger/20"
-                      : "border-input-border focus:border-primary focus:ring-2 focus:ring-primary/20",
+                      ? "border-danger hover:border-danger focus:border-danger focus:ring-3 focus:ring-danger/15"
+                      : "border-input-border hover:border-border-strong focus:border-ring focus:ring-3 focus:ring-ring/12",
                   ],
                   variant === "filled" && [
-                    "border border-transparent bg-surface-muted",
+                    "border border-transparent bg-surface-muted hover:bg-surface-hover",
                     error
-                      ? "border-danger focus:border-danger focus:ring-2 focus:ring-danger/20 focus:bg-surface"
-                      : "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-surface",
+                      ? "border-danger focus:border-danger focus:ring-3 focus:ring-danger/15 focus:bg-input"
+                      : "focus:border-ring focus:ring-3 focus:ring-ring/12 focus:bg-input",
                   ],
                 ],
             textareaClassName
@@ -291,7 +302,7 @@ export default function TextareaField({
                 }}
                 className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors cursor-pointer"
               >
-                {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+                {copied ? <Check size={13} className="text-success" /> : <Copy size={13} />}
               </button>
             )}
             {expandable && (
@@ -329,7 +340,7 @@ export default function TextareaField({
               key={qi.label}
               type="button"
               onClick={() => handleInsertSnippet(qi.value)}
-              className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-muted/60 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground hover:border-primary/40 hover:bg-surface-hover hover:text-foreground transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-muted/60 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground hover:border-border-strong hover:bg-surface-hover hover:text-foreground transition-colors cursor-pointer"
             >
               <Plus size={10} />
               <span>{qi.label}</span>
@@ -343,18 +354,19 @@ export default function TextareaField({
         typeof document !== "undefined" &&
         createPortal(
           <div
-            className="fixed inset-0 z-[9500] flex items-center justify-center bg-black/55 p-4 backdrop-blur-xs"
+            className="fixed inset-0 z-[9500] flex items-center justify-center bg-black/55 p-4 backdrop-blur-xs animate-in fade-in-0 duration-150 motion-reduce:animate-none"
             onClick={(e) => {
               if (e.target === e.currentTarget) setExpanded(false);
             }}
           >
-            <div className="flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-surface text-foreground shadow-2xl">
+            <div className="flex w-full max-w-2xl flex-col overflow-hidden rounded-[var(--radius-overlay)] border border-border bg-card text-card-foreground shadow-[var(--shadow-overlay)] animate-in zoom-in-95 duration-150 motion-reduce:animate-none">
               <div className="flex items-center justify-between border-b border-border px-4 py-3">
                 <span className="text-sm font-semibold">{label || "Edição expandida"}</span>
                 <button
                   type="button"
                   onClick={() => setExpanded(false)}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-hover hover:text-foreground cursor-pointer"
+                  aria-label="Minimizar editor"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
                 >
                   <Minimize2 size={14} />
                 </button>
@@ -367,14 +379,14 @@ export default function TextareaField({
                 disabled={effectiveDisabled}
                 placeholder={placeholder}
                 onChange={(e) => dispatchNativeValue(e.target.value)}
-                className="w-full resize-y bg-surface p-4 text-sm leading-relaxed text-foreground outline-none"
+                className="w-full resize-y bg-input p-4 text-sm leading-relaxed text-input-foreground outline-none"
               />
               <div className="flex items-center justify-between border-t border-border bg-surface-muted/40 px-4 py-2.5 text-xs text-muted-foreground">
-                <span>{currentText.length} caracteres</span>
+                <span className="tabular-nums">{currentText.length} caracteres</span>
                 <button
                   type="button"
                   onClick={() => setExpanded(false)}
-                  className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 cursor-pointer"
+                  className="rounded-[var(--radius-control)] bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
                 >
                   Concluir
                 </button>
