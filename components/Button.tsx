@@ -39,6 +39,7 @@ export type ButtonProps = {
   full?: boolean;
   variant?:
     | 'solid'
+    | 'brand'
     | 'outline'
     | 'dashed'
     | 'tonal'
@@ -91,38 +92,40 @@ const variantClasses: Record<string, string> = {
   solid: 'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active',
   default: 'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active',
   primary: 'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active',
-  secondary: 'bg-surface-muted text-surface-foreground hover:bg-surface-hover',
-  outline: 'bg-transparent border border-border text-surface-foreground hover:bg-surface-hover',
+  brand: 'bg-brand text-brand-foreground hover:bg-brand-hover active:bg-brand-active',
+  secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary-hover',
+  outline:
+    'bg-surface border border-border text-surface-foreground hover:bg-surface-hover hover:border-border-strong',
   dashed:
-    'bg-transparent border border-dashed border-border text-surface-foreground hover:border-primary hover:text-primary',
+    'bg-transparent border border-dashed border-border-strong text-surface-foreground hover:border-primary hover:text-primary hover:bg-surface-hover/50',
   tonal:
-    'bg-primary/12 text-primary hover:bg-primary/20 border border-transparent',
+    'bg-primary-soft text-primary-soft-foreground hover:bg-secondary-hover border border-transparent',
   filled:
-    'bg-primary/12 text-primary hover:bg-primary/20 border border-transparent',
+    'bg-primary-soft text-primary-soft-foreground hover:bg-secondary-hover border border-transparent',
   ghost: 'bg-transparent hover:bg-surface-hover text-surface-foreground',
-  destructive: 'bg-red-600 text-white hover:bg-red-500',
+  destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive-hover',
   'danger-outline':
-    'bg-transparent border border-red-500 text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-950/40',
+    'bg-transparent border border-danger-border text-danger-soft-foreground hover:bg-danger-soft',
   'danger-dashed':
-    'bg-transparent border border-dashed border-red-400 text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-950/40',
+    'bg-transparent border border-dashed border-danger-border text-danger-soft-foreground hover:bg-danger-soft',
   'danger-ghost':
-    'bg-transparent text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40',
-  success: 'bg-emerald-600 text-white hover:bg-emerald-500',
+    'bg-transparent text-danger-soft-foreground hover:bg-danger-soft',
+  success: 'bg-success text-success-foreground hover:bg-success-hover',
   'success-outline':
-    'bg-transparent border border-emerald-500 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-600 dark:text-emerald-400 dark:hover:bg-emerald-950/40',
-  warning: 'bg-amber-500 text-white hover:bg-amber-400',
+    'bg-transparent border border-success-border text-success-soft-foreground hover:bg-success-soft',
+  warning: 'bg-warning text-warning-foreground hover:bg-warning-hover',
   'warning-outline':
-    'bg-transparent border border-amber-400 text-amber-700 hover:bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-950/40',
-  info: 'bg-sky-500 text-white hover:bg-sky-400',
+    'bg-transparent border border-warning-border text-warning-soft-foreground hover:bg-warning-soft',
+  info: 'bg-info text-info-foreground hover:bg-info-hover',
   'info-outline':
-    'bg-transparent border border-sky-400 text-sky-700 hover:bg-sky-50 dark:border-sky-600 dark:text-sky-400 dark:hover:bg-sky-950/40',
-  link: 'bg-transparent text-primary hover:underline',
+    'bg-transparent border border-info-border text-info-soft-foreground hover:bg-info-soft',
+  link: 'bg-transparent text-primary hover:underline underline-offset-4',
 };
 
 const sizeClasses = {
-  sm: 'px-3 py-1.5 text-sm min-w-[72px] gap-1.5',
-  md: 'px-4 py-2 text-base min-w-[96px] gap-2',
-  lg: 'px-6 py-3 text-lg min-w-[128px] gap-2.5',
+  sm: 'h-8 px-3 text-xs font-medium min-w-[68px] gap-1.5',
+  md: 'h-10 px-4 text-sm font-medium min-w-[88px] gap-2',
+  lg: 'h-12 px-6 text-base font-medium min-w-[112px] gap-2.5',
 };
 
 const squareSizeClasses = {
@@ -132,9 +135,9 @@ const squareSizeClasses = {
 };
 
 const linkSizeClasses = {
-  sm: 'px-1 py-0.5 text-sm min-w-0 gap-1.5',
-  md: 'px-1 py-0.5 text-base min-w-0 gap-2',
-  lg: 'px-1 py-0.5 text-lg min-w-0 gap-2.5',
+  sm: 'px-1 py-0.5 text-xs font-medium min-w-0 gap-1.5',
+  md: 'px-1 py-0.5 text-sm font-medium min-w-0 gap-2',
+  lg: 'px-1 py-0.5 text-base font-medium min-w-0 gap-2.5',
 };
 
 const iconSizeClasses = {
@@ -144,9 +147,9 @@ const iconSizeClasses = {
 };
 
 const loaderSizeClasses = {
-  sm: 'w-4 h-4',
-  md: 'w-5 h-5',
-  lg: 'w-6 h-6',
+  sm: 'w-3.5 h-3.5',
+  md: 'w-4 h-4',
+  lg: 'w-5 h-5',
 };
 
 function mapTooltipPlacement(pos: NonNullable<ButtonProps['tooltipPosition']>): {
@@ -276,13 +279,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       disabled={isDisabled}
       aria-busy={loading || undefined}
       className={cn(
-        'transition-colors duration-150 whitespace-nowrap',
+        'transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out whitespace-nowrap select-none',
         'inline-flex items-center justify-center',
-        !isFlat && 'shadow-sm shadow-zinc-900/10',
-        isCircleOrPill ? 'rounded-full' : 'rounded-md',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        !isFlat && 'shadow-[var(--shadow-control)]',
+        isCircleOrPill ? 'rounded-full' : 'rounded-[var(--radius-control)]',
         wide && !isIconBox && 'min-w-[180px] px-8',
-        'active:not-disabled:translate-y-[2px]',
-        isDisabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer',
+        'active:not-disabled:scale-[0.985] active:not-disabled:translate-y-[0.5px] motion-reduce:transform-none',
+        isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
         isFull && 'w-full',
         variantClasses[variant],
         resolvedSizeClass,
@@ -294,7 +298,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       ) : loading ? (
         <span className="inline-flex items-center justify-center gap-2 flex-1">
           <Loader className={cn('animate-spin shrink-0', loaderSizeClasses[size])} />
-          {loadingText && <span className="leading-none">{loadingText}</span>}
+          {loadingText && <span className="leading-none lopes-trim-cap">{loadingText}</span>}
         </span>
       ) : (
         <>
@@ -303,7 +307,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
               {iconLeft}
             </span>
           )}
-          {children && <span className="leading-none">{children}</span>}
+          {children && <span className="leading-none lopes-trim-cap">{children}</span>}
           {iconRight && (
             <span className={cn('flex shrink-0 items-center justify-center', iconSizeClasses[size])}>
               {iconRight}
