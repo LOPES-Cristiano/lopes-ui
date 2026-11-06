@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { twMerge } from "tailwind-merge";
@@ -59,7 +59,7 @@ export function AlertTitle({
   className?: string;
 }) {
   return (
-    <h5 className={twMerge("font-semibold text-sm leading-snug tracking-tight", className)}>
+    <h5 className={twMerge("font-semibold text-sm leading-snug tracking-tight text-balance", className)}>
       {children}
     </h5>
   );
@@ -73,7 +73,7 @@ export function AlertDescription({
   className?: string;
 }) {
   return (
-    <div className={twMerge("text-sm leading-relaxed mt-0.5 [&_p]:leading-relaxed", className)}>
+    <div className={twMerge("text-sm leading-relaxed mt-0.5 text-pretty [&_p]:leading-relaxed", className)}>
       {children}
     </div>
   );
@@ -89,44 +89,44 @@ type S = {
 
 const STYLES: Record<AlertVariant, S> = {
   info: {
-    bg: "bg-blue-50 dark:bg-blue-950/40", border: "border-blue-200 dark:border-blue-800/60",
-    accentLeft: "border-l-4 border-l-blue-500", accentTop: "border-t-4 border-t-blue-500",
-    title: "text-blue-900 dark:text-blue-200", body: "text-blue-700 dark:text-blue-300", icon: "text-blue-500 dark:text-blue-400", iconBg: "bg-blue-100 dark:bg-blue-900/50",
-    dismiss: "text-blue-400 hover:text-blue-600 hover:bg-blue-100 dark:text-blue-500 dark:hover:text-blue-300 dark:hover:bg-blue-900/40",
-    actionSolid: "bg-blue-600 text-white hover:bg-blue-700",
-    actionGhost: "text-blue-700 hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-blue-900/40",
+    bg: "bg-info-soft", border: "border-info-border",
+    accentLeft: "border-l-4 border-l-info", accentTop: "border-t-4 border-t-info",
+    title: "text-info-soft-foreground", body: "text-info-soft-foreground/90", icon: "text-info", iconBg: "bg-info/15",
+    dismiss: "text-info-soft-foreground/70 hover:text-info-soft-foreground hover:bg-info/15",
+    actionSolid: "bg-info text-info-foreground hover:opacity-90",
+    actionGhost: "text-info-soft-foreground hover:bg-info/15",
   },
   success: {
-    bg: "bg-emerald-50 dark:bg-emerald-950/40", border: "border-emerald-200 dark:border-emerald-800/60",
-    accentLeft: "border-l-4 border-l-emerald-500", accentTop: "border-t-4 border-t-emerald-500",
-    title: "text-emerald-900 dark:text-emerald-200", body: "text-emerald-700 dark:text-emerald-300", icon: "text-emerald-500 dark:text-emerald-400", iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
-    dismiss: "text-emerald-400 hover:text-emerald-600 hover:bg-emerald-100 dark:text-emerald-500 dark:hover:text-emerald-300 dark:hover:bg-emerald-900/40",
-    actionSolid: "bg-emerald-600 text-white hover:bg-emerald-700",
-    actionGhost: "text-emerald-700 hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-900/40",
+    bg: "bg-success-soft", border: "border-success-border",
+    accentLeft: "border-l-4 border-l-success", accentTop: "border-t-4 border-t-success",
+    title: "text-success-soft-foreground", body: "text-success-soft-foreground/90", icon: "text-success", iconBg: "bg-success/15",
+    dismiss: "text-success-soft-foreground/70 hover:text-success-soft-foreground hover:bg-success/15",
+    actionSolid: "bg-success text-success-foreground hover:opacity-90",
+    actionGhost: "text-success-soft-foreground hover:bg-success/15",
   },
   warning: {
-    bg: "bg-amber-50 dark:bg-amber-950/40", border: "border-amber-200 dark:border-amber-800/60",
-    accentLeft: "border-l-4 border-l-amber-500", accentTop: "border-t-4 border-t-amber-500",
-    title: "text-amber-900 dark:text-amber-200", body: "text-amber-700 dark:text-amber-300", icon: "text-amber-500 dark:text-amber-400", iconBg: "bg-amber-100 dark:bg-amber-900/50",
-    dismiss: "text-amber-400 hover:text-amber-600 hover:bg-amber-100 dark:text-amber-500 dark:hover:text-amber-300 dark:hover:bg-amber-900/40",
-    actionSolid: "bg-amber-500 text-white hover:bg-amber-600",
-    actionGhost: "text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/40",
+    bg: "bg-warning-soft", border: "border-warning-border",
+    accentLeft: "border-l-4 border-l-warning", accentTop: "border-t-4 border-t-warning",
+    title: "text-warning-soft-foreground", body: "text-warning-soft-foreground/90", icon: "text-warning", iconBg: "bg-warning/15",
+    dismiss: "text-warning-soft-foreground/70 hover:text-warning-soft-foreground hover:bg-warning/15",
+    actionSolid: "bg-warning text-warning-foreground hover:opacity-90",
+    actionGhost: "text-warning-soft-foreground hover:bg-warning/15",
   },
   danger: {
-    bg: "bg-red-50 dark:bg-red-950/40", border: "border-red-200 dark:border-red-800/60",
-    accentLeft: "border-l-4 border-l-red-500", accentTop: "border-t-4 border-t-red-500",
-    title: "text-red-900 dark:text-red-200", body: "text-red-700 dark:text-red-300", icon: "text-red-500 dark:text-red-400", iconBg: "bg-red-100 dark:bg-red-900/50",
-    dismiss: "text-red-400 hover:text-red-600 hover:bg-red-100 dark:text-red-500 dark:hover:text-red-300 dark:hover:bg-red-900/40",
-    actionSolid: "bg-red-600 text-white hover:bg-red-700",
-    actionGhost: "text-red-700 hover:bg-red-100 dark:text-red-300 dark:hover:bg-red-900/40",
+    bg: "bg-danger-soft", border: "border-danger-border",
+    accentLeft: "border-l-4 border-l-danger", accentTop: "border-t-4 border-t-danger",
+    title: "text-danger-soft-foreground", body: "text-danger-soft-foreground/90", icon: "text-danger", iconBg: "bg-danger/15",
+    dismiss: "text-danger-soft-foreground/70 hover:text-danger-soft-foreground hover:bg-danger/15",
+    actionSolid: "bg-danger text-danger-foreground hover:opacity-90",
+    actionGhost: "text-danger-soft-foreground hover:bg-danger/15",
   },
   neutral: {
-    bg: "bg-zinc-50 dark:bg-zinc-800/50", border: "border-zinc-200 dark:border-zinc-700",
-    accentLeft: "border-l-4 border-l-zinc-500", accentTop: "border-t-4 border-t-zinc-500",
-    title: "text-zinc-900 dark:text-zinc-100", body: "text-zinc-600 dark:text-zinc-300", icon: "text-zinc-500 dark:text-zinc-400", iconBg: "bg-zinc-100 dark:bg-zinc-700",
-    dismiss: "text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 dark:text-zinc-500 dark:hover:text-zinc-300 dark:hover:bg-zinc-700",
-    actionSolid: "bg-zinc-800 text-white hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-100",
-    actionGhost: "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700",
+    bg: "bg-muted/60", border: "border-border",
+    accentLeft: "border-l-4 border-l-muted-foreground", accentTop: "border-t-4 border-t-muted-foreground",
+    title: "text-foreground", body: "text-muted-foreground", icon: "text-muted-foreground", iconBg: "bg-muted",
+    dismiss: "text-muted-foreground hover:text-foreground hover:bg-muted",
+    actionSolid: "bg-primary text-primary-foreground hover:bg-primary-hover",
+    actionGhost: "text-foreground hover:bg-muted",
   },
 };
 
@@ -142,8 +142,8 @@ const DEFAULT_ICON: Record<AlertVariant, LucideIcon> = {
 
 function AlertContent({
   title, description, children, variant = "neutral", accent = "none", icon, dismissible, closeText, banner = false, onDismiss, actions,
-  dialog, s, className, componentId,
-}: AlertProps & { s: S }) {
+  dialog, s, className, componentId, titleId, descriptionId,
+}: AlertProps & { s: S; titleId?: string; descriptionId?: string }) {
   const IconComponent = icon === null ? null : (icon ?? DEFAULT_ICON[variant ?? "neutral"]);
   const showDismiss = Boolean(dismissible || closeText);
 
@@ -151,21 +151,20 @@ function AlertContent({
     return (
       <div
         {...(componentId ? { "data-component-id": componentId } : {})}
-        className="w-full relative flex flex-col gap-1 select-none"
-        role="alertdialog"
+        className="w-full relative flex flex-col gap-1"
       >
         <div className="flex gap-4 items-start pr-8">
           {IconComponent && (
-            <span className={twMerge("shrink-0 flex h-10 w-10 items-center justify-center rounded-2xl", s.iconBg)}>
+            <span className={twMerge("shrink-0 flex h-10 w-10 items-center justify-center rounded-xl", s.iconBg)}>
               <IconComponent size={20} strokeWidth={2} className={s.icon} />
             </span>
           )}
           <div className="flex-1 min-w-0">
             {title && (
-              <h3 className="font-bold text-lg text-foreground leading-snug">{title}</h3>
+              <h3 id={titleId} className="font-bold text-lg text-foreground leading-snug text-balance">{title}</h3>
             )}
             {description && (
-              <div className="text-sm leading-relaxed text-muted-foreground mt-2">
+              <div id={descriptionId} className="text-sm leading-relaxed text-muted-foreground mt-2 text-pretty">
                 {description}
               </div>
             )}
@@ -182,14 +181,14 @@ function AlertContent({
                 type="button"
                 onClick={a.onClick}
                 className={twMerge(
-                  "rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-150 cursor-pointer shadow-xs",
+                  "rounded-[var(--radius-control)] px-4 py-2 text-sm font-semibold transition-colors duration-150 cursor-pointer shadow-[var(--shadow-control)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                   a.variant === "ghost"
-                    ? "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
-                    : twMerge("bg-[var(--primary)] text-primary-foreground hover:bg-[var(--primary-hover)]", 
-                        variant === "danger" && "bg-red-600 text-white hover:bg-red-700",
-                        variant === "warning" && "bg-amber-500 text-white hover:bg-amber-600",
-                        variant === "success" && "bg-emerald-600 text-white hover:bg-emerald-700",
-                        variant === "info" && "bg-blue-600 text-white hover:bg-blue-700"
+                    ? "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent shadow-none"
+                    : twMerge("bg-primary text-primary-foreground hover:bg-primary-hover", 
+                        variant === "danger" && "bg-danger text-danger-foreground hover:opacity-90",
+                        variant === "warning" && "bg-warning text-warning-foreground hover:opacity-90",
+                        variant === "success" && "bg-success text-success-foreground hover:opacity-90",
+                        variant === "info" && "bg-info text-info-foreground hover:opacity-90"
                       )
                 )}
               >
@@ -205,7 +204,7 @@ function AlertContent({
             type="button"
             aria-label="Fechar"
             onClick={onDismiss}
-            className="absolute -top-1 -right-1 text-muted-foreground hover:text-foreground rounded-xl p-1.5 hover:bg-muted transition-colors cursor-pointer"
+            className="absolute -top-1 -right-1 text-muted-foreground hover:text-foreground rounded-[var(--radius-control)] p-1.5 hover:bg-muted transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             <X size={16} />
           </button>
@@ -221,7 +220,7 @@ function AlertContent({
         "flex gap-3 border",
         banner
           ? "w-full rounded-none border-x-0 border-t-0 px-4 py-2.5 items-center"
-          : "rounded-xl p-4",
+          : "rounded-[var(--radius-card)] p-4",
         s.bg,
         s.border,
         !banner && accent === "left" && s.accentLeft,
@@ -245,10 +244,10 @@ function AlertContent({
 
       <div className={twMerge("flex-1 min-w-0", s.body)}>
         {title && (
-          <p className={twMerge("font-semibold text-sm leading-snug", s.title)}>{title}</p>
+          <p className={twMerge("font-semibold text-sm leading-snug text-balance", s.title)}>{title}</p>
         )}
         {description && (
-          <div className={twMerge("text-sm leading-relaxed mt-0.5", s.body, !title && "mt-0")}>
+          <div className={twMerge("text-sm leading-relaxed mt-0.5 text-pretty", s.body, !title && "mt-0")}>
             {description}
           </div>
         )}
@@ -262,7 +261,7 @@ function AlertContent({
                 type="button"
                 onClick={a.onClick}
                 className={twMerge(
-                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150 cursor-pointer",
+                  "rounded-[var(--radius-control)] px-3 py-1.5 text-xs font-semibold transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                   a.variant === "ghost" ? s.actionGhost : s.actionSolid,
                 )}
               >
@@ -280,7 +279,7 @@ function AlertContent({
           aria-label={typeof closeText === "string" ? closeText : "Fechar"}
           onClick={onDismiss}
           className={twMerge(
-            "shrink-0 rounded-lg transition-colors duration-150 cursor-pointer",
+            "shrink-0 rounded-[var(--radius-control)] transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
             closeText ? "px-2 py-1 text-xs font-semibold" : "p-1",
             s.dismiss,
           )}
@@ -307,6 +306,8 @@ export default function Alert({
   const resolvedVariant: AlertVariant = variant ?? (banner ? "warning" : "neutral");
   const s = STYLES[resolvedVariant];
   const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const descriptionId = useId();
 
   useBodyScrollLock(!!dialog && !!open);
 
@@ -323,13 +324,46 @@ export default function Alert({
   useEffect(() => {
     if (!dialog || !open) return;
     const prev = document.activeElement as HTMLElement | null;
-    dialogRef.current?.focus();
+    const panel = dialogRef.current;
+    const raf = requestAnimationFrame(() => {
+      if (!panel) return;
+      const focusables = panel.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length > 0) focusables[0].focus();
+      else panel.focus();
+    });
 
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose?.();
+      if (e.key === "Escape") {
+        onClose?.();
+        return;
+      }
+      if (e.key === "Tab" && panel) {
+        const focusables = Array.from(
+          panel.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )
+        );
+        if (focusables.length === 0) {
+          e.preventDefault();
+          panel.focus();
+          return;
+        }
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === panel)) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
     document.addEventListener("keydown", onKey);
     return () => {
+      cancelAnimationFrame(raf);
       document.removeEventListener("keydown", onKey);
       prev?.focus();
     };
@@ -348,7 +382,7 @@ export default function Alert({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/55 backdrop-blur-xs animate-in fade-in-0 duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -356,18 +390,30 @@ export default function Alert({
       {/* Dialog panel */}
       <div
         ref={dialogRef}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby={rest.title ? titleId : undefined}
+        aria-describedby={rest.description ? descriptionId : undefined}
         tabIndex={-1}
         className={twMerge(
-          "relative z-10 w-full sm:min-w-[480px] max-w-lg rounded-2xl bg-surface border border-border p-6 shadow-2xl outline-none",
-          resolvedVariant === "info" && "border-l-4 border-l-blue-500",
-          resolvedVariant === "success" && "border-l-4 border-l-emerald-500",
-          resolvedVariant === "warning" && "border-l-4 border-l-amber-500",
-          resolvedVariant === "danger" && "border-l-4 border-l-red-500",
-          resolvedVariant === "neutral" && "border-l-4 border-l-zinc-400 dark:border-l-zinc-600",
+          "relative z-10 w-full sm:min-w-[480px] max-w-lg rounded-[var(--radius-overlay)] bg-card border border-border p-6 shadow-[var(--shadow-overlay)] outline-none animate-in fade-in-0 zoom-in-95 duration-200",
+          resolvedVariant === "info" && "border-l-4 border-l-info",
+          resolvedVariant === "success" && "border-l-4 border-l-success",
+          resolvedVariant === "warning" && "border-l-4 border-l-warning",
+          resolvedVariant === "danger" && "border-l-4 border-l-danger",
+          resolvedVariant === "neutral" && "border-l-4 border-l-border",
         )}
-        aria-modal="true"
       >
-        <AlertContent {...rest} variant={resolvedVariant} s={s} dialog dismissible={rest.dismissible} onDismiss={onClose} />
+        <AlertContent
+          {...rest}
+          variant={resolvedVariant}
+          s={s}
+          dialog
+          dismissible={rest.dismissible}
+          onDismiss={onClose}
+          titleId={titleId}
+          descriptionId={descriptionId}
+        />
       </div>
     </div>,
     document.body,
