@@ -18,37 +18,25 @@ function SidebarBadge({
   active?: boolean;
 }) {
   const getClasses = () => {
-    if (active) {
-      switch (variant) {
-        case 'success':
-          return 'bg-emerald-100 text-emerald-800 border border-emerald-300/80 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-500/40';
-        case 'warning':
-          return 'bg-amber-100 text-amber-800 border border-amber-300/80 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-500/40';
-        case 'danger':
-          return 'bg-rose-100 text-rose-800 border border-rose-300/80 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-500/40';
-        case 'info':
-          return 'bg-blue-100 text-blue-800 border border-blue-300/80 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-500/40';
-        default:
-          return 'bg-zinc-900/10 text-[var(--sidebar-item-active-foreground)] border border-zinc-500/20 dark:bg-white/15 dark:border-white/20';
-      }
-    }
     switch (variant) {
       case 'success':
-        return 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-500/25 dark:border-emerald-500/30';
+        return 'bg-success-soft text-success-soft-foreground border border-success-border';
       case 'warning':
-        return 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-500/25 dark:border-amber-500/30';
+        return 'bg-warning-soft text-warning-soft-foreground border border-warning-border';
       case 'danger':
-        return 'bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border border-rose-500/25 dark:border-rose-500/30';
+        return 'bg-danger-soft text-danger-soft-foreground border border-danger-border';
       case 'info':
-        return 'bg-blue-500/15 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border border-blue-500/25 dark:border-blue-500/30';
+        return 'bg-info-soft text-info-soft-foreground border border-info-border';
       default:
-        return 'bg-zinc-500/10 text-zinc-700 dark:bg-white/10 dark:text-zinc-300 border border-[var(--sidebar-border)]';
+        return active
+          ? 'bg-zinc-900/10 text-[var(--sidebar-item-active-foreground)] border border-zinc-500/20 dark:bg-white/15 dark:border-white/20'
+          : 'bg-zinc-500/10 text-[var(--sidebar-item-foreground)] dark:bg-white/10 border border-[var(--sidebar-border)]';
     }
   };
 
   return (
     <span
-      className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-none tracking-tight ${getClasses()}`}
+      className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-none tracking-tight tabular-nums ${getClasses()}`}
     >
       {value}
     </span>
@@ -75,7 +63,12 @@ function SidebarMarqueeLabel({
   const [duration, setDuration] = useState(0);
 
   useEffect(() => {
-    if (!isHovered || !containerRef.current || !textRef.current) {
+    if (
+      !isHovered ||
+      !containerRef.current ||
+      !textRef.current ||
+      (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+    ) {
       setOffset(0);
       return;
     }
@@ -179,7 +172,7 @@ export function SidebarNavItem({
   };
 
   const rowBase = [
-    'relative flex items-center rounded-lg transition-all duration-150 select-none text-left',
+    'relative flex items-center rounded-[var(--radius-control)] transition-colors duration-150 select-none text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
     effectiveCollapsed
       ? 'w-9 h-9 mx-auto justify-center p-0 overflow-hidden shrink-0'
       : isTopItem
@@ -365,7 +358,7 @@ export function SidebarNavItem({
             e.stopPropagation();
             togglePin(itemPinId);
           }}
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded-md opacity-0 group-hover/pin:opacity-100 text-[var(--sidebar-icon-foreground)] hover:text-amber-400 hover:bg-[var(--sidebar-item-hover-background)] transition-all z-10 cursor-pointer"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded-md opacity-0 group-hover/pin:opacity-100 group-focus-within/pin:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 text-[var(--sidebar-icon-foreground)] hover:text-amber-400 hover:bg-[var(--sidebar-item-hover-background)] transition-opacity z-10 cursor-pointer"
         >
           <PinOff size={12} />
         </button>
@@ -380,10 +373,10 @@ export function SidebarNavItem({
             togglePin(itemPinId);
           }}
           className={[
-            'absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded-md transition-all z-10 cursor-pointer',
+            'absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded-md transition-opacity z-10 cursor-pointer focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
             isPinned
-              ? 'opacity-0 group-hover/nav:opacity-100 text-amber-400 hover:text-amber-300 hover:bg-[var(--sidebar-item-hover-background)]'
-              : 'opacity-0 group-hover/nav:opacity-100 text-[var(--sidebar-icon-foreground)] hover:text-amber-400 hover:bg-[var(--sidebar-item-hover-background)]',
+              ? 'opacity-0 group-hover/nav:opacity-100 group-focus-within/nav:opacity-100 text-amber-400 hover:text-amber-300 hover:bg-[var(--sidebar-item-hover-background)]'
+              : 'opacity-0 group-hover/nav:opacity-100 group-focus-within/nav:opacity-100 text-[var(--sidebar-icon-foreground)] hover:text-amber-400 hover:bg-[var(--sidebar-item-hover-background)]',
           ].join(' ')}
         >
           {isPinned ? <PinOff size={11} /> : <Pin size={11} />}
@@ -418,7 +411,7 @@ export function SidebarNavItem({
       {hasChildren && (
         <div
           id={submenuContentId}
-          className="grid transition-[grid-template-rows] duration-300 ease-in-out"
+          className="grid transition-[grid-template-rows] duration-300 ease-in-out motion-reduce:transition-none"
           style={{ gridTemplateRows: subOpen && !effectiveCollapsed ? '1fr' : '0fr' }}
         >
           <div className="overflow-hidden">
