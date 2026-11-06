@@ -1,9 +1,14 @@
 "use client";
 
-import React, { useLayoutEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import React from "react";
 import { HelpCircle, AlertCircle } from "lucide-react";
 import { cn } from "@/utils/cn";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../primitives/tooltip";
 
 export type FieldWrapperProps = {
   id?: string;
@@ -32,71 +37,24 @@ export type FieldWrapperProps = {
 };
 
 function FieldTooltip({ message }: { message: string }) {
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const tooltipRef = useRef<HTMLSpanElement>(null);
-  const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState({ left: 0, top: 0 });
-
-  useLayoutEffect(() => {
-    if (!open) return;
-
-    function updatePosition() {
-      const trigger = triggerRef.current;
-      const tooltip = tooltipRef.current;
-      if (!trigger || !tooltip) return;
-
-      const triggerRect = trigger.getBoundingClientRect();
-      const tooltipRect = tooltip.getBoundingClientRect();
-      const margin = 8;
-      const gap = 8;
-      const centered = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
-      const left = Math.min(
-        Math.max(centered, margin),
-        window.innerWidth - tooltipRect.width - margin,
-      );
-      const top = triggerRect.top >= tooltipRect.height + gap + margin
-        ? triggerRect.top - tooltipRect.height - gap
-        : triggerRect.bottom + gap;
-
-      setPosition({ left, top });
-    }
-
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
-    return () => {
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
-    };
-  }, [open]);
-
   return (
-    <>
-      <button
-        data-component-id="erp.field-wrapper.help-tooltip"
-        ref={triggerRef}
-        type="button"
-        aria-label="Mostrar ajuda"
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
-        className="ml-1 inline-flex items-center align-middle text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-full"
-      >
-        <HelpCircle size={13} className="text-muted-foreground/80 hover:text-primary transition-colors" />
-      </button>
-      {open && typeof document !== "undefined" && createPortal(
-        <span
-          ref={tooltipRef}
-          role="tooltip"
-          style={{ left: position.left, top: position.top }}
-          className="pointer-events-none fixed z-[99999] w-64 max-w-xs rounded-xl bg-zinc-900/95 text-zinc-50 dark:bg-zinc-800/95 dark:text-zinc-100 backdrop-blur-md px-3 py-2 text-xs font-normal leading-relaxed shadow-2xl border border-zinc-700/50 animate-in fade-in-0 zoom-in-95 duration-150"
-        >
+    <TooltipProvider delayDuration={180}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            data-component-id="erp.field-wrapper.help-tooltip"
+            type="button"
+            aria-label="Mostrar ajuda"
+            className="ml-1 inline-flex h-4 w-4 items-center justify-center align-middle text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 rounded-full cursor-pointer"
+          >
+            <HelpCircle size={13} className="text-muted-foreground/85 hover:text-foreground transition-colors" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs leading-relaxed">
           {message}
-        </span>,
-        document.body,
-      )}
-    </>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -109,7 +67,7 @@ export function FieldSet({ className, children, ...props }: FieldSetProps) {
     <fieldset
       data-slot="field-set"
       className={cn(
-        "block m-0 min-w-0 space-y-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-900/40 p-5",
+        "block m-0 min-w-0 space-y-4 rounded-[var(--radius-card)] border border-border bg-surface-muted/40 p-5",
         className
       )}
       {...props}
@@ -128,8 +86,8 @@ export function FieldLegend({ className, variant = "legend", children, ...props 
     <legend
       data-slot="field-legend"
       className={cn(
-        "float-left w-full p-0 mb-1 font-semibold text-zinc-900 dark:text-zinc-100 after:block after:clear-both",
-        variant === "legend" ? "text-base" : "text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400",
+        "float-left w-full p-0 mb-1 font-semibold text-foreground after:block after:clear-both",
+        variant === "legend" ? "text-base" : "text-xs uppercase tracking-wider text-muted-foreground",
         className,
       )}
       {...props}
@@ -185,19 +143,19 @@ export default function FieldWrapper({
       htmlFor={id}
       className={cn(
         "inline-flex select-none items-center text-sm font-medium leading-none",
-        error ? "text-red-600 dark:text-red-400" : "text-foreground/80",
-        isHorizontal && cn("shrink-0 pt-[9px]", labelWidth),
-        isResponsive && cn("sm:shrink-0 sm:pt-[9px]", `sm:${labelWidth}`),
+        error ? "text-danger" : "text-foreground/85",
+        isHorizontal && cn("shrink-0 pt-[11px]", labelWidth),
+        isResponsive && cn("sm:shrink-0 sm:pt-[11px]", `sm:${labelWidth}`),
       )}
     >
       <span>{cleanLabel}</span>
       {isRequired && (
-        <span aria-hidden="true" className="ml-1 text-red-500">
+        <span aria-hidden="true" className="ml-1 text-danger">
           *
         </span>
       )}
       {tooltip && (
-        <span className="ml-1.5 inline-flex">
+        <span className="ml-1 inline-flex">
           <FieldTooltip message={tooltip} />
         </span>
       )}
@@ -207,7 +165,7 @@ export default function FieldWrapper({
   const subline = error ? (
     <p
       id={id ? `${id}-error` : undefined}
-      className="flex items-center gap-1 text-xs text-red-500 dark:text-red-400"
+      className="flex items-center gap-1 text-xs text-danger"
     >
       <AlertCircle size={11} className="shrink-0" />
       {error}
@@ -215,7 +173,7 @@ export default function FieldWrapper({
   ) : resolvedHelpText ? (
     <p
       id={id ? `${id}-help` : undefined}
-      className="text-xs leading-relaxed text-muted-foreground"
+      className="text-xs leading-relaxed text-pretty text-muted-foreground"
     >
       {resolvedHelpText}
     </p>
