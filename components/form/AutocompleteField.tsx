@@ -77,7 +77,7 @@ export default function AutocompleteField({
   placeholder = 'Buscar...',
   disabled,
   loading = false,
-  size = 'sm',
+  size = 'md',
   variant = 'default',
   maxSuggestions = 200,
   emptyMessage = 'Nenhum resultado encontrado',
@@ -339,24 +339,24 @@ export default function AutocompleteField({
   if (!hasPermission && hideIfDenied) return null;
 
   const wrapCls = twMerge(
-    'relative flex w-full items-center overflow-hidden border transition-all duration-150',
-    size === 'sm' ? 'rounded-md' : 'rounded-lg',
+    'relative flex w-full items-center overflow-hidden rounded-[var(--radius-control)] border transition-[background-color,border-color,box-shadow] duration-150',
     variant === 'filled'
-      ? 'bg-[var(--surface-muted)] border-transparent hover:bg-[var(--surface-hover)] focus-within:bg-[var(--surface)] focus-within:border-[var(--border-strong)] focus-within:ring-2 focus-within:ring-[var(--ring)]/10'
-      : 'bg-[var(--input-background)] border-[var(--input-border)] hover:border-[var(--border-strong)] focus-within:border-[var(--ring)] focus-within:ring-2 focus-within:ring-[var(--ring)]/10',
+      ? 'bg-surface-muted border-transparent hover:bg-surface-hover focus-within:bg-input focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/12'
+      : 'bg-input border-input-border hover:border-border-strong focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/12',
     error &&
-      'border-red-400 hover:border-red-400 focus-within:border-red-500 focus-within:ring-red-500/10',
-    effectiveDisabled && 'opacity-60 pointer-events-none bg-[var(--surface-muted)]'
+      'border-danger hover:border-danger focus-within:border-danger focus-within:ring-3 focus-within:ring-danger/15',
+    effectiveDisabled && 'opacity-60 pointer-events-none bg-surface-muted'
   );
 
   const hasClear = clearable && !!displayValue;
+  const describedBy = error ? `${id}-error` : (helpText || hint) ? `${id}-help` : undefined;
 
   const inputCls = twMerge(
-    'flex-1 min-w-0 bg-transparent outline-none border-0 ring-0 text-[var(--input-foreground)] placeholder:text-[var(--input-placeholder)]',
+    'flex-1 min-w-0 bg-transparent outline-none border-0 ring-0 text-input-foreground placeholder:text-input-placeholder',
     s.h,
     s.text,
     s.px,
-    hasClear && loading ? 'pr-16' : hasClear || loading ? 'pr-12' : 'pr-9'
+    hasClear && loading ? 'pr-20' : hasClear || loading ? 'pr-14' : 'pr-9'
   );
 
   return (
@@ -413,12 +413,12 @@ export default function AutocompleteField({
             }}
             onKeyDown={handleKeyDown}
             aria-invalid={error ? true : undefined}
-            aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
+            aria-describedby={describedBy}
             className={inputCls}
           />
-          <span className="absolute right-0 top-0 flex h-full items-center gap-1 pr-2 pointer-events-none">
+          <span className="absolute right-0 top-0 flex h-full items-center gap-0.5 pr-1.5 pointer-events-none">
             {loading && (
-              <Loader2 size={14} className="animate-spin text-[var(--surface-muted-foreground)]" />
+              <Loader2 size={14} className="animate-spin text-muted-foreground mr-0.5" />
             )}
             {hasClear && (
               <button
@@ -430,9 +430,9 @@ export default function AutocompleteField({
                   e.stopPropagation();
                   handleClear();
                 }}
-                className="pointer-events-auto flex h-5 w-5 items-center justify-center rounded text-[var(--surface-muted-foreground)] transition-colors hover:text-[var(--surface-foreground)]"
+                className="pointer-events-auto flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
               >
-                <X size={12} />
+                <X size={13} />
               </button>
             )}
             <button
@@ -446,11 +446,11 @@ export default function AutocompleteField({
                 setOpen((o) => !o);
                 inputRef.current?.focus();
               }}
-              className="pointer-events-auto flex h-5 w-5 items-center justify-center rounded text-[var(--surface-muted-foreground)] transition-colors hover:text-[var(--surface-foreground)]"
+              className="pointer-events-auto flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground cursor-pointer"
             >
               <ChevronDown
                 size={14}
-                className={twMerge('transition-transform duration-150', open && 'rotate-180')}
+                className={twMerge('transition-transform duration-150 motion-reduce:transition-none', open && 'rotate-180 text-foreground')}
               />
             </button>
           </span>
@@ -469,7 +469,7 @@ export default function AutocompleteField({
               }}
               onWheel={(e) => e.stopPropagation()}
               className={twMerge(
-                'z-[999999] overflow-y-auto overscroll-contain rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-1.5 shadow-2xl space-y-0.5 pointer-events-auto',
+                'z-[999999] overflow-y-auto overscroll-contain rounded-[var(--radius-card)] border border-border bg-popover text-popover-foreground p-1.5 shadow-[var(--shadow-floating)] animate-in fade-in-0 zoom-in-95 duration-150 motion-reduce:animate-none space-y-0.5 pointer-events-auto',
                 s.text
               )}
             >
@@ -496,12 +496,12 @@ export default function AutocompleteField({
                       }}
                       onMouseEnter={() => setHighlighted(i)}
                       className={twMerge(
-                        'flex cursor-pointer items-center px-2.5 py-2 rounded-lg text-xs sm:text-sm transition-colors select-none',
+                        'flex cursor-pointer items-center px-2.5 py-2 rounded-[var(--radius-control)] text-xs sm:text-sm transition-colors select-none',
                         displayValue === opt.label
-                          ? 'bg-primary/10 text-primary font-semibold dark:bg-primary/20'
+                          ? 'bg-primary-soft text-primary-soft-foreground font-semibold'
                           : i === highlighted
-                            ? 'bg-zinc-100 dark:bg-zinc-800 text-foreground'
-                            : 'text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                            ? 'bg-surface-hover text-foreground'
+                            : 'text-surface-foreground hover:bg-surface-hover'
                       )}
                     >
                       {opt.label}
@@ -518,10 +518,10 @@ export default function AutocompleteField({
                       }}
                       onMouseEnter={() => setHighlighted(filtered.length)}
                       className={twMerge(
-                        'flex cursor-pointer items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs sm:text-sm font-medium text-primary transition-colors select-none',
+                        'flex cursor-pointer items-center gap-1.5 px-2.5 py-2 rounded-[var(--radius-control)] text-xs sm:text-sm font-medium text-brand transition-colors select-none',
                         highlighted === filtered.length
-                          ? 'bg-primary/10 dark:bg-primary/20'
-                          : 'hover:bg-primary/5 dark:hover:bg-primary/10'
+                          ? 'bg-brand-soft text-brand-soft-foreground'
+                          : 'hover:bg-brand-soft/60'
                       )}
                     >
                       <Plus size={14} className="shrink-0" />
