@@ -54,35 +54,35 @@ export type StatCardProps = {
 // ── Color maps ────────────────────────────────────────────────────────────────
 
 const COLOR_ICON_BG: Record<StatCardColor, string> = {
-  default: "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400",
-  indigo: "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400",
-  blue: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
-  emerald: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400",
-  amber: "bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400",
-  red: "bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400",
+  default: "bg-muted text-muted-foreground",
+  indigo: "bg-brand-soft text-brand",
+  blue: "bg-info-soft text-info",
+  emerald: "bg-success-soft text-success",
+  amber: "bg-warning-soft text-warning",
+  red: "bg-danger-soft text-danger",
   violet: "bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400",
   teal: "bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400",
 };
 
 const SPARK_COLOR: Record<StatCardColor, string> = {
-  default: "#a1a1aa",
-  indigo: "#6366f1",
-  blue: "#3b82f6",
-  emerald: "#10b981",
-  amber: "#f59e0b",
-  red: "#ef4444",
+  default: "var(--surface-muted-foreground)",
+  indigo: "var(--brand)",
+  blue: "var(--info)",
+  emerald: "var(--success)",
+  amber: "var(--warning)",
+  red: "var(--danger)",
   violet: "#8b5cf6",
   teal: "#14b8a6",
 };
 
 const DEFAULT_SEGMENT_PALETTE: string[] = [
-  "#6366f1",
-  "#10b981",
-  "#f59e0b",
-  "#3b82f6",
+  "var(--brand)",
+  "var(--success)",
+  "var(--warning)",
+  "var(--info)",
   "#8b5cf6",
   "#14b8a6",
-  "#ef4444",
+  "var(--danger)",
 ];
 
 function resolveStatHexColor(color: StatCardColor | string | undefined, fallbackIndex = 0): string {
@@ -95,6 +95,7 @@ function resolveStatHexColor(color: StatCardColor | string | undefined, fallback
 
 function Sparkline({ data, color }: { data: SparkPoint[]; color: string }) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const gradId = React.useId();
 
   if (data.length < 2) return null;
 
@@ -124,7 +125,7 @@ function Sparkline({ data, color }: { data: SparkPoint[]; color: string }) {
       onMouseLeave={() => setHoverIdx(null)}
     >
       {activePoint && (
-        <div className="pointer-events-none absolute -top-6 right-0 z-10 rounded bg-zinc-900 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-white shadow-sm whitespace-nowrap dark:bg-zinc-100 dark:text-zinc-900">
+        <div className="pointer-events-none absolute -top-6 right-0 z-10 rounded bg-popover px-1.5 py-0.5 text-[10px] font-mono font-semibold tabular-nums text-popover-foreground border border-border shadow-[var(--shadow-floating)] whitespace-nowrap">
           {activePoint.label ? `${activePoint.label}: ` : ""}
           {activePoint.value.toLocaleString("pt-BR")}
         </div>
@@ -142,12 +143,12 @@ function Sparkline({ data, color }: { data: SparkPoint[]; color: string }) {
         }}
       >
         <defs>
-          <linearGradient id={`sg-${color.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity={0.25} />
             <stop offset="100%" stopColor={color} stopOpacity={0} />
           </linearGradient>
         </defs>
-        <path d={areaPath} fill={`url(#sg-${color.replace("#", "")})`} />
+        <path d={areaPath} fill={`url(#${gradId})`} />
         <path
           d={linePath}
           fill="none"
@@ -172,12 +173,12 @@ function TrendBadge({ trend }: { trend: StatCardTrend }) {
   const abs = Math.abs(trend.value);
 
   const cls = twMerge(
-    "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold",
+    "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
     isNeutral
-      ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
+      ? "bg-muted text-muted-foreground"
       : isPositive
-        ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400"
-        : "bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400",
+        ? "bg-success-soft text-success-soft-foreground"
+        : "bg-danger-soft text-danger-soft-foreground",
   );
 
   const Icon = isNeutral ? Minus : isPositive ? TrendingUp : TrendingDown;
@@ -194,7 +195,7 @@ function TrendBadge({ trend }: { trend: StatCardTrend }) {
 
 function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={twMerge("animate-pulse rounded bg-zinc-100 dark:bg-zinc-800", className)} />
+    <div className={twMerge("animate-pulse motion-reduce:animate-none rounded bg-muted", className)} />
   );
 }
 
@@ -244,12 +245,12 @@ export default function StatCard({
           : undefined
       }
       className={twMerge(
-        "group/stat relative flex flex-col gap-1.5 sm:gap-3 rounded-xl sm:rounded-2xl border border-zinc-100 dark:border-zinc-800",
-        "bg-white dark:bg-zinc-900 p-2.5 sm:p-5 text-left w-full",
+        "@container/stat group/stat relative flex flex-col gap-1.5 sm:gap-3 rounded-[var(--radius-card)] border border-border",
+        "bg-card p-2.5 sm:p-5 text-left text-card-foreground shadow-[var(--shadow-card)] w-full",
         !hasPermission && "opacity-60 pointer-events-none",
         onClick &&
           hasPermission &&
-          "cursor-pointer hover:border-zinc-200 dark:hover:border-zinc-700 hover:shadow-md hover:shadow-zinc-900/5 dark:hover:shadow-black/20 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+          "cursor-pointer hover:border-border-strong hover:shadow-[var(--shadow-floating)] transition-[border-color,box-shadow,background-color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
         className,
       )}
     >
@@ -274,7 +275,7 @@ export default function StatCard({
             {loading ? (
               <Skeleton className="h-3 sm:h-3.5 w-16 sm:w-24 rounded" />
             ) : (
-              <p className="text-[11px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 truncate">
+              <p className="text-[11px] sm:text-xs font-medium text-muted-foreground truncate">
                 {title}
               </p>
             )}
@@ -282,7 +283,7 @@ export default function StatCard({
         </div>
 
         {spark && !loading && (
-          <div className="hidden sm:block shrink-0 opacity-70 group-hover/stat:opacity-100 transition-opacity">
+          <div className="hidden sm:block shrink-0 opacity-75 group-hover/stat:opacity-100 transition-opacity">
             <Sparkline data={spark} color={sparkColor} />
           </div>
         )}
@@ -295,11 +296,11 @@ export default function StatCard({
             <Skeleton className="h-6 sm:h-8 w-20 sm:w-28 rounded mt-1" />
           ) : (
             <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
-              <span className="text-base sm:text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 leading-none">
+              <span className="text-base sm:text-2xl font-black tracking-tight tabular-nums text-foreground leading-none">
                 {value}
               </span>
               {unit && (
-                <span className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-500 font-medium">
+                <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">
                   {unit}
                 </span>
               )}
@@ -308,9 +309,9 @@ export default function StatCard({
 
           {/* Previous period */}
           {!loading && previousValue !== undefined && (
-            <p className="hidden sm:block text-[11px] text-zinc-400 dark:text-zinc-500 mt-1">
+            <p className="hidden sm:block text-[11px] text-muted-foreground mt-1 tabular-nums">
               Anterior:{" "}
-              <span className="font-medium text-zinc-500 dark:text-zinc-400">{previousValue}</span>
+              <span className="font-medium text-foreground/80">{previousValue}</span>
             </p>
           )}
         </div>
@@ -320,7 +321,7 @@ export default function StatCard({
           <div className="shrink-0 flex flex-col items-end gap-0.5">
             <TrendBadge trend={trend} />
             {trend.label && (
-              <span className="hidden sm:block text-[10px] text-zinc-400 dark:text-zinc-500 whitespace-nowrap">
+              <span className="hidden sm:block text-[10px] text-muted-foreground whitespace-nowrap">
                 {trend.label}
               </span>
             )}
@@ -331,16 +332,16 @@ export default function StatCard({
       {/* Target Goal Progress Bar */}
       {!loading && clampedProgress !== undefined && (
         <div className="mt-1 flex flex-col gap-1">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full transition-all duration-300"
+              className="h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none"
               style={{ width: `${clampedProgress}%`, backgroundColor: sparkColor }}
             />
           </div>
           {progressLabel && (
-            <div className="flex items-center justify-between text-[10px] text-zinc-400 dark:text-zinc-500">
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground">
               <span>{progressLabel}</span>
-              <span className="font-mono font-semibold">{Math.round(clampedProgress)}%</span>
+              <span className="font-mono font-semibold tabular-nums">{Math.round(clampedProgress)}%</span>
             </div>
           )}
         </div>
@@ -348,7 +349,7 @@ export default function StatCard({
 
       {/* Optional Footer */}
       {!loading && footer && (
-        <div className="mt-1 border-t border-zinc-100 dark:border-zinc-800/80 pt-2.5 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="mt-1 border-t border-border/80 pt-2.5 text-xs text-muted-foreground">
           {footer}
         </div>
       )}
@@ -371,10 +372,10 @@ export function StatGroup({
   return (
     <div
       className={twMerge(
-        "inline-flex w-full overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs",
+        "inline-flex w-full overflow-hidden rounded-[var(--radius-card)] border border-border bg-card shadow-[var(--shadow-card)]",
         orientation === "vertical"
-          ? "flex-col divide-y divide-zinc-200 dark:divide-zinc-800"
-          : "flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-zinc-200 dark:divide-zinc-800",
+          ? "flex-col divide-y divide-border"
+          : "flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-border",
         "[&>*]:flex-1 [&>*]:rounded-none [&>*]:border-0 [&>*]:shadow-none",
         className,
       )}
@@ -432,7 +433,7 @@ export function StatsSegmentsCard({
     <div
       {...(componentId ? { "data-component-id": componentId } : {})}
       className={twMerge(
-        "flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 text-surface-foreground shadow-xs",
+        "flex flex-col gap-4 rounded-[var(--radius-card)] border border-border bg-card p-5 text-card-foreground shadow-[var(--shadow-card)]",
         !hasPermission && "opacity-60 pointer-events-none",
         className,
       )}
@@ -444,7 +445,7 @@ export function StatsSegmentsCard({
             {loading ? (
               <Skeleton className="h-8 w-36 rounded" />
             ) : (
-              <span className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-none">
+              <span className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums text-foreground leading-none">
                 {totalValue}
               </span>
             )}
@@ -519,7 +520,7 @@ export function StatsSegmentsCard({
               <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground truncate">
                 {seg.label}
               </span>
-              <div className="flex items-baseline justify-between gap-1.5 flex-wrap">
+              <div className="flex items-baseline justify-between gap-1.5 flex-wrap tabular-nums">
                 <span className="text-sm font-bold text-foreground">{seg.value}</span>
                 <span className="text-xs font-mono font-semibold" style={{ color: hex }}>
                   {seg.share}%
@@ -592,7 +593,7 @@ export function StatsRingCard({
     <div
       {...(componentId ? { "data-component-id": componentId } : {})}
       className={twMerge(
-        "flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-5 text-surface-foreground shadow-xs",
+        "flex items-center justify-between gap-4 rounded-[var(--radius-card)] border border-border bg-card p-5 text-card-foreground shadow-[var(--shadow-card)]",
         !hasPermission && "opacity-60 pointer-events-none",
         className,
       )}
@@ -606,7 +607,7 @@ export function StatsRingCard({
               <Skeleton className="h-7 w-24 rounded" />
             ) : (
               <>
-                <span className="text-2xl font-black tracking-tight text-foreground leading-none">
+                <span className="text-2xl font-black tracking-tight tabular-nums text-foreground leading-none">
                   {value}
                 </span>
                 {subtitle && (
@@ -624,7 +625,7 @@ export function StatsRingCard({
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   {st.label}
                 </p>
-                <p className="text-sm font-bold text-foreground">{st.value}</p>
+                <p className="text-sm font-bold tabular-nums text-foreground">{st.value}</p>
               </div>
             ))}
           </div>
@@ -650,7 +651,7 @@ export function StatsRingCard({
             fill="none"
             stroke="currentColor"
             strokeWidth={thickness}
-            className="text-zinc-100 dark:text-zinc-800"
+            className="text-muted"
           />
           {!loading && (
             <circle
@@ -663,7 +664,7 @@ export function StatsRingCard({
               strokeDasharray={circumference}
               strokeDashoffset={dashOffset}
               strokeLinecap="round"
-              className="transition-[stroke-dashoffset] duration-500 ease-out"
+              className="transition-[stroke-dashoffset] duration-500 ease-out motion-reduce:transition-none"
             />
           )}
         </svg>
@@ -671,7 +672,7 @@ export function StatsRingCard({
           {loading ? (
             <Skeleton className="h-4 w-9 rounded" />
           ) : (
-            <span className="text-sm font-black tracking-tight text-foreground">
+            <span className="text-sm font-black tracking-tight tabular-nums text-foreground">
               {ringLabel ?? `${Math.round(clamped)}%`}
             </span>
           )}
