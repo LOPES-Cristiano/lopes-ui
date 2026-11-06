@@ -207,8 +207,27 @@ export default function Modal({
   const resolvedOpen = Boolean(isOpen !== undefined ? isOpen : (open ?? true));
   const isActuallyOpen = resolvedOpen;
   const titleId = React.useId();
+  const descriptionId = React.useId();
+  const cardRef = React.useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [rendered, setRendered] = useState(isActuallyOpen);
+  const [prevOpen, setPrevOpen] = useState(isActuallyOpen);
+
+  if (prevOpen !== isActuallyOpen) {
+    setPrevOpen(isActuallyOpen);
+    if (isActuallyOpen) {
+      setRendered(true);
+    }
+  }
+
+  useEffect(() => {
+    if (isActuallyOpen) return;
+    const timer = setTimeout(() => {
+      setRendered(false);
+    }, 180);
+    return () => clearTimeout(timer);
+  }, [isActuallyOpen]);
 
   useBodyScrollLock(resolvedOpen);
 
@@ -227,6 +246,52 @@ export default function Modal({
     return () => unregisterModal(handleClose);
   }, [isActuallyOpen]);
 
+  /* Gestão de foco ao abrir/fechar e contenção de Tab */
+  useEffect(() => {
+    if (!isActuallyOpen || !mounted) return;
+    const prevFocused = document.activeElement as HTMLElement | null;
+    const raf = requestAnimationFrame(() => {
+      const card = cardRef.current;
+      if (!card || card.contains(document.activeElement)) return;
+      card.focus();
+    });
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const card = cardRef.current;
+      if (!card) return;
+      if (document.querySelector('[data-floating-open="true"], [data-radix-popper-content-wrapper]')) {
+        return;
+      }
+      const focusables = Array.from(
+        card.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      );
+      if (focusables.length === 0) {
+        e.preventDefault();
+        card.focus();
+        return;
+      }
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === card)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleTab);
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener('keydown', handleTab);
+      prevFocused?.focus?.();
+    };
+  }, [isActuallyOpen, mounted]);
+
   useEffect(() => {
     setMounted(true);
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -235,7 +300,8 @@ export default function Modal({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  if (!isActuallyOpen || !mounted) return null;
+  if ((!isActuallyOpen && !rendered) || !mounted) return null;
+  const isClosing = !isActuallyOpen;
 
   const isFullscreen = size === 'fullscreen';
   const isFullscreenMobile =
@@ -257,8 +323,9 @@ export default function Modal({
       ? document.getElementById('erp-workspace-container')
       : null;
 
-  const animationClass =
-    animation === 'drawer' || animation === 'slide-from-right' || (!animation && (isFullscreen || offsetHeader || withinShell))
+  const animationClass = isClosing
+    ? 'animate-out fade-out-0 zoom-out-95 duration-150 pointer-events-none'
+    : animation === 'drawer' || animation === 'slide-from-right' || (!animation && (isFullscreen || offsetHeader || withinShell))
       ? 'animate-drawer-slide-in'
       : animation === 'slide-left'
         ? 'animate-slide-in-left'
@@ -349,6 +416,7 @@ export default function Modal({
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}
+      aria-describedby={description ? descriptionId : undefined}
       style={zIndex ? { zIndex } : undefined}
       className={cn(
         shellContainer
@@ -365,8 +433,11 @@ export default function Modal({
       <div
         className={cn(
           shellContainer
-            ? 'absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in-0 duration-500'
-            : 'fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in-0 duration-500',
+            ? 'absolute inset-0 bg-black/55 backdrop-blur-xs transition-opacity'
+            : 'fixed inset-0 bg-black/55 backdrop-blur-xs transition-opacity',
+          isClosing
+            ? 'animate-out fade-out-0 duration-150 pointer-events-none'
+            : 'animate-in fade-in-0 duration-200',
           !shellContainer && offsetHeader && 'top-14'
         )}
         onClick={onClose}
@@ -375,6 +446,8 @@ export default function Modal({
 
       {/* Modal Card */}
       <div
+        ref={cardRef}
+        tabIndex={-1}
         style={{
           width: '100%',
           maxWidth: finalMaxWidth,
@@ -383,21 +456,21 @@ export default function Modal({
           maxHeight: finalMaxHeight,
         }}
         className={cn(
-          'relative z-10 flex flex-col bg-card border border-border text-card-foreground shadow-2xl overflow-hidden antialiased',
+          'relative z-10 flex flex-col bg-card border border-border text-card-foreground shadow-[var(--shadow-overlay)] overflow-hidden outline-none antialiased',
           animationClass,
           isFullscreen
             ? 'rounded-none border-0 h-full w-full'
             : isFullscreenMobile
               ? variant === 'square'
-                ? 'rounded-none sm:rounded-lg border-0 sm:border h-full sm:h-auto'
-                : 'rounded-none sm:rounded-2xl border-0 sm:border h-full sm:h-auto'
+                ? 'rounded-none sm:rounded-[var(--radius-card)] border-0 sm:border h-full sm:h-auto'
+                : 'rounded-none sm:rounded-[var(--radius-overlay)] border-0 sm:border h-full sm:h-auto'
               : variant === 'rounded'
-                ? 'rounded-2xl'
+                ? 'rounded-[var(--radius-overlay)]'
                 : variant === 'square'
-                  ? 'rounded-lg'
+                  ? 'rounded-[var(--radius-card)]'
                   : shellContainer
-                    ? 'rounded-xl'
-                    : 'rounded-lg',
+                    ? 'rounded-[var(--radius-overlay)]'
+                    : 'rounded-[var(--radius-card)]',
           className
         )}
       >
@@ -414,7 +487,7 @@ export default function Modal({
                 <div
                   id={titleId}
                   className={cn(
-                    'text-base sm:text-lg font-semibold text-foreground leading-tight break-words',
+                    'text-base sm:text-lg font-semibold text-foreground leading-tight break-words text-balance',
                     headerClassName && 'text-inherit'
                   )}
                 >
@@ -423,8 +496,9 @@ export default function Modal({
               )}
               {description && (
                 <p
+                  id={descriptionId}
                   className={cn(
-                    'text-xs text-muted-foreground mt-0.5',
+                    'text-xs text-muted-foreground mt-0.5 text-pretty',
                     headerClassName && 'text-inherit opacity-80'
                   )}
                 >
@@ -437,8 +511,8 @@ export default function Modal({
               type="button"
               onClick={onClose}
               className={cn(
-                'rounded-xl p-1.5 text-muted-foreground opacity-70 transition-opacity hover:opacity-100 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none cursor-pointer',
-                headerClassName && 'text-inherit opacity-85 hover:opacity-100 hover:bg-white/20 dark:hover:bg-white/20 focus:ring-white/40',
+                'rounded-[var(--radius-control)] p-1.5 text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none cursor-pointer',
+                headerClassName && 'text-inherit opacity-85 hover:opacity-100 hover:bg-white/20 dark:hover:bg-white/20 focus-visible:ring-white/40',
                 closeButtonClassName
               )}
               aria-label="Fechar"
@@ -454,7 +528,7 @@ export default function Modal({
             data-component-id={componentId ? `${componentId}.close-icon` : 'erp.modal.close-icon'}
             type="button"
             onClick={onClose}
-            className="absolute top-3.5 right-3.5 z-20 rounded-xl p-1.5 text-muted-foreground opacity-70 transition-opacity hover:opacity-100 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
+            className="absolute top-3.5 right-3.5 z-20 rounded-[var(--radius-control)] p-1.5 text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
             aria-label="Fechar"
           >
             <X className="h-4 w-4" />
@@ -468,7 +542,7 @@ export default function Modal({
               ? { padding: typeof padding === 'number' ? `${padding}px` : padding }
               : {}),
           }}
-          className={cn('flex-1 overflow-y-auto min-h-0', paddingClass, bodyClassName)}
+          className={cn('flex-1 overflow-y-auto overscroll-contain min-h-0', paddingClass, bodyClassName)}
         >
           {children}
         </div>
