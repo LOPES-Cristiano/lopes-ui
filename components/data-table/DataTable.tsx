@@ -591,16 +591,18 @@ export default function DataTable<T = Record<string, unknown>>({
       {/* Container da Tabela (minimal = sem bordas externas, clean) */}
       <div
         className={twMerge(
-          'w-full min-w-0 transition-all',
+          'w-full min-w-0 transition-colors',
           variant === 'minimal'
             ? 'border-0 bg-transparent shadow-none'
-            : 'rounded-none sm:rounded-2xl bg-surface border-0 sm:border border-border/80 shadow-none sm:shadow-xs'
+            : 'rounded-none sm:rounded-[var(--radius-card)] bg-surface border-0 sm:border border-border shadow-none sm:shadow-[var(--shadow-card)]'
         )}
       >
         {tabs && tabs.length > 0 && (
           <div className="border-b border-border bg-muted/10 px-2 pt-2 shrink-0 overflow-hidden flex items-end justify-between gap-2">
             {/* Lado Esquerdo: Abas Originais */}
             <div
+              role="tablist"
+              aria-label="Filtros por aba"
               data-no-swipe="true"
               className="flex items-end gap-1.5 overflow-x-auto overflow-y-hidden scrollbar-none w-full scroll-smooth pr-8 pb-0.5"
             >
@@ -640,12 +642,14 @@ export default function DataTable<T = Record<string, unknown>>({
                     data-component-id={tab.componentId || `erp.data-table.tab-${i}`}
                     key={i}
                     type="button"
+                    role="tab"
+                    aria-selected={isActive}
                     onClick={() => {
                       setActiveTab(i);
                       onTabChange?.(tab, i);
                     }}
                     className={twMerge(
-                      'group inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 rounded-t-md',
+                      'group inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 rounded-t-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                       isActive
                         ? '-mb-[1px] bg-primary text-primary-foreground border-t-2 border-t-primary border-x border-primary font-bold shadow-xs z-10'
                         : 'bg-surface hover:bg-muted/40 text-foreground/80 hover:text-foreground border border-border/80 border-b-transparent dark:bg-card dark:hover:bg-muted/20'
@@ -655,9 +659,9 @@ export default function DataTable<T = Record<string, unknown>>({
                     {count !== null && (
                       <span
                         className={twMerge(
-                          'inline-flex min-w-4 items-center justify-center rounded px-1.5 py-0.5 text-[11px] font-bold leading-none transition-colors',
+                          'inline-flex min-w-4 items-center justify-center rounded px-1.5 py-0.5 text-[11px] font-bold leading-none tabular-nums transition-colors',
                           isActive
-                            ? 'bg-[#d9383a] text-white shadow-2xs'
+                            ? 'bg-brand text-brand-foreground shadow-2xs'
                             : 'bg-muted text-muted-foreground group-hover:bg-muted/80'
                         )}
                       >
@@ -679,7 +683,19 @@ export default function DataTable<T = Record<string, unknown>>({
         )}
 
         {/* Visualização Desktop: Tabela Tradicional */}
-        <div className="hidden md:block w-full overflow-x-auto">
+        <div
+          role="region"
+          aria-label={
+            typeof resolvedTitle === 'string' && resolvedTitle
+              ? resolvedTitle
+              : typeof caption === 'string' && caption
+                ? caption
+                : 'Tabela de dados'
+          }
+          tabIndex={0}
+          className="hidden md:flex w-full overflow-x-auto lopes-scroll-shadow-x focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/40"
+        >
+          <span aria-hidden="true" className="lopes-scroll-hint-left" />
           <table className="w-full min-w-full border-collapse text-left">
             {caption && <caption className="sr-only">{caption}</caption>}
             <DataTableHeader
@@ -774,6 +790,7 @@ export default function DataTable<T = Record<string, unknown>>({
               />
             )}
           </table>
+          <span aria-hidden="true" className="lopes-scroll-hint-right" />
         </div>
 
         {/* Visualização Mobile: Linhas Zebradas Identicas ao PC pegando toda a tela */}
