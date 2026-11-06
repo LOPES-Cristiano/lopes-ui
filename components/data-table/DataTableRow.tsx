@@ -29,21 +29,21 @@ function resolveActionToneClass<T>(action: DataTableAction<T>, row: T): string {
       : action.buttonClassName;
   }
   if (action.danger || action.tone === 'danger' || action.variant === 'delete') {
-    return 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40';
+    return 'text-danger hover:bg-danger-soft';
   }
   if (action.tone === 'warning') {
-    return 'text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/40';
+    return 'text-warning hover:bg-warning-soft';
   }
   if (action.tone === 'success') {
-    return 'text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40';
+    return 'text-success hover:bg-success-soft';
   }
   if (action.tone === 'primary' || action.variant === 'edit') {
     return 'text-primary hover:bg-primary/10';
   }
   if (action.tone === 'info' || action.variant === 'detail') {
-    return 'text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40';
+    return 'text-info hover:bg-info-soft';
   }
-  return 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800';
+  return 'text-muted-foreground hover:text-foreground hover:bg-muted';
 }
 
 function resolveActionIconClass<T>(action: DataTableAction<T>, row: T): string {
@@ -53,19 +53,19 @@ function resolveActionIconClass<T>(action: DataTableAction<T>, row: T): string {
       : action.iconClassName;
   }
   if (action.danger || action.tone === 'danger' || action.variant === 'delete') {
-    return 'text-red-500 dark:text-red-400';
+    return 'text-danger';
   }
   if (action.tone === 'warning') {
-    return 'text-amber-500 dark:text-amber-400';
+    return 'text-warning';
   }
   if (action.tone === 'success') {
-    return 'text-emerald-500 dark:text-emerald-400';
+    return 'text-success';
   }
   if (action.tone === 'primary' || action.variant === 'edit') {
     return 'text-primary';
   }
   if (action.tone === 'info' || action.variant === 'detail') {
-    return 'text-blue-500 dark:text-blue-400';
+    return 'text-info';
   }
   return '';
 }
@@ -233,11 +233,11 @@ export function DataTableRow<T = Record<string, unknown>>({
         }}
         className={twMerge(
           'group transition-colors',
-          striped && rowIndex % 2 === 1 ? 'bg-zinc-50/50 dark:bg-zinc-800/30' : 'bg-surface',
-          hoverable && 'hover:bg-primary/5 dark:hover:bg-primary/10',
-          isSelected && !rowClassName && 'bg-primary/10 dark:bg-primary/20',
+          striped && rowIndex % 2 === 1 ? 'bg-muted/25' : 'bg-surface',
+          hoverable && 'hover:bg-surface-hover',
+          isSelected && !rowClassName && 'bg-brand-soft/60',
           dividers && 'border-b border-border/60',
-          isInteractive && 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40',
+          isInteractive && 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/40',
           typeof rowClassName === 'function' ? rowClassName(row, rowIndex) : rowClassName
         )}
       >
@@ -253,7 +253,7 @@ export function DataTableRow<T = Record<string, unknown>>({
               type="button"
               onClick={() => onToggleExpand?.(rowSelectionKey, row)}
               className={twMerge(
-                'inline-flex items-center justify-center h-6 w-6 rounded-md border transition-all duration-200 cursor-pointer',
+                'inline-flex items-center justify-center h-6 w-6 rounded-md border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer',
                 isExpanded
                   ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                   : 'bg-muted/30 border-border/80 text-muted-foreground hover:bg-muted/80 hover:text-foreground'
@@ -263,9 +263,9 @@ export function DataTableRow<T = Record<string, unknown>>({
               aria-expanded={isExpanded}
             >
               {isExpanded ? (
-                <Minus size={13} strokeWidth={2.5} className="transition-transform duration-200" />
+                <Minus size={13} strokeWidth={2.5} />
               ) : (
-                <Plus size={13} strokeWidth={2.5} className="transition-transform duration-200" />
+                <Plus size={13} strokeWidth={2.5} />
               )}
             </button>
           </td>
@@ -284,7 +284,7 @@ export function DataTableRow<T = Record<string, unknown>>({
               disabled={!isSelectable && !isSelected}
               onChange={() => onToggleSelect(rowSelectionKey, row)}
               className={twMerge(
-                'h-4 w-4 rounded border-border text-primary focus:ring-primary shrink-0 cursor-pointer disabled:opacity-50',
+                'h-4 w-4 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 shrink-0 cursor-pointer disabled:opacity-50',
                 checkboxClassName
               )}
             />
@@ -301,7 +301,7 @@ export function DataTableRow<T = Record<string, unknown>>({
             col.align === 'center'
               ? 'text-center'
               : col.align === 'right'
-                ? 'text-right'
+                ? 'text-right tabular-nums'
                 : 'text-left';
 
           return (
@@ -361,7 +361,7 @@ export function DataTableRow<T = Record<string, unknown>>({
                     disabled={isDisabled || isRunning}
                     onClick={() => handleActionClick(action, idx)}
                     className={twMerge(
-                      'group/btn inline-flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:scale-110 active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100',
+                      'group/btn inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-control)] text-xs font-semibold transition-[color,background-color,transform] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed',
                       hasIcon && !showText ? 'p-1.5' : 'px-2.5 py-1.5',
                       toneCls
                     )}
@@ -375,7 +375,7 @@ export function DataTableRow<T = Record<string, unknown>>({
                         <Icon
                           size={16}
                           className={twMerge(
-                            'transition-transform duration-150 group-hover/btn:scale-110 shrink-0',
+                            'shrink-0',
                             iconCls
                           )}
                         />
@@ -396,13 +396,13 @@ export function DataTableRow<T = Record<string, unknown>>({
                     onClick={toggleMenu}
                     aria-expanded={menuOpen}
                     aria-haspopup="menu"
-                    className="group/more rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all duration-150 hover:scale-110 active:scale-95 cursor-pointer"
+                    className="group/more rounded-[var(--radius-control)] p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-[color,background-color,transform] duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
                     title="Mais ações"
                     aria-label="Mais ações"
                   >
                     <EllipsisVertical
                       size={16}
-                      className="transition-transform duration-150 group-hover/more:scale-110"
+                      className="shrink-0"
                     />
                   </button>
 
@@ -423,7 +423,7 @@ export function DataTableRow<T = Record<string, unknown>>({
                               : undefined,
                           zIndex: 9999,
                         }}
-                        className="min-w-44 rounded-xl border border-border bg-surface p-1 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+                        className="min-w-44 rounded-[var(--radius-card)] border border-border bg-popover text-popover-foreground p-1 shadow-[var(--shadow-floating)] animate-in fade-in-0 zoom-in-95 duration-150"
                       >
                         {overflowActions.map((action, overflowIdx) => {
                           const absoluteIdx = inlineCount + overflowIdx;
@@ -456,7 +456,7 @@ export function DataTableRow<T = Record<string, unknown>>({
                                 handleActionClick(action, absoluteIdx);
                               }}
                               className={twMerge(
-                                'group/item flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-left',
+                                'group/item flex w-full items-center gap-2 rounded-[var(--radius-control)] px-2.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:bg-muted cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-left',
                                 toneCls
                               )}
                             >
@@ -467,7 +467,7 @@ export function DataTableRow<T = Record<string, unknown>>({
                                   <Icon
                                     size={14}
                                     className={twMerge(
-                                      'shrink-0 transition-transform duration-150 group-hover/item:scale-115',
+                                      'shrink-0',
                                       iconCls
                                     )}
                                   />
