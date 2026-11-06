@@ -89,28 +89,28 @@ export type CardFooterProps = {
 // ── Style maps ────────────────────────────────────────────────────────────────
 
 const VARIANT_CLASSES: Record<CardVariant, string> = {
-  default:  "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800",
-  outlined: "bg-transparent border border-zinc-300 dark:border-zinc-700",
-  elevated: "bg-white dark:bg-zinc-900 border-transparent",
-  filled:   "border-transparent",
-  ghost:    "bg-transparent border-transparent",
+  default:  "bg-card text-card-foreground border border-border",
+  outlined: "bg-transparent text-card-foreground border border-border-strong",
+  elevated: "bg-card text-card-foreground border border-transparent shadow-[var(--shadow-card)]",
+  filled:   "text-card-foreground border border-transparent",
+  ghost:    "bg-transparent text-card-foreground border border-transparent",
 };
 
 const SHADOW_CLASSES: Record<CardShadow, string> = {
   none: "",
-  sm:   "shadow-sm",
+  sm:   "shadow-[var(--shadow-card)]",
   md:   "shadow-md",
-  lg:   "shadow-lg",
-  xl:   "shadow-xl",
+  lg:   "shadow-[var(--shadow-floating)]",
+  xl:   "shadow-[var(--shadow-overlay)]",
 };
 
 const RADIUS_CLASSES: Record<CardRadius, string> = {
   none: "rounded-none",
   sm:   "rounded-sm",
-  md:   "rounded-md",
+  md:   "rounded-[var(--radius-control)]",
   lg:   "rounded-lg",
-  xl:   "rounded-xl",
-  "2xl":"rounded-2xl",
+  xl:   "rounded-[var(--radius-card)]",
+  "2xl":"rounded-[var(--radius-overlay)]",
 };
 
 type ColorStyle = {
@@ -122,40 +122,40 @@ type ColorStyle = {
 
 const COLOR_STYLES: Record<CardColor, ColorStyle> = {
   default: {
-    filled:   "bg-zinc-50 dark:bg-zinc-800/50",
-    accent:   "bg-zinc-400",
-    iconBg:   "bg-zinc-100 dark:bg-zinc-800",
-    iconText: "text-zinc-600 dark:text-zinc-400",
+    filled:   "bg-surface-muted/70",
+    accent:   "bg-muted-foreground/60",
+    iconBg:   "bg-surface-muted",
+    iconText: "text-muted-foreground",
   },
   primary: {
-    filled:   "bg-indigo-50 dark:bg-indigo-950/40",
-    accent:   "bg-indigo-500",
-    iconBg:   "bg-indigo-100 dark:bg-indigo-900/50",
-    iconText: "text-indigo-600 dark:text-indigo-300",
+    filled:   "bg-brand-soft/70",
+    accent:   "bg-brand",
+    iconBg:   "bg-brand-soft",
+    iconText: "text-brand-soft-foreground",
   },
   success: {
-    filled:   "bg-emerald-50 dark:bg-emerald-950/40",
-    accent:   "bg-emerald-500",
-    iconBg:   "bg-emerald-100 dark:bg-emerald-900/50",
-    iconText: "text-emerald-600 dark:text-emerald-300",
+    filled:   "bg-success-soft/70",
+    accent:   "bg-success",
+    iconBg:   "bg-success-soft",
+    iconText: "text-success-soft-foreground",
   },
   warning: {
-    filled:   "bg-amber-50 dark:bg-amber-950/40",
-    accent:   "bg-amber-400",
-    iconBg:   "bg-amber-100 dark:bg-amber-900/50",
-    iconText: "text-amber-600 dark:text-amber-300",
+    filled:   "bg-warning-soft/70",
+    accent:   "bg-warning",
+    iconBg:   "bg-warning-soft",
+    iconText: "text-warning-soft-foreground",
   },
   danger: {
-    filled:   "bg-red-50 dark:bg-red-950/40",
-    accent:   "bg-red-500",
-    iconBg:   "bg-red-100 dark:bg-red-900/50",
-    iconText: "text-red-600 dark:text-red-300",
+    filled:   "bg-danger-soft/70",
+    accent:   "bg-danger",
+    iconBg:   "bg-danger-soft",
+    iconText: "text-danger-soft-foreground",
   },
   info: {
-    filled:   "bg-sky-50 dark:bg-sky-950/40",
-    accent:   "bg-sky-500",
-    iconBg:   "bg-sky-100 dark:bg-sky-900/50",
-    iconText: "text-sky-600 dark:text-sky-300",
+    filled:   "bg-info-soft/70",
+    accent:   "bg-info",
+    iconBg:   "bg-info-soft",
+    iconText: "text-info-soft-foreground",
   },
   violet: {
     filled:   "bg-violet-50 dark:bg-violet-950/40",
@@ -187,7 +187,7 @@ export function CardTitle({
   className?: string;
 }) {
   return (
-    <h3 className={twMerge("text-sm font-semibold text-zinc-900 dark:text-zinc-50 leading-snug", className)}>
+    <h3 className={twMerge("text-sm font-semibold text-card-foreground leading-snug text-balance", className)}>
       {children}
     </h3>
   );
@@ -201,7 +201,7 @@ export function CardDescription({
   className?: string;
 }) {
   return (
-    <p className={twMerge("mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed", className)}>
+    <p className={twMerge("mt-0.5 text-xs text-muted-foreground leading-relaxed text-pretty", className)}>
       {children}
     </p>
   );
@@ -232,7 +232,7 @@ export function CardHeader({
       <div className="flex items-start gap-3 min-w-0 flex-1">
         {Icon && (
           <span className={twMerge(
-            "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+            "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)]",
             c.iconBg, c.iconText
           )}>
             <Icon size={17} />
@@ -240,10 +240,10 @@ export function CardHeader({
         )}
         <div className="min-w-0 flex-1">
           {title && (
-            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 leading-snug truncate">{title}</p>
+            <p className="text-sm font-semibold text-card-foreground leading-snug truncate">{title}</p>
           )}
           {description && (
-            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">{description}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed text-pretty">{description}</p>
           )}
           {children}
         </div>
@@ -286,7 +286,7 @@ export function CardFooter({
     <div className={twMerge(
       "flex items-center flex-wrap gap-2 px-5 pb-5",
       alignClass,
-      divider && "border-t border-zinc-100 dark:border-zinc-800 pt-4",
+      divider && "border-t border-border pt-4",
       className,
     )}>
       {children}
@@ -340,15 +340,15 @@ export default function Card({
   const isHorizontal = layout === "horizontal";
 
   const classes = twMerge(
-    "relative overflow-hidden transition-all duration-200 text-left",
+    "@container relative overflow-hidden transition-[background-color,border-color,box-shadow,transform] duration-200 text-left",
     isHorizontal ? "flex flex-col sm:flex-row" : "flex flex-col",
     VARIANT_CLASSES[resolvedVariant],
     resolvedVariant === "filled" ? c.filled : "",
-    isHero ? "shadow-lg bg-gradient-to-br from-white to-slate-50/80 dark:from-zinc-900 dark:to-zinc-900/60 border border-slate-200/80 dark:border-zinc-800" : SHADOW_CLASSES[shadow],
+    isHero ? "shadow-[var(--shadow-floating)] bg-gradient-to-br from-card to-surface-muted/70 border border-border" : SHADOW_CLASSES[shadow],
     RADIUS_CLASSES[radius],
     compact && "[&>div]:px-3.5 [&>div]:py-2.5",
     isImageFull && "text-white border-transparent",
-    isClickable && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
+    isClickable && "cursor-pointer hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 hover:shadow-[var(--shadow-floating)] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
     className,
   );
 
