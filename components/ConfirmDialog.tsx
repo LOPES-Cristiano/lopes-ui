@@ -81,20 +81,20 @@ type VConfig = {
 const VARIANTS: Record<ConfirmDialogVariant, VConfig> = {
   danger: {
     icon: Trash2,
-    iconBg: 'bg-destructive/10 text-destructive',
-    iconCls: 'text-destructive',
+    iconBg: 'bg-danger-soft text-danger-soft-foreground border border-danger-border/60',
+    iconCls: 'text-danger',
     buttonVariant: 'destructive',
   },
   warning: {
     icon: AlertTriangle,
-    iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    iconCls: 'text-amber-600 dark:text-amber-400',
+    iconBg: 'bg-warning-soft text-warning-soft-foreground border border-warning-border/60',
+    iconCls: 'text-warning',
     buttonVariant: 'warning',
   },
   info: {
     icon: AlertTriangle,
-    iconBg: 'bg-primary/10 text-primary',
-    iconCls: 'text-primary',
+    iconBg: 'bg-info-soft text-info-soft-foreground border border-info-border/60',
+    iconCls: 'text-info',
     buttonVariant: 'primary',
   },
 };
@@ -205,7 +205,7 @@ export default function ConfirmDialog({
         }}
         className={cn(
           'fixed left-1/2 top-1/2 z-[7800] -translate-x-1/2 -translate-y-1/2',
-          'w-[calc(100vw-2rem)] sm:w-full max-w-[calc(100vw-2rem)] sm:max-w-none bg-card border border-border text-card-foreground shadow-2xl rounded-2xl p-4 sm:p-6 overflow-hidden box-border',
+          'w-[calc(100vw-2rem)] sm:w-full max-w-[calc(100vw-2rem)] sm:max-w-none bg-card border border-border text-card-foreground shadow-[var(--shadow-overlay)] rounded-[var(--radius-overlay)] p-4 sm:p-6 overflow-hidden box-border',
           'flex flex-col duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
           isFullMobile && [
             'max-sm:!fixed max-sm:!inset-0 max-sm:!top-0 max-sm:!left-0 max-sm:!right-0 max-sm:!bottom-0',
@@ -231,11 +231,11 @@ export default function ConfirmDialog({
             </div>
 
             <AlertDialogHeader className="min-w-0 text-left space-y-1">
-              <AlertDialogTitle className="text-base font-semibold text-foreground leading-tight">
+              <AlertDialogTitle className="text-base font-semibold text-foreground leading-tight text-balance">
                 {title ?? 'Confirmar ação'}
               </AlertDialogTitle>
               {description && (
-                <AlertDialogDescription className="text-xs sm:text-sm text-muted-foreground">
+                <AlertDialogDescription className="text-xs sm:text-sm text-muted-foreground text-pretty">
                   {description}
                 </AlertDialogDescription>
               )}
@@ -247,7 +247,7 @@ export default function ConfirmDialog({
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="p-1.5 -mr-1 -mt-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors shrink-0 disabled:opacity-50"
+              className="p-1.5 -mr-1 -mt-1 rounded-[var(--radius-control)] text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer shrink-0 disabled:opacity-50"
               aria-label="Fechar"
             >
               <X size={18} />
@@ -257,7 +257,7 @@ export default function ConfirmDialog({
 
         {/* Body com Scroll Interno */}
         {children && (
-          <div className="flex-1 overflow-y-auto min-h-0 text-sm text-muted-foreground w-full py-2 px-1 -mx-1 flex flex-col">
+          <div className="flex-1 overflow-y-auto overscroll-contain min-h-0 text-sm text-muted-foreground w-full py-2 px-1 -mx-1 flex flex-col">
             {children}
           </div>
         )}
