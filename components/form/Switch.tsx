@@ -2,7 +2,8 @@
 
 import React, { useId } from "react";
 import { twMerge } from "tailwind-merge";
-import { HelpCircle, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { FieldTooltip } from "./FieldWrapper";
 import { useAccessControl } from "../useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -28,7 +29,7 @@ export type SwitchProps = {
   helpText?: string;
   size?: "sm" | "md" | "lg";
   /** Color of the track when ON */
-  color?: "indigo" | "emerald" | "sky" | "rose" | "amber" | "zinc";
+  color?: "primary" | "brand" | "indigo" | "emerald" | "sky" | "rose" | "amber" | "zinc";
   /** When true, the label is rendered to the left of the toggle */
   labelLeft?: boolean;
   /** Tailwind width class of the outer wrapper */
@@ -49,21 +50,25 @@ const SIZE = {
 } as const;
 
 const TRACK_ON: Record<NonNullable<SwitchProps["color"]>, string> = {
+  primary: "bg-primary",
+  brand:   "bg-brand",
   indigo:  "bg-primary",
-  emerald: "bg-emerald-500",
-  sky:     "bg-sky-500",
-  rose:    "bg-rose-500",
-  amber:   "bg-amber-400",
+  emerald: "bg-success",
+  sky:     "bg-info",
+  rose:    "bg-danger",
+  amber:   "bg-warning",
   zinc:    "bg-zinc-700",
 };
 
 const FOCUS_RING: Record<NonNullable<SwitchProps["color"]>, string> = {
-  indigo:  "peer-focus-visible:ring-ring",
-  emerald: "peer-focus-visible:ring-emerald-400",
-  sky:     "peer-focus-visible:ring-sky-400",
-  rose:    "peer-focus-visible:ring-rose-400",
-  amber:   "peer-focus-visible:ring-amber-400",
-  zinc:    "peer-focus-visible:ring-zinc-500",
+  primary: "peer-focus-visible:ring-ring/40",
+  brand:   "peer-focus-visible:ring-brand/45",
+  indigo:  "peer-focus-visible:ring-ring/40",
+  emerald: "peer-focus-visible:ring-success/45",
+  sky:     "peer-focus-visible:ring-info/45",
+  rose:    "peer-focus-visible:ring-danger/45",
+  amber:   "peer-focus-visible:ring-warning/45",
+  zinc:    "peer-focus-visible:ring-zinc-500/45",
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -140,18 +145,20 @@ export default function Switch({
           s.track,
           isChecked
             ? twMerge(TRACK_ON[color], "ring-transparent")
-            : "bg-zinc-200 ring-zinc-300 dark:bg-zinc-600 dark:ring-zinc-500",
-          "peer-focus-visible:ring-2 peer-focus-visible:ring-offset-1",
+            : "bg-surface-muted ring-input-border hover:ring-border-strong",
+          "peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background",
           FOCUS_RING[color],
-          error && "ring-2 ring-red-400",
+          error && "ring-2 ring-danger",
         )}
         aria-hidden="true"
       >
         {/* Thumb */}
         <span
           className={twMerge(
-            "ml-0.5 rounded-full shadow transition-transform duration-200 ease-in-out",
-            isChecked && color === "indigo" ? "bg-primary-foreground" : "bg-white",
+            "ml-0.5 rounded-full shadow-xs transition-transform duration-200 ease-in-out motion-reduce:transition-none",
+            isChecked && (color === "indigo" || color === "primary")
+              ? "bg-primary-foreground"
+              : "bg-white",
             s.thumb,
             isChecked ? s.translate : "translate-x-0",
           )}
@@ -171,14 +178,14 @@ export default function Switch({
     >
       <span className={twMerge("font-medium text-surface-foreground", s.text)}>{inlineLabel}</span>
       {description && (
-        <span className="text-xs text-muted-foreground mt-0.5">{description}</span>
+        <span className="text-xs text-muted-foreground text-pretty mt-0.5">{description}</span>
       )}
     </label>
   ) : null;
 
   // ── Top label (above toggle) ───────────────────────────────────────────────
   const topLabelEl = label ? (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1">
       <label
         htmlFor={id}
         className={twMerge(
@@ -188,31 +195,20 @@ export default function Switch({
         )}
       >
         {label}
-        {required && <span aria-hidden="true" className="ml-0.5 text-red-500">*</span>}
+        {required && <span aria-hidden="true" className="ml-0.5 text-danger">*</span>}
       </label>
-      {tooltip && (
-        <span className="group/tip relative inline-flex cursor-default">
-          <HelpCircle size={13} className="text-zinc-400 transition-colors group-hover/tip:text-zinc-600" />
-          <span
-            role="tooltip"
-            className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 w-max max-w-[14rem] rounded-lg bg-zinc-900 px-2.5 py-1.5 text-[11px] leading-snug text-white shadow-xl opacity-0 scale-95 group-hover/tip:opacity-100 group-hover/tip:scale-100 transition-all duration-150"
-          >
-            {tooltip}
-            <span className="absolute left-1/2 top-full -translate-x-1/2 border-[4px] border-transparent border-t-zinc-900" />
-          </span>
-        </span>
-      )}
+      {tooltip && <FieldTooltip message={tooltip} />}
     </div>
   ) : null;
 
   // ── Error / help text ──────────────────────────────────────────────────────
   const subTextEl = error ? (
-    <p id={`${id}-error`} className="flex items-center gap-1 text-xs text-red-600 mt-1">
+    <p id={`${id}-error`} className="flex items-center gap-1 text-xs text-danger mt-1">
       <AlertCircle size={11} strokeWidth={2.5} className="shrink-0" />
       {error}
     </p>
   ) : helpText ? (
-    <p id={`${id}-help`} className="text-xs text-zinc-400 mt-1">{helpText}</p>
+    <p id={`${id}-help`} className="text-xs text-muted-foreground text-pretty mt-1">{helpText}</p>
   ) : null;
 
   // ── Layout ─────────────────────────────────────────────────────────────────
