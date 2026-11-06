@@ -61,36 +61,36 @@ export type TabsProps = TabsPrimitiveRootProps & {
 
 const LIST_VARIANT_CLS: Record<TabsVariant, string> = {
   pills:
-    "w-fit max-w-full overflow-x-auto no-scrollbar self-start rounded-xl bg-zinc-100 dark:bg-zinc-800/80 p-1 gap-1 text-zinc-500 dark:text-zinc-400",
+    "w-fit max-w-full overflow-x-auto no-scrollbar self-start rounded-[var(--radius-card)] bg-surface-muted p-1 gap-1 text-muted-foreground",
   underline:
-    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-none border-b border-zinc-200 dark:border-zinc-800 bg-transparent p-0 gap-4 sm:gap-6 text-zinc-500 dark:text-zinc-400",
+    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-none border-b border-border bg-transparent p-0 gap-4 sm:gap-6 text-muted-foreground",
   bordered:
-    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-none border-b border-zinc-200 dark:border-zinc-800 bg-transparent p-0 gap-1.5 sm:gap-2 text-zinc-500 dark:text-zinc-400",
+    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-none border-b border-border bg-transparent p-0 gap-1.5 sm:gap-2 text-muted-foreground",
   enclosed:
-    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-t-xl border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/50 p-1.5 gap-1.5 text-zinc-500 dark:text-zinc-400",
+    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-t-[var(--radius-card)] border-b border-border bg-surface-muted/60 p-1.5 gap-1.5 text-muted-foreground",
   lifted:
-    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-none border-b border-zinc-200 dark:border-zinc-800 bg-transparent px-1 pt-1 pb-0 gap-1.5 text-zinc-500 dark:text-zinc-400",
+    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-none border-b border-border bg-transparent px-1 pt-1 pb-0 gap-1.5 text-muted-foreground",
   card:
-    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-none border-b border-zinc-200 dark:border-zinc-800 bg-transparent p-0 gap-1 text-zinc-600 dark:text-zinc-400",
+    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-none border-b border-border bg-transparent p-0 gap-1 text-muted-foreground",
   "editable-card":
-    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-none border-b border-zinc-200 dark:border-zinc-800 bg-transparent p-0 gap-1 text-zinc-600 dark:text-zinc-400",
+    "w-full max-w-full overflow-x-auto no-scrollbar justify-start h-auto rounded-none border-b border-border bg-transparent p-0 gap-1 text-muted-foreground",
 };
 
 const TRIGGER_VARIANT_CLS: Record<TabsVariant, string> = {
   pills:
-    "rounded-lg data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-xs dark:data-[state=active]:bg-zinc-900 dark:data-[state=active]:text-zinc-100",
+    "rounded-[var(--radius-control)] data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-[var(--shadow-control)]",
   underline:
-    "-mb-px rounded-none border-b-2 border-transparent px-1 pb-2.5 pt-1.5 data-[state=active]:border-indigo-600 dark:data-[state=active]:border-indigo-400 data-[state=active]:bg-transparent data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400 data-[state=active]:shadow-none",
+    "-mb-px rounded-none border-b-2 border-transparent px-1 pb-2.5 pt-1.5 hover:text-foreground data-[state=active]:border-brand data-[state=active]:bg-transparent data-[state=active]:text-brand data-[state=active]:shadow-none",
   bordered:
-    "-mb-px rounded-none border-b-2 border-transparent px-3 pb-2.5 pt-1.5 data-[state=active]:border-zinc-900 dark:data-[state=active]:border-zinc-100 data-[state=active]:bg-transparent data-[state=active]:text-zinc-900 data-[state=active]:shadow-none dark:data-[state=active]:bg-transparent dark:data-[state=active]:text-zinc-100",
+    "-mb-px rounded-none border-b-2 border-transparent px-3 pb-2.5 pt-1.5 hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none",
   enclosed:
-    "rounded-lg border border-transparent data-[state=active]:border-zinc-200/80 data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-2xs dark:data-[state=active]:border-zinc-700 dark:data-[state=active]:bg-zinc-900 dark:data-[state=active]:text-zinc-100",
+    "rounded-[var(--radius-control)] border border-transparent data-[state=active]:border-border data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-[var(--shadow-control)]",
   lifted:
-    "-mb-px rounded-t-xl rounded-b-none border border-transparent px-4 py-2 data-[state=active]:border-zinc-200 data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-none dark:data-[state=active]:border-zinc-800 dark:data-[state=active]:border-b-zinc-900 dark:data-[state=active]:bg-zinc-900 dark:data-[state=active]:text-zinc-100",
+    "-mb-px rounded-t-[var(--radius-card)] rounded-b-none border border-transparent px-4 py-2 data-[state=active]:border-border data-[state=active]:border-b-card data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-none",
   card:
-    "-mb-px rounded-t-lg rounded-b-none border border-zinc-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-800/60 px-3.5 py-2 hover:text-indigo-600 dark:hover:text-indigo-400 data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-none dark:data-[state=active]:border-b-zinc-900 dark:data-[state=active]:bg-zinc-900 dark:data-[state=active]:text-indigo-400",
+    "-mb-px rounded-t-[var(--radius-control)] rounded-b-none border border-border bg-surface-muted/80 px-3.5 py-2 hover:text-brand data-[state=active]:border-b-card data-[state=active]:bg-card data-[state=active]:text-brand data-[state=active]:shadow-none",
   "editable-card":
-    "-mb-px rounded-t-lg rounded-b-none border border-zinc-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-800/60 px-3.5 py-2 hover:text-indigo-600 dark:hover:text-indigo-400 data-[state=active]:border-b-white data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-none dark:data-[state=active]:border-b-zinc-900 dark:data-[state=active]:bg-zinc-900 dark:data-[state=active]:text-indigo-400",
+    "-mb-px rounded-t-[var(--radius-control)] rounded-b-none border border-border bg-surface-muted/80 px-3.5 py-2 hover:text-brand data-[state=active]:border-b-card data-[state=active]:bg-card data-[state=active]:text-brand data-[state=active]:shadow-none",
 };
 
 const SIZE_CLS: Record<TabsSize, string> = {
@@ -218,9 +218,9 @@ export default function Tabs({
           Boolean(onRemove) &&
           (item.closable !== undefined ? item.closable : isEditableCard);
 
-        return (
+        const triggerNode = (
           <TabsTrigger
-            key={item.value}
+            key={canClose ? undefined : item.value}
             value={item.value}
             componentId={item.componentId}
             hideIfDenied={item.hideIfDenied}
@@ -228,41 +228,48 @@ export default function Tabs({
             className={cn(
               TRIGGER_VARIANT_CLS[variant],
               SIZE_CLS[size],
-              fullWidth && !isVertical && "flex-1",
+              canClose && "pr-7",
+              fullWidth && !isVertical && (canClose ? "w-full" : "flex-1"),
               isVertical && "justify-start",
               triggerClassName,
             )}
           >
             {item.icon && <span className="shrink-0">{item.icon}</span>}
-            <span>{item.label}</span>
+            <span className="lopes-trim-cap">{item.label}</span>
             {item.badge !== undefined && item.badge !== null && (
-              <span className="ml-1 inline-flex items-center justify-center rounded-full bg-zinc-200/80 dark:bg-zinc-700 px-1.5 py-0.5 text-[10px] font-semibold leading-none">
+              <span className="ml-1 inline-flex items-center justify-center rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-secondary-foreground">
                 {item.badge}
               </span>
             )}
-            {canClose && (
-              <span
-                role="button"
-                tabIndex={0}
-                aria-label={`Fechar aba ${typeof item.label === "string" ? item.label : item.value}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onRemove?.(item.value);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    onRemove?.(item.value);
-                  }
-                }}
-                className="ml-1.5 -mr-1 inline-flex h-4 w-4 items-center justify-center rounded-sm text-zinc-400 hover:bg-zinc-200/80 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-100 transition-colors cursor-pointer"
-              >
-                <X className="h-3 w-3" />
-              </span>
-            )}
           </TabsTrigger>
+        );
+
+        if (!canClose) {
+          return triggerNode;
+        }
+
+        return (
+          <div
+            key={item.value}
+            role="presentation"
+            className={cn(
+              "group/tab relative inline-flex items-center",
+              fullWidth && !isVertical && "flex-1",
+            )}
+          >
+            {triggerNode}
+            <button
+              type="button"
+              aria-label={`Fechar aba ${typeof item.label === "string" ? item.label : item.value}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove?.(item.value);
+              }}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-sm text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
         );
       })}
 
@@ -273,10 +280,10 @@ export default function Tabs({
           aria-label={addLabel}
           title={addLabel}
           className={cn(
-            "inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer",
+            "inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
             variant === "card" || variant === "editable-card"
-              ? "-mb-px rounded-t-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/40 px-2.5 py-2 text-zinc-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-zinc-800 dark:hover:text-indigo-400"
-              : "rounded-lg px-2 py-1 text-zinc-500 hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60 hover:text-zinc-900 dark:hover:text-zinc-100",
+              ? "-mb-px rounded-t-[var(--radius-control)] border border-border bg-surface-muted/60 px-2.5 py-2 text-muted-foreground hover:text-brand hover:bg-card"
+              : "rounded-[var(--radius-control)] px-2 py-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground",
           )}
         >
           <Plus className="h-3.5 w-3.5" />
@@ -306,7 +313,7 @@ export default function Tabs({
         <div
           className={cn(
             "flex items-center justify-between gap-3 w-full",
-            hasBottomBorderBar && "border-b border-zinc-200 dark:border-zinc-800",
+            hasBottomBorderBar && "border-b border-border",
           )}
         >
           {tabsListNode}
