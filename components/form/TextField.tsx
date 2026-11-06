@@ -254,7 +254,7 @@ export default function TextField({
   clearable = false,
   onClear,
   showCount = false,
-  size = "sm",
+  size = "md",
   variant = "default",
   leftIcon,
   rightIcon,
@@ -387,6 +387,17 @@ export default function TextField({
   ) : null;
 
   const resolvedLabelAction = labelAction ?? countNode;
+  const describedBy = error ? `${id}-error` : (helpText || hint) ? `${id}-help` : undefined;
+  const suppressPasswordManagers = !isPasswordField && (!autoComplete || autoComplete === "off");
+  const antiAutofillProps = suppressPasswordManagers
+    ? {
+        "data-1p-ignore": "true",
+        "data-lpignore": "true",
+        "data-bwignore": "true",
+        "data-form-type": "other",
+      }
+    : {};
+  const resolvedName = name ?? (suppressPasswordManagers ? `input_off_${id}` : id);
 
   // ── Contained / Floating Mantine-inspired variants ──────────────────────────
   if (isInternalLabel) {
@@ -406,10 +417,10 @@ export default function TextField({
         <div
           onClick={() => inputRef.current?.focus()}
           className={twMerge(
-            "relative flex items-center rounded-xl border bg-surface transition-all duration-150",
+            "relative flex items-center rounded-[var(--radius-card)] border bg-input transition-[background-color,border-color,box-shadow] duration-150",
             error
-              ? "border-danger focus-within:border-danger focus-within:ring-2 focus-within:ring-danger/20"
-              : "border-input-border hover:border-border-strong focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15",
+              ? "border-danger focus-within:border-danger focus-within:ring-3 focus-within:ring-danger/15"
+              : "border-input-border hover:border-border-strong focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/12",
             effectiveDisabled && "opacity-60 cursor-not-allowed bg-surface-muted"
           )}
         >
@@ -428,8 +439,8 @@ export default function TextField({
             <label
               htmlFor={id}
               className={twMerge(
-                "pointer-events-none absolute left-3 origin-top-left select-none font-medium transition-all duration-150",
-                error ? "text-danger" : focused ? "text-primary" : "text-muted-foreground",
+                "pointer-events-none absolute left-3 origin-top-left select-none font-medium transition-[top,transform,font-size,color] duration-150 motion-reduce:transition-none",
+                error ? "text-danger" : focused ? "text-foreground" : "text-muted-foreground",
                 isContained
                   ? "top-1.5 text-[11px] font-semibold tracking-tight"
                   : floated
@@ -445,7 +456,7 @@ export default function TextField({
               ref={inputRef}
               id={id}
               data-component-id={componentId}
-              name={name ?? `input_off_${id}`}
+              name={resolvedName}
               type={resolvedType}
               placeholder={isFloating && !focused ? "" : placeholder}
               value={value !== undefined ? currentText : undefined}
@@ -466,14 +477,16 @@ export default function TextField({
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck={false}
+              {...antiAutofillProps}
               inputMode={resolvedInputMode}
               autoFocus={autoFocus}
               minLength={minLength}
               maxLength={maxLength}
               required={required}
               aria-invalid={error ? true : undefined}
+              aria-describedby={describedBy}
               className={twMerge(
-                "w-full bg-transparent pt-1 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none disabled:cursor-not-allowed",
+                "w-full bg-transparent pt-1 text-sm text-input-foreground placeholder:text-input-placeholder outline-none disabled:cursor-not-allowed",
                 inputClassName
               )}
             />
@@ -538,10 +551,10 @@ export default function TextField({
   );
 
   const baseInput = twMerge(
-    "w-full font-sans transition-colors duration-150 outline-hidden",
-    "text-zinc-900 placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500",
-    "disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400 dark:disabled:bg-zinc-800/60 dark:disabled:text-zinc-500",
-    "read-only:cursor-default read-only:bg-zinc-50 dark:read-only:bg-zinc-800/40",
+    "w-full font-sans transition-[background-color,border-color,box-shadow,color] duration-150 outline-hidden",
+    "text-input-foreground placeholder:text-input-placeholder",
+    "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted-foreground",
+    "read-only:cursor-default read-only:bg-surface-muted/50",
     s.h,
     s.text
   );
@@ -550,62 +563,62 @@ export default function TextField({
     baseInput,
     s.pl,
     s.pr,
-    variant === "underlined" ? "rounded-none px-1" : "rounded-md",
+    variant === "underlined" ? "rounded-none px-1" : "rounded-[var(--radius-control)]",
     variant === "default" && [
-      "border bg-white dark:bg-zinc-900",
+      "border bg-input",
       error
-        ? "border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-        : "border-zinc-300 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-zinc-700 dark:focus:border-primary",
+        ? "border-danger hover:border-danger focus:border-danger focus:ring-3 focus:ring-danger/15"
+        : "border-input-border hover:border-border-strong focus:border-ring focus:ring-3 focus:ring-ring/12",
     ],
     variant === "filled" && [
-      "border border-transparent bg-zinc-100 dark:bg-zinc-800",
+      "border border-transparent bg-surface-muted hover:bg-surface-hover",
       error
-        ? "border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:bg-white dark:focus:bg-zinc-900"
-        : "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-zinc-900",
+        ? "border-danger focus:border-danger focus:ring-3 focus:ring-danger/15 focus:bg-input"
+        : "focus:border-ring focus:ring-3 focus:ring-ring/12 focus:bg-input",
     ],
     variant === "underlined" && [
       "border-0 border-b-2 bg-transparent",
       error
-        ? "border-b-rose-500 focus:border-b-rose-500"
-        : "border-b-zinc-300 dark:border-b-zinc-700 focus:border-b-primary",
+        ? "border-b-danger focus:border-b-danger"
+        : "border-b-input-border hover:border-b-border-strong focus:border-b-ring",
     ],
     variant === "borderless" && [
-      "border border-transparent bg-transparent hover:bg-zinc-100/60 dark:hover:bg-zinc-800/50",
-      error && "text-rose-600 dark:text-rose-400",
+      "border border-transparent bg-transparent hover:bg-surface-hover/60",
+      error && "text-danger",
     ],
     inputClassName
   );
 
   const wrapCls = twMerge(
-    "relative flex items-center transition-colors duration-150 overflow-hidden",
-    variant === "underlined" ? "rounded-none" : "rounded-md",
+    "relative flex items-center transition-[background-color,border-color,box-shadow] duration-150 overflow-hidden",
+    variant === "underlined" ? "rounded-none" : "rounded-[var(--radius-control)]",
     variant === "default" && [
-      "border bg-white dark:bg-zinc-900",
+      "border bg-input",
       error
-        ? "border-rose-500 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20"
-        : "border-zinc-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 dark:border-zinc-700 dark:focus-within:border-primary",
+        ? "border-danger hover:border-danger focus-within:border-danger focus-within:ring-3 focus-within:ring-danger/15"
+        : "border-input-border hover:border-border-strong focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/12",
     ],
     variant === "filled" && [
-      "border border-transparent bg-zinc-100 dark:bg-zinc-800",
+      "border border-transparent bg-surface-muted hover:bg-surface-hover",
       error
-        ? "border-rose-500 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20 focus-within:bg-white dark:focus-within:bg-zinc-900"
-        : "focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 focus-within:bg-white dark:focus-within:bg-zinc-900",
+        ? "border-danger focus-within:border-danger focus-within:ring-3 focus-within:ring-danger/15 focus-within:bg-input"
+        : "focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/12 focus-within:bg-input",
     ],
     variant === "underlined" && [
       "border-0 border-b-2 bg-transparent",
       error
-        ? "border-b-rose-500 focus-within:border-b-rose-500"
-        : "border-b-zinc-300 dark:border-b-zinc-700 focus-within:border-b-primary",
+        ? "border-b-danger focus-within:border-b-danger"
+        : "border-b-input-border hover:border-b-border-strong focus-within:border-b-ring",
     ],
     variant === "borderless" && [
-      "border border-transparent bg-transparent hover:bg-zinc-100/60 dark:hover:bg-zinc-800/50",
+      "border border-transparent bg-transparent hover:bg-surface-hover/60",
     ]
   );
 
   const rightPadClass = rightSection
     ? "pr-2"
     : (canTogglePassword && canClear) || ((canTogglePassword || canClear) && rightIcon)
-      ? "pr-14"
+      ? "pr-16"
       : rightIcon || canTogglePassword || canClear
         ? s.padR
         : s.pr;
@@ -639,7 +652,7 @@ export default function TextField({
           ref={inputRef}
           id={id}
           data-component-id={componentId}
-          name={name ?? `input_off_${id}`}
+          name={resolvedName}
           type={resolvedType}
           placeholder={placeholder}
           value={value !== undefined ? currentText : undefined}
@@ -654,30 +667,27 @@ export default function TextField({
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck={false}
-          data-1p-ignore="true"
-          data-lpignore="true"
-          data-bwignore="true"
-          data-form-type="other"
+          {...antiAutofillProps}
           inputMode={resolvedInputMode}
           autoFocus={autoFocus}
           minLength={minLength}
           maxLength={maxLength}
           required={required}
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
+          aria-describedby={describedBy}
           className={standaloneCls}
         />
       ) : (
         <div className={wrapCls}>
           {leftSection && (
-            <div className="flex shrink-0 items-center self-stretch border-r border-zinc-200 dark:border-zinc-700 px-2">
+            <div className="flex shrink-0 items-center self-stretch border-r border-border px-2">
               {leftSection}
             </div>
           )}
           {leftIcon && !leftSection && (
             <span
               className={twMerge(
-                "pointer-events-none absolute top-1/2 -translate-y-1/2 text-zinc-400",
+                "pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground",
                 s.iL
               )}
             >
@@ -687,7 +697,7 @@ export default function TextField({
           {resolvedAddonBefore && (
             <span
               className={twMerge(
-                "shrink-0 select-none self-stretch flex items-center border-r border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400",
+                "shrink-0 select-none self-stretch flex items-center border-r border-border bg-surface-muted/60 text-muted-foreground",
                 s.aff
               )}
             >
@@ -698,7 +708,7 @@ export default function TextField({
             ref={inputRef}
             id={id}
             data-component-id={componentId}
-            name={name ?? `input_off_${id}`}
+            name={resolvedName}
             type={resolvedType}
             placeholder={placeholder}
             value={value !== undefined ? currentText : undefined}
@@ -713,23 +723,20 @@ export default function TextField({
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
-            data-1p-ignore="true"
-            data-lpignore="true"
-            data-bwignore="true"
-            data-form-type="other"
+            {...antiAutofillProps}
             inputMode={resolvedInputMode}
             autoFocus={autoFocus}
             minLength={minLength}
             maxLength={maxLength}
             required={required}
             aria-invalid={error ? true : undefined}
-            aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
+            aria-describedby={describedBy}
             className={inputCls}
           />
           {resolvedAddonAfter && (
             <span
               className={twMerge(
-                "shrink-0 select-none self-stretch flex items-center border-l border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400",
+                "shrink-0 select-none self-stretch flex items-center border-l border-border bg-surface-muted/60 text-muted-foreground",
                 s.aff
               )}
             >
@@ -739,7 +746,7 @@ export default function TextField({
           {(rightIcon || hasInteractiveRight) && !rightSection && (
             <span
               className={twMerge(
-                "absolute top-1/2 -translate-y-1/2 flex items-center gap-1 text-zinc-400",
+                "absolute top-1/2 -translate-y-1/2 flex items-center gap-1 text-muted-foreground",
                 s.iR
               )}
             >
@@ -749,7 +756,7 @@ export default function TextField({
                   tabIndex={-1}
                   aria-label="Limpar campo"
                   onClick={handleClear}
-                  className="inline-flex h-5 w-5 items-center justify-center rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
                 >
                   <X size={s.iconSz - 1} />
                 </button>
@@ -760,7 +767,7 @@ export default function TextField({
                   tabIndex={-1}
                   aria-label={passwordVisible ? "Ocultar senha" : "Mostrar senha"}
                   onClick={() => setPasswordVisible((prev) => !prev)}
-                  className="inline-flex h-5 w-5 items-center justify-center rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
                 >
                   {passwordVisible ? <EyeOff size={s.iconSz} /> : <Eye size={s.iconSz} />}
                 </button>
@@ -773,7 +780,7 @@ export default function TextField({
             </span>
           )}
           {rightSection && (
-            <div className="flex shrink-0 items-center self-stretch border-l border-zinc-200 dark:border-zinc-700 px-1.5">
+            <div className="flex shrink-0 items-center self-stretch border-l border-border px-1.5">
               {rightSection}
             </div>
           )}
