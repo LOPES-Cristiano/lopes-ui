@@ -11,7 +11,7 @@ import type {
   ToastOptions as HotToastOptions,
   ToastPosition,
 } from "react-hot-toast";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -59,6 +59,7 @@ const DEFAULT_DURATION = 4_000;
 let toastLimit = 5;
 let activeToastIds: string[] = [];
 const toastTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const interactiveToastIds = new Set<string>();
 
 function clearToastTimer(id?: string) {
   if (id) {
@@ -74,27 +75,27 @@ function clearToastTimer(id?: string) {
 }
 
 const successIcon = (
-  <span className="flex h-5 w-5 shrink-0 items-center justify-center text-emerald-500">
+  <span className="flex h-5 w-5 shrink-0 items-center justify-center text-success">
     <CheckCircle2 size={18} strokeWidth={2.25} />
   </span>
 );
 const errorIcon = (
-  <span className="flex h-5 w-5 shrink-0 items-center justify-center text-red-500">
+  <span className="flex h-5 w-5 shrink-0 items-center justify-center text-danger">
     <XCircle size={18} strokeWidth={2.25} />
   </span>
 );
 const loadingIcon = (
-  <span className="flex h-5 w-5 shrink-0 items-center justify-center text-indigo-500">
+  <span className="flex h-5 w-5 shrink-0 items-center justify-center text-brand">
     <Loader2 size={18} strokeWidth={2.25} className="animate-spin" />
   </span>
 );
 const warningIcon = (
-  <span className="flex h-5 w-5 shrink-0 items-center justify-center text-amber-500">
+  <span className="flex h-5 w-5 shrink-0 items-center justify-center text-warning">
     <AlertTriangle size={18} strokeWidth={2.25} />
   </span>
 );
 const infoIcon = (
-  <span className="flex h-5 w-5 shrink-0 items-center justify-center text-sky-500">
+  <span className="flex h-5 w-5 shrink-0 items-center justify-center text-info">
     <Info size={18} strokeWidth={2.25} />
   </span>
 );
@@ -131,11 +132,11 @@ function buildToastContent(
   return (
     <span className="flex min-w-0 flex-1 items-start gap-3">
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className={twMerge("min-w-0 break-words text-sm leading-snug", description ? "font-semibold" : "")}>
+        <span className={twMerge("min-w-0 break-words text-sm leading-snug text-pretty", description ? "font-semibold" : "")}>
           {message}
         </span>
         {description && (
-          <span className="min-w-0 break-words text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+          <span className="min-w-0 break-words text-xs text-muted-foreground leading-relaxed text-pretty">
             {description}
           </span>
         )}
@@ -149,7 +150,7 @@ function buildToastContent(
             action.onClick();
             if (id) dismissToast(id);
           }}
-          className="mt-0.5 shrink-0 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-2.5 py-1 text-xs font-semibold text-zinc-900 dark:text-zinc-100 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer"
+          className="mt-0.5 shrink-0 rounded-[var(--radius-control)] border border-border bg-secondary px-2.5 py-1 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
         >
           {action.label}
         </button>
@@ -163,7 +164,7 @@ function buildToastContent(
             e.stopPropagation();
             dismissToast(id);
           }}
-          className="mt-0.5 shrink-0 rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+          className="mt-0.5 shrink-0 rounded-[var(--radius-control)] p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
         >
           <X size={14} />
         </button>
@@ -197,6 +198,7 @@ function rememberToast(id: string) {
     const staleId = activeToastIds.shift();
     if (staleId) {
       clearToastTimer(staleId);
+      interactiveToastIds.delete(staleId);
       hotToast.dismiss(staleId);
     }
   }
@@ -204,13 +206,25 @@ function rememberToast(id: string) {
 
 function dismissToast(id?: string) {
   clearToastTimer(id);
-  activeToastIds = id ? activeToastIds.filter((toastId) => toastId !== id) : [];
+  if (id) {
+    interactiveToastIds.delete(id);
+    activeToastIds = activeToastIds.filter((toastId) => toastId !== id);
+  } else {
+    interactiveToastIds.clear();
+    activeToastIds = [];
+  }
   hotToast.dismiss(id);
 }
 
 function removeToast(id?: string) {
   clearToastTimer(id);
-  activeToastIds = id ? activeToastIds.filter((toastId) => toastId !== id) : [];
+  if (id) {
+    interactiveToastIds.delete(id);
+    activeToastIds = activeToastIds.filter((toastId) => toastId !== id);
+  } else {
+    interactiveToastIds.clear();
+    activeToastIds = [];
+  }
   hotToast.remove(id);
 }
 
@@ -250,11 +264,18 @@ function show(
       break;
   }
 
+  if (toastOptions.action || toastOptions.closeButton) {
+    interactiveToastIds.add(toastId);
+  } else {
+    interactiveToastIds.delete(toastId);
+  }
+
   clearToastTimer(toastId);
 
   if (type !== "loading" && hotOptions.duration && hotOptions.duration !== Infinity) {
     const timer = setTimeout(() => {
       toastTimers.delete(toastId);
+      interactiveToastIds.delete(toastId);
       activeToastIds = activeToastIds.filter((id) => id !== toastId);
       hotToast.dismiss(toastId);
     }, hotOptions.duration);
@@ -318,6 +339,7 @@ export function Toaster({
   maxToasts = 5,
 }: ToasterProps) {
   const [isMobile, setIsMobile] = React.useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   React.useEffect(() => {
     toastLimit = maxToasts;
@@ -351,11 +373,11 @@ export function Toaster({
         duration: DEFAULT_DURATION,
         className: "lopes-ui-toast",
         style: {
-          background: "var(--background)",
-          color: "var(--foreground)",
+          background: "var(--card)",
+          color: "var(--card-foreground)",
           border: "1px solid var(--border)",
-          borderRadius: 12,
-          boxShadow: "0 18px 45px rgb(15 23 42 / 0.14)",
+          borderRadius: "var(--radius-card)",
+          boxShadow: "var(--shadow-floating)",
           fontSize: 13,
           lineHeight: "18px",
           maxWidth: "min(450px, 92vw)",
@@ -363,56 +385,85 @@ export function Toaster({
         },
       }}
     >
-      {(t) => (
-        <motion.div
-          onClick={() => dismissToast(t.id)}
-          initial={{
-            opacity: 0,
-            y: isTop ? -26 : 26,
-            scale: 0.92,
-          }}
-          animate={{
-            opacity: t.visible ? 1 : 0,
-            y: t.visible ? 0 : isTop ? -18 : 18,
-            scale: t.visible ? 1 : 0.94,
-          }}
-          transition={{
-            type: "spring",
-            stiffness: 380,
-            damping: 24,
-            mass: 0.5,
-          }}
-          whileTap={{ scale: 0.98 }}
-          role="button"
-          tabIndex={0}
-          aria-label="Clique para fechar notificação"
-          className="cursor-pointer select-none"
-          style={{
-            pointerEvents: "auto",
-            willChange: "transform, opacity",
-            backfaceVisibility: "hidden",
-            transform: "translateZ(0)",
-          }}
-        >
-          <ToastBar
-            toast={t}
+      {(t) => {
+        const isInteractive = interactiveToastIds.has(t.id);
+        return (
+          <motion.div
+            onClick={isInteractive ? undefined : () => dismissToast(t.id)}
+            onKeyDown={
+              isInteractive
+                ? undefined
+                : (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      dismissToast(t.id);
+                    }
+                  }
+            }
+            initial={
+              shouldReduceMotion
+                ? { opacity: 0 }
+                : {
+                    opacity: 0,
+                    y: isTop ? -20 : 20,
+                    scale: 0.95,
+                  }
+            }
+            animate={
+              shouldReduceMotion
+                ? { opacity: t.visible ? 1 : 0 }
+                : {
+                    opacity: t.visible ? 1 : 0,
+                    y: t.visible ? 0 : isTop ? -14 : 14,
+                    scale: t.visible ? 1 : 0.96,
+                  }
+            }
+            transition={
+              shouldReduceMotion
+                ? { duration: 0.15 }
+                : {
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 28,
+                    mass: 0.5,
+                  }
+            }
+            whileTap={isInteractive || shouldReduceMotion ? undefined : { scale: 0.985 }}
+            role={isInteractive ? undefined : "button"}
+            tabIndex={isInteractive ? undefined : 0}
+            aria-label={isInteractive ? undefined : "Fechar notificação"}
+            className={twMerge(
+              "rounded-[var(--radius-card)]",
+              !isInteractive &&
+                "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+            )}
             style={{
-              ...t.style,
-              animation: "none",
-              cursor: "pointer",
+              pointerEvents: "auto",
+              willChange: "transform, opacity",
+              backfaceVisibility: "hidden",
+              transform: "translateZ(0)",
             }}
           >
-            {({ icon, message }) => (
-              <div className="flex w-full items-start gap-2.5">
-                {icon ? <span className="mt-0.5 shrink-0">{icon}</span> : null}
-                <div className="min-w-0 flex-1 [&>div]:!m-0 [&>div]:!p-0">
-                  {message}
+            <ToastBar
+              toast={t}
+              style={{
+                ...t.style,
+                animation: "none",
+                cursor: isInteractive ? "default" : "pointer",
+              }}
+            >
+              {({ icon, message }) => (
+                <div className="flex w-full items-start gap-2.5">
+                  {icon ? <span className="mt-0.5 shrink-0">{icon}</span> : null}
+                  <div className="min-w-0 flex-1 [&>div]:!m-0 [&>div]:!p-0">
+                    {message}
+                  </div>
                 </div>
-              </div>
-            )}
-          </ToastBar>
-        </motion.div>
-      )}
+              )}
+            </ToastBar>
+          </motion.div>
+        );
+      }}
     </HotToaster>
   );
 }
@@ -430,12 +481,12 @@ export type ToastPreviewProps = {
 };
 
 const previewConfig: Record<ToastType, { icon: React.ReactNode; bar: string }> = {
-  default: { icon: null, bar: "bg-zinc-400 dark:bg-zinc-600" },
-  success: { icon: successIcon, bar: "bg-emerald-500" },
-  error: { icon: errorIcon, bar: "bg-red-500" },
-  loading: { icon: loadingIcon, bar: "bg-indigo-500" },
-  warning: { icon: warningIcon, bar: "bg-amber-500" },
-  info: { icon: infoIcon, bar: "bg-sky-500" },
+  default: { icon: null, bar: "bg-muted-foreground/40" },
+  success: { icon: successIcon, bar: "bg-success" },
+  error: { icon: errorIcon, bar: "bg-danger" },
+  loading: { icon: loadingIcon, bar: "bg-brand" },
+  warning: { icon: warningIcon, bar: "bg-warning" },
+  info: { icon: infoIcon, bar: "bg-info" },
 };
 
 export function ToastPreview({
@@ -456,8 +507,7 @@ export function ToastPreview({
     <div className={twMerge("w-full max-w-sm", className)}>
       <div
         className={twMerge(
-          "relative flex items-start gap-3 overflow-hidden rounded-xl border px-4 py-3.5 shadow-lg shadow-zinc-950/[0.06]",
-          "border-zinc-200/90 bg-white text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100",
+          "relative flex items-start gap-3 overflow-hidden rounded-[var(--radius-card)] border border-border bg-card px-4 py-3.5 text-card-foreground shadow-[var(--shadow-floating)]",
         )}
       >
         {showBar && (
@@ -467,14 +517,14 @@ export function ToastPreview({
         <div className="min-w-0 flex-1">
           <div
             className={twMerge(
-              "break-words text-sm leading-snug",
+              "break-words text-sm leading-snug text-pretty",
               description ? "font-semibold" : "font-medium",
             )}
           >
             {message}
           </div>
           {description && (
-            <div className="mt-0.5 break-words text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+            <div className="mt-0.5 break-words text-xs leading-relaxed text-muted-foreground text-pretty">
               {description}
             </div>
           )}
@@ -484,7 +534,7 @@ export function ToastPreview({
             data-component-id={action.componentId ?? "erp.toast.preview-action"}
             type="button"
             onClick={action.onClick}
-            className="mt-0.5 shrink-0 whitespace-nowrap rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-2.5 py-1 text-xs font-semibold text-zinc-900 dark:text-zinc-100 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer"
+            className="mt-0.5 shrink-0 whitespace-nowrap rounded-[var(--radius-control)] border border-border bg-secondary px-2.5 py-1 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
           >
             {action.label}
           </button>
@@ -495,7 +545,7 @@ export function ToastPreview({
             type="button"
             onClick={onClose}
             aria-label="Fechar notificação"
-            className="mt-0.5 shrink-0 rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 cursor-pointer"
+            className="mt-0.5 shrink-0 rounded-[var(--radius-control)] p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
           >
             <X size={14} />
           </button>
