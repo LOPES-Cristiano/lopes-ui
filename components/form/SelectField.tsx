@@ -321,6 +321,9 @@ export default function SelectField({
     return null;
   }
 
+  const canClear = clearable && hasValue && !effectiveDisabled;
+  const describedBy = error ? `${id}-error` : (helpText || hint) ? `${id}-help` : undefined;
+
   return (
     <FieldWrapper
       id={id}
@@ -347,65 +350,72 @@ export default function SelectField({
           disabled={effectiveDisabled}
           aria-haspopup="listbox"
           aria-expanded={open}
-          aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
           onClick={() => setOpen((current) => !current)}
           onKeyDown={handleKeyDown}
           className={twMerge(
-            "flex w-full items-center justify-between gap-2 rounded-md border text-left outline-none transition duration-150",
+            "flex w-full items-center justify-between gap-2 rounded-[var(--radius-control)] border text-left outline-none transition-[background-color,border-color,box-shadow] duration-150 cursor-pointer",
             s.h,
             s.text,
             s.px,
+            canClear && "pr-14",
             variant === "filled"
-              ? "border-transparent bg-zinc-100 hover:bg-zinc-200/70 focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 dark:focus:bg-zinc-900"
+              ? open
+                ? "border-ring ring-3 ring-ring/12 bg-input"
+                : "border-transparent bg-surface-muted hover:bg-surface-hover focus-visible:border-ring focus-visible:bg-input focus-visible:ring-3 focus-visible:ring-ring/12"
               : open
-                ? "border-primary ring-2 ring-primary/20 bg-white dark:bg-zinc-900"
-                : "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20",
-            effectiveDisabled && "cursor-not-allowed opacity-60 bg-zinc-100 dark:bg-zinc-800/60",
-            error && "border-rose-500 dark:border-rose-500 ring-1 ring-rose-500/30 focus:border-rose-500 focus:ring-rose-500/20",
+                ? "border-ring ring-3 ring-ring/12 bg-input"
+                : "border-input-border bg-input hover:border-border-strong focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/12",
+            effectiveDisabled && "cursor-not-allowed opacity-60 bg-surface-muted",
+            error && "border-danger hover:border-danger ring-0 focus-visible:border-danger focus-visible:ring-3 focus-visible:ring-danger/15",
           )}
         >
-          <span className="flex items-center gap-2 truncate">
+          <span className="flex items-center gap-2 truncate min-w-0">
             {(icon || selected?.icon) && (
-              <span className="shrink-0 text-primary/80 flex items-center">
+              <span className="shrink-0 text-muted-foreground flex items-center">
                 {selected?.icon ?? icon}
               </span>
             )}
-            <span className={twMerge("truncate", hasValue ? "text-zinc-900 dark:text-zinc-100 font-medium" : "text-zinc-400 dark:text-zinc-500")}>
+            <span className={twMerge("truncate", hasValue ? "text-input-foreground font-medium" : "text-input-placeholder")}>
               {selected?.label ?? placeholder}
             </span>
           </span>
-          <span className="flex items-center gap-1">
-            {clearable && hasValue && !effectiveDisabled && (
-              <span
-                role="button"
-                tabIndex={-1}
-                aria-label="Limpar"
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  setValue("");
-                  setOpen(false);
-                  buttonRef.current?.focus();
-                }}
-                className="inline-flex h-5 w-5 items-center justify-center rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition"
-              >
-                ×
-              </span>
+          <ChevronDown
+            size={14}
+            className={twMerge(
+              "shrink-0 text-muted-foreground transition-transform duration-150 motion-reduce:transition-none",
+              open && "rotate-180 text-foreground",
             )}
-            <ChevronDown size={14} className={twMerge("shrink-0 text-zinc-400 dark:text-zinc-500 transition-transform duration-150", open && "rotate-180 text-primary")} />
-          </span>
+          />
         </button>
+
+        {canClear && (
+          <button
+            type="button"
+            aria-label="Limpar seleção"
+            onClick={(event) => {
+              event.stopPropagation();
+              setValue("");
+              setOpen(false);
+              buttonRef.current?.focus();
+            }}
+            className="absolute right-7 top-1/2 -translate-y-1/2 inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
+          >
+            <X size={13} />
+          </button>
+        )}
 
         {open && typeof document !== "undefined" && createPortal(
           <div
             ref={dropdownRef}
             data-floating-open="true"
             style={dropdownStyle}
-            className="pointer-events-auto z-[999999] flex flex-col overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl"
+            className="pointer-events-auto z-[999999] flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-popover text-popover-foreground shadow-[var(--shadow-floating)] animate-in fade-in-0 zoom-in-95 duration-150 motion-reduce:animate-none"
           >
             {searchable && (
-              <div className="relative flex items-center border-b border-zinc-100 dark:border-zinc-800 p-1.5">
-                <Search size={13} className="pointer-events-none absolute left-3.5 text-zinc-400" />
+              <div className="relative flex items-center border-b border-border p-1.5">
+                <Search size={13} className="pointer-events-none absolute left-3.5 text-muted-foreground" />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -416,7 +426,7 @@ export default function SelectField({
                     setHighlighted(0);
                   }}
                   onKeyDown={handleKeyDown}
-                  className="w-full rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 pl-7 pr-7 py-1 text-xs text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 focus:outline-none focus:border-primary"
+                  className="w-full rounded-[var(--radius-control)] border border-input-border bg-surface-muted/60 pl-7 pr-7 py-1.5 text-xs text-foreground placeholder:text-input-placeholder focus:outline-none focus:border-ring focus:bg-input"
                 />
                 {search && (
                   <button
@@ -426,7 +436,7 @@ export default function SelectField({
                       setSearch("");
                       searchInputRef.current?.focus();
                     }}
-                    className="absolute right-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                    className="absolute right-2.5 inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
                   >
                     <X size={12} />
                   </button>
@@ -440,7 +450,7 @@ export default function SelectField({
               className="flex-1 overflow-y-auto overscroll-contain p-1 space-y-0.5"
             >
               {filteredOptions.length === 0 ? (
-                <li className="px-2.5 py-3 text-center text-xs text-zinc-400">
+                <li className="px-2.5 py-3 text-center text-xs text-muted-foreground">
                   {emptyMessage}
                 </li>
               ) : (
@@ -454,7 +464,7 @@ export default function SelectField({
                       {showGroupHeader && (
                         <li
                           role="presentation"
-                          className="px-2.5 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 select-none"
+                          className="px-2.5 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground select-none"
                         >
                           {option.group}
                         </li>
@@ -472,15 +482,15 @@ export default function SelectField({
                           if (!option.disabled) setHighlighted(index);
                         }}
                         className={twMerge(
-                          "flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md text-xs sm:text-sm transition-colors select-none",
+                          "flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-[var(--radius-control)] text-xs sm:text-sm transition-colors select-none",
                           option.disabled
                             ? "opacity-45 cursor-not-allowed"
                             : "cursor-pointer",
                           isSelected
-                            ? "bg-primary/10 text-primary font-semibold dark:bg-primary/20"
+                            ? "bg-primary-soft text-primary-soft-foreground font-semibold"
                             : index === highlighted && !option.disabled
-                              ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
-                              : "text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800",
+                              ? "bg-surface-hover text-foreground"
+                              : "text-surface-foreground hover:bg-surface-hover",
                         )}
                       >
                         <div className="flex min-w-0 items-center gap-2">
@@ -488,7 +498,7 @@ export default function SelectField({
                           <div className="min-w-0">
                             <div className="truncate">{option.label}</div>
                             {option.description && (
-                              <div className="truncate text-[11px] font-normal text-zinc-400 dark:text-zinc-500">
+                              <div className="truncate text-[11px] font-normal text-muted-foreground">
                                 {option.description}
                               </div>
                             )}
