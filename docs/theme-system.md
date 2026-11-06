@@ -175,3 +175,23 @@ usuário clica ThemeToggle
                ▼
            browser pinta um único frame com tudo atualizado
 ```
+
+
+---
+
+## Tokens Semânticos, Geometria e Elevação (`styles/lopes-ui.css`)
+
+Além do neutro corporativo `--primary` (`#18181b` no tema claro / `#fafafa` no escuro), a biblioteca expõe tokens semânticos de 3 camadas registrados em `:root`, `.dark` e `@theme inline`:
+
+| Família | Tokens CSS / Utilitários Tailwind | Uso principal |
+|---|---|---|
+| **Brand (Destaque)** | `--brand`, `--brand-hover`, `--brand-foreground`, `--brand-soft`, `--brand-soft-foreground`, `--brand-border` (`bg-brand`, `text-brand`, `bg-brand-soft`, `border-brand-border`) | Abas ativas, badges primárias, CTAs de destaque, indicadores e anéis |
+| **Status Semânticos** | `--success-*`, `--warning-*`, `--info-*`, `--danger-*`, `--destructive-*` | Alertas, badges, botões semânticos, validações e ícones de diálogo |
+| **Geometria** | `--radius-control` (`0.5rem`), `--radius-card` (`0.875rem`), `--radius-overlay` (`1rem`) | Alinhamento uniforme entre botões, campos de formulário, cards e modais |
+| **Sombras em Camadas** | `--shadow-control`, `--shadow-card`, `--shadow-floating`, `--shadow-overlay` | Elevação progressiva calibrada separadamente para light e dark mode |
+
+### Recursos nativos da plataforma web
+- **`color-scheme` & `accent-color`**: declarados em `app/layout.tsx` (`viewport.colorScheme = "light dark"`) e `:root` / `.dark` para tematizar controles nativos e scrollbars sem FOUC.
+- **`.lopes-trim-cap`**: aplica `text-box: trim-both cap alphabetic` para alinhamento óptico exato entre texto e ícones em `Button` e `Badge`.
+- **`.lopes-scroll-shadow-x`**: utiliza `container-type: scroll-state` e `@container scroll-state(scrollable: left / right)` para sinalizar rolagem horizontal em tabelas largas sem listeners JS.
+- **Acessibilidade global**: suporte a `@media (prefers-reduced-motion: reduce)` (inibindo deslocamentos espaciais e reduzindo a rotação de spinners para `6s`) e `@media (forced-colors: active)`.
