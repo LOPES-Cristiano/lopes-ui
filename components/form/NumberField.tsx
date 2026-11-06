@@ -152,7 +152,7 @@ export default function NumberField({
   if (!hasPermission && hideIfDenied) return null;
 
   const inputCls = twMerge(
-    "flex-1 min-w-0 bg-transparent outline-none border-0 ring-0 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500",
+    "flex-1 min-w-0 bg-transparent outline-none border-0 ring-0 tabular-nums text-input-foreground placeholder:text-input-placeholder",
     "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
     s.h, s.text,
     leftIcon  ? s.padL : s.pl,
@@ -162,12 +162,12 @@ export default function NumberField({
   );
 
   const wrapCls = twMerge(
-    "relative flex w-full items-center overflow-hidden rounded-lg border transition-all duration-150",
+    "relative flex w-full items-center overflow-hidden rounded-[var(--radius-control)] border transition-[background-color,border-color,box-shadow] duration-150",
     variant === "filled"
-      ? "bg-zinc-100 border-transparent hover:bg-zinc-200/70 focus-within:bg-white focus-within:border-zinc-300 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 dark:focus-within:bg-zinc-900 dark:focus-within:border-zinc-600"
-      : "bg-white border-zinc-300 hover:border-zinc-400 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:border-zinc-600 dark:focus-within:border-zinc-500",
-    error && "border-red-400 hover:border-red-400 focus-within:border-red-500 focus-within:ring-red-500/10",
-    (effectiveDisabled || readOnly) && "opacity-60 pointer-events-none bg-zinc-50 dark:bg-zinc-800/50",
+      ? "bg-surface-muted border-transparent hover:bg-surface-hover focus-within:bg-input focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/12"
+      : "bg-input border-input-border hover:border-border-strong focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/12",
+    error && "border-danger hover:border-danger focus-within:border-danger focus-within:ring-3 focus-within:ring-danger/15",
+    (effectiveDisabled || readOnly) && "opacity-60 pointer-events-none bg-surface-muted",
   );
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -254,12 +254,12 @@ export default function NumberField({
     >
       <div className={wrapCls}>
         {leftIcon && (
-          <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-zinc-400", s.iL)}>
+          <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground", s.iL)}>
             {React.cloneElement(leftIcon, { size: s.iconSz })}
           </span>
         )}
         {prefix && (
-          <span className={twMerge("shrink-0 select-none self-stretch flex items-center border-r border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400", s.aff)}>
+          <span className={twMerge("shrink-0 select-none self-stretch flex items-center border-r border-border bg-surface-muted/60 text-muted-foreground", s.aff)}>
             {prefix}
           </span>
         )}
@@ -272,22 +272,22 @@ export default function NumberField({
           autoComplete={autoComplete ?? "off"}
           required={required}
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
+          aria-describedby={error ? `${id}-error` : (helpText || hint) ? `${id}-help` : undefined}
           className={inputCls}
           data-component-id={componentId || (idProp ? `erp.form.number.${idProp}` : undefined)}
         />
         {suffix && (
-          <span className={twMerge("shrink-0 select-none self-stretch flex items-center border-l border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400", s.aff)}>
+          <span className={twMerge("shrink-0 select-none self-stretch flex items-center border-l border-border bg-surface-muted/60 text-muted-foreground", s.aff)}>
             {suffix}
           </span>
         )}
         {rightIcon && !showControls && (
-          <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-zinc-400", s.iR)}>
+          <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground", s.iR)}>
             {React.cloneElement(rightIcon, { size: s.iconSz })}
           </span>
         )}
         {showControls && (
-          <div className="flex shrink-0 self-stretch border-l border-zinc-200 dark:border-zinc-700">
+          <div className="flex shrink-0 self-stretch border-l border-border">
             <button
               type="button"
               tabIndex={-1}
@@ -295,7 +295,7 @@ export default function NumberField({
               disabled={effectiveDisabled || readOnly || atMin}
               onClick={() => handleStep(-1)}
               className={twMerge(
-                "flex items-center justify-center text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 disabled:opacity-40 disabled:pointer-events-none transition-colors",
+                "flex items-center justify-center text-muted-foreground hover:bg-surface-hover hover:text-foreground disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer",
                 s.btnW,
               )}
             >
@@ -308,7 +308,7 @@ export default function NumberField({
               disabled={effectiveDisabled || readOnly || atMax}
               onClick={() => handleStep(1)}
               className={twMerge(
-                "flex items-center justify-center border-l border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 disabled:opacity-40 disabled:pointer-events-none transition-colors",
+                "flex items-center justify-center border-l border-border text-muted-foreground hover:bg-surface-hover hover:text-foreground disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer",
                 s.btnW,
               )}
             >
