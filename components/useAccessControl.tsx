@@ -29,7 +29,7 @@ export interface AccessControlProviderProps {
   onRefresh?: () => Promise<{ tasks?: string[]; isAdmin?: boolean } | void>;
   /**
    * Comportamento padrão para componentIds não mapeados quando o usuário não é admin.
-   * Default: `true` (permissivo por padrão na biblioteca de UI).
+   * Default: `false` (fail-closed quando AccessControlProvider está montado).
    */
   defaultAllow?: boolean;
 }
@@ -54,7 +54,7 @@ export function AccessControlProvider({
   permissionsMap,
   canAccessFn,
   onRefresh,
-  defaultAllow = true,
+  defaultAllow = false,
 }: AccessControlProviderProps) {
   const [tasks, setTasks] = useState<string[]>(initialTasks);
   const [isAdmin, setIsAdmin] = useState<boolean>(initialIsAdmin);
@@ -71,6 +71,7 @@ export function AccessControlProvider({
 
   const hasTask = useCallback(
     (taskCode: string): boolean => {
+      if (isAdmin) return true;
       if (!taskCode) return true;
       if (tasks.includes(taskCode)) return true;
       // Full module permission (e.g. "FINANCEIRO") implies read permission ("FINANCEIRO.VIEW"),
@@ -80,27 +81,30 @@ export function AccessControlProvider({
       }
       return false;
     },
-    [tasks],
+    [isAdmin, tasks],
   );
 
   const hasAnyTask = useCallback(
     (taskCodes: string[]): boolean => {
+      if (isAdmin) return true;
       if (!taskCodes || taskCodes.length === 0) return true;
       return taskCodes.some((code) => hasTask(code));
     },
-    [hasTask],
+    [isAdmin, hasTask],
   );
 
   const hasAllTasks = useCallback(
     (taskCodes: string[]): boolean => {
+      if (isAdmin) return true;
       if (!taskCodes || taskCodes.length === 0) return true;
       return taskCodes.every((code) => hasTask(code));
     },
-    [hasTask],
+    [isAdmin, hasTask],
   );
 
   const canAccess = useCallback(
     (componentIdOrTask: string): boolean => {
+      if (isAdmin) return true;
       if (!componentIdOrTask) return true;
       if (canAccessFn) return canAccessFn(componentIdOrTask);
 
@@ -115,7 +119,7 @@ export function AccessControlProvider({
 
       return defaultAllow;
     },
-    [canAccessFn, permissionsMap, hasAnyTask, hasTask, defaultAllow],
+    [isAdmin, canAccessFn, permissionsMap, hasAnyTask, hasTask, defaultAllow],
   );
 
   const refresh = useCallback(async () => {
