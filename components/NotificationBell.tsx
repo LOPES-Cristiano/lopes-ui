@@ -15,7 +15,9 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
-import { calcSmartPos } from '@/hooks/useSmartPosition';
+import { calcSmartPos } from '../hooks/useSmartPosition';
+import { sanitizeSafeHref } from '../utils/sanitize';
+import { useAccessControl } from './useAccessControl';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -55,6 +57,7 @@ export type NotificationBellProps = {
   onNotificationClick?: (notification: NotificationItem) => void;
   className?: string;
   componentId?: string;
+  hideIfDenied?: boolean;
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -159,13 +162,11 @@ function NotificationRow({
   onDismiss?: (id: string) => void;
   onNotificationClick?: (n: NotificationItem) => void;
 }) {
-  const [imgError, setImgError] = useState(false);
+  const [failedAvatar, setFailedAvatar] = useState<string | null>(null);
   const cfg = TYPE_CONFIG[item.type ?? 'default'];
   const Icon = item.icon ?? cfg.icon;
-
-  useEffect(() => {
-    setImgError(false);
-  }, [item.avatar]);
+  const safeHref = item.href ? sanitizeSafeHref(item.href) : null;
+  const safeRefHref = item.reference?.href ? sanitizeSafeHref(item.reference.href) : null;
 
   const handleClick = () => {
     if (!item.read) onMarkRead?.(item.id);
@@ -173,14 +174,8 @@ function NotificationRow({
     item.onClick?.();
   };
 
-  const content = (
-    <div
-      className={twMerge(
-        'group/row relative flex items-start gap-3 px-5 py-3.5 cursor-pointer transition-colors select-none',
-        'hover:bg-header-command-panel-hover',
-        !item.read && 'bg-header-command-panel-active'
-      )}
-    >
+  const innerBody = (
+    <>
       {/* Unread dot */}
       {!item.read && (
         <span className="absolute left-2 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-header-command-panel-active-foreground shrink-0" />
@@ -190,14 +185,13 @@ function NotificationRow({
       <div className="mt-0.5 shrink-0">
         {item.avatar || item.avatarFallback ? (
           <div className="h-9 w-9 rounded-full overflow-hidden bg-header-profile-avatar flex items-center justify-center shrink-0">
-            {item.avatar && !imgError ? (
-              // eslint-disable-next-line @next/next/no-img-element
+            {item.avatar && failedAvatar !== item.avatar ? (
               <img
                 src={item.avatar}
-                alt=""
+                alt={item.title}
                 width={36}
                 height={36}
-                onError={() => setImgError(true)}
+                onError={() => setFailedAvatar(item.avatar ?? null)}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -219,7 +213,7 @@ function NotificationRow({
       </div>
 
       {/* Text content */}
-      <div className="flex-1 min-w-0 space-y-0.5 pr-6">
+      <div className="flex-1 min-w-0 space-y-0.5 pr-7 text-left">
         <p
           className={twMerge(
             'text-sm leading-snug text-header-command-panel-foreground',
@@ -233,79 +227,79 @@ function NotificationRow({
             {item.description}
           </p>
         )}
-        {item.reference && (
-          <span
-            onClick={(e) => {
-              e.stopPropagation();
-              if (item.reference?.href) window.location.href = item.reference.href;
-            }}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-header-command-panel-active-foreground hover:underline cursor-pointer"
-          >
+        {item.reference && !safeRefHref && (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-header-command-panel-active-foreground">
             {item.reference.label}
-            {item.reference.href && <ExternalLink size={9} />}
           </span>
         )}
-        <p className="text-[11px] text-header-command-panel-muted pt-0.5">
+        <p suppressHydrationWarning className="text-[11px] text-header-command-panel-muted pt-0.5 tabular-nums">
           {formatTimestamp(item.timestamp)}
         </p>
       </div>
-
-      {/* Actions — visible on hover */}
-      <div className="absolute right-3 top-3 flex flex-col items-end gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
-        {onDismiss && (
-          <button
-            data-component-id={`erp.notification.dismiss-${item.id}`}
-            type="button"
-            aria-label="Dispensar"
-            onClick={(e: React.MouseEvent) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onDismiss(item.id);
-            }}
-            className="rounded p-0.5 text-header-command-panel-muted hover:text-header-command-panel-foreground hover:bg-header-command-panel-hover transition-colors cursor-pointer"
-          >
-            <X size={12} />
-          </button>
-        )}
-        {!item.read && onMarkRead && (
-          <button
-            data-component-id={`erp.notification.mark-read-${item.id}`}
-            type="button"
-            aria-label="Marcar como lida"
-            onClick={(e: React.MouseEvent) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onMarkRead(item.id);
-            }}
-            className="rounded p-0.5 text-header-command-panel-muted hover:text-header-command-panel-active-foreground hover:bg-header-command-panel-hover transition-colors cursor-pointer"
-          >
-            <Check size={12} />
-          </button>
-        )}
-      </div>
-    </div>
+    </>
   );
 
-  if (item.href) {
-    return (
-      <a href={item.href} className="block" onClick={handleClick}>
-        {content}
-      </a>
-    );
-  }
+  const triggerCls =
+    'flex w-full items-start gap-3 px-5 py-3.5 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring';
+
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={handleClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleClick();
-        }
-      }}
+      className={twMerge(
+        'group/row relative transition-colors',
+        'hover:bg-header-command-panel-hover',
+        !item.read && 'bg-header-command-panel-active'
+      )}
     >
-      {content}
+      {safeHref ? (
+        <a href={safeHref} onClick={handleClick} className={triggerCls}>
+          {innerBody}
+        </a>
+      ) : (
+        <button type="button" onClick={handleClick} className={triggerCls}>
+          {innerBody}
+        </button>
+      )}
+
+      {/* Sibling reference link when reference has its own href */}
+      {item.reference && safeRefHref && (
+        <div className="px-5 pb-2.5 -mt-2 pl-[4.25rem]">
+          <a
+            href={safeRefHref}
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-header-command-panel-active-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+          >
+            {item.reference.label}
+            <ExternalLink size={10} />
+          </a>
+        </div>
+      )}
+
+      {/* Sibling actions — visible on hover and keyboard focus */}
+      {(onDismiss || (!item.read && onMarkRead)) && (
+        <div className="absolute right-2.5 top-2.5 flex flex-col items-end gap-1 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 transition-opacity">
+          {onDismiss && (
+            <button
+              data-component-id={`erp.notification.dismiss-${item.id}`}
+              type="button"
+              aria-label="Dispensar notificação"
+              onClick={() => onDismiss(item.id)}
+              className="inline-flex h-6 w-6 items-center justify-center rounded-md text-header-command-panel-muted hover:text-header-command-panel-foreground hover:bg-header-command-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors cursor-pointer"
+            >
+              <X size={13} />
+            </button>
+          )}
+          {!item.read && onMarkRead && (
+            <button
+              data-component-id={`erp.notification.mark-read-${item.id}`}
+              type="button"
+              aria-label="Marcar como lida"
+              onClick={() => onMarkRead(item.id)}
+              className="inline-flex h-6 w-6 items-center justify-center rounded-md text-header-command-panel-muted hover:text-header-command-panel-active-foreground hover:bg-header-command-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors cursor-pointer"
+            >
+              <Check size={13} />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -324,7 +318,11 @@ export function NotificationBell({
   onNotificationClick,
   className,
   componentId,
+  hideIfDenied = true,
 }: NotificationBellProps) {
+  const { canAccess } = useAccessControl();
+  const hasPermission = componentId ? canAccess(componentId) : true;
+
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -336,8 +334,6 @@ export function NotificationBell({
   const openPanel = useCallback(() => {
     if (!triggerRef.current) return;
     const r = triggerRef.current.getBoundingClientRect();
-    // Panel width: 26rem (416px) on sm+, 22rem (352px) on mobile.
-    // Panel height: header ~48px + scrollable list capped at min(480, 70dvh).
     const panelW = window.innerWidth >= 640 ? 416 : 352;
     const panelH = Math.min(530, window.innerHeight * 0.8);
     const { top, left } = calcSmartPos({ anchor: r, panelW, panelH, gap: 8, preferH: 'end' });
@@ -355,27 +351,36 @@ export function NotificationBell({
         setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setOpen(false);
+      }
     };
     document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
+    document.addEventListener('keydown', onKey, true);
     return () => {
       document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('keydown', onKey, true);
     };
   }, [open]);
+
+  if (!hasPermission && hideIfDenied) {
+    return null;
+  }
+
+  const safeViewAllHref = viewAllHref ? sanitizeSafeHref(viewAllHref) : null;
 
   const footerContent =
     footer !== undefined ? (
       footer
-    ) : viewAllHref ? (
+    ) : safeViewAllHref ? (
       <a
-        href={viewAllHref}
+        href={safeViewAllHref}
         onClick={() => {
           onViewAll?.();
           setOpen(false);
         }}
-        className="text-xs font-semibold text-header-command-panel-active-foreground hover:underline flex items-center gap-1 py-1"
+        className="text-xs font-semibold text-header-command-panel-active-foreground hover:underline flex items-center gap-1 py-1 px-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span>Ver todas as notificações</span>
         <ExternalLink size={12} />
@@ -388,7 +393,7 @@ export function NotificationBell({
           onViewAll();
           setOpen(false);
         }}
-        className="text-xs font-semibold text-header-command-panel-active-foreground hover:underline flex items-center gap-1 py-1 cursor-pointer"
+        className="text-xs font-semibold text-header-command-panel-active-foreground hover:underline flex items-center gap-1 py-1 px-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
       >
         <span>Ver todas as notificações</span>
         <ExternalLink size={12} />
@@ -401,21 +406,22 @@ export function NotificationBell({
       <button
         ref={triggerRef}
         type="button"
-        data-component-id={componentId || "erp.header.btn.notificacoes"}
+        disabled={!hasPermission}
+        data-component-id={componentId || 'erp.header.btn.notificacoes'}
         aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
         aria-expanded={open}
         aria-haspopup="dialog"
         onClick={() => (open ? setOpen(false) : openPanel())}
         className={twMerge(
           'group relative inline-flex h-9 w-9 items-center justify-center rounded-xl',
-          'bg-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer',
-          open && 'bg-slate-100 dark:bg-slate-800/60 text-slate-900 dark:text-white',
+          'bg-transparent text-muted-foreground hover:text-foreground transition-all duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer',
+          open && 'bg-muted text-foreground',
           className
         )}
       >
         <Bell size={19} className="stroke-[1.75]" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white shadow-xs leading-none">
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground shadow-xs leading-none tabular-nums">
             <span className="translate-y-[0.5px] leading-none text-center">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
@@ -431,8 +437,9 @@ export function NotificationBell({
             ref={panelRef}
             role="dialog"
             aria-label="Notificações"
+            data-floating-open="true"
             style={{ top: pos.top, left: pos.left }}
-            className="fixed z-[9999] w-[22rem] sm:w-[26rem] flex flex-col bg-header-command-panel text-header-command-panel-foreground border border-header-command-panel-border shadow-2xl overflow-hidden"
+            className="fixed z-[9200] w-[22rem] sm:w-[26rem] rounded-2xl flex flex-col bg-header-command-panel text-header-command-panel-foreground border border-header-command-panel-border shadow-2xl overflow-hidden"
           >
             {/* Panel header */}
             <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-header-command-panel-border shrink-0">
@@ -441,7 +448,7 @@ export function NotificationBell({
                   Notificações
                 </span>
                 {!loading && unreadCount > 0 && (
-                  <span className="inline-flex items-center justify-center h-5 min-w-5 rounded-full bg-header-command-panel-active px-1.5 text-[11px] font-semibold text-header-command-panel-active-foreground">
+                  <span className="inline-flex items-center justify-center h-5 min-w-5 rounded-full bg-header-command-panel-active px-1.5 text-[11px] font-semibold text-header-command-panel-active-foreground tabular-nums">
                     {unreadCount}
                   </span>
                 )}
@@ -452,7 +459,7 @@ export function NotificationBell({
                     data-component-id="erp.notification.mark-all-read"
                     type="button"
                     onClick={onMarkAllRead}
-                    className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-header-command-panel-muted hover:text-header-command-panel-foreground hover:bg-header-command-panel-hover transition-colors cursor-pointer"
+                    className="inline-flex min-h-7 items-center gap-1.5 rounded-md px-2 py-1 text-xs text-header-command-panel-muted hover:text-header-command-panel-foreground hover:bg-header-command-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors cursor-pointer"
                   >
                     <CheckCheck size={12} />
                     Marcar todas
@@ -461,9 +468,9 @@ export function NotificationBell({
                 <button
                   data-component-id="erp.notification.close"
                   type="button"
-                  aria-label="Fechar"
+                  aria-label="Fechar notificações"
                   onClick={() => setOpen(false)}
-                  className="rounded-md p-1 text-header-command-panel-muted hover:text-header-command-panel-foreground hover:bg-header-command-panel-hover transition-colors cursor-pointer"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md text-header-command-panel-muted hover:text-header-command-panel-foreground hover:bg-header-command-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors cursor-pointer"
                 >
                   <X size={14} />
                 </button>
@@ -471,7 +478,7 @@ export function NotificationBell({
             </div>
 
             {/* Notification list */}
-            <div className="overflow-y-auto max-h-[min(30rem,70dvh)] divide-y divide-header-command-panel-border">
+            <div className="overflow-y-auto overscroll-contain max-h-[min(30rem,70dvh)] divide-y divide-header-command-panel-border">
               {loading ? (
                 <div
                   role="status"
@@ -508,8 +515,7 @@ export function NotificationBell({
               ) : (
                 grouped.map(({ group, items }) => (
                   <div key={group}>
-                    {/* Group label */}
-                    <div className="sticky top-0 bg-header-command-panel-hover backdrop-blur-sm px-4 py-1.5 border-b border-header-command-panel-border">
+                    <div className="sticky top-0 z-10 bg-header-command-panel-hover backdrop-blur-sm px-4 py-1.5 border-b border-header-command-panel-border">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-header-command-panel-muted">
                         {group}
                       </span>
