@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import Button from './Button';
 import toast from './Toast';
-import { cn } from '@/utils/cn';
+import { cn } from '../utils/cn';
 import { useAccessControl } from './useAccessControl';
 
 export type CodeEditorLanguage =
