@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type LucideIcon, ChevronRight, LogOut, Settings, User, Briefcase, Building2 } from "lucide-react";
+import { useAccessControl } from "../useAccessControl";
 
 // ─── ProfileMenuHeader ────────────────────────────────────────────────────────
 
@@ -38,60 +39,61 @@ export function ProfileMenuHeader({
   cargoNome,
 }: ProfileMenuHeaderProps) {
   const directSrc = avatarUrl || fotoUrl || avatar || null;
-  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
-  const [imgFailed, setImgFailed] = useState(false);
+  const userIdStr = usuarioId != null ? String(usuarioId).trim() : "";
+  const [asyncResolved, setAsyncResolved] = useState<{ key: string; url: string | null } | null>(null);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    if (directSrc || usuarioId == null || !resolveAvatarUrl) {
-      setResolvedSrc(null);
-      return;
-    }
-    const userIdStr = String(usuarioId).trim();
-    if (!userIdStr) {
-      setResolvedSrc(null);
+    if (directSrc || !userIdStr || !resolveAvatarUrl) {
       return;
     }
     try {
       const result = resolveAvatarUrl(userIdStr);
-      if (typeof result === "string" || result === null) {
-        setResolvedSrc(result || null);
-      } else if (result && typeof result.then === "function") {
+      if (result && typeof result === "object" && typeof result.then === "function") {
         result
           .then((url) => {
-            if (!cancelled) setResolvedSrc(url || null);
+            if (!cancelled) setAsyncResolved({ key: userIdStr, url: url || null });
           })
           .catch(() => {
-            if (!cancelled) setResolvedSrc(null);
+            if (!cancelled) setAsyncResolved({ key: userIdStr, url: null });
           });
       }
     } catch {
-      if (!cancelled) setResolvedSrc(null);
+      // ignore synchronous errors in custom resolver
     }
     return () => {
       cancelled = true;
     };
-  }, [directSrc, usuarioId, resolveAvatarUrl]);
+  }, [directSrc, userIdStr, resolveAvatarUrl]);
 
+  let syncResolved: string | null = null;
+  if (!directSrc && userIdStr && resolveAvatarUrl) {
+    try {
+      const maybeSync = resolveAvatarUrl(userIdStr);
+      if (typeof maybeSync === "string") {
+        syncResolved = maybeSync || null;
+      }
+    } catch {
+      syncResolved = null;
+    }
+  }
+
+  const resolvedSrc =
+    syncResolved ?? (asyncResolved?.key === userIdStr ? asyncResolved.url : null);
   const imgSrc = directSrc || resolvedSrc;
-
-  useEffect(() => {
-    setImgFailed(false);
-  }, [imgSrc]);
-
-  const showImg = Boolean(imgSrc && !imgFailed);
+  const showImg = Boolean(imgSrc && failedSrc !== imgSrc);
 
   return (
-    <div className="flex flex-col gap-2.5 px-4 py-3.5 border-b border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/80 dark:bg-zinc-800/40">
+    <div className="flex flex-col gap-2.5 px-4 py-3.5 border-b border-border bg-muted/40">
       <div className="flex items-center gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-sm font-bold text-white ring-2 ring-slate-200 dark:ring-zinc-600 shadow-sm">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-sm font-bold text-white ring-2 ring-border shadow-sm">
           {showImg && imgSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={imgSrc}
-              alt={name ?? "avatar"}
+              alt={name ?? "Avatar do usuário"}
               className="h-full w-full object-cover"
-              onError={() => setImgFailed(true)}
+              onError={() => setFailedSrc(imgSrc)}
             />
           ) : (
             <span className="flex items-center justify-center">
@@ -102,12 +104,12 @@ export function ProfileMenuHeader({
 
         <div className="min-w-0 flex-1">
           {name && (
-            <p className="truncate text-sm font-bold leading-tight text-zinc-900 dark:text-zinc-100">
+            <p className="truncate text-sm font-bold leading-tight text-foreground">
               {name}
             </p>
           )}
           {(login || email) && (
-            <p className="mt-0.5 truncate text-xs font-medium leading-tight text-zinc-500 dark:text-zinc-400">
+            <p className="mt-0.5 truncate text-xs font-medium leading-tight text-muted-foreground">
               {login ? `@${login}` : email}
             </p>
           )}
@@ -117,13 +119,13 @@ export function ProfileMenuHeader({
       {(cargoNome || departamentoNome) && (
         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
           {cargoNome && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/50">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
               <Briefcase size={10} />
               {cargoNome}
             </span>
           )}
           {departamentoNome && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/50">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-secondary text-secondary-foreground border border-border">
               <Building2 size={10} />
               {departamentoNome}
             </span>
@@ -138,7 +140,7 @@ export function ProfileMenuHeader({
 
 export function ProfileMenuDivider() {
   return (
-    <div className="my-1 mx-3 border-t border-zinc-200 dark:border-zinc-700/80" role="separator" />
+    <div className="my-1 mx-3 border-t border-border" role="separator" />
   );
 }
 
@@ -151,7 +153,7 @@ export type ProfileMenuItemProps = {
   label: string;
   /** Texto secundário abaixo do label */
   description?: string;
-  /** Atalho de teclado exibido à direita (ex: \"⌘K\") */
+  /** Atalho de teclado exibido à direita (ex: "⌘K") */
   shortcut?: string;
   /** Navega para este href em vez de chamar onClick */
   href?: string;
@@ -163,8 +165,10 @@ export type ProfileMenuItemProps = {
   badge?: React.ReactNode;
   /** Seta indicando sub-navegação */
   arrow?: boolean;
-  /** Identificador de componente para telemetria / automação */
+  /** Identificador de componente para telemetria / RBAC */
   componentId?: string;
+  /** Oculta o item caso o usuário não tenha permissão em `componentId` */
+  hideIfDenied?: boolean;
 };
 
 export function ProfileMenuItem({
@@ -179,25 +183,38 @@ export function ProfileMenuItem({
   badge,
   arrow = false,
   componentId,
+  hideIfDenied = true,
 }: ProfileMenuItemProps) {
+  const { canAccess } = useAccessControl();
+  const hasPermission = componentId ? canAccess(componentId) : true;
+
+  if (!hasPermission && hideIfDenied) {
+    return null;
+  }
+
+  const effectiveDisabled = disabled || !hasPermission;
+  const resolvedComponentId =
+    componentId || `erp.profile-menu.${label.toLowerCase().replace(/\s+/g, "-")}`;
+
   const base = [
     "group flex min-h-[var(--header-profile-menu-item-height)] w-full items-center gap-2.5",
     "mx-1 w-[calc(100%-8px)] px-3 py-2 rounded-lg text-sm transition-colors duration-100",
-    disabled
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    effectiveDisabled
       ? "cursor-not-allowed opacity-40"
       : danger
-      ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer"
-      : "text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700/60 cursor-pointer",
+      ? "text-destructive hover:bg-destructive/10 cursor-pointer"
+      : "text-foreground hover:bg-accent cursor-pointer",
   ].join(" ");
 
   const inner = (
     <>
       {Icon && (
         <span
-          className={`shrink-0 flex h-7 w-7 items-center justify-center rounded-md transition-colors group-hover:bg-zinc-200/70 dark:group-hover:bg-zinc-600/50 ${
+          className={`shrink-0 flex h-7 w-7 items-center justify-center rounded-md transition-colors group-hover:bg-muted ${
             danger
-              ? "text-red-500 dark:text-red-400"
-              : "text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-200"
+              ? "text-destructive"
+              : "text-muted-foreground group-hover:text-foreground"
           }`}
         >
           <Icon size={15} strokeWidth={1.75} />
@@ -227,7 +244,10 @@ export function ProfileMenuItem({
         href={href}
         className={base}
         role="menuitem"
-        onClick={disabled ? (e) => e.preventDefault() : onClick}
+        aria-disabled={effectiveDisabled || undefined}
+        tabIndex={effectiveDisabled ? -1 : undefined}
+        data-component-id={resolvedComponentId}
+        onClick={effectiveDisabled ? (e) => e.preventDefault() : onClick}
       >
         {inner}
       </Link>
@@ -238,10 +258,10 @@ export function ProfileMenuItem({
     <button
       type="button"
       role="menuitem"
-      disabled={disabled}
+      disabled={effectiveDisabled}
       className={base}
-      onClick={disabled ? undefined : onClick}
-      data-component-id={componentId || `erp.profile-menu.${label.toLowerCase().replace(/\s+/g, '-')}`}
+      onClick={effectiveDisabled ? undefined : onClick}
+      data-component-id={resolvedComponentId}
     >
       {inner}
     </button>
@@ -252,7 +272,7 @@ export function ProfileMenuItem({
 
 export function ProfileMenuSectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 select-none">
+    <div className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground select-none">
       {children}
     </div>
   );
@@ -281,6 +301,8 @@ export type ProfileActionsProps = ProfileMenuHeaderProps & {
   /** Controla exibição do cabeçalho do perfil (padrão: true quando dados do usuário são informados) */
   showHeader?: boolean;
   className?: string;
+  componentId?: string;
+  hideIfDenied?: boolean;
 };
 
 export function ProfileActions({
@@ -309,8 +331,16 @@ export function ProfileActions({
   showLogout = true,
   showHeader,
   className,
+  componentId,
+  hideIfDenied = true,
 }: ProfileActionsProps = {}) {
   const router = useRouter();
+  const { canAccess } = useAccessControl();
+  const hasPermission = componentId ? canAccess(componentId) : true;
+
+  if (!hasPermission && hideIfDenied) {
+    return null;
+  }
 
   const hasUserInfo = Boolean(
     name ||
@@ -352,7 +382,10 @@ export function ProfileActions({
   const hasBodyContent = effectiveItems.length > 0 || Boolean(children);
 
   return (
-    <div className={className}>
+    <div
+      className={className}
+      data-component-id={componentId || undefined}
+    >
       {shouldRenderHeader && (
         <ProfileMenuHeader
           avatarUrl={avatarUrl}
