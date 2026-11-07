@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Sparkles, X } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 import { useAccessControl } from "./useAccessControl";
 
 export interface TourStep {
