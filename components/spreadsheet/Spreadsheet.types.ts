@@ -12,12 +12,12 @@ export type SpreadsheetContextMenuItem = {
   separator?: boolean;
 };
 
-export type SpreadsheetColumn<T = any> = {
+export type SpreadsheetColumn<T = Record<string, unknown>> = {
   /** Chave única da coluna. Também é o campo lido da linha quando não há `accessor`. */
   key: string;
   header: string;
   type?: SpreadsheetColumnType;
-  accessor?: (row: T) => any;
+  accessor?: (row: T) => unknown;
   width?: number;
   minWidth?: number;
   align?: 'left' | 'center' | 'right';
@@ -43,21 +43,21 @@ export type SpreadsheetColumn<T = any> = {
   /** Grupo de cabeçalho (ex.: "Saldo por filial"). */
   group?: string;
   /** Formatação customizada do valor exibido. */
-  format?: (value: any, row: T) => React.ReactNode;
+  format?: (value: unknown, row: T) => React.ReactNode;
   /** Formatação condicional: retorna classes Tailwind para a célula. */
-  cellClassName?: (value: any, row: T) => string | undefined;
+  cellClassName?: (value: unknown, row: T) => string | undefined;
   /** Valor usado na edição -> valor gravado. */
-  parseEdit?: (input: string, row: T) => any;
+  parseEdit?: (input: string, row: T) => unknown;
   /**
    * Hover card exibido ao passar o mouse na célula (ex.: origem do dado). Retorne o conteúdo — pode ser um
    * componente que busca dados ao montar (carregamento sob demanda). Retornar null/undefined não abre nada.
    */
-  hoverCard?: (row: T, value: any) => React.ReactNode;
+  hoverCard?: (row: T, value: unknown) => React.ReactNode;
   /** Largura do hover card em px (padrão 380). */
   hoverCardWidth?: number;
 };
 
-export type SpreadsheetProps<T = any> = {
+export type SpreadsheetProps<T = Record<string, unknown>> = {
   columns: SpreadsheetColumn<T>[];
   rows: T[];
   rowKey: (row: T, index: number) => string;
@@ -72,7 +72,7 @@ export type SpreadsheetProps<T = any> = {
   searchPlaceholder?: string;
   exportFileName?: string;
   /** Estado de visibilidade inicial por chave. */
-  onCellEdit?: (row: T, columnKey: string, value: any) => void;
+  onCellEdit?: (row: T, columnKey: string, value: unknown) => void;
   rowClassName?: (row: T) => string | undefined;
   /** Itens do menu de contexto (botão direito) da linha. Sem a prop, o menu nativo do navegador é mantido. */
   contextMenu?: (row: T) => SpreadsheetContextMenuItem[];
