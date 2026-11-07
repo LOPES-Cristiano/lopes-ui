@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 
 export type ScrollAreaProps = React.HTMLAttributes<HTMLDivElement> & {
   orientation?: "vertical" | "horizontal" | "both";
