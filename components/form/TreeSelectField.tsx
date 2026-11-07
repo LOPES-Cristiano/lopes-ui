@@ -469,28 +469,40 @@ export default function TreeSelectField(props: TreeSelectFieldProps) {
         }}
       >
         <PopoverTrigger asChild>
-          <button
+          <div
             id={id}
-            type="button"
-            disabled={effectiveDisabled}
+            role="combobox"
+            tabIndex={effectiveDisabled ? -1 : 0}
+            aria-disabled={effectiveDisabled || undefined}
             data-component-id={componentId}
             aria-expanded={open}
             data-invalid={error ? "true" : undefined}
+            onKeyDown={(e) => {
+              if (effectiveDisabled) return;
+              if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+                e.preventDefault();
+                setOpen((prev) => {
+                  const next = !prev;
+                  if (next) setQuery("");
+                  return next;
+                });
+              }
+            }}
             className={twMerge(
-              "group relative flex w-full items-center justify-between gap-2 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/20 cursor-pointer",
+              "group relative flex w-full items-center justify-between gap-2 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-3 focus-visible:ring-ring/12 cursor-pointer",
               sz.minH,
               sz.text,
               sz.px,
               sz.py,
               variantClasses,
-              open && variant !== "underlined" && "border-primary ring-2 ring-primary/20",
-              error && "border-red-500 dark:border-red-500 focus-visible:ring-red-500/20",
-              effectiveDisabled && "opacity-55 cursor-not-allowed pointer-events-none"
+              open && variant !== "underlined" && "border-ring ring-3 ring-ring/12",
+              error && "border-danger focus-visible:ring-danger/15",
+              effectiveDisabled && "opacity-60 cursor-not-allowed pointer-events-none"
             )}
           >
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
               {!hasSelection ? (
-                <span className="truncate text-zinc-400 dark:text-zinc-500">{placeholder}</span>
+                <span className="truncate text-input-placeholder">{placeholder}</span>
               ) : isMulti ? (
                 <>
                   {selectedMulti.slice(0, maxTagCount).map((val) => {
@@ -498,39 +510,31 @@ export default function TreeSelectField(props: TreeSelectFieldProps) {
                     return (
                       <span
                         key={val}
-                        className="inline-flex max-w-full items-center gap-1 rounded-lg bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                        className="inline-flex max-w-full items-center gap-1 rounded-lg bg-primary-soft pl-2 pr-0.5 py-0.5 text-xs font-medium text-primary-soft-foreground"
                       >
                         <span className="truncate">{node?.label ?? val}</span>
-                        <span
-                          role="button"
-                          tabIndex={0}
+                        <button
+                          type="button"
                           aria-label={`Remover ${node?.label ?? val}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             commitMulti(selectedMulti.filter((v) => v !== val));
                           }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              commitMulti(selectedMulti.filter((v) => v !== val));
-                            }
-                          }}
-                          className="rounded-sm p-0.5 hover:bg-primary/20 cursor-pointer"
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer shrink-0"
                         >
                           <X size={11} />
-                        </span>
+                        </button>
                       </span>
                     );
                   })}
                   {selectedMulti.length > maxTagCount && (
-                    <span className="inline-flex items-center rounded-lg bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                    <span className="inline-flex items-center rounded-lg bg-surface-muted px-2 py-0.5 text-xs font-semibold tabular-nums text-surface-foreground">
                       +{selectedMulti.length - maxTagCount}
                     </span>
                   )}
                 </>
               ) : (
-                <span className="flex min-w-0 items-center gap-2 truncate font-medium text-zinc-900 dark:text-zinc-100">
+                <span className="flex min-w-0 items-center gap-2 truncate font-medium text-input-foreground">
                   {singleNode?.icon && <span className="shrink-0">{singleNode.icon}</span>}
                   <span className="truncate">{singleNode?.label ?? selectedSingle}</span>
                 </span>
@@ -539,30 +543,24 @@ export default function TreeSelectField(props: TreeSelectFieldProps) {
 
             <div className="flex shrink-0 items-center gap-1">
               {clearable && hasSelection && !effectiveDisabled && (
-                <span
-                  role="button"
-                  tabIndex={0}
+                <button
+                  type="button"
                   aria-label="Limpar seleção"
                   onClick={handleClear}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      handleClear(e as unknown as React.MouseEvent);
-                    }
-                  }}
-                  className="rounded-md p-0.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition-colors"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
                 >
                   <X size={14} />
-                </span>
+                </button>
               )}
               <ChevronDown
                 size={16}
                 className={twMerge(
-                  "text-zinc-400 transition-transform duration-150",
+                  "text-muted-foreground transition-transform duration-150 motion-reduce:transition-none",
                   open && "rotate-180 text-primary"
                 )}
               />
             </div>
-          </button>
+          </div>
         </PopoverTrigger>
 
         <PopoverContent
