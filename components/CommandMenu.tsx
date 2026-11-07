@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Search, ChevronRight, ArrowLeft, Clock } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { twMerge } from 'tailwind-merge';
 import { useAccessControl } from './useAccessControl';
 
@@ -74,6 +74,8 @@ function detectMac() {
   return typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
 }
 
+const subscribeNoop = () => () => {};
+
 /** Normalize accents/diacritics so "orcamento" matches "Orçamento" and "armario" matches "Armário" */
 export function normalizeCommandText(text: string): string {
   return text
@@ -83,27 +85,55 @@ export function normalizeCommandText(text: string): string {
     .trim();
 }
 
-function scoreCommandMatch(item: CommandItem, normalizedQuery: string): number {
-  const normLabel = normalizeCommandText(item.label);
-  if (normLabel === normalizedQuery) return 100;
-  if (normLabel.startsWith(normalizedQuery)) return 85;
-  if (normLabel.includes(normalizedQuery)) return 70;
-
-  const normKeywords = (item.keywords ?? []).map(normalizeCommandText).join(' ');
-  if (normKeywords.includes(normalizedQuery)) return 55;
-
-  const normDesc = normalizeCommandText(item.description ?? '');
-  if (normDesc.includes(normalizedQuery)) return 40;
-
-  const normGroup = normalizeCommandText(item.group ?? '');
-  if (normGroup.includes(normalizedQuery)) return 25;
-
+function scoreSingleToken(
+  normLabel: string,
+  normKeywords: string,
+  normDesc: string,
+  normGroup: string,
+  token: string,
+): number {
+  if (normLabel === token) return 100;
+  if (normLabel.startsWith(token)) return 85;
+  if (normLabel.includes(token)) return 70;
+  if (normKeywords.includes(token)) return 55;
+  if (normDesc.includes(token)) return 40;
+  if (normGroup.includes(token)) return 25;
   return 0;
+}
+
+/**
+ * Multi-token AND + relevance scoring:
+ * Every whitespace-separated token in `normalizedQuery` must match at least one field,
+ * while exact/prefix label matches get boosted to the top.
+ */
+function scoreCommandMatch(item: CommandItem, normalizedQuery: string): number {
+  if (!normalizedQuery) return 1;
+  const normLabel = normalizeCommandText(item.label);
+  const normKeywords = (item.keywords ?? []).map(normalizeCommandText).join(' ');
+  const normDesc = normalizeCommandText(item.description ?? '');
+  const normGroup = normalizeCommandText(item.group ?? '');
+
+  const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return 1;
+
+  let total = 0;
+  for (const token of tokens) {
+    const tokenScore = scoreSingleToken(normLabel, normKeywords, normDesc, normGroup, token);
+    if (tokenScore === 0) return 0;
+    total += tokenScore;
+  }
+
+  let avg = total / tokens.length;
+  if (normLabel === normalizedQuery) avg += 40;
+  else if (normLabel.startsWith(normalizedQuery)) avg += 25;
+  else if (normLabel.includes(normalizedQuery)) avg += 15;
+
+  return avg;
 }
 
 function filterCommandItemsByAccess(
   items: CommandItem[],
-  canAccess: (id: string) => boolean
+  canAccess: (id: string) => boolean,
 ): CommandItem[] {
   const result: CommandItem[] = [];
   for (const item of items) {
@@ -114,7 +144,11 @@ function filterCommandItemsByAccess(
     const filteredChildren = item.children
       ? filterCommandItemsByAccess(item.children, canAccess)
       : undefined;
-    if (item.children && item.children.length > 0 && (!filteredChildren || filteredChildren.length === 0)) {
+    if (
+      item.children &&
+      item.children.length > 0 &&
+      (!filteredChildren || filteredChildren.length === 0)
+    ) {
       continue;
     }
     result.push({
@@ -149,10 +183,11 @@ export function Command({
 
   const permittedRootItems = useMemo(
     () => filterCommandItemsByAccess(items, canAccess),
-    [items, canAccess]
+    [items, canAccess],
   );
 
-  const currentItems = pageStack.length > 0 ? pageStack[pageStack.length - 1].items : permittedRootItems;
+  const currentItems =
+    pageStack.length > 0 ? pageStack[pageStack.length - 1].items : permittedRootItems;
 
   const filtered = useMemo(() => {
     const q = normalizeCommandText(query);
@@ -202,6 +237,7 @@ export function Command({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.nativeEvent.isComposing) return;
     const len = Math.max(1, filtered.length);
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -223,12 +259,12 @@ export function Command({
     <div
       data-component-id={componentId}
       className={twMerge(
-        'flex flex-col overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100',
+        'flex flex-col overflow-hidden rounded-xl border border-border bg-surface text-foreground',
         !hasRootPermission && 'opacity-50 pointer-events-none',
-        className
+        className,
       )}
     >
-      <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 px-3">
+      <div className="flex items-center gap-2 border-b border-border px-3">
         {pageStack.length > 0 ? (
           <button
             type="button"
@@ -236,13 +272,13 @@ export function Command({
               setPageStack((prev) => prev.slice(0, -1));
               setActiveIndex(0);
             }}
-            className="rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+            className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             aria-label="Voltar"
           >
             <ArrowLeft size={14} />
           </button>
         ) : (
-          <Search size={15} className="shrink-0 text-zinc-400" />
+          <Search size={15} className="shrink-0 text-muted-foreground" />
         )}
         <input
           autoFocus={autoFocus}
@@ -254,17 +290,21 @@ export function Command({
           }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="flex-1 bg-transparent py-2.5 text-sm outline-none placeholder:text-zinc-400"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          className="flex-1 bg-transparent py-2.5 text-sm outline-none placeholder:text-muted-foreground"
         />
       </div>
-      <div ref={listRef} className="max-h-64 overflow-y-auto py-1.5">
+      <div ref={listRef} className="max-h-64 overflow-y-auto overscroll-contain py-1.5">
         {filtered.length === 0 ? (
-          <p className="px-3 py-6 text-center text-xs text-zinc-400">{emptyText}</p>
+          <p className="px-3 py-6 text-center text-xs text-muted-foreground">{emptyText}</p>
         ) : (
           groups.map(([groupName, groupItems]) => (
             <div key={groupName || '__ungrouped__'}>
               {groupName && (
-                <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {groupName}
                 </p>
               )}
@@ -283,8 +323,8 @@ export function Command({
                     className={twMerge(
                       'mx-1.5 flex w-[calc(100%-0.75rem)] items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors cursor-pointer',
                       active
-                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'
-                        : 'text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-foreground hover:bg-surface-hover',
                     )}
                   >
                     {Icon && <Icon size={15} className="shrink-0 opacity-70" />}
@@ -292,7 +332,7 @@ export function Command({
                     {item.children && item.children.length > 0 ? (
                       <ChevronRight size={14} className="shrink-0 opacity-50" />
                     ) : item.shortcut ? (
-                      <kbd className="rounded border border-zinc-200 dark:border-zinc-700 px-1.5 py-0.5 text-[10px] font-mono text-zinc-400">
+                      <kbd className="rounded border border-border px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
                         {item.shortcut}
                       </kbd>
                     ) : null}
@@ -323,31 +363,49 @@ export default function CommandMenu({
   const { canAccess } = useAccessControl();
   const hasRootPermission = !componentId || canAccess(componentId);
 
+  const mounted = useSyncExternalStore(
+    subscribeNoop,
+    () => true,
+    () => false,
+  );
+  const mac = useSyncExternalStore(
+    subscribeNoop,
+    detectMac,
+    () => false,
+  );
+
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
   const [pageStack, setPageStack] = useState<{ title: string; items: CommandItem[] }[]>([]);
-  const [recentIds, setRecentIds] = useState<string[]>([]);
-  const [mac, setMac] = useState(false);
-  // Avoid SSR/hydration mismatch for portal and modifier key label
-  const [mounted, setMounted] = useState(false);
+  const [recentIds, setRecentIds] = useState<string[]>(() => {
+    if (!recentStorageKey || typeof window === 'undefined') return [];
+    try {
+      const stored = window.localStorage.getItem(recentStorageKey);
+      return stored ? (JSON.parse(stored) as string[]) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useBodyScrollLock(open);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-    setMac(detectMac());
-    if (recentStorageKey && typeof window !== 'undefined') {
-      try {
-        const stored = window.localStorage.getItem(recentStorageKey);
-        if (stored) setRecentIds(JSON.parse(stored));
-      } catch {}
-    }
-  }, [recentStorageKey]);
+  const openMenu = useCallback(() => {
+    setQuery('');
+    setActiveIndex(0);
+    setPageStack([]);
+    setOpen(true);
+  }, []);
+
+  const close = useCallback(() => {
+    setOpen(false);
+    setQuery('');
+    setActiveIndex(0);
+    setPageStack([]);
+  }, []);
 
   const rememberRecent = useCallback(
     (itemId: string) => {
@@ -360,7 +418,7 @@ export default function CommandMenu({
         return next;
       });
     },
-    [recentStorageKey, maxRecentItems]
+    [recentStorageKey, maxRecentItems],
   );
 
   // ─── Global shortcut ⌘K / Ctrl+K ──────────────────────────────────────────
@@ -369,32 +427,54 @@ export default function CommandMenu({
     const down = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((v) => !v);
+        setOpen((prev) => {
+          const next = !prev;
+          if (next) {
+            setQuery('');
+            setActiveIndex(0);
+            setPageStack([]);
+          }
+          return next;
+        });
       }
     };
     document.addEventListener('keydown', down);
     return () => document.removeEventListener('keydown', down);
   }, [hasRootPermission]);
 
-  // ─── Focus input when dialog opens ────────────────────────────────────────
+  // ─── Focus input & capture Escape when dialog opens ───────────────────────
   useEffect(() => {
-    if (open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setQuery('');
-      setActiveIndex(0);
-      setPageStack([]);
-      requestAnimationFrame(() => inputRef.current?.focus());
-    }
-  }, [open]);
+    if (!open) return;
+    const raf = requestAnimationFrame(() => inputRef.current?.focus());
+    const onEscapeCapture = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      setPageStack((prev) => {
+        if (prev.length > 0) {
+          setActiveIndex(0);
+          return prev.slice(0, -1);
+        }
+        close();
+        return prev;
+      });
+    };
+    document.addEventListener('keydown', onEscapeCapture, true);
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener('keydown', onEscapeCapture, true);
+    };
+  }, [open, close]);
 
   const permittedRootItems = useMemo(
     () => filterCommandItemsByAccess(items, canAccess),
-    [items, canAccess]
+    [items, canAccess],
   );
 
-  const currentItems = pageStack.length > 0 ? pageStack[pageStack.length - 1].items : permittedRootItems;
+  const currentItems =
+    pageStack.length > 0 ? pageStack[pageStack.length - 1].items : permittedRootItems;
 
-  // ─── Filtering (NFD accent-insensitive + relevance score) ─────────────────
+  // ─── Filtering (NFD accent-insensitive + multi-token AND + relevance score) ─
   const filtered = useMemo(() => {
     const q = normalizeCommandText(query);
     const available = currentItems.filter((i) => !i.disabled);
@@ -422,28 +502,14 @@ export default function CommandMenu({
       if (!map.has(g)) map.set(g, []);
       map.get(g)!.push(item);
     }
-    return Array.from(map.entries()); // [groupLabel, items[]]
+    return Array.from(map.entries());
   }, [filtered, query, pageStack.length, recentIds, currentItems]);
-
-  // ─── Reset active index on query change ───────────────────────────────────
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setActiveIndex(0);
-  }, [query]);
 
   // ─── Scroll active item into view ─────────────────────────────────────────
   useEffect(() => {
     const el = listRef.current?.querySelector("[data-active='true']") as HTMLElement | null;
     el?.scrollIntoView({ block: 'nearest' });
   }, [activeIndex]);
-
-  // ─── Actions ──────────────────────────────────────────────────────────────
-  const close = useCallback(() => {
-    setOpen(false);
-    setQuery('');
-    setActiveIndex(0);
-    setPageStack([]);
-  }, []);
 
   const select = useCallback(
     (item: CommandItem) => {
@@ -465,12 +531,15 @@ export default function CommandMenu({
       }
       close();
     },
-    [close, router, rememberRecent]
+    [close, router, rememberRecent],
   );
 
   if (!hasRootPermission && hideIfDenied) return null;
 
+  const safeActiveIndex = filtered.length > 0 ? Math.min(activeIndex, filtered.length - 1) : 0;
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.nativeEvent.isComposing) return;
     const len = Math.max(1, filtered.length);
     switch (e.key) {
       case 'ArrowDown':
@@ -483,7 +552,7 @@ export default function CommandMenu({
         break;
       case 'Enter':
         e.preventDefault();
-        if (filtered[activeIndex]) select(filtered[activeIndex]);
+        if (filtered[safeActiveIndex]) select(filtered[safeActiveIndex]);
         break;
       case 'Backspace':
         if (!query && pageStack.length > 0) {
@@ -492,21 +561,11 @@ export default function CommandMenu({
           setActiveIndex(0);
         }
         break;
-      case 'Escape':
-        e.preventDefault();
-        if (pageStack.length > 0) {
-          setPageStack((prev) => prev.slice(0, -1));
-          setActiveIndex(0);
-        } else {
-          close();
-        }
-        break;
     }
   };
 
   const modKey = mac ? '⌘' : 'Ctrl';
 
-  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <>
       {/* ── Trigger button ─────────────────────────────────────────────────── */}
@@ -514,18 +573,20 @@ export default function CommandMenu({
         data-component-id={componentId ?? 'erp.header.busca'}
         type="button"
         disabled={!hasRootPermission}
-        onClick={() => hasRootPermission && setOpen(true)}
+        onClick={() => hasRootPermission && openMenu()}
         className={twMerge(
-          'flex items-center gap-2.5 rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/60 px-3 py-1.5 text-xs text-slate-400 dark:text-slate-500 shadow-2xs',
-          'hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none',
-          className
+          'flex items-center gap-2.5 rounded-lg border border-header-command-border bg-header-command px-3 py-1.5 text-xs text-header-command-placeholder shadow-2xs',
+          'hover:bg-header-command-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none',
+          className,
         )}
         aria-label="Abrir menu de comandos"
       >
-        <Search size={15} className="shrink-0 text-slate-400 dark:text-slate-500" />
-        <span className="hidden sm:inline w-36 text-left font-normal text-slate-500 dark:text-slate-400">{triggerLabel}</span>
+        <Search size={15} className="shrink-0 text-header-command-placeholder" />
+        <span className="hidden sm:inline w-36 text-left font-normal text-header-command-placeholder">
+          {triggerLabel}
+        </span>
         {mounted && (
-          <kbd className="hidden sm:inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-none">
+          <kbd className="hidden sm:inline-flex items-center rounded-md bg-header-command-kbd px-1.5 py-0.5 text-[10px] font-medium text-header-command-kbd-foreground leading-none">
             {modKey}K
           </kbd>
         )}
@@ -536,7 +597,8 @@ export default function CommandMenu({
         open &&
         createPortal(
           <div
-            className="fixed inset-0 z-50 flex items-start justify-center px-3 sm:px-4 pt-[6vh] sm:pt-[14vh]"
+            data-floating-open="true"
+            className="fixed inset-0 z-[7500] flex items-start justify-center px-3 sm:px-4 pt-[6vh] sm:pt-[14vh]"
             role="dialog"
             aria-modal="true"
             aria-label="Menu de comandos"
@@ -588,24 +650,33 @@ export default function CommandMenu({
                   data-component-id="erp.command-menu.input"
                   ref={inputRef}
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setActiveIndex(0);
+                  }}
                   onKeyDown={onKeyDown}
                   placeholder={placeholder}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
                   className="flex-1 bg-transparent py-4 text-sm text-header-command-panel-foreground placeholder-header-command-panel-muted outline-none"
                 />
-                <kbd
-                  role="button"
-                  tabIndex={0}
+                <button
+                  type="button"
+                  aria-label="Fechar menu de comandos"
                   onClick={close}
-                  onKeyDown={(e) => e.key === 'Enter' && close()}
-                  className="flex cursor-pointer items-center rounded border border-header-command-panel-border bg-header-command-panel-hover px-1.5 py-0.5 text-[10px] font-medium text-header-command-panel-muted hover:bg-header-command-panel-active select-none"
+                  className="inline-flex h-6 cursor-pointer items-center rounded border border-header-command-panel-border bg-header-command-panel-hover px-1.5 py-0.5 text-[10px] font-medium text-header-command-panel-muted hover:bg-header-command-panel-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring select-none"
                 >
                   Esc
-                </kbd>
+                </button>
               </div>
 
               {/* ── Results list ───────────────────────────────────────────── */}
-              <div ref={listRef} className="max-h-[55dvh] sm:max-h-80 overflow-y-auto py-2 overscroll-contain">
+              <div
+                ref={listRef}
+                className="max-h-[55dvh] sm:max-h-80 overflow-y-auto py-2 overscroll-contain"
+              >
                 {filtered.length === 0 ? (
                   <p className="px-4 py-10 text-center text-sm text-header-command-panel-muted">
                     Nenhum resultado encontrado.
@@ -620,7 +691,7 @@ export default function CommandMenu({
                       )}
                       {groupItems.map((item) => {
                         const idx = filtered.indexOf(item);
-                        const active = idx === activeIndex;
+                        const active = idx === safeActiveIndex;
                         const Icon = item.icon ?? (groupName === 'Recentes' ? Clock : undefined);
                         const hasSub = Boolean(item.children && item.children.length > 0);
 
@@ -636,7 +707,7 @@ export default function CommandMenu({
                               'mx-2 flex w-[calc(100%-1rem)] items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors cursor-pointer',
                               active
                                 ? 'bg-header-command-panel-active text-header-command-panel-active-foreground'
-                                : 'text-header-command-panel-foreground hover:bg-header-command-panel-hover'
+                                : 'text-header-command-panel-foreground hover:bg-header-command-panel-hover',
                             )}
                           >
                             {Icon && (
@@ -645,7 +716,7 @@ export default function CommandMenu({
                                   'flex h-7 w-7 shrink-0 items-center justify-center rounded-md border',
                                   active
                                     ? 'border-header-command-panel-active-foreground bg-header-command-panel-active text-header-command-panel-active-foreground'
-                                    : 'border-header-command-panel-border bg-header-command-panel-hover text-header-command-panel-muted'
+                                    : 'border-header-command-panel-border bg-header-command-panel-hover text-header-command-panel-muted',
                                 )}
                               >
                                 <Icon size={14} />
@@ -669,7 +740,7 @@ export default function CommandMenu({
                                   'ml-auto flex-shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium leading-none',
                                   active
                                     ? 'border-header-command-panel-active-foreground bg-header-command-panel text-header-command-panel-active-foreground'
-                                    : 'border-header-command-panel-border bg-header-command-panel text-header-command-panel-muted'
+                                    : 'border-header-command-panel-border bg-header-command-panel text-header-command-panel-muted',
                                 )}
                               >
                                 {item.shortcut}
@@ -714,7 +785,7 @@ export default function CommandMenu({
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
