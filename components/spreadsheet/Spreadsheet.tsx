@@ -33,14 +33,15 @@ const norm = (v: unknown) =>
 
 const isNumericType = (t?: string) => t === 'number' || t === 'currency' || t === 'integer' || t === 'percent';
 
-function toDate(v: any): Date | null {
+function toDate(v: unknown): Date | null {
   if (v == null || v === '') return null;
   if (v instanceof Date) return v;
+  if (typeof v !== 'string' && typeof v !== 'number') return null;
   const d = new Date(v);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-function formatValue(col: SpreadsheetColumn, value: any): string {
+function formatValue<T>(col: SpreadsheetColumn<T>, value: unknown): string {
   if (value == null || value === '') return '';
   switch (col.type) {
     case 'currency':
@@ -61,7 +62,7 @@ function formatValue(col: SpreadsheetColumn, value: any): string {
 }
 
 /** Filtro estilo planilha: ">10", "<=5", "=3", "10..20" para números; "contém" para texto. */
-function matchFilter(col: SpreadsheetColumn, value: any, raw: string): boolean {
+function matchFilter<T>(col: SpreadsheetColumn<T>, value: unknown, raw: string): boolean {
   const q = raw.trim();
   if (!q) return true;
   if (isNumericType(col.type)) {
@@ -84,7 +85,7 @@ function matchFilter(col: SpreadsheetColumn, value: any, raw: string): boolean {
   return norm(value).includes(norm(q));
 }
 
-function aggregate(col: SpreadsheetColumn, values: any[]): number | null {
+function aggregate<T>(col: SpreadsheetColumn<T>, values: unknown[]): number | null {
   const nums = values.filter((v) => typeof v === 'number' && !Number.isNaN(v)) as number[];
   switch (col.aggregate) {
     case 'count':
@@ -114,7 +115,7 @@ function downloadCsv(name: string, header: string[], lines: string[][]) {
   URL.revokeObjectURL(url);
 }
 
-export default function Spreadsheet<T = any>({
+export default function Spreadsheet<T = Record<string, unknown>>({
   columns,
   rows,
   rowKey,
@@ -144,7 +145,7 @@ export default function Spreadsheet<T = any>({
   const [globalFilter, setGlobalFilter] = useState('');
   const [showFilters, setShowFilters] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [edits, setEdits] = useState<Record<string, any>>({});
+  const [edits, setEdits] = useState<Record<string, unknown>>({});
   const [editing, setEditing] = useState<{ rowId: string; colKey: string } | null>(null);
   const editingRef = useRef<{ rowId: string; colKey: string } | null>(null);
   const [draft, setDraft] = useState('');
@@ -158,7 +159,7 @@ export default function Spreadsheet<T = any>({
     if (hoverOpenTimer.current) clearTimeout(hoverOpenTimer.current);
     if (hoverCloseTimer.current) clearTimeout(hoverCloseTimer.current);
   };
-  const scheduleHover = (el: HTMLElement, def: SpreadsheetColumn<T>, value: any, row: T) => {
+  const scheduleHover = (el: HTMLElement, def: SpreadsheetColumn<T>, value: unknown, row: T) => {
     clearHoverTimers();
     hoverOpenTimer.current = setTimeout(() => {
       const node = def.hoverCard?.(row, value);
@@ -249,7 +250,7 @@ export default function Spreadsheet<T = any>({
               return ev === '' || ev === null ? undefined : ev;
             }
           }
-          const v = c.accessor ? c.accessor(row) : (row as any)[c.key];
+          const v = c.accessor ? c.accessor(row) : (row as Record<string, unknown>)[c.key];
           return v === '' || v === null ? undefined : v;
         },
         filterFn: ((row, id, value) => {
@@ -276,7 +277,7 @@ export default function Spreadsheet<T = any>({
       }
       const set = new Set<string>();
       for (const r of rows) {
-        const v = c.accessor ? c.accessor(r) : (r as any)[c.key];
+        const v = c.accessor ? c.accessor(r) : (r as Record<string, unknown>)[c.key];
         if (v != null && v !== '') set.add(String(v));
       }
       out.set(c.key, Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR')));
@@ -347,7 +348,7 @@ export default function Spreadsheet<T = any>({
     const col = colMap.get(activeEditing.colKey)!;
     const row = tableRows.find((r) => r.id === activeEditing.rowId)?.original;
     if (row !== undefined) {
-      let value: any = draft;
+      let value: unknown = draft;
       if (col.parseEdit) value = col.parseEdit(draft, row);
       else if (isNumericType(col.type)) {
         const cleaned = draft.replace(/[^\d,.-]/g, '');
