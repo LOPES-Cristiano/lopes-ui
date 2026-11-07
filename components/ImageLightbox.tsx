@@ -17,7 +17,8 @@ import {
   Maximize2,
   FileText,
 } from "lucide-react";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
+import { escapeHtml, sanitizeMediaUrl } from "../utils/sanitize";
 import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -47,7 +48,7 @@ export type ImageLightboxProps = {
   caption?: string;
   /** Starting slide index. Default: 0 */
   initialIndex?: number;
-  /**Controlled index */
+  /** Controlled index */
   activeIndex?: number;
   onIndexChange?: (index: number) => void;
   /** Render embedded inline inside a card/panel instead of a fullscreen portal. Default: false */
@@ -92,7 +93,11 @@ export default function ImageLightbox({
 }: ImageLightboxProps) {
   const { canAccess } = useAccessControl();
   const hasPermission = !componentId || canAccess(componentId);
-  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const items: LightboxMediaItem[] = React.useMemo(() => {
     if (itemsProp && itemsProp.length > 0) return itemsProp;
@@ -159,12 +164,13 @@ export default function ImageLightbox({
     });
   }, []);
 
-  // Keyboard shortcuts in modal mode
+  // Capture-phase keyboard shortcuts in modal mode so Escape does not close parent modals/drawers
   useEffect(() => {
     if (inline || !open) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
+        e.stopPropagation();
         onClose?.();
       } else if (e.key === "ArrowRight" && items.length > 1) {
         e.preventDefault();
@@ -186,24 +192,28 @@ export default function ImageLightbox({
         setRotation((r) => (r + 90) % 360);
       }
     };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+    window.addEventListener("keydown", handleKey, true);
+    return () => window.removeEventListener("keydown", handleKey, true);
   }, [inline, open, items.length, currentIndex, isPdf, onClose, goTo, zoomBy, resetTransform]);
 
   if (!hasPermission && hideIfDenied) return null;
   if (!mounted || !isVisible || !currentItem) return null;
 
+  const safeCurrentSrc = sanitizeMediaUrl(currentItem.src);
+
   const handlePrint = () => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !safeCurrentSrc) return;
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) return;
     if (isPdf) {
-      win.location.href = currentItem.src;
+      win.location.href = safeCurrentSrc;
       return;
     }
-    const safeSrc = currentItem.src.replace(/"/g, "&quot;");
-    const safeTitle = (currentItem.title || currentItem.alt || "Imagem").replace(/</g, "&lt;");
-    win.document.write(`<!doctype html><html><head><title>${safeTitle}</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff}img{max-width:100%;max-height:100vh;object-fit:contain}</style></head><body><img src="${safeSrc}" onload="window.print();window.close();" /></body></html>`);
+    const safeSrcAttr = escapeHtml(safeCurrentSrc);
+    const safeTitle = escapeHtml(currentItem.title || currentItem.alt || "Imagem");
+    win.document.write(
+      `<!doctype html><html><head><title>${safeTitle}</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff}img{max-width:100%;max-height:100vh;object-fit:contain}</style></head><body><img src="${safeSrcAttr}" alt="${safeTitle}" onload="window.print();window.close();" /></body></html>`,
+    );
     win.document.close();
   };
 
@@ -235,17 +245,21 @@ export default function ImageLightbox({
     dragOrigin.current = null;
   };
 
+  const toolbarBtnClass =
+    "inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 disabled:opacity-40 transition-colors cursor-pointer";
+
   const viewerContent = (
     <div
       {...(componentId ? { "data-component-id": componentId } : {})}
+      data-floating-open={inline ? undefined : "true"}
       role={inline ? "region" : "dialog"}
       aria-modal={inline ? undefined : true}
       aria-label={currentItem.title || currentItem.alt || "Visualizador de mídia"}
       className={twMerge(
-        "flex flex-col select-none text-zinc-100",
+        "flex flex-col text-zinc-100 overscroll-contain",
         inline
           ? "relative h-[480px] w-full overflow-hidden rounded-2xl border border-border bg-zinc-950"
-          : "fixed inset-0 z-[9990] bg-zinc-950/92 backdrop-blur-md",
+          : "fixed inset-0 z-[9500] bg-zinc-950/92 backdrop-blur-md",
         !hasPermission && "opacity-60 pointer-events-none",
         className,
       )}
@@ -254,7 +268,7 @@ export default function ImageLightbox({
       <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-black/40 px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-2.5">
           {items.length > 1 && (
-            <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono text-xs font-semibold text-zinc-200">
+            <span className="select-none rounded-md bg-white/10 px-2 py-0.5 font-mono text-xs font-semibold tabular-nums text-zinc-200">
               {currentIndex + 1} / {items.length}
             </span>
           )}
@@ -271,34 +285,32 @@ export default function ImageLightbox({
         </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-1">
+        <div className="flex select-none items-center gap-1">
           {!isPdf && (
             <>
               <button
                 type="button"
-                title="Diminuir zoom (-)"
                 aria-label="Diminuir zoom"
                 onClick={() => zoomBy(-0.25)}
                 disabled={zoom <= 0.25}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 hover:text-white disabled:opacity-40 transition-colors cursor-pointer"
+                className={toolbarBtnClass}
               >
                 <ZoomOut size={16} />
               </button>
               <button
                 type="button"
-                title="Redefinir visualização (0)"
+                aria-label="Redefinir zoom"
                 onClick={resetTransform}
-                className="min-w-13 rounded-lg px-2 py-1 font-mono text-xs font-semibold text-zinc-200 hover:bg-white/10 transition-colors cursor-pointer"
+                className="min-w-13 rounded-lg px-2 py-1 font-mono text-xs font-semibold tabular-nums text-zinc-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 transition-colors cursor-pointer"
               >
                 {Math.round(zoom * 100)}%
               </button>
               <button
                 type="button"
-                title="Aumentar zoom (+)"
                 aria-label="Aumentar zoom"
                 onClick={() => zoomBy(0.25)}
                 disabled={zoom >= 4}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 hover:text-white disabled:opacity-40 transition-colors cursor-pointer"
+                className={toolbarBtnClass}
               >
                 <ZoomIn size={16} />
               </button>
@@ -307,29 +319,28 @@ export default function ImageLightbox({
 
               <button
                 type="button"
-                title="Girar à esquerda"
                 aria-label="Girar à esquerda"
                 onClick={() => setRotation((r) => (r - 90 + 360) % 360)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                className={toolbarBtnClass}
               >
                 <RotateCcw size={16} />
               </button>
               <button
                 type="button"
-                title="Girar à direita (R)"
                 aria-label="Girar à direita"
                 onClick={() => setRotation((r) => (r + 90) % 360)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                className={toolbarBtnClass}
               >
                 <RotateCw size={16} />
               </button>
               <button
                 type="button"
-                title="Espelhar horizontalmente"
                 aria-label="Espelhar horizontalmente"
+                aria-pressed={flippedX}
                 onClick={() => setFlippedX((f) => !f)}
                 className={twMerge(
-                  "hidden sm:inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer",
+                  "hidden sm:inline-flex",
+                  toolbarBtnClass,
                   flippedX && "bg-white/15 text-white",
                 )}
               >
@@ -337,10 +348,9 @@ export default function ImageLightbox({
               </button>
               <button
                 type="button"
-                title="Ajustar à tela"
                 aria-label="Ajustar à tela"
                 onClick={resetTransform}
-                className="hidden sm:inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                className={twMerge("hidden sm:inline-flex", toolbarBtnClass)}
               >
                 <Maximize2 size={15} />
               </button>
@@ -349,27 +359,25 @@ export default function ImageLightbox({
 
           {(allowDownload || allowPrint) && <span className="mx-1 h-4 w-px bg-white/15" />}
 
-          {allowDownload && (
+          {allowDownload && safeCurrentSrc && (
             <a
-              href={currentItem.src}
+              href={safeCurrentSrc}
               download={currentItem.title || true}
               target="_blank"
               rel="noopener noreferrer"
-              title="Baixar arquivo"
               aria-label="Baixar arquivo"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 hover:text-white transition-colors"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 transition-colors"
             >
               <Download size={16} />
             </a>
           )}
 
-          {allowPrint && (
+          {allowPrint && safeCurrentSrc && (
             <button
               type="button"
-              title="Imprimir"
               aria-label="Imprimir"
               onClick={handlePrint}
-              className="hidden sm:inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+              className={twMerge("hidden sm:inline-flex", toolbarBtnClass)}
             >
               <Printer size={16} />
             </button>
@@ -380,10 +388,9 @@ export default function ImageLightbox({
               <span className="mx-1 h-4 w-px bg-white/15" />
               <button
                 type="button"
-                title="Fechar (Esc)"
-                aria-label="Fechar"
+                aria-label="Fechar visualizador"
                 onClick={onClose}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 transition-colors cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -414,7 +421,7 @@ export default function ImageLightbox({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         className={twMerge(
-          "relative flex flex-1 items-center justify-center overflow-hidden p-4",
+          "relative flex flex-1 select-none items-center justify-center overflow-hidden p-4",
           !isPdf && zoom > 1 ? (isDragging ? "cursor-grabbing" : "cursor-grab") : "cursor-default",
         )}
       >
@@ -428,7 +435,7 @@ export default function ImageLightbox({
                 e.stopPropagation();
                 goTo(currentIndex - 1);
               }}
-              className="absolute left-3 top-1/2 z-20 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white border border-white/15 hover:bg-black/80 transition-colors cursor-pointer"
+              className="absolute left-3 top-1/2 z-20 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white border border-white/15 hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 transition-colors cursor-pointer"
             >
               <ChevronLeft size={20} />
             </button>
@@ -439,7 +446,7 @@ export default function ImageLightbox({
                 e.stopPropagation();
                 goTo(currentIndex + 1);
               }}
-              className="absolute right-3 top-1/2 z-20 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white border border-white/15 hover:bg-black/80 transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 z-20 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white border border-white/15 hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 transition-colors cursor-pointer"
             >
               <ChevronRight size={20} />
             </button>
@@ -447,16 +454,17 @@ export default function ImageLightbox({
         )}
 
         {isPdf ? (
-          <iframe
-            src={currentItem.src}
-            title={currentItem.title || "Visualizador PDF"}
-            className="h-full w-full max-w-5xl rounded-xl border border-white/15 bg-white"
-          />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
+          safeCurrentSrc ? (
+            <iframe
+              src={safeCurrentSrc}
+              title={currentItem.title || "Visualizador PDF"}
+              className="h-full w-full max-w-5xl rounded-xl border border-white/15 bg-white"
+            />
+          ) : null
+        ) : safeCurrentSrc ? (
           <img
-            src={currentItem.src}
-            alt={currentItem.alt || currentItem.title || ""}
+            src={safeCurrentSrc}
+            alt={currentItem.alt || currentItem.title || "Imagem em visualização"}
             draggable={false}
             style={{
               transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom}) rotate(${rotation}deg) scaleX(${flippedX ? -1 : 1})`,
@@ -464,37 +472,39 @@ export default function ImageLightbox({
             }}
             className="max-h-full max-w-full rounded-lg object-contain shadow-2xl"
           />
-        )}
+        ) : null}
       </div>
 
       {/* Filmstrip Thumbnails */}
       {showThumbnails && items.length > 1 && (
-        <div className="flex items-center justify-center gap-2 overflow-x-auto border-t border-white/10 bg-black/50 px-4 py-2.5">
+        <div className="flex select-none items-center justify-center gap-2 overflow-x-auto border-t border-white/10 bg-black/50 px-4 py-2.5">
           {items.map((item, idx) => {
             const active = idx === currentIndex;
             const itemIsPdf = isPdfItem(item);
+            const thumbSrc = sanitizeMediaUrl(item.thumbnail || item.src);
             return (
               <button
                 key={item.id ?? `${item.src}-${idx}`}
                 type="button"
+                aria-label={item.title || item.alt || `Ir para item ${idx + 1}`}
+                aria-current={active ? "true" : undefined}
                 onClick={() => goTo(idx)}
                 className={twMerge(
-                  "relative h-12 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all cursor-pointer",
+                  "relative h-12 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 cursor-pointer",
                   active
                     ? "border-primary ring-2 ring-primary/40 opacity-100 scale-105"
                     : "border-white/15 opacity-55 hover:opacity-90",
                 )}
               >
-                {itemIsPdf && !item.thumbnail ? (
+                {(itemIsPdf && !item.thumbnail) || !thumbSrc ? (
                   <div className="flex h-full w-full flex-col items-center justify-center bg-zinc-800 text-[10px] font-bold text-zinc-200">
                     <FileText size={15} />
                     <span>PDF</span>
                   </div>
                 ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={item.thumbnail || item.src}
-                    alt={item.alt || item.title || `Item ${idx + 1}`}
+                    src={thumbSrc}
+                    alt={item.alt || item.title || `Miniatura ${idx + 1}`}
                     className="h-full w-full object-cover"
                   />
                 )}
