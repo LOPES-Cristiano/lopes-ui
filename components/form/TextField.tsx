@@ -5,10 +5,12 @@ import { twMerge } from "tailwind-merge";
 import { Eye, EyeOff, X } from "lucide-react";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
 import { useAccessControl } from "../useAccessControl";
+import { maskCnpjAlphanumeric, onlyAlphanumericUpper } from "../../utils/document";
 
 export type TextFieldMask =
   | "cpf"
   | "cnpj"
+  | "cnpj-alpha"
   | "cpf-cnpj"
   | "cep"
   | "phone"
@@ -52,18 +54,19 @@ export function applyInputMask(
       else if (d.length > 3) f = `${d.slice(0, 3)}.${d.slice(3)}`;
       return { formatted: f, unmasked: d };
     }
-    case "cnpj": {
-      const d = digits.slice(0, 14);
-      let f = d;
-      if (d.length > 12)
-        f = `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
-      else if (d.length > 8)
-        f = `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8)}`;
-      else if (d.length > 5) f = `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5)}`;
-      else if (d.length > 2) f = `${d.slice(0, 2)}.${d.slice(2)}`;
-      return { formatted: f, unmasked: d };
+    case "cnpj":
+    case "cnpj-alpha": {
+      const clean =
+        mask === "cnpj-alpha" || /[A-Za-z]/.test(input)
+          ? onlyAlphanumericUpper(input).slice(0, 14)
+          : digits.slice(0, 14);
+      return { formatted: maskCnpjAlphanumeric(clean), unmasked: clean };
     }
     case "cpf-cnpj": {
+      if (/[A-Za-z]/.test(input)) {
+        const clean = onlyAlphanumericUpper(input).slice(0, 14);
+        return { formatted: maskCnpjAlphanumeric(clean), unmasked: clean };
+      }
       return digits.length <= 11
         ? applyInputMask(digits, "cpf")
         : applyInputMask(digits, "cnpj");
@@ -305,7 +308,11 @@ export default function TextField({
 
   const resolvedInputMode =
     inputMode ??
-    (mask && mask !== "plate" && typeof mask === "string" ? "numeric" : undefined);
+    (mask && typeof mask === "string"
+      ? mask === "plate" || mask === "cnpj-alpha"
+        ? "text"
+        : "numeric"
+      : undefined);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (mask) {
