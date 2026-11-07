@@ -3,11 +3,12 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { Slot } from '@radix-ui/react-slot';
-import { cn } from '@/utils/cn';
+import { cn } from '../../utils/cn';
 
 type HoverCardContextValue = {
   open: boolean;
-  triggerRef: React.MutableRefObject<HTMLElement | null>;
+  getTriggerElement: () => HTMLElement | null;
+  setTriggerElement: (node: HTMLElement | null) => void;
   handleEnter: () => void;
   handleLeave: () => void;
 };
@@ -46,25 +47,41 @@ function HoverCard({
     [controlledOpen, onOpenChange]
   );
 
-  const clearTimers = () => {
+  const clearTimers = React.useCallback(() => {
     if (openTimerRef.current) clearTimeout(openTimerRef.current);
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-  };
+  }, []);
 
-  const handleEnter = () => {
+  const handleEnter = React.useCallback(() => {
     clearTimers();
     openTimerRef.current = setTimeout(() => setOpen(true), openDelay);
-  };
+  }, [clearTimers, openDelay, setOpen]);
 
-  const handleLeave = () => {
+  const handleLeave = React.useCallback(() => {
     clearTimers();
     closeTimerRef.current = setTimeout(() => setOpen(false), closeDelay);
-  };
+  }, [clearTimers, closeDelay, setOpen]);
 
-  React.useEffect(() => clearTimers, []);
+  const getTriggerElement = React.useCallback(() => triggerRef.current, []);
+  const setTriggerElement = React.useCallback((node: HTMLElement | null) => {
+    triggerRef.current = node;
+  }, []);
+
+  React.useEffect(() => clearTimers, [clearTimers]);
+
+  const ctxValue = React.useMemo<HoverCardContextValue>(
+    () => ({
+      open,
+      getTriggerElement,
+      setTriggerElement,
+      handleEnter,
+      handleLeave,
+    }),
+    [open, getTriggerElement, setTriggerElement, handleEnter, handleLeave]
+  );
 
   return (
-    <HoverCardContext.Provider value={{ open, triggerRef, handleEnter, handleLeave }}>
+    <HoverCardContext.Provider value={ctxValue}>
       {children}
     </HoverCardContext.Provider>
   );
@@ -77,15 +94,21 @@ export interface HoverCardTriggerProps extends React.HTMLAttributes<HTMLElement>
 const HoverCardTrigger = React.forwardRef<HTMLElement, HoverCardTriggerProps>(
   ({ asChild = false, onMouseEnter, onMouseLeave, onFocus, onBlur, ...props }, ref) => {
     const ctx = React.useContext(HoverCardContext);
+    const setTriggerElement = ctx?.setTriggerElement;
     const Comp = (asChild ? Slot : 'span') as React.ElementType;
+
+    const mergedRef = React.useCallback(
+      (node: HTMLElement | null) => {
+        setTriggerElement?.(node);
+        if (typeof ref === 'function') ref(node);
+        else if (ref) (ref as React.MutableRefObject<HTMLElement | null>).current = node;
+      },
+      [setTriggerElement, ref]
+    );
 
     return (
       <Comp
-        ref={(node: HTMLElement | null) => {
-          if (ctx) ctx.triggerRef.current = node;
-          if (typeof ref === 'function') ref(node);
-          else if (ref) (ref as React.MutableRefObject<HTMLElement | null>).current = node;
-        }}
+        ref={mergedRef}
         data-slot="hover-card-trigger"
         data-state={ctx?.open ? 'open' : 'closed'}
         onMouseEnter={(e: React.MouseEvent<HTMLElement>) => {
@@ -120,11 +143,12 @@ export interface HoverCardContentProps extends React.HTMLAttributes<HTMLDivEleme
 const HoverCardContent = React.forwardRef<HTMLDivElement, HoverCardContentProps>(
   ({ className, align = 'center', side = 'bottom', sideOffset = 6, style, ...props }, ref) => {
     const ctx = React.useContext(HoverCardContext);
+    const getTriggerElement = ctx?.getTriggerElement;
     const contentRef = React.useRef<HTMLDivElement | null>(null);
     const [pos, setPos] = React.useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
     const updatePosition = React.useCallback(() => {
-      const trigger = ctx?.triggerRef.current;
+      const trigger = getTriggerElement?.();
       const panel = contentRef.current;
       if (!trigger || !panel) return;
 
@@ -154,7 +178,7 @@ const HoverCardContent = React.forwardRef<HTMLDivElement, HoverCardContentProps>
       top = Math.max(margin, Math.min(top, window.innerHeight - pRect.height - margin));
 
       setPos({ top, left });
-    }, [align, ctx?.triggerRef, side, sideOffset]);
+    }, [align, getTriggerElement, side, sideOffset]);
 
     React.useLayoutEffect(() => {
       if (!ctx?.open) return;
@@ -167,16 +191,22 @@ const HoverCardContent = React.forwardRef<HTMLDivElement, HoverCardContentProps>
       };
     }, [ctx?.open, updatePosition]);
 
+    const mergedContentRef = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        contentRef.current = node;
+        if (typeof ref === 'function') ref(node);
+        else if (ref) ref.current = node;
+      },
+      [ref]
+    );
+
     if (!ctx?.open || typeof document === 'undefined') return null;
 
     return createPortal(
       <div
-        ref={(node) => {
-          contentRef.current = node;
-          if (typeof ref === 'function') ref(node);
-          else if (ref) ref.current = node;
-        }}
+        ref={mergedContentRef}
         data-slot="hover-card-content"
+        data-floating-open="true"
         data-state="open"
         data-side={side}
         onMouseEnter={ctx.handleEnter}
@@ -188,7 +218,7 @@ const HoverCardContent = React.forwardRef<HTMLDivElement, HoverCardContentProps>
           ...style,
         }}
         className={cn(
-          'z-[99999] w-72 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 text-zinc-900 dark:text-zinc-100 shadow-xl outline-none animate-in fade-in-0 zoom-in-95 duration-150',
+          'z-[9200] pointer-events-auto w-72 max-w-[calc(100vw-1.5rem)] rounded-[var(--radius-card)] border border-border bg-popover p-4 text-popover-foreground shadow-[var(--shadow-floating)] outline-none animate-in fade-in-0 zoom-in-95 duration-150 motion-reduce:animate-none',
           className
         )}
         {...props}
