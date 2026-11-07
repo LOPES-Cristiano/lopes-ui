@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { cn } from '@/utils/cn';
+import { cn } from '../../utils/cn';
 
 export interface ScrollAreaPrimitiveProps extends React.HTMLAttributes<HTMLDivElement> {
   orientation?: 'vertical' | 'horizontal' | 'both';
@@ -23,7 +23,6 @@ const ScrollArea = React.forwardRef<HTMLDivElement, ScrollAreaPrimitiveProps>(
           orientation === 'vertical' && 'overflow-y-auto overflow-x-hidden',
           orientation === 'horizontal' && 'overflow-x-auto overflow-y-hidden',
           orientation === 'both' && 'overflow-auto',
-          '[&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-300/80 hover:[&::-webkit-scrollbar-thumb]:bg-zinc-400 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700 dark:hover:[&::-webkit-scrollbar-thumb]:bg-zinc-600',
           viewportClassName
         )}
       >
