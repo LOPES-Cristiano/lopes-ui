@@ -33,7 +33,12 @@ export { default as NumberField } from "./NumberField";
 export type { NumberFieldProps } from "./NumberField";
 
 export { default as SelectField } from "./SelectField";
-export type { SelectFieldProps, SelectOption } from "./SelectField";
+export type {
+  SelectFieldProps,
+  SelectOption,
+  SelectGroupMeta,
+  SelectDisplayMode,
+} from "./SelectField";
 
 export { default as MultiSelectField } from "./MultiSelectField";
 export type { MultiSelectFieldProps, MultiSelectOption } from "./MultiSelectField";
@@ -129,6 +134,12 @@ export type {
   CheckableTagGroupOption,
   CheckableTagGroupProps,
 } from "./TagsInput";
+
+export { default as TagInputField } from "./TagInputField";
+export type { TagInputFieldProps } from "./TagInputField";
+
+export { default as ColorPickerField } from "./ColorPickerField";
+export type { ColorPickerFieldProps } from "./ColorPickerField";
 
 export { default as SliderField } from "./SliderField";
 export type { SliderFieldProps, SliderMark } from "./SliderField";
