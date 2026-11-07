@@ -22,23 +22,26 @@ export function useSidebarGroups(
   // Hydrate once on mount or when storage key changes
   useEffect(() => {
     if (!groupsCollapsible) return;
-    try {
-      const stored = localStorage.getItem(groupsStorageKey);
-      const validIds = safeParseStringArray(stored);
-      if (validIds.length > 0) {
-        const availableGroupIds = new Set(
-          groups
-            .filter((g) => Boolean(g.label) && g.collapsible !== false)
-            .map((g, index) => resolveGroupId(g, index)),
-        );
-        const filtered = validIds.filter((id) => availableGroupIds.has(id));
-        setCollapsedGroupIds(new Set(filtered));
+    const timer = setTimeout(() => {
+      try {
+        const stored = localStorage.getItem(groupsStorageKey);
+        const validIds = safeParseStringArray(stored);
+        if (validIds.length > 0) {
+          const availableGroupIds = new Set(
+            groups
+              .filter((g) => Boolean(g.label) && g.collapsible !== false)
+              .map((g, index) => resolveGroupId(g, index)),
+          );
+          const filtered = validIds.filter((id) => availableGroupIds.has(id));
+          setCollapsedGroupIds(new Set(filtered));
+        }
+      } catch {
+        // ignore
+      } finally {
+        isHydratedRef.current = true;
       }
-    } catch {
-      // ignore
-    } finally {
-      isHydratedRef.current = true;
-    }
+    }, 0);
+    return () => clearTimeout(timer);
     // Only run on mount / when key changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupsCollapsible, groupsStorageKey]);
