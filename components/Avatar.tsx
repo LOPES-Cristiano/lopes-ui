@@ -114,22 +114,20 @@ export default function Avatar({
   componentId,
   onClick,
 }: AvatarProps) {
-  const [imgError, setImgError] = useState(false);
-  const [canShowFallback, setCanShowFallback] = useState(fallbackDelayMs <= 0);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const delayKey = `${src ?? ""}::${fallbackDelayMs}`;
+  const [readyDelayKey, setReadyDelayKey] = useState<string | null>(() =>
+    fallbackDelayMs <= 0 ? delayKey : null
+  );
 
   useEffect(() => {
-    setImgError(false);
-  }, [src]);
-
-  useEffect(() => {
-    if (fallbackDelayMs <= 0) {
-      setCanShowFallback(true);
-      return;
-    }
-    setCanShowFallback(false);
-    const timer = setTimeout(() => setCanShowFallback(true), fallbackDelayMs);
+    if (fallbackDelayMs <= 0) return;
+    const timer = setTimeout(() => setReadyDelayKey(delayKey), fallbackDelayMs);
     return () => clearTimeout(timer);
-  }, [fallbackDelayMs, src]);
+  }, [delayKey, fallbackDelayMs]);
+
+  const imgError = Boolean(src && failedSrc === src);
+  const canShowFallback = fallbackDelayMs <= 0 || readyDelayKey === delayKey;
 
   const s = SIZE_CLS[size];
   const shapeCls = mask ? "" : shape === "square" ? s.squareRadius : "rounded-full";
@@ -159,12 +157,13 @@ export default function Avatar({
         )}
       >
         {showImg ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={src}
             alt={alt ?? name ?? "avatar"}
             className="h-full w-full object-cover"
-            onError={() => setImgError(true)}
+            onError={() => {
+              if (src) setFailedSrc(src);
+            }}
           />
         ) : !canShowFallback ? null : displayInitials ? (
           <span className={s.text}>{displayInitials}</span>
