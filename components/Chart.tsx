@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useId, useMemo, useState } from "react";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 import { useAccessControl } from "./useAccessControl";
 
 export type ChartColor = "indigo" | "emerald" | "amber" | "rose" | "sky" | "violet" | "zinc";
@@ -42,8 +42,10 @@ export interface ChartProps {
   showGrid?: boolean;
   /** Empilha barras no modo bar */
   stacked?: boolean;
-  /** Função para formatar valores numéricos (ex: moeda, %) */
+  /** Função para formatar valores numéricos nos tooltips e legendas (ex: moeda, %) */
   valueFormatter?: (value: number) => string;
+  /** Função opcional para formatar rótulos compactos no eixo Y */
+  axisFormatter?: (value: number) => string;
   /** Texto central no gráfico de rosca (Donut) */
   centerLabel?: string;
   /** Subtexto central no gráfico de rosca (Donut) */
@@ -58,37 +60,37 @@ const COLOR_PALETTE: Record<
   { stroke: string; fill: string; hex: string; bgClass: string; textClass: string }
 > = {
   indigo: {
-    stroke: "#4f46e5",
-    fill: "#6366f1",
-    hex: "#4f46e5",
+    stroke: "var(--chart-1, #4f46e5)",
+    fill: "var(--chart-1, #6366f1)",
+    hex: "var(--chart-1, #4f46e5)",
     bgClass: "bg-indigo-600",
     textClass: "text-indigo-600 dark:text-indigo-400",
   },
   emerald: {
-    stroke: "#059669",
-    fill: "#10b981",
-    hex: "#10b981",
+    stroke: "var(--chart-2, #059669)",
+    fill: "var(--chart-2, #10b981)",
+    hex: "var(--chart-2, #10b981)",
     bgClass: "bg-emerald-500",
     textClass: "text-emerald-600 dark:text-emerald-400",
   },
   amber: {
-    stroke: "#d97706",
-    fill: "#f59e0b",
-    hex: "#f59e0b",
+    stroke: "var(--chart-3, #d97706)",
+    fill: "var(--chart-3, #f59e0b)",
+    hex: "var(--chart-3, #f59e0b)",
     bgClass: "bg-amber-500",
     textClass: "text-amber-600 dark:text-amber-400",
   },
   rose: {
-    stroke: "#e11d48",
-    fill: "#f43f5e",
-    hex: "#f43f5e",
+    stroke: "var(--chart-4, #e11d48)",
+    fill: "var(--chart-4, #f43f5e)",
+    hex: "var(--chart-4, #f43f5e)",
     bgClass: "bg-rose-500",
     textClass: "text-rose-600 dark:text-rose-400",
   },
   sky: {
-    stroke: "#0284c7",
-    fill: "#0ea5e9",
-    hex: "#0ea5e9",
+    stroke: "var(--chart-5, #0284c7)",
+    fill: "var(--chart-5, #0ea5e9)",
+    hex: "var(--chart-5, #0ea5e9)",
     bgClass: "bg-sky-500",
     textClass: "text-sky-600 dark:text-sky-400",
   },
@@ -108,7 +110,15 @@ const COLOR_PALETTE: Record<
   },
 };
 
-const DEFAULT_COLORS: ChartColor[] = ["indigo", "emerald", "amber", "rose", "sky", "violet", "zinc"];
+const DEFAULT_COLORS: ChartColor[] = [
+  "indigo",
+  "emerald",
+  "amber",
+  "rose",
+  "sky",
+  "violet",
+  "zinc",
+];
 
 const defaultFormat = (v: number) => v.toLocaleString("pt-BR");
 
@@ -124,6 +134,7 @@ export default function Chart({
   showGrid = true,
   stacked = false,
   valueFormatter = defaultFormat,
+  axisFormatter,
   centerLabel,
   centerSublabel,
   bordered = true,
@@ -133,6 +144,7 @@ export default function Chart({
 }: ChartProps) {
   const uid = useId().replace(/:/g, "");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const resolvedAxisFormatter = axisFormatter ?? valueFormatter;
 
   const { canAccess } = useAccessControl();
   const hasAccess = componentId ? canAccess(componentId) : true;
@@ -146,7 +158,9 @@ export default function Chart({
       }));
     }
     if (data.length === 0) return [{ key: valueKey, label: "Valor", color: "indigo" }];
-    const keys = Object.keys(data[0]).filter((k) => k !== "label" && k !== "color" && typeof data[0][k] === "number");
+    const keys = Object.keys(data[0]).filter(
+      (k) => k !== "label" && k !== "color" && typeof data[0][k] === "number",
+    );
     if (keys.length === 0) return [{ key: valueKey, label: "Valor", color: "indigo" }];
     return keys.map((k, idx) => ({
       key: k,
@@ -178,25 +192,31 @@ export default function Chart({
 
   return (
     <div
+      data-component-id={componentId}
       className={cn(
         "@container flex flex-col min-w-0",
-        bordered && "rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 sm:p-5",
-        className
+        bordered &&
+          "rounded-[var(--radius-card)] border border-border bg-surface p-3.5 sm:p-5 shadow-[var(--shadow-card)]",
+        !hasAccess && "opacity-50 pointer-events-none",
+        className,
       )}
     >
       {/* Header & Legend */}
       {(title || subtitle || (showLegend && type !== "donut" && resolvedSeries.length > 1)) && (
-        <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
           <div>
-            {title && <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>}
-            {subtitle && <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{subtitle}</p>}
+            {title && <h3 className="text-sm font-semibold text-foreground">{title}</h3>}
+            {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
           </div>
           {showLegend && type !== "donut" && (
             <div className="flex flex-wrap items-center gap-3">
               {resolvedSeries.map((s) => {
                 const palette = COLOR_PALETTE[s.color];
                 return (
-                  <div key={s.key} className="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                  <div
+                    key={s.key}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+                  >
                     <span className={cn("size-2.5 rounded-sm shrink-0", palette.bgClass)} />
                     <span>{s.label}</span>
                   </div>
@@ -229,6 +249,7 @@ export default function Chart({
           showGrid={showGrid}
           stacked={stacked}
           valueFormatter={valueFormatter}
+          axisFormatter={resolvedAxisFormatter}
           hoveredIndex={hoveredIndex}
           setHoveredIndex={setHoveredIndex}
         />
@@ -242,6 +263,7 @@ export default function Chart({
           height={height}
           showGrid={showGrid}
           valueFormatter={valueFormatter}
+          axisFormatter={resolvedAxisFormatter}
           hoveredIndex={hoveredIndex}
           setHoveredIndex={setHoveredIndex}
         />
@@ -260,6 +282,7 @@ function BarChartBody({
   showGrid,
   stacked,
   valueFormatter,
+  axisFormatter,
   hoveredIndex,
   setHoveredIndex,
 }: {
@@ -270,22 +293,23 @@ function BarChartBody({
   showGrid: boolean;
   stacked: boolean;
   valueFormatter: (v: number) => string;
+  axisFormatter: (v: number) => string;
   hoveredIndex: number | null;
   setHoveredIndex: (idx: number | null) => void;
 }) {
   const ticks = [1, 0.75, 0.5, 0.25, 0];
 
   return (
-    <div className="relative select-none" style={{ height }}>
+    <div className="relative select-none tabular-nums" style={{ height }}>
       {/* Horizontal grid lines */}
       {showGrid && (
         <div className="absolute inset-0 bottom-6 flex flex-col justify-between pointer-events-none">
           {ticks.map((t) => (
             <div key={t} className="flex items-center gap-1.5 sm:gap-2 w-full">
-              <span className="w-11 sm:w-14 text-right text-[9px] sm:text-[10px] font-mono text-zinc-400 dark:text-zinc-500 shrink-0 truncate">
-                {valueFormatter(Math.round(maxValue * t))}
+              <span className="w-12 sm:w-16 text-right text-[10px] font-mono text-muted-foreground shrink-0 truncate">
+                {axisFormatter(Math.round(maxValue * t))}
               </span>
-              <div className="flex-1 border-b border-dashed border-zinc-200/80 dark:border-zinc-800" />
+              <div className="flex-1 border-b border-dashed border-border/80" />
             </div>
           ))}
         </div>
@@ -294,14 +318,14 @@ function BarChartBody({
       {/* Bars container */}
       <div
         className={cn(
-          "relative h-full flex items-end justify-between gap-1 sm:gap-2 pt-2",
-          showGrid ? "pl-12 sm:pl-16" : "pl-0"
+          "relative h-full flex items-end justify-between gap-1 sm:gap-2 pb-6 pt-2",
+          showGrid ? "pl-14 sm:pl-18" : "pl-0",
         )}
       >
         {data.map((item, i) => {
           const isHovered = hoveredIndex === i;
-          const isFirst = i === 0;
-          const isLast = i === data.length - 1;
+          const isFirst = i <= 1;
+          const isLast = i >= data.length - 2;
           return (
             <div
               key={item.label + i}
@@ -314,15 +338,15 @@ function BarChartBody({
               {isHovered && (
                 <div
                   className={cn(
-                    "absolute -top-2 -translate-y-full z-20 pointer-events-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 sm:px-3 py-2 shadow-lg min-w-[120px] sm:min-w-[130px] whitespace-nowrap",
+                    "absolute -top-2 -translate-y-full z-20 pointer-events-none rounded-lg border border-border bg-popover px-2.5 sm:px-3 py-2 shadow-lg min-w-[130px] sm:min-w-[145px] whitespace-nowrap",
                     isFirst
                       ? "left-0 translate-x-0"
                       : isLast
                         ? "right-0 translate-x-0"
-                        : "left-1/2 -translate-x-1/2"
+                        : "left-1/2 -translate-x-1/2",
                   )}
                 >
-                  <p className="text-[11px] font-semibold text-zinc-900 dark:text-zinc-100 mb-1 border-b border-zinc-100 dark:border-zinc-800 pb-1">
+                  <p className="text-[11px] font-semibold text-foreground mb-1 border-b border-border/70 pb-1">
                     {item.label}
                   </p>
                   <div className="space-y-1">
@@ -330,12 +354,15 @@ function BarChartBody({
                       const val = Number(item[s.key]) || 0;
                       const palette = COLOR_PALETTE[s.color];
                       return (
-                        <div key={s.key} className="flex items-center justify-between gap-3 text-xs">
-                          <span className="inline-flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+                        <div
+                          key={s.key}
+                          className="flex items-center justify-between gap-3 text-xs"
+                        >
+                          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                             <span className={cn("size-2 rounded-full", palette.bgClass)} />
                             {s.label}
                           </span>
-                          <span className="font-mono font-semibold text-zinc-900 dark:text-zinc-100">
+                          <span className="font-mono font-semibold text-foreground tabular-nums">
                             {valueFormatter(val)}
                           </span>
                         </div>
@@ -348,8 +375,8 @@ function BarChartBody({
               {/* Bars */}
               <div
                 className={cn(
-                  "w-full max-w-[44px] flex-1 min-h-0 flex items-end justify-center gap-1 px-0.5 rounded-t-md transition-colors",
-                  isHovered && "bg-zinc-100/60 dark:bg-zinc-800/40"
+                  "w-full max-w-[56px] h-full flex items-end justify-center gap-1.5 px-1 rounded-t-md transition-colors",
+                  isHovered && "bg-muted/40",
                 )}
               >
                 {stacked ? (
@@ -370,7 +397,7 @@ function BarChartBody({
                 ) : (
                   series.map((s) => {
                     const val = Number(item[s.key]) || 0;
-                    const pct = Math.max(val > 0 ? 2 : 0, Math.min(100, (val / maxValue) * 100));
+                    const pct = Math.max(val > 0 ? 3 : 0, Math.min(100, (val / maxValue) * 100));
                     const palette = COLOR_PALETTE[s.color];
                     return (
                       <div
@@ -379,7 +406,7 @@ function BarChartBody({
                         className={cn(
                           "flex-1 rounded-t-md transition-all duration-300",
                           palette.bgClass,
-                          hoveredIndex !== null && !isHovered && "opacity-55"
+                          hoveredIndex !== null && !isHovered && "opacity-55",
                         )}
                       />
                     );
@@ -388,7 +415,7 @@ function BarChartBody({
               </div>
 
               {/* X-axis label */}
-              <span className="h-6 shrink-0 flex items-center justify-center text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-full px-0.5">
+              <span className="absolute bottom-0 text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate max-w-full px-0.5">
                 {item.label}
               </span>
             </div>
@@ -410,6 +437,7 @@ function AreaLineChartBody({
   height,
   showGrid,
   valueFormatter,
+  axisFormatter,
   hoveredIndex,
   setHoveredIndex,
 }: {
@@ -421,23 +449,47 @@ function AreaLineChartBody({
   height: number;
   showGrid: boolean;
   valueFormatter: (v: number) => string;
+  axisFormatter: (v: number) => string;
   hoveredIndex: number | null;
   setHoveredIndex: (idx: number | null) => void;
 }) {
   const svgW = 640;
   const svgH = 200;
-  const padX = 16;
-  const padY = 14;
+  const padX = 12;
+  const padY = 12;
   const plotW = svgW - padX * 2;
   const plotH = svgH - padY * 2;
 
   const count = Math.max(1, data.length);
   const getX = (idx: number) => (count === 1 ? svgW / 2 : padX + (idx / (count - 1)) * plotW);
   const getY = (val: number) => padY + plotH - Math.min(1, Math.max(0, val / maxValue)) * plotH;
+  const ticks = [1, 0.75, 0.5, 0.25, 0];
+
+  // Thin X-axis labels when data has many points (e.g. > 10 points)
+  const labelStep = Math.max(1, Math.ceil(data.length / 9));
 
   return (
-    <div className="relative select-none" style={{ height }}>
-      <div className="relative h-[calc(100%-24px)] w-full">
+    <div className="relative select-none tabular-nums" style={{ height }}>
+      {/* Horizontal grid & Y-axis labels */}
+      {showGrid && (
+        <div className="absolute inset-0 bottom-6 flex flex-col justify-between pointer-events-none">
+          {ticks.map((t) => (
+            <div key={t} className="flex items-center gap-1.5 sm:gap-2 w-full">
+              <span className="w-12 sm:w-16 text-right text-[10px] font-mono text-muted-foreground shrink-0 truncate">
+                {axisFormatter(Math.round(maxValue * t))}
+              </span>
+              <div className="flex-1 border-b border-dashed border-border/80" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div
+        className={cn(
+          "relative h-[calc(100%-24px)]",
+          showGrid ? "ml-14 sm:ml-18" : "ml-0",
+        )}
+      >
         <svg
           viewBox={`0 0 ${svgW} ${svgH}`}
           preserveAspectRatio="none"
@@ -447,32 +499,20 @@ function AreaLineChartBody({
             {series.map((s) => {
               const palette = COLOR_PALETTE[s.color];
               return (
-                <linearGradient key={s.key} id={`grad-${uid}-${s.key}`} x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  key={s.key}
+                  id={`grad-${uid}-${s.key}`}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop offset="0%" stopColor={palette.fill} stopOpacity={0.32} />
                   <stop offset="100%" stopColor={palette.fill} stopOpacity={0.0} />
                 </linearGradient>
               );
             })}
           </defs>
-
-          {/* Grid lines */}
-          {showGrid &&
-            [0, 0.25, 0.5, 0.75, 1].map((t) => {
-              const y = padY + plotH * t;
-              return (
-                <line
-                  key={t}
-                  x1={padX}
-                  x2={svgW - padX}
-                  y1={y}
-                  y2={y}
-                  stroke="currentColor"
-                  strokeDasharray="4 4"
-                  className="text-zinc-200 dark:text-zinc-800"
-                  strokeWidth={1}
-                />
-              );
-            })}
 
           {/* Series paths */}
           {series.map((s) => {
@@ -483,7 +523,9 @@ function AreaLineChartBody({
             }));
             if (pts.length === 0) return null;
 
-            const linePath = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+            const linePath = pts
+              .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+              .join(" ");
             const areaPath = `${linePath} L ${pts[pts.length - 1].x.toFixed(1)} ${(padY + plotH).toFixed(1)} L ${pts[0].x.toFixed(1)} ${(padY + plotH).toFixed(1)} Z`;
 
             return (
@@ -497,16 +539,20 @@ function AreaLineChartBody({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                {pts.map((p, i) => (
-                  <circle
-                    key={i}
-                    cx={p.x}
-                    cy={p.y}
-                    r={hoveredIndex === i ? 5 : 3}
-                    fill={palette.stroke}
-                    className="transition-all duration-150"
-                  />
-                ))}
+                {pts.map((p, i) => {
+                  const showDot = data.length <= 14 || hoveredIndex === i;
+                  if (!showDot) return null;
+                  return (
+                    <circle
+                      key={i}
+                      cx={p.x}
+                      cy={p.y}
+                      r={hoveredIndex === i ? 5 : 3}
+                      fill={palette.stroke}
+                      className="transition-all duration-150"
+                    />
+                  );
+                })}
               </g>
             );
           })}
@@ -520,7 +566,7 @@ function AreaLineChartBody({
               y2={padY + plotH}
               stroke="currentColor"
               strokeDasharray="3 3"
-              className="text-zinc-400 dark:text-zinc-600"
+              className="text-muted-foreground/60"
               strokeWidth={1.5}
             />
           )}
@@ -530,8 +576,8 @@ function AreaLineChartBody({
         <div className="absolute inset-0 flex">
           {data.map((item, i) => {
             const isHovered = hoveredIndex === i;
-            const isFirst = i === 0;
-            const isLast = i === data.length - 1;
+            const isFirst = i <= 1;
+            const isLast = i >= data.length - 2;
             return (
               <div
                 key={item.label + i}
@@ -543,15 +589,15 @@ function AreaLineChartBody({
                 {isHovered && (
                   <div
                     className={cn(
-                      "absolute top-0 z-20 pointer-events-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 sm:px-3 py-2 shadow-lg min-w-[125px] sm:min-w-[135px] whitespace-nowrap",
+                      "absolute top-0 z-20 pointer-events-none rounded-lg border border-border bg-popover px-2.5 sm:px-3 py-2 shadow-lg min-w-[140px] sm:min-w-[155px] whitespace-nowrap",
                       isFirst
                         ? "left-0 translate-x-0"
                         : isLast
                           ? "right-0 translate-x-0"
-                          : "left-1/2 -translate-x-1/2"
+                          : "left-1/2 -translate-x-1/2",
                     )}
                   >
-                    <p className="text-[11px] font-semibold text-zinc-900 dark:text-zinc-100 mb-1 border-b border-zinc-100 dark:border-zinc-800 pb-1">
+                    <p className="text-[11px] font-semibold text-foreground mb-1 border-b border-border/70 pb-1">
                       {item.label}
                     </p>
                     <div className="space-y-1">
@@ -559,12 +605,15 @@ function AreaLineChartBody({
                         const val = Number(item[s.key]) || 0;
                         const palette = COLOR_PALETTE[s.color];
                         return (
-                          <div key={s.key} className="flex items-center justify-between gap-3 text-xs">
-                            <span className="inline-flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+                          <div
+                            key={s.key}
+                            className="flex items-center justify-between gap-3 text-xs"
+                          >
+                            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                               <span className={cn("size-2 rounded-full", palette.bgClass)} />
                               {s.label}
                             </span>
-                            <span className="font-mono font-semibold text-zinc-900 dark:text-zinc-100">
+                            <span className="font-mono font-semibold text-foreground tabular-nums">
                               {valueFormatter(val)}
                             </span>
                           </div>
@@ -580,12 +629,25 @@ function AreaLineChartBody({
       </div>
 
       {/* X-axis labels */}
-      <div className="flex items-center justify-between gap-1 pt-1.5 px-1 sm:px-2">
-        {data.map((d, i) => (
-          <span key={d.label + i} className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-[44px] sm:max-w-none">
-            {d.label}
-          </span>
-        ))}
+      <div
+        className={cn(
+          "flex items-center justify-between gap-1 pt-1.5 px-1",
+          showGrid ? "ml-14 sm:ml-18" : "ml-0",
+        )}
+      >
+        {data.map((d, i) => {
+          const isVisible =
+            data.length <= 10 || i === 0 || i === data.length - 1 || i % labelStep === 0;
+          if (!isVisible) return null;
+          return (
+            <span
+              key={d.label + i}
+              className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate"
+            >
+              {d.label}
+            </span>
+          );
+        })}
       </div>
     </div>
   );
@@ -621,31 +683,45 @@ function DonutChartBody({
   const circumference = 2 * Math.PI * r;
 
   const segments = useMemo(() => {
-    let accumulatedPct = 0;
-    return data.map((d, i) => {
+    return data.reduce<
+      Array<{
+        label: string;
+        val: number;
+        pct: number;
+        palette: (typeof COLOR_PALETTE)[ChartColor];
+        dashArray: string;
+        dashOffset: number;
+        nextPct: number;
+      }>
+    >((acc, d, i) => {
+      const prevPct = i > 0 ? acc[i - 1].nextPct : 0;
       const val = Number(d[valueKey]) || 0;
       const pct = total > 0 ? val / total : 0;
       const colorName = (d.color as ChartColor) || DEFAULT_COLORS[i % DEFAULT_COLORS.length];
       const palette = COLOR_PALETTE[colorName] ?? COLOR_PALETTE.indigo;
       const dashArray = `${pct * circumference} ${circumference}`;
-      const dashOffset = -accumulatedPct * circumference;
-      accumulatedPct += pct;
-      return {
+      const dashOffset = -prevPct * circumference;
+      acc.push({
         label: d.label,
         val,
         pct,
         palette,
         dashArray,
         dashOffset,
-      };
-    });
+        nextPct: prevPct + pct,
+      });
+      return acc;
+    }, []);
   }, [data, valueKey, total, circumference]);
 
   const activeSegment = hoveredIndex !== null ? segments[hoveredIndex] : null;
 
   return (
-    <div className="flex flex-col @md:flex-row items-center justify-center gap-5 @md:gap-6 py-2">
-      <div className="relative flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
+    <div className="flex flex-col @md:flex-row items-center justify-center gap-5 @md:gap-6 py-2 tabular-nums">
+      <div
+        className="relative flex items-center justify-center shrink-0"
+        style={{ width: size, height: size }}
+      >
         <svg width={size} height={size} className="-rotate-90">
           <circle
             cx={size / 2}
@@ -654,7 +730,7 @@ function DonutChartBody({
             fill="none"
             stroke="currentColor"
             strokeWidth={strokeWidth}
-            className="text-zinc-100 dark:text-zinc-800"
+            className="text-muted"
           />
           {segments.map((seg, idx) => (
             <circle
@@ -679,13 +755,15 @@ function DonutChartBody({
 
         {/* Center text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-4">
-          <span className="text-lg font-bold text-zinc-900 dark:text-zinc-100 leading-tight">
-            {activeSegment ? valueFormatter(activeSegment.val) : centerLabel ?? valueFormatter(total)}
+          <span className="text-base sm:text-lg font-bold text-foreground leading-tight">
+            {activeSegment
+              ? valueFormatter(activeSegment.val)
+              : (centerLabel ?? valueFormatter(total))}
           </span>
-          <span className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate max-w-[110px]">
+          <span className="text-[11px] text-muted-foreground mt-0.5 truncate max-w-[115px]">
             {activeSegment
               ? `${activeSegment.label} (${Math.round(activeSegment.pct * 100)}%)`
-              : centerSublabel ?? "Total"}
+              : (centerSublabel ?? "Total")}
           </span>
         </div>
       </div>
@@ -700,20 +778,18 @@ function DonutChartBody({
               onMouseLeave={() => setHoveredIndex(null)}
               className={cn(
                 "flex items-center justify-between gap-3 rounded-lg px-2.5 py-1.5 text-xs transition-colors cursor-pointer",
-                hoveredIndex === idx
-                  ? "bg-zinc-100 dark:bg-zinc-800"
-                  : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                hoveredIndex === idx ? "bg-muted" : "hover:bg-muted/50",
               )}
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span className={cn("size-2.5 rounded-sm shrink-0", seg.palette.bgClass)} />
-                <span className="font-medium text-zinc-700 dark:text-zinc-300 truncate">{seg.label}</span>
+                <span className="font-medium text-foreground/90 truncate">{seg.label}</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="font-mono font-semibold text-zinc-900 dark:text-zinc-100">
+                <span className="font-mono font-semibold text-foreground">
                   {valueFormatter(seg.val)}
                 </span>
-                <span className="text-[11px] text-zinc-400 w-9 text-right">
+                <span className="text-[11px] text-muted-foreground w-9 text-right">
                   {Math.round(seg.pct * 100)}%
                 </span>
               </div>
