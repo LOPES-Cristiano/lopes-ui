@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { Loader } from 'lucide-react';
-import { cn } from '@/utils/cn';
+import { cn } from '../utils/cn';
 import ConfirmDialog, { type ConfirmDialogVariant } from './ConfirmDialog';
 import { useAccessControl } from './useAccessControl';
 import {
@@ -213,10 +213,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   const { canAccess } = useAccessControl();
 
   const hasPermission = !componentId || canAccess(componentId);
-  if (!hasPermission && hideIfDenied) {
+  if (!hasPermission && hideIfDenied && !asChild) {
     return null;
   }
 
+  const hiddenViaSlot = !hasPermission && hideIfDenied && asChild;
   const isDisabled = loading || disabled || !hasPermission;
   const isLink = variant === 'link';
   const isFlat =
@@ -287,6 +288,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
         wide && !isIconBox && 'min-w-[180px] px-8',
         'active:not-disabled:scale-[0.985] active:not-disabled:translate-y-[0.5px] motion-reduce:transform-none',
         isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
+        hiddenViaSlot && 'hidden pointer-events-none',
         isFull && 'w-full',
         variantClasses[variant],
         resolvedSizeClass,
