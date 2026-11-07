@@ -1,16 +1,8 @@
 'use client';
 
 import { useAccessControl } from '../useAccessControl';
-import React, { useCallback, useEffect, useMemo, useRef, useState, Fragment } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
-import { ArrowDown, ArrowUp, ArrowUpDown, Search, SlidersHorizontal, X } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../primitives/select';
 import type { DataTableProps } from './DataTable.types';
 import { DataTableColumnPanel } from './DataTableColumnPanel';
 import { DataTableFilterDialog } from './DataTableFilterDialog';
@@ -79,13 +71,13 @@ export default function DataTable<T = Record<string, unknown>>({
   defaultActiveTab = 0,
   onTabChange,
   dataMode = 'client',
-  pagination = false,
+  pagination,
   paginationMode = 'client',
   page: controlledPage,
   pageSize: controlledPageSize,
   totalRows,
-  pageSizeOptions = [10, 25, 50, 100],
-  defaultPageSize = 10,
+  pageSizeOptions,
+  defaultPageSize,
   defaultSortKey,
   defaultSortDir,
   sortKey: controlledSortKey,
@@ -119,6 +111,23 @@ export default function DataTable<T = Record<string, unknown>>({
   const { canAccess } = useAccessControl();
   const isForbidden = Boolean(componentId && !canAccess(componentId));
 
+  const resolvedDefaultPageSize = defaultPageSize ?? 10;
+  const resolvedPageSizeOptions = useMemo(
+    () => pageSizeOptions ?? [10, 25, 50, 100],
+    [pageSizeOptions],
+  );
+  const isPaginationEnabled =
+    pagination !== undefined
+      ? pagination
+      : Boolean(
+          controlledPage !== undefined ||
+            controlledPageSize !== undefined ||
+            defaultPageSize !== undefined ||
+            pageSizeOptions !== undefined ||
+            onPageChange !== undefined ||
+            onPageSizeChange !== undefined,
+        );
+
   const isServerData = dataMode === 'server' || paginationMode === 'server';
   const safeRows = useMemo(() => (Array.isArray(rows) ? rows : []), [rows]);
 
@@ -129,7 +138,7 @@ export default function DataTable<T = Record<string, unknown>>({
       icon?: React.ReactNode;
       onClick: () => void | Promise<void>;
       disabled?: boolean;
-      variant?: any;
+      variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
       componentId?: string;
       buttonClassName?: string;
       tooltip?: string;
@@ -140,6 +149,7 @@ export default function DataTable<T = Record<string, unknown>>({
     } else if (screenDefinition && screenActionHandlers) {
       const toolbarActions = screenDefinition.actions.filter((a) => a.placement === 'toolbar');
       toolbarActions.forEach((action) => {
+        if (action.componentId && !canAccess(action.componentId)) return;
         const actionKey = action.id;
         const capitalized = actionKey.charAt(0).toUpperCase() + actionKey.slice(1);
         const handler =
@@ -187,8 +197,9 @@ export default function DataTable<T = Record<string, unknown>>({
         .filter((a) => a.inline === false)
         .forEach((a, idx) => {
           const actionId = `action-${idx}`;
-          let rawLabel: any;
+          let rawLabel: unknown;
           try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             rawLabel = typeof a.label === 'function' ? a.label(null as any) : a.label;
           } catch {
             rawLabel = undefined;
@@ -209,7 +220,7 @@ export default function DataTable<T = Record<string, unknown>>({
     }
 
     return list;
-  }, [tableActions, screenDefinition, screenActionHandlers, actions]);
+  }, [tableActions, screenDefinition, screenActionHandlers, actions, canAccess]);
 
   const resolvedTitle = title ?? screenDefinition?.title;
   const resolvedDescription = description ?? screenDefinition?.description;
@@ -232,7 +243,7 @@ export default function DataTable<T = Record<string, unknown>>({
     setSort,
     setActiveTab,
   } = useDataTableQuery({
-    defaultPageSize,
+    defaultPageSize: resolvedDefaultPageSize,
     defaultActiveTab,
     activeTab: controlledActiveTab,
     controlledPage,
@@ -252,6 +263,14 @@ export default function DataTable<T = Record<string, unknown>>({
     onPageSizeChange,
     onQueryChange,
   });
+
+  const effectivePageSizeOptions = useMemo(() => {
+    const set = new Set<number>(resolvedPageSizeOptions);
+    if (resolvedDefaultPageSize > 0) set.add(resolvedDefaultPageSize);
+    if (controlledPageSize && controlledPageSize > 0) set.add(controlledPageSize);
+    if (pageSize > 0) set.add(pageSize);
+    return Array.from(set).sort((a, b) => a - b);
+  }, [resolvedPageSizeOptions, resolvedDefaultPageSize, controlledPageSize, pageSize]);
 
   const [filterOpen, setFilterOpen] = useState(false);
   const [colPanelOpen, setColPanelOpen] = useState(false);
@@ -288,35 +307,39 @@ export default function DataTable<T = Record<string, unknown>>({
       }
       onExpandedRowsChange?.(Array.from(next));
     },
-    [expandedKeys, controlledExpandedRowKeys, onExpandedRowsChange]
+    [expandedKeys, controlledExpandedRowKeys, onExpandedRowsChange],
   );
 
   const hasExpandable = Boolean(renderExpandedRow);
 
-  const [internalHiddenCols, setInternalHiddenCols] = useState<Set<string>>(() => {
-    if (defaultHiddenColumns) return new Set(defaultHiddenColumns);
-    return new Set(columns.filter((c) => c.hidden && !c.required).map((c) => c.key));
-  });
-
-  useEffect(() => {
-    if (controlledHiddenColumns) return;
-    setInternalHiddenCols((prev) => {
-      const initialHidden = columns.filter((c) => c.hidden && !c.required).map((c) => c.key);
-      let changed = false;
-      initialHidden.forEach((k) => {
-        if (!prev.has(k)) changed = true;
-      });
-      if (!changed) return prev;
-      const merged = new Set(prev);
-      initialHidden.forEach((k) => merged.add(k));
-      return merged;
+  const [colHiddenOverrides, setColHiddenOverrides] = useState<Record<string, boolean>>(() => {
+    if (!defaultHiddenColumns) return {};
+    const initial: Record<string, boolean> = {};
+    defaultHiddenColumns.forEach((key) => {
+      initial[key] = true;
     });
-  }, [columns, controlledHiddenColumns]);
+    return initial;
+  });
 
   const hiddenCols = useMemo(() => {
     if (controlledHiddenColumns) return new Set(controlledHiddenColumns);
-    return internalHiddenCols;
-  }, [controlledHiddenColumns, internalHiddenCols]);
+    const next = new Set<string>();
+    columns.forEach((c) => {
+      if (c.required) return;
+      const isHidden = Object.prototype.hasOwnProperty.call(colHiddenOverrides, c.key)
+        ? colHiddenOverrides[c.key]
+        : Boolean(c.hidden);
+      if (isHidden) {
+        next.add(c.key);
+      }
+    });
+    Object.entries(colHiddenOverrides).forEach(([key, isHidden]) => {
+      if (isHidden && !columns.some((c) => c.key === key && c.required)) {
+        next.add(key);
+      }
+    });
+    return next;
+  }, [controlledHiddenColumns, columns, colHiddenOverrides]);
 
   const handleToggleCol = useCallback(
     (key: string) => {
@@ -327,73 +350,66 @@ export default function DataTable<T = Record<string, unknown>>({
         const visibleCount = columns.filter((c) => !hiddenCols.has(c.key)).length;
         if (visibleCount <= 1) return;
       }
+
       const next = new Set(hiddenCols);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
+      const willBeHidden = !isCurrentlyHidden;
+      if (willBeHidden) next.add(key);
+      else next.delete(key);
 
       if (controlledHiddenColumns && onHiddenColumnsChange) {
         onHiddenColumnsChange([...next]);
       } else {
-        setInternalHiddenCols(next);
+        setColHiddenOverrides((prev) => ({
+          ...prev,
+          [key]: willBeHidden,
+        }));
       }
     },
-    [columns, hiddenCols, controlledHiddenColumns, onHiddenColumnsChange]
+    [columns, hiddenCols, controlledHiddenColumns, onHiddenColumnsChange],
   );
 
-  const [tabCountsCache, setTabCountsCache] = useState<Record<number, number>>({});
+  // Cache de contagens por aba no modo servidor, invalidado automaticamente quando busca/filtros mudam
+  const serverTabScopeKey = isServerData ? JSON.stringify({ debouncedSearch, filters }) : '';
+  const [serverTabCache, setServerTabCache] = useState<{
+    scopeKey: string;
+    counts: Record<number, number>;
+  }>({ scopeKey: serverTabScopeKey, counts: {} });
 
-  // Limpa o cache de contagens de abas do servidor quando filtros ou busca mudam
-  const prevFilterSearchRef = useRef<string>('');
-  useEffect(() => {
-    if (!isServerData) return;
-    const currentKey = JSON.stringify({ debouncedSearch, filters });
-    if (prevFilterSearchRef.current && prevFilterSearchRef.current !== currentKey) {
-      setTabCountsCache({});
-    }
-    prevFilterSearchRef.current = currentKey;
-  }, [isServerData, debouncedSearch, filters]);
+  const shouldCacheActiveServerTabCount = Boolean(
+    isServerData &&
+      !loading &&
+      totalRows !== undefined &&
+      tabs &&
+      tabs[activeTab]?.showCount &&
+      tabs[activeTab]?.count === undefined,
+  );
 
-  useEffect(() => {
-    if (!tabs || tabs.length === 0) return;
-
-    setTabCountsCache((prev) => {
-      const next = { ...prev };
-      let changed = false;
-
-      tabs.forEach((tab, i) => {
-        if (!tab.showCount) return;
-
-        let count: number | null = null;
-        if (tab.count !== undefined) {
-          count = tab.count;
-        } else if (isServerData) {
-          if (!loading && activeTab === i && totalRows !== undefined) {
-            count = totalRows;
-          }
-        } else if (tab.filter) {
-          count = safeRows.filter(tab.filter).length;
-        } else if (tab.field && tab.value !== undefined) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          count = safeRows.filter((r: any) => String(r[tab.field!] ?? '') === String(tab.value)).length;
-        } else {
-          count = safeRows.length;
-        }
-
-        if (count !== null) {
-          if (next[i] !== count) {
-            next[i] = count;
-            changed = true;
-          }
-        }
+  if (isServerData) {
+    if (serverTabCache.scopeKey !== serverTabScopeKey) {
+      setServerTabCache({
+        scopeKey: serverTabScopeKey,
+        counts:
+          shouldCacheActiveServerTabCount && totalRows !== undefined
+            ? { [activeTab]: totalRows }
+            : {},
       });
+    } else if (
+      shouldCacheActiveServerTabCount &&
+      totalRows !== undefined &&
+      serverTabCache.counts[activeTab] !== totalRows
+    ) {
+      setServerTabCache({
+        scopeKey: serverTabScopeKey,
+        counts: { ...serverTabCache.counts, [activeTab]: totalRows },
+      });
+    }
+  }
 
-      return changed ? next : prev;
-    });
-  }, [tabs, safeRows, isServerData, activeTab, totalRows, loading]);
+  const tabCountsCache = serverTabCache.counts;
 
   const visibleCols = useMemo(
     () => columns.filter((c) => !hiddenCols.has(c.key)),
-    [columns, hiddenCols]
+    [columns, hiddenCols],
   );
 
   const filteredRows = useMemo(() => {
@@ -434,12 +450,27 @@ export default function DataTable<T = Record<string, unknown>>({
     columns,
   ]);
 
-  const resolvedTotalRows = isServerData ? (totalRows ?? safeRows.length) : filteredRows.length;
+  const isPrePaginated = totalRows !== undefined && totalRows > safeRows.length;
+  const isServerPaginated = isServerData || isPrePaginated;
+  const resolvedTotalRows = isServerPaginated
+    ? (totalRows ?? safeRows.length)
+    : filteredRows.length;
+  const totalPages = Math.max(1, Math.ceil(resolvedTotalRows / pageSize));
+  const effectivePage = isServerPaginated ? page : Math.max(1, Math.min(page, totalPages));
+
   const pageRows = useMemo(() => {
-    if (!pagination || isServerData) return filteredRows;
-    const start = (page - 1) * pageSize;
+    if (!isPaginationEnabled) return filteredRows;
+    if (isServerPaginated) {
+      if (filteredRows.length <= pageSize) return filteredRows;
+      const start = (effectivePage - 1) * pageSize;
+      if (start < filteredRows.length) {
+        return filteredRows.slice(start, start + pageSize);
+      }
+      return filteredRows.slice(0, pageSize);
+    }
+    const start = (effectivePage - 1) * pageSize;
     return filteredRows.slice(start, start + pageSize);
-  }, [filteredRows, pagination, isServerData, page, pageSize]);
+  }, [filteredRows, isPaginationEnabled, isServerPaginated, effectivePage, pageSize]);
 
   const {
     selectedKeys,
@@ -453,20 +484,20 @@ export default function DataTable<T = Record<string, unknown>>({
     safeRows,
     pageRows,
     rowKey,
-    page,
+    page: effectivePage,
     pageSize,
     selectable,
     isRowSelectable,
     onSelectionChange,
     selectedKeys: controlledSelectedKeys,
     onRowSelect,
-    isServerData,
-    pagination,
+    isServerData: isServerPaginated,
+    pagination: isPaginationEnabled,
   });
 
   const hasActions = Boolean(actions && actions.length > 0);
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
-  const pageOffset = Math.max(0, (page - 1) * pageSize);
+  const pageOffset = Math.max(0, (effectivePage - 1) * pageSize);
 
   const activeSortCol = useMemo(() => {
     if (!sortKey) return null;
@@ -482,7 +513,7 @@ export default function DataTable<T = Record<string, unknown>>({
     return activeSortCol.key;
   }, [activeSortCol]);
 
-  // Reúne ações para o menu flutuante QuickActions no mobile (tableActions + ações globais não-inline)
+  // Reúne ações para o menu flutuante QuickActions no mobile
   const mobileQuickActions = useMemo(() => {
     const list: Array<{
       id: string;
@@ -509,19 +540,17 @@ export default function DataTable<T = Record<string, unknown>>({
     return list;
   }, [resolvedTableActions]);
 
-  const hasTabs = Boolean(tabs && tabs.length > 0);
-  const isInline = filterVariant === 'inline';
   const hasHeaderContent = Boolean(
     resolvedTitle ||
       resolvedDescription ||
       toolbarSlot ||
       (resolvedTableActions && resolvedTableActions.length > 0) ||
-      Boolean(onClose)
+      Boolean(onClose),
   );
   const hasSelection = selectedKeys.size > 0 || selectedRows.length > 0;
   const hasSortableColumns = useMemo(
     () => visibleCols.some((c) => c.sortable !== false),
-    [visibleCols]
+    [visibleCols],
   );
   const hasDesktopToolbar = Boolean(
     hasHeaderContent ||
@@ -530,7 +559,7 @@ export default function DataTable<T = Record<string, unknown>>({
       columnToggle ||
       toolbarLeftSlot ||
       toolbarSlot ||
-      hasSelection
+      hasSelection,
   );
   const showToolbar = hasDesktopToolbar || hasSortableColumns;
 
@@ -540,8 +569,16 @@ export default function DataTable<T = Record<string, unknown>>({
 
   return (
     <div
+      data-component-id={componentId ?? 'data-table'}
+      aria-busy={loading || undefined}
       className={twMerge('w-full flex flex-col gap-3', className)}
-      >
+    >
+      {loading && showLoadingLabel && loadingLabel && (
+        <span role="status" aria-live="polite" className="sr-only">
+          {loadingLabel}
+        </span>
+      )}
+
       {showToolbar && (
         <div className={twMerge('px-2 sm:px-0', !hasDesktopToolbar && 'md:hidden')}>
           <DataTableToolbar
@@ -588,18 +625,16 @@ export default function DataTable<T = Record<string, unknown>>({
         </div>
       )}
 
-      {/* Container da Tabela (minimal = sem bordas externas, clean) */}
       <div
         className={twMerge(
           'w-full min-w-0 transition-colors',
           variant === 'minimal'
             ? 'border-0 bg-transparent shadow-none'
-            : 'rounded-none sm:rounded-[var(--radius-card)] bg-surface border-0 sm:border border-border shadow-none sm:shadow-[var(--shadow-card)]'
+            : 'rounded-none sm:rounded-[var(--radius-card)] bg-surface border-0 sm:border border-border shadow-none sm:shadow-[var(--shadow-card)]',
         )}
       >
         {tabs && tabs.length > 0 && (
           <div className="border-b border-border bg-muted/10 px-2 pt-2 shrink-0 overflow-hidden flex items-end justify-between gap-2">
-            {/* Lado Esquerdo: Abas Originais */}
             <div
               role="tablist"
               aria-label="Filtros por aba"
@@ -607,6 +642,10 @@ export default function DataTable<T = Record<string, unknown>>({
               className="flex items-end gap-1.5 overflow-x-auto overflow-y-hidden scrollbar-none w-full scroll-smooth pr-8 pb-0.5"
             >
               {tabs.map((tab, i) => {
+                if (tab.componentId && !canAccess(tab.componentId)) {
+                  return null;
+                }
+
                 let count: number | null = null;
                 if (tab.showCount) {
                   if (tab.count !== undefined) {
@@ -623,13 +662,14 @@ export default function DataTable<T = Record<string, unknown>>({
                     } else if (tabCountsCache[i] !== undefined) {
                       count = tabCountsCache[i];
                     }
-                  } else if (tabCountsCache[i] !== undefined) {
-                    count = tabCountsCache[i];
                   } else if (tab.filter) {
                     count = safeRows.filter(tab.filter).length;
                   } else if (tab.field && tab.value !== undefined) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    count = safeRows.filter((r: any) => String(r[tab.field!] ?? '') === String(tab.value)).length;
+                    count = safeRows.filter(
+                      (r) =>
+                        String((r as Record<string, unknown>)[tab.field!] ?? '') ===
+                        String(tab.value),
+                    ).length;
                   } else {
                     count = safeRows.length;
                   }
@@ -652,7 +692,7 @@ export default function DataTable<T = Record<string, unknown>>({
                       'group inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 rounded-t-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                       isActive
                         ? '-mb-[1px] bg-primary text-primary-foreground border-t-2 border-t-primary border-x border-primary font-bold shadow-xs z-10'
-                        : 'bg-surface hover:bg-muted/40 text-foreground/80 hover:text-foreground border border-border/80 border-b-transparent dark:bg-card dark:hover:bg-muted/20'
+                        : 'bg-surface hover:bg-muted/40 text-foreground/80 hover:text-foreground border border-border/80 border-b-transparent dark:bg-card dark:hover:bg-muted/20',
                     )}
                   >
                     <span>{tab.label}</span>
@@ -662,7 +702,7 @@ export default function DataTable<T = Record<string, unknown>>({
                           'inline-flex min-w-4 items-center justify-center rounded px-1.5 py-0.5 text-[11px] font-bold leading-none tabular-nums transition-colors',
                           isActive
                             ? 'bg-brand text-brand-foreground shadow-2xs'
-                            : 'bg-muted text-muted-foreground group-hover:bg-muted/80'
+                            : 'bg-muted text-muted-foreground group-hover:bg-muted/80',
                         )}
                       >
                         {count}
@@ -675,7 +715,6 @@ export default function DataTable<T = Record<string, unknown>>({
           </div>
         )}
 
-        {/* Slot de Sub-cabeçalho customizado (dentro da aba / acima da tabela) */}
         {subHeaderSlot && (
           <div className="w-full px-3 py-2 bg-muted/15 border-b border-border/70 flex items-center justify-between gap-3 flex-wrap">
             {subHeaderSlot}
@@ -729,7 +768,12 @@ export default function DataTable<T = Record<string, unknown>>({
               ) : pageRows.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={visibleCols.length + (selectable ? 1 : 0) + (hasActions ? 1 : 0) + (hasExpandable ? 1 : 0)}
+                    colSpan={
+                      visibleCols.length +
+                      (selectable ? 1 : 0) +
+                      (hasActions ? 1 : 0) +
+                      (hasExpandable ? 1 : 0)
+                    }
                     className="py-12 text-center text-xs text-muted-foreground"
                   >
                     {emptySlot ?? 'Nenhum registro encontrado.'}
@@ -758,7 +802,9 @@ export default function DataTable<T = Record<string, unknown>>({
                       hasExpandable={hasExpandable}
                       isExpanded={isExpanded}
                       onToggleExpand={() => toggleRowExpand(key)}
-                      expandedContent={isExpanded && renderExpandedRow ? renderExpandedRow(row, idx) : null}
+                      expandedContent={
+                        isExpanded && renderExpandedRow ? renderExpandedRow(row, idx) : null
+                      }
                       actions={actions}
                       actionsDisplay={actionsDisplay}
                       maxInlineActions={maxInlineActions}
@@ -793,16 +839,16 @@ export default function DataTable<T = Record<string, unknown>>({
           <span aria-hidden="true" className="lopes-scroll-hint-right" />
         </div>
 
-        {/* Visualização Mobile: Linhas Zebradas Identicas ao PC pegando toda a tela */}
+        {/* Visualização Mobile */}
         <div className="block md:hidden w-full">
           {loading ? (
             <DataTableMobileCardsSkeleton cardCount={Math.min(pageSize ?? 6, 8)} />
           ) : pageRows.length === 0 ? (
-            <div className="py-12 text-center text-xs text-muted-foreground bg-surface border-y border-zinc-200/80 dark:border-zinc-800">
+            <div className="py-12 text-center text-xs text-muted-foreground bg-surface border-y border-border/80">
               {emptySlot ?? 'Nenhum registro encontrado.'}
             </div>
           ) : (
-            <div className="w-full border-t border-zinc-400/80 dark:border-zinc-600 bg-white dark:bg-zinc-900/30">
+            <div className="w-full border-t border-border bg-surface">
               {pageRows.map((row, idx) => {
                 const key = getDataTableRowKey(row, idx, rowKey, pageOffset);
                 const isExpanded = expandedKeys.has(key);
@@ -824,7 +870,9 @@ export default function DataTable<T = Record<string, unknown>>({
                     hasExpandable={hasExpandable}
                     isExpanded={isExpanded}
                     onToggleExpand={() => toggleRowExpand(key)}
-                    expandedContent={isExpanded && renderExpandedRow ? renderExpandedRow(row, idx) : null}
+                    expandedContent={
+                      isExpanded && renderExpandedRow ? renderExpandedRow(row, idx) : null
+                    }
                     actions={actions}
                     onRowClick={onRowClick}
                     onActionError={onActionError}
@@ -835,16 +883,16 @@ export default function DataTable<T = Record<string, unknown>>({
           )}
         </div>
 
-        {pagination && resolvedTotalRows > 0 && (
+        {isPaginationEnabled && resolvedTotalRows > 0 && (
           <div className="w-full">
             <DataTablePagination
-              page={page}
+              page={effectivePage}
               pageSize={pageSize}
               totalRows={resolvedTotalRows}
-              pageSizeOptions={pageSizeOptions}
+              pageSizeOptions={effectivePageSizeOptions}
               onPageChange={setResolvedPage}
               onPageSizeChange={setResolvedPageSize}
-              isServerPagination={isServerData}
+              isServerPagination={isServerPaginated}
               loading={loading}
             />
           </div>
@@ -886,7 +934,7 @@ export default function DataTable<T = Record<string, unknown>>({
       {mobileQuickActions.length > 0 && (
         <QuickActions
           className="md:hidden"
-          mainButtonClassName="bg-blue-600 hover:bg-blue-700 text-white shadow-xl h-14 w-14"
+          mainButtonClassName="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl h-14 w-14"
           actions={mobileQuickActions}
         />
       )}
