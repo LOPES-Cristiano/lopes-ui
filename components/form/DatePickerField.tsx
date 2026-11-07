@@ -6,10 +6,8 @@ import { CalendarDays, X } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
 import Calendar from "../Calendar";
+import { useEscKey } from "../Modal";
 import { useAccessControl } from "../useAccessControl";
-
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
 
 export type DatePickerFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   id?: string;
@@ -32,6 +30,26 @@ export type DatePickerFieldProps = Omit<FieldWrapperProps, "children" | "id"> & 
   hideIfDenied?: boolean;
 };
 
+function parseIsoDate(value?: string) {
+  if (!value) return null;
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
+function toIsoDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatDisplayDate(date: Date) {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${day}/${month}/${date.getFullYear()}`;
+}
+
 export default function DatePickerField({
   label,
   labelInline,
@@ -48,7 +66,7 @@ export default function DatePickerField({
   id: idProp,
   name,
   value,
-  defaultValue,
+  defaultValue = "",
   onChange,
   min,
   max,
@@ -66,33 +84,46 @@ export default function DatePickerField({
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const [internalIso, setInternalIso] = useState(defaultValue);
+  const [editingText, setEditingText] = useState<string | null>(null);
   const { canAccess } = useAccessControl();
   const hasPermission = !componentId || canAccess(componentId);
   const effectiveDisabled = Boolean(disabled || !hasPermission);
   const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({
     position: "fixed",
     visibility: "hidden",
-    zIndex: 99999,
+    zIndex: 9200,
   });
-  const [typedValue, setTypedValue] = useState("");
 
-  const selectedDate = useMemo(() => parseIsoDate(value ?? defaultValue), [defaultValue, value]);
+  const currentIso = value !== undefined ? value : internalIso;
+  const selectedDate = useMemo(() => parseIsoDate(currentIso), [currentIso]);
   const minDate = useMemo(() => parseIsoDate(min), [min]);
   const maxDate = useMemo(() => parseIsoDate(max), [max]);
 
-  useEffect(() => {
-    if (selectedDate) {
-      setTypedValue(formatDisplayDate(selectedDate));
-    } else {
-      setTypedValue("");
-    }
-  }, [selectedDate]);
+  const typedValue = editingText !== null ? editingText : selectedDate ? formatDisplayDate(selectedDate) : "";
+
+  const commitDate = (nextIso: string) => {
+    setEditingText(null);
+    if (value === undefined) setInternalIso(nextIso);
+    onChange?.(nextIso);
+  };
+
+  const closePanel = useCallback(() => {
+    setOpen(false);
+    setEditingText(null);
+    setPanelStyle({
+      position: "fixed",
+      visibility: "hidden",
+      zIndex: 9200,
+    });
+  }, []);
+
+  useEscKey(closePanel, open);
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value;
     if (raw === "") {
-      setTypedValue("");
-      onChange?.("");
+      commitDate("");
       return;
     }
 
@@ -107,7 +138,7 @@ export default function DatePickerField({
       formatted = `${clean.slice(0, 2)}/${clean.slice(2, 4)}/${clean.slice(4)}`;
     }
 
-    setTypedValue(formatted);
+    setEditingText(formatted);
 
     if (clean.length === 8) {
       const day = Number(clean.slice(0, 2));
@@ -117,7 +148,7 @@ export default function DatePickerField({
       if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 1700 && year <= 2100) {
         const date = new Date(year, month - 1, day);
         if (date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year) {
-          onChange?.(toIsoDate(date));
+          commitDate(toIsoDate(date));
         }
       }
     }
@@ -127,8 +158,8 @@ export default function DatePickerField({
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    const width = Math.min(320, window.innerWidth - 24);
-    const left = Math.min(Math.max(12, rect.left), window.innerWidth - width - 12);
+    const widthPx = Math.min(320, window.innerWidth - 24);
+    const left = Math.min(Math.max(12, rect.left), window.innerWidth - widthPx - 12);
 
     const panelHeight = 350;
     const spaceBelow = window.innerHeight - rect.bottom;
@@ -155,8 +186,8 @@ export default function DatePickerField({
       position: "fixed",
       left,
       top,
-      width,
-      zIndex: 99999,
+      width: widthPx,
+      zIndex: 9200,
       pointerEvents: "auto",
       visibility: "visible",
     });
@@ -168,71 +199,55 @@ export default function DatePickerField({
       updatePosition();
       setOpen(true);
     } else {
-      setOpen(false);
+      closePanel();
     }
   };
 
-  useIsomorphicLayoutEffect(() => {
-    if (!open) {
-      setPanelStyle({
-        position: "fixed",
-        visibility: "hidden",
-        zIndex: 99999,
-      });
-      return;
-    }
+  useEffect(() => {
+    if (!open) return;
 
-    updatePosition();
+    const rafId = window.requestAnimationFrame(updatePosition);
 
     function handleOutsideClick(event: MouseEvent) {
       const target = event.target as Node;
       if (containerRef.current?.contains(target) || panelRef.current?.contains(target)) return;
-      setOpen(false);
-    }
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        event.stopPropagation();
-        setOpen(false);
-      }
+      closePanel();
     }
 
     document.addEventListener("mousedown", handleOutsideClick);
-    document.addEventListener("keydown", handleEscape);
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
 
     return () => {
+      window.cancelAnimationFrame(rafId);
       document.removeEventListener("mousedown", handleOutsideClick);
-      document.removeEventListener("keydown", handleEscape);
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [open, updatePosition]);
+  }, [open, updatePosition, closePanel]);
 
   function handleSelect(date: Date) {
     if (readOnly || effectiveDisabled) return;
-    onChange?.(toIsoDate(date));
-    setOpen(false);
+    commitDate(toIsoDate(date));
+    closePanel();
   }
 
   function handleClear() {
     if (readOnly || effectiveDisabled) return;
-    setTypedValue("");
-    onChange?.("");
-    setOpen(false);
+    commitDate("");
+    closePanel();
   }
 
   function handleToday() {
     if (readOnly || effectiveDisabled) return;
-    onChange?.(toIsoDate(new Date()));
-    setOpen(false);
+    commitDate(toIsoDate(new Date()));
+    closePanel();
   }
 
   if (!hasPermission && hideIfDenied) return null;
 
   const canShowClear = clearable && Boolean(typedValue) && !effectiveDisabled && !readOnly;
+  const describedBy = error ? `${id}-error` : (helpText || hint) ? `${id}-help` : undefined;
 
   return (
     <FieldWrapper
@@ -257,6 +272,7 @@ export default function DatePickerField({
             id={id}
             name={name ?? `datepicker_off_${id}`}
             type="text"
+            inputMode="numeric"
             value={typedValue}
             placeholder={placeholder || "dd/mm/aaaa"}
             disabled={effectiveDisabled}
@@ -270,30 +286,31 @@ export default function DatePickerField({
             data-bwignore="true"
             data-form-type="other"
             onChange={handleInputChange}
+            onBlur={() => setEditingText(null)}
             className={twMerge(
-              "flex w-full items-center gap-2 border bg-white dark:bg-zinc-900 text-left outline-none transition-all duration-150",
+              "flex w-full items-center gap-2 rounded-[var(--radius-control)] border bg-input text-input-foreground placeholder:text-input-placeholder text-left tabular-nums outline-none transition-[background-color,border-color,box-shadow] duration-150",
               canShowClear ? "pr-14" : "pr-9",
               size === "sm"
-                ? "h-8 text-xs pl-2.5 rounded-md"
+                ? "h-8 text-xs pl-2.5"
                 : size === "lg"
-                  ? "h-12 text-base pl-4 rounded-lg"
-                  : "h-10 text-sm pl-3 rounded-lg",
+                  ? "h-12 text-base pl-4"
+                  : "h-10 text-sm pl-3",
               error
-                ? "border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-                : "border-zinc-300 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/10 dark:border-zinc-700 dark:focus:border-zinc-500",
-              (effectiveDisabled || readOnly) && "cursor-not-allowed opacity-60",
+                ? "border-danger focus:border-danger focus:ring-3 focus:ring-danger/15"
+                : "border-input-border hover:border-border-strong focus:border-ring focus:ring-3 focus:ring-ring/12",
+              (effectiveDisabled || readOnly) && "cursor-not-allowed opacity-60 bg-surface-muted",
             )}
             aria-invalid={error ? true : undefined}
-            aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
+            aria-describedby={describedBy}
           />
-          <span className="absolute right-2.5 flex items-center gap-1">
+          <span className="absolute right-1.5 flex items-center gap-0.5">
             {canShowClear && (
               <button
                 type="button"
                 tabIndex={-1}
                 onClick={handleClear}
                 aria-label="Limpar data"
-                className="flex h-5 w-5 items-center justify-center rounded text-[var(--surface-muted-foreground)] hover:text-[var(--surface-foreground)] transition-colors"
+                className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
               >
                 <X size={13} />
               </button>
@@ -303,7 +320,7 @@ export default function DatePickerField({
               type="button"
               disabled={effectiveDisabled || readOnly}
               onClick={handleToggle}
-              className="flex h-5 w-5 items-center justify-center text-[var(--surface-muted-foreground)] hover:text-[var(--surface-foreground)] transition-colors"
+              className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
               aria-label="Alternar calendário"
             >
               <CalendarDays size={15} />
@@ -311,76 +328,59 @@ export default function DatePickerField({
           </span>
         </div>
 
-        {open && panelStyle.left !== undefined && typeof document !== "undefined" && createPortal(
-          <div
-            ref={panelRef}
-            data-floating-open="true"
-            style={panelStyle}
-            className="pointer-events-auto inline-flex w-fit flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-2.5 shadow-[0_22px_50px_rgba(15,23,42,0.18)]"
-          >
-            <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-[var(--border)] pb-2">
-              <p className="text-sm font-semibold text-[var(--surface-foreground)]">Selecionar data</p>
-              <button
-                data-component-id={componentId ? `${componentId}.close` : "erp.datepicker.close"}
-                type="button"
-                onClick={() => setOpen(false)}
-                className="rounded-md p-1 text-[var(--surface-muted-foreground)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--surface-foreground)]"
-                aria-label="Fechar calendário"
-              >
-                <X size={14} />
-              </button>
-            </div>
-            <Calendar
-              size="sm"
-              compact
-              value={selectedDate}
-              minDate={minDate ?? undefined}
-              maxDate={maxDate ?? undefined}
-              disabledDate={disabledDate}
-              onChange={handleSelect}
-            />
-            <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-[var(--border)] pt-2.5">
-              <button
-                type="button"
-                data-component-id={componentId ? `${componentId}.clear` : "erp.datepicker.clear"}
-                onClick={handleClear}
-                className="rounded-md px-2 py-1 text-sm text-[var(--surface-muted-foreground)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--surface-foreground)]"
-              >
-                Limpar
-              </button>
-              <button
-                type="button"
-                data-component-id={componentId ? `${componentId}.today` : "erp.datepicker.today"}
-                onClick={handleToday}
-                className="rounded-md border border-[var(--border)] px-2 py-1 text-sm text-[var(--surface-foreground)] transition-colors hover:bg-[var(--surface-hover)]"
-              >
-                Hoje
-              </button>
-            </div>
-          </div>,
-          document.body,
-        )}
+        {open &&
+          panelStyle.left !== undefined &&
+          typeof document !== "undefined" &&
+          createPortal(
+            <div
+              ref={panelRef}
+              data-floating-open="true"
+              style={panelStyle}
+              className="pointer-events-auto z-[9200] inline-flex w-fit flex-col rounded-[var(--radius-card)] border border-border bg-popover text-popover-foreground p-2.5 shadow-[var(--shadow-floating)] animate-in fade-in-0 zoom-in-95 duration-150 motion-reduce:animate-none"
+            >
+              <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-border pb-2">
+                <p className="text-sm font-semibold text-foreground">Selecionar data</p>
+                <button
+                  data-component-id={componentId ? `${componentId}.close` : "erp.datepicker.close"}
+                  type="button"
+                  onClick={closePanel}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
+                  aria-label="Fechar calendário"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              <Calendar
+                size="sm"
+                compact
+                value={selectedDate}
+                minDate={minDate ?? undefined}
+                maxDate={maxDate ?? undefined}
+                disabledDate={disabledDate}
+                onChange={handleSelect}
+              />
+              <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border pt-2.5">
+                <button
+                  type="button"
+                  data-component-id={componentId ? `${componentId}.clear` : "erp.datepicker.clear"}
+                  onClick={handleClear}
+                  className="min-h-6 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-surface-hover hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
+                >
+                  Limpar
+                </button>
+                <button
+                  type="button"
+                  data-component-id={componentId ? `${componentId}.today` : "erp.datepicker.today"}
+                  onClick={handleToday}
+                  className="min-h-6 rounded-[var(--radius-control)] border border-border px-2.5 py-1 text-xs font-medium text-surface-foreground transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
+                >
+                  Hoje
+                </button>
+              </div>
+            </div>,
+            document.body,
+          )}
       </div>
     </FieldWrapper>
   );
-}
-
-function parseIsoDate(value?: string) {
-  if (!value) return null;
-  const [year, month, day] = value.split("-").map(Number);
-  if (!year || !month || !day) return null;
-  return new Date(year, month - 1, day);
-}
-
-function toIsoDate(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function formatDisplayDate(date: Date) {
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${day}/${month}/${date.getFullYear()}`;
 }
