@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Globe, Lock } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 
 // ─── 1. BrowserMockup (daisyUI mockup-browser) ───────────────────────────────
 
