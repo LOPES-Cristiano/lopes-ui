@@ -4,5 +4,8 @@ export * from "../RichTextEditor";
 export { default as RichTextField } from "../RichTextField";
 export * from "../RichTextField";
 
+export { default as RichTextViewer } from "../RichTextViewer";
+export * from "../RichTextViewer";
+
 export { default as EmailComposer } from "../EmailComposer";
 export * from "../EmailComposer";
