@@ -149,51 +149,45 @@ function Panel({
       {/* Trigger & Header */}
       {item.actions ? (
         <div
-          id={headingId}
-          data-component-id={item.componentId ?? `erp.accordion.item-${item.id}`}
-          data-accordion-trigger="true"
-          role="button"
-          tabIndex={item.disabled ? -1 : 0}
-          aria-expanded={open}
-          aria-controls={panelId}
-          aria-disabled={item.disabled || undefined}
-          onClick={item.disabled ? undefined : onToggle}
-          onKeyDown={(e) => {
-            if (!item.disabled && (e.key === "Enter" || e.key === " ")) {
-              e.preventDefault();
-              onToggle();
-              return;
-            }
-            onTriggerKeyDown?.(e);
-          }}
           className={twMerge(
-            "flex w-full items-center justify-between gap-3 text-left transition-colors duration-150 select-none outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-inset",
-            s.trigger,
-            open
-              ? "text-zinc-900 dark:text-zinc-50 border-b border-zinc-200/70 dark:border-zinc-800/80"
-              : "text-zinc-700 dark:text-zinc-200",
-            item.disabled
-              ? "cursor-not-allowed opacity-40"
-              : "cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/60",
+            "flex w-full items-center justify-between gap-2 transition-colors duration-150",
+            open && "border-b border-border",
+            !item.disabled && "hover:bg-muted/50",
           )}
         >
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <button
+            id={headingId}
+            type="button"
+            data-component-id={item.componentId ?? `erp.accordion.item-${item.id}`}
+            data-accordion-trigger="true"
+            disabled={item.disabled}
+            aria-expanded={open}
+            aria-controls={panelId}
+            onClick={item.disabled ? undefined : onToggle}
+            onKeyDown={onTriggerKeyDown}
+            className={twMerge(
+              "flex flex-1 min-w-0 items-center gap-2.5 text-left transition-colors duration-150 select-none outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+              s.trigger,
+              open ? "text-foreground" : "text-foreground/85",
+              item.disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer",
+            )}
+          >
             {chevronEl}
             {Icon && (
               <span
                 className={twMerge(
-                  "shrink-0 text-zinc-400 dark:text-zinc-500",
+                  "shrink-0 text-muted-foreground",
                   item.iconClassName,
                 )}
               >
                 <Icon size={s.icon} strokeWidth={1.75} />
               </span>
             )}
-            <div className="flex-1 min-w-0">{item.title}</div>
+            <span className="flex-1 min-w-0 font-medium leading-snug">{item.title}</span>
             {item.badge !== undefined && (
               <span
                 className={twMerge(
-                  "shrink-0 rounded-full bg-zinc-100 dark:bg-zinc-800 px-1.5 py-px text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 leading-none",
+                  "shrink-0 rounded-full bg-muted px-1.5 py-px text-[10px] font-semibold text-muted-foreground leading-none tabular-nums",
                   item.badgeClassName,
                 )}
               >
@@ -201,17 +195,13 @@ function Panel({
               </span>
             )}
             {item.subtitle && !open && (
-              <span className="shrink-0 text-xs text-zinc-400 truncate max-w-[12rem]">
+              <span className="shrink-0 text-xs text-muted-foreground truncate max-w-[12rem]">
                 {item.subtitle}
               </span>
             )}
-          </div>
+          </button>
 
-          <div
-            className="shrink-0 flex items-center gap-2"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-          >
+          <div className="shrink-0 flex items-center gap-2 pr-3">
             {item.actions}
           </div>
         </div>
