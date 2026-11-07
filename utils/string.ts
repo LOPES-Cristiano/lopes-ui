@@ -21,6 +21,14 @@ export function truncate(value: string | null | undefined, maxLength: number): s
 }
 
 /**
+ * Remove acentuação diacrítica preservando capitalização e espaçamento originais.
+ */
+export function removeAccents(value: string | null | undefined): string {
+  if (!value) return '';
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+/**
  * Gera uma sugestão de código/sigla a partir de um nome ou descrição por normalização alfanumérica.
  */
 export function gerarCodigoSugerido(texto: string | null | undefined, maxLength = 4): string {
@@ -44,6 +52,20 @@ export function normalizeString(value: string | null | undefined): string {
     .trim()
     .toLowerCase();
 }
+
+/**
+ * Retorna o valor textual/numérico formatado ou um traço padrão ("—") quando vazio/nulo.
+ */
+export function valueOrDash(
+  value: string | number | null | undefined,
+  fallback = '—'
+): string {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'number') return Number.isFinite(value) ? String(value) : fallback;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : fallback;
+}
+export const valorOuTraco = valueOrDash;
 
 /**
  * Extrai até 2 iniciais maiúsculas de um nome
