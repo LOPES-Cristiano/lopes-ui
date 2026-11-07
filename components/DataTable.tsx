@@ -3,3 +3,7 @@
 export { default } from './data-table/DataTable';
 export * from './data-table/DataTable.types';
 export { default as DataTable } from './data-table/DataTable';
+export {
+  DataTableMobileCard,
+  type DataTableMobileCardProps,
+} from './data-table/DataTableMobileCard';
