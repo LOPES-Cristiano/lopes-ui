@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import toast from "@/components/Toast";
+import toast from "../components/Toast";
 
 type ToastMethod = "success" | "error" | "loading";
 
