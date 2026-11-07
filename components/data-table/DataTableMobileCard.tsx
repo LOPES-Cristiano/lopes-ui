@@ -5,6 +5,7 @@ import { Minus, MoreVertical, Plus } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import type { DataTableAction, DataTableColumn } from './DataTable.types';
 import ConfirmDialog from '../ConfirmDialog';
+import { useEscKey } from '../Modal';
 
 export type DataTableMobileCardProps<T = Record<string, unknown>> = {
   row: T;
@@ -19,7 +20,18 @@ export type DataTableMobileCardProps<T = Record<string, unknown>> = {
   expandedContent?: React.ReactNode;
 };
 
-const CODE_KEYS = new Set(['code', 'id', 'codigo']);
+const CODE_KEYS = new Set([
+  'code',
+  'id',
+  'codigo',
+  'numero',
+  'chave',
+  'protocolo',
+  'sku',
+  'referencia',
+  'documento',
+]);
+
 const TITLE_KEYS = new Set([
   'title',
   'name',
@@ -28,8 +40,24 @@ const TITLE_KEYS = new Set([
   'titulo',
   'descricao',
   'description',
+  'nomeRazao',
+  'razaoSocial',
+  'fantasia',
+  'nomeFantasia',
+  'cliente',
+  'fornecedor',
+  'produto',
+  'assunto',
 ]);
-const STATUS_KEYS = new Set(['status', 'situacao', 'state']);
+
+const STATUS_KEYS = new Set([
+  'status',
+  'situacao',
+  'situacaoDescricao',
+  'state',
+  'etapa',
+  'fase',
+]);
 
 export function DataTableMobileCard<T = Record<string, unknown>>({
   row,
@@ -50,6 +78,8 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
     index: number;
   } | null>(null);
 
+  useEscKey(() => setMenuOpen(false), menuOpen);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const r = row as any;
 
@@ -58,13 +88,18 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
 
   const visibleColumns = columns.filter((c) => !c.hidden);
 
-  // Heurísticas genéricas limpas com fallback para as primeiras colunas visíveis
-  const codeCol = visibleColumns.find((c) => CODE_KEYS.has(c.key));
-  const statusCol = visibleColumns.find((c) => STATUS_KEYS.has(c.key));
+  // Prioriza mobileRole explícito, seguido pelas heurísticas genéricas e fallback para a primeira coluna visível
+  const codeCol =
+    visibleColumns.find((c) => c.mobileRole === 'code') ??
+    visibleColumns.find((c) => !c.mobileRole && CODE_KEYS.has(c.key));
+  const statusCol =
+    visibleColumns.find((c) => c.mobileRole === 'status') ??
+    visibleColumns.find((c) => !c.mobileRole && STATUS_KEYS.has(c.key));
   const titleCol =
-    visibleColumns.find((c) => TITLE_KEYS.has(c.key)) ||
-    visibleColumns.find((c) => c !== codeCol && c !== statusCol) ||
-    visibleColumns[0] ||
+    visibleColumns.find((c) => c.mobileRole === 'title') ??
+    visibleColumns.find((c) => !c.mobileRole && TITLE_KEYS.has(c.key)) ??
+    visibleColumns.find((c) => c !== codeCol && c !== statusCol) ??
+    visibleColumns[0] ??
     columns[0];
 
   const rawTitle = titleCol ? resolveCellValue(titleCol) : 'Registro';
@@ -87,7 +122,7 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
       ? codeCol.render(codeVal, row, rowIndex)
       : codeVal;
 
-  // Status a exibir no topo (se não for a coluna do título principal)
+  // Status a exibir no canto (se não for a coluna do título principal)
   const statusVal = statusCol && statusCol !== titleCol ? resolveCellValue(statusCol) : null;
   const statusRendered =
     statusCol && statusCol !== titleCol && statusCol.render
@@ -96,7 +131,7 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
 
   // Colunas secundárias para exibir metadados no card mobile
   const secondaryCols = visibleColumns.filter(
-    (c) => c !== titleCol && c !== codeCol && c !== statusCol
+    (c) => c !== titleCol && c !== codeCol && c !== statusCol,
   );
 
   const executeAction = async (action: DataTableAction<T>, index: number) => {
@@ -123,19 +158,19 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
   };
 
   return (
-    <div className="flex flex-col border-b border-zinc-200/70 dark:border-zinc-800/70">
+    <div className="flex flex-col border-b border-border/70">
       <div
-        onClick={() => onRowClick?.(row, rowIndex)}
+        onClick={onRowClick ? () => onRowClick(row, rowIndex) : undefined}
         className={twMerge(
-          'relative flex flex-col gap-1.5 py-3 px-3.5 sm:px-4 transition-colors cursor-pointer select-none',
-          isStriped ? 'bg-zinc-50/60 dark:bg-zinc-800/30' : 'bg-white dark:bg-zinc-900/40',
-          'hover:bg-primary/5 dark:hover:bg-primary/10 active:bg-zinc-100 dark:active:bg-zinc-800'
+          'relative flex flex-col gap-1.5 py-3 px-3.5 sm:px-4 transition-colors',
+          onRowClick && 'cursor-pointer',
+          isStriped ? 'bg-muted/25' : 'bg-surface',
+          onRowClick && 'hover:bg-primary/5 active:bg-muted/50',
         )}
       >
-        {/* Topo do Card: Código na frente do Nome + Título Principal à esquerda | Status + Ações à direita */}
+        {/* Topo do Card: Código + Título Principal à esquerda | Menu de Ações à direita */}
         <div className="flex items-start justify-between gap-2 min-w-0">
           <div className="flex items-start gap-2 min-w-0 flex-1">
-            {/* Botão de Expandir Accordion (Mobile) */}
             {hasExpandable && (
               <div className="shrink-0 mt-0.5" onClick={(e) => e.stopPropagation()}>
                 <button
@@ -143,12 +178,11 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                   type="button"
                   onClick={() => onToggleExpand?.(row)}
                   className={twMerge(
-                    'inline-flex items-center justify-center h-6 w-6 rounded-md border transition-all duration-200 cursor-pointer',
+                    'inline-flex items-center justify-center h-6 w-6 rounded-md border transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                     isExpanded
                       ? 'bg-primary text-primary-foreground border-primary shadow-xs'
-                      : 'bg-muted/30 border-border/80 text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+                      : 'bg-muted/30 border-border/80 text-muted-foreground hover:bg-muted/80 hover:text-foreground',
                   )}
-                  title={isExpanded ? 'Recolher detalhes' : 'Expandir detalhes'}
                   aria-label={isExpanded ? 'Recolher detalhes' : 'Expandir detalhes'}
                   aria-expanded={isExpanded}
                 >
@@ -161,11 +195,10 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
               </div>
             )}
 
-            {/* Código na frente do Nome */}
             {codeRendered != null && codeRendered !== '' && (
               <div className="shrink-0 mt-0.5">
                 {typeof codeRendered === 'string' || typeof codeRendered === 'number' ? (
-                  <span className="font-mono text-[11px] font-bold text-primary bg-primary/10 dark:bg-primary/20 border border-primary/25 px-1.5 py-0.5 rounded leading-none">
+                  <span className="font-mono text-[11px] font-bold tabular-nums text-primary bg-primary/10 border border-primary/25 px-1.5 py-0.5 rounded leading-none">
                     {codeRendered}
                   </span>
                 ) : (
@@ -174,35 +207,42 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
               </div>
             )}
 
-            {/* Título Principal (Nome, Avatar, etc.) */}
             <div className="min-w-0 flex-1">
               {isCustomRenderedTitle ? (
                 renderedTitle
               ) : (
-                <div className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-zinc-100 leading-snug truncate">
+                <div className="text-xs sm:text-[13px] font-bold text-foreground leading-snug truncate">
                   {titleStr}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Lado Direito: Menu de Ações (3 pontos) */}
           {visibleActions.length > 0 && (
             <div className="relative shrink-0 pt-0.5" onClick={(e) => e.stopPropagation()}>
               <button
                 data-component-id="erp.data-table.mobile-card.menu"
                 type="button"
                 aria-label="Ações do registro"
+                aria-expanded={menuOpen}
+                aria-haspopup="menu"
                 onClick={() => setMenuOpen((v) => !v)}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
               >
                 <MoreVertical size={16} />
               </button>
 
               {menuOpen && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1.5 z-50 min-w-44 rounded-2xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-0.5">
+                  <div
+                    className="fixed inset-0 z-[9190]"
+                    onClick={() => setMenuOpen(false)}
+                  />
+                  <div
+                    role="menu"
+                    data-floating-open="true"
+                    className="absolute right-0 top-full mt-1.5 z-[9200] min-w-44 rounded-2xl border border-border bg-popover p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-0.5"
+                  >
                     {visibleActions.map((action, aIdx) => {
                       const Icon = action.getIcon ? action.getIcon(row) : action.icon;
                       const label =
@@ -231,6 +271,7 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                           }
                           key={aIdx}
                           type="button"
+                          role="menuitem"
                           disabled={isDisabled}
                           onClick={() => {
                             if (isDisabled) return;
@@ -238,15 +279,15 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                             handleActionClick(action, aIdx);
                           }}
                           className={twMerge(
-                            'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold transition-colors text-left',
+                            'flex min-h-8 w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                             isDisabled
                               ? 'opacity-40 cursor-not-allowed pointer-events-none'
                               : 'cursor-pointer',
                             !isDisabled &&
                               (action.danger
-                                ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40'
-                                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-zinc-800'),
-                            customBtnClass
+                                ? 'text-danger hover:bg-danger/10'
+                                : 'text-foreground hover:bg-muted/60'),
+                            customBtnClass,
                           )}
                         >
                           {Icon && (
@@ -254,10 +295,8 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                               size={15}
                               className={twMerge(
                                 'shrink-0',
-                                action.danger
-                                  ? 'text-red-500'
-                                  : 'text-slate-500 dark:text-slate-400',
-                                customIconClass
+                                action.danger ? 'text-danger' : 'text-muted-foreground',
+                                customIconClass,
                               )}
                             />
                           )}
@@ -275,7 +314,6 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
         {/* Linha de Detalhes Secundários & Status */}
         {(secondaryCols.length > 0 || (statusRendered != null && statusRendered !== '')) && (
           <div className="flex items-center justify-between gap-2 pt-0.5">
-            {/* Detalhes Secundários */}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground min-w-0 flex-1">
               {secondaryCols.map((col, idx) => {
                 const rawVal = resolveCellValue(col);
@@ -294,12 +332,10 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                 return (
                   <div key={col.key || idx} className="flex items-center gap-1 min-w-0">
                     {isPrimitive && colLabel && typeof colLabel === 'string' && (
-                      <span className="text-muted-foreground/70 font-normal">{colLabel}:</span>
+                      <span className="text-muted-foreground/75 font-normal">{colLabel}:</span>
                     )}
                     {isPrimitive ? (
-                      <span className="font-medium text-slate-700 dark:text-zinc-300 truncate">
-                        {rendered}
-                      </span>
+                      <span className="font-medium text-foreground/90 truncate">{rendered}</span>
                     ) : (
                       rendered
                     )}
@@ -308,7 +344,6 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
               })}
             </div>
 
-            {/* Status no canto inferior direito */}
             {statusRendered != null && statusRendered !== '' && (
               <div className="shrink-0">
                 {typeof statusRendered === 'string' || typeof statusRendered === 'number' ? (
@@ -324,9 +359,8 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
         )}
       </div>
 
-      {/* Conteúdo Expandido do Accordion (Mobile) */}
       {hasExpandable && isExpanded && expandedContent && (
-        <div className="border-t border-border/70 p-3 bg-muted/20 dark:bg-zinc-900/60 border-l-4 border-l-primary/70 animate-in fade-in-50 duration-200">
+        <div className="border-t border-border/70 p-3 bg-muted/20 border-l-4 border-l-primary/70 animate-in fade-in-50 duration-200">
           {expandedContent}
         </div>
       )}
@@ -334,9 +368,8 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
       {confirmAction &&
         (() => {
           const confirmProp = confirmAction.action.confirm;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const confirmConfig =
-            typeof confirmProp === 'function' ? (confirmProp as (r: T) => any)(row) : confirmProp;
+            typeof confirmProp === 'function' ? confirmProp(row) : confirmProp;
           if (!confirmConfig) return null;
           return (
             <ConfirmDialog
