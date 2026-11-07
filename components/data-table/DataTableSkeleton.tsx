@@ -19,7 +19,6 @@ const sizePaddingMap: Record<DataTableSize, string> = {
   lg: 'py-4 px-5',
 };
 
-// Generates varied realistic shimmer bar widths to simulate real textual/numerical data
 function getShimmerWidth(colIndex: number, rowIndex: number): string {
   const widths = ['w-3/4', 'w-1/2', 'w-2/3', 'w-5/6', 'w-2/5', 'w-4/5', 'w-3/5', 'w-1/3'];
   const index = (colIndex * 3 + rowIndex * 5) % widths.length;
@@ -44,24 +43,21 @@ export function DataTableRowsSkeleton({
           key={`skeleton-row-${rIdx}`}
           className={twMerge(
             'border-b border-border/50 transition-colors',
-            striped && rIdx % 2 === 1 ? 'bg-muted/20' : 'bg-surface'
+            striped && rIdx % 2 === 1 ? 'bg-muted/20' : 'bg-surface',
           )}
         >
-          {/* Expand Skeleton */}
           {hasExpandable && (
             <td className={twMerge(padding, 'w-10 text-center')}>
               <Skeleton className="h-5 w-5 rounded-md mx-auto" />
             </td>
           )}
 
-          {/* Checkbox Skeleton */}
           {selectable && (
             <td className={twMerge(padding, 'w-10 text-center')}>
               <Skeleton className="h-4 w-4 rounded-md mx-auto" />
             </td>
           )}
 
-          {/* Data Columns Skeletons */}
           {columns.map((col, cIdx) => {
             const isRight = col.align === 'right';
             const isCenter = col.align === 'center';
@@ -76,13 +72,13 @@ export function DataTableRowsSkeleton({
                 <div
                   className={twMerge(
                     'flex items-center',
-                    isRight ? 'justify-end' : isCenter ? 'justify-center' : 'justify-start'
+                    isRight ? 'justify-end' : isCenter ? 'justify-center' : 'justify-start',
                   )}
                 >
                   <Skeleton
                     className={twMerge(
                       'h-3.5 rounded-md',
-                      isCenter ? 'w-1/2' : isRight ? 'w-2/3' : widthClass
+                      isCenter ? 'w-1/2' : isRight ? 'w-2/3' : widthClass,
                     )}
                   />
                 </div>
@@ -90,7 +86,6 @@ export function DataTableRowsSkeleton({
             );
           })}
 
-          {/* Actions Skeleton */}
           {hasActions && (
             <td className={twMerge(padding, 'w-20 text-right')}>
               <div className="flex items-center justify-end gap-1.5">
@@ -111,12 +106,9 @@ interface DataTableMobileCardsSkeletonProps {
 
 export function DataTableMobileCardsSkeleton({ cardCount = 4 }: DataTableMobileCardsSkeletonProps) {
   return (
-    <div className="-mx-4 sm:mx-0 divide-y divide-zinc-200/90 dark:divide-zinc-800 border-y border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900/30">
+    <div className="-mx-4 sm:mx-0 divide-y divide-border/80 border-y border-border/80 bg-surface">
       {Array.from({ length: cardCount }).map((_, idx) => (
-        <div
-          key={`mobile-skeleton-card-${idx}`}
-          className="p-4 space-y-2.5"
-        >
+        <div key={`mobile-skeleton-card-${idx}`} className="p-4 space-y-2.5">
           <div className="flex items-center justify-between gap-2">
             <Skeleton className="h-4 w-1/2 rounded-md" />
             <Skeleton className="h-4 w-4 rounded-full" />
@@ -148,10 +140,9 @@ export function DataTableFullSkeleton({
     <div
       className={twMerge(
         'w-full flex flex-col rounded-2xl border border-border/80 bg-surface shadow-2xs overflow-hidden',
-        className
+        className,
       )}
     >
-      {/* Toolbar Skeleton */}
       {hasToolbar && (
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 border-b border-border/60">
           <div className="flex items-center gap-2">
@@ -165,7 +156,6 @@ export function DataTableFullSkeleton({
         </div>
       )}
 
-      {/* Tabs Skeleton */}
       {hasTabs && (
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 bg-muted/10">
           <Skeleton className="h-7 w-20 rounded-lg" />
@@ -174,13 +164,12 @@ export function DataTableFullSkeleton({
         </div>
       )}
 
-      {/* Table Skeleton */}
       <div className="w-full overflow-x-auto">
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-border/80 bg-muted/30">
               {Array.from({ length: columnsCount }).map((_, cIdx) => (
-                <th key={`head-skeleton-${cIdx}`} className="py-3 px-4">
+                <th key={`head-skeleton-${cIdx}`} scope="col" className="py-3 px-4">
                   <Skeleton className="h-3.5 w-3/4 rounded-md" />
                 </th>
               ))}
@@ -191,7 +180,9 @@ export function DataTableFullSkeleton({
               <tr key={`full-row-skeleton-${rIdx}`}>
                 {Array.from({ length: columnsCount }).map((_, cIdx) => (
                   <td key={`full-cell-skeleton-${rIdx}-${cIdx}`} className="py-3.5 px-4">
-                    <Skeleton className={twMerge('h-3.5 rounded-md', getShimmerWidth(cIdx, rIdx))} />
+                    <Skeleton
+                      className={twMerge('h-3.5 rounded-md', getShimmerWidth(cIdx, rIdx))}
+                    />
                   </td>
                 ))}
               </tr>
@@ -200,7 +191,6 @@ export function DataTableFullSkeleton({
         </table>
       </div>
 
-      {/* Pagination Skeleton */}
       {hasPagination && (
         <div className="flex items-center justify-between p-3.5 border-t border-border/60 bg-muted/10">
           <Skeleton className="h-4 w-32 rounded-md" />
