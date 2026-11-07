@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   ChevronDown,
@@ -10,6 +10,7 @@ import {
   ChevronsRight,
 } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
+import { useEscKey } from '../Modal';
 
 export function DataTablePagination({
   page,
@@ -31,18 +32,30 @@ export function DataTablePagination({
 }) {
   const [pageSizeOpen, setPageSizeOpen] = useState(false);
   const [jumpOpen, setJumpOpen] = useState(false);
-  const [jumpValue, setJumpValue] = useState(String(page));
+  const [jumpDraft, setJumpDraft] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const jumpRef = useRef<HTMLDivElement>(null);
   const jumpInputRef = useRef<HTMLInputElement>(null);
 
+  const resolvedOptions = useMemo(() => {
+    const set = new Set<number>(pageSizeOptions);
+    if (pageSize > 0) set.add(pageSize);
+    return Array.from(set).sort((a, b) => a - b);
+  }, [pageSizeOptions, pageSize]);
+
   const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
   const startRecord = totalRows === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord = Math.min(page * pageSize, totalRows);
+  const jumpValue = jumpDraft ?? String(page);
 
-  useEffect(() => {
-    setJumpValue(String(page));
-  }, [page]);
+  useEscKey(
+    () => {
+      setPageSizeOpen(false);
+      setJumpOpen(false);
+      setJumpDraft(null);
+    },
+    pageSizeOpen || jumpOpen,
+  );
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -51,6 +64,7 @@ export function DataTablePagination({
       }
       if (jumpRef.current && !jumpRef.current.contains(e.target as Node)) {
         setJumpOpen(false);
+        setJumpDraft(null);
       }
     };
     if (pageSizeOpen || jumpOpen) {
@@ -80,39 +94,40 @@ export function DataTablePagination({
   function handleJumpSubmit(e?: React.FormEvent) {
     e?.preventDefault();
     const num = parseInt(jumpValue, 10);
-    if (!isNaN(num)) {
+    if (!Number.isNaN(num)) {
       handleNavigate(num);
     }
     setJumpOpen(false);
+    setJumpDraft(null);
   }
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2.5 sm:px-4 py-2 border-t border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-900/60 text-xs">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2.5 sm:px-4 py-2 border-t border-border/80 bg-muted/20 text-xs tabular-nums">
       {/* Lado Esquerdo: Info de limites de linha e registros */}
-      <div className="text-[11.5px] text-zinc-500 dark:text-zinc-400 leading-none">
+      <div className="text-[11.5px] text-muted-foreground leading-none">
         {loading ? (
           <span>Carregando...</span>
         ) : totalRows > 0 ? (
           <div className="flex items-center gap-1.5 flex-wrap">
             <span>
               Mostrando{' '}
-              <strong className="font-semibold text-zinc-900 dark:text-zinc-100">
+              <strong className="font-semibold text-foreground">
                 {startRecord.toLocaleString('pt-BR')}
-              </strong>
-              {' '}a{' '}
-              <strong className="font-semibold text-zinc-900 dark:text-zinc-100">
+              </strong>{' '}
+              a{' '}
+              <strong className="font-semibold text-foreground">
                 {endRecord.toLocaleString('pt-BR')}
-              </strong>
-              {' '}de{' '}
-              <strong className="font-semibold text-zinc-900 dark:text-zinc-100">
+              </strong>{' '}
+              de{' '}
+              <strong className="font-semibold text-foreground">
                 {totalRows.toLocaleString('pt-BR')}
-              </strong>
-              {' '}registros
+              </strong>{' '}
+              registros
             </span>
-            <span className="hidden sm:inline text-zinc-300 dark:text-zinc-700">•</span>
-            <span className="hidden sm:inline text-zinc-500 dark:text-zinc-400">
-              Página <strong className="font-semibold text-zinc-800 dark:text-zinc-200">{page}</strong> de{' '}
-              <strong className="font-semibold text-zinc-800 dark:text-zinc-200">{totalPages}</strong>
+            <span className="hidden sm:inline text-border">•</span>
+            <span className="hidden sm:inline text-muted-foreground">
+              Página <strong className="font-semibold text-foreground">{page}</strong> de{' '}
+              <strong className="font-semibold text-foreground">{totalPages}</strong>
             </span>
           </div>
         ) : (
@@ -129,8 +144,7 @@ export function DataTablePagination({
             type="button"
             disabled={page <= 1 || loading}
             onClick={() => handleNavigate(1)}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition shadow-2xs"
-            title="Primeira página"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-border bg-surface text-foreground/80 hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer transition shadow-2xs"
             aria-label="Primeira página"
           >
             <ChevronsLeft size={13} />
@@ -142,8 +156,7 @@ export function DataTablePagination({
             type="button"
             disabled={page <= 1 || loading}
             onClick={() => handleNavigate(page - 1)}
-            className="flex h-7 items-center gap-1 px-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-[11.5px] font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition shadow-2xs"
-            title="Página anterior"
+            className="flex h-7 items-center gap-1 px-2 rounded-md border border-border bg-surface text-[11.5px] font-semibold text-foreground/80 hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer transition shadow-2xs"
             aria-label="Página anterior"
           >
             <ChevronLeft size={13} />
@@ -155,12 +168,19 @@ export function DataTablePagination({
             <button
               data-component-id="erp.data-table.jump-open"
               type="button"
+              aria-label={`Ir para página. Página atual ${page} de ${totalPages}`}
+              aria-expanded={jumpOpen}
               onClick={() => {
-                setJumpOpen((v) => !v);
-                setTimeout(() => jumpInputRef.current?.select(), 50);
+                setJumpOpen((v) => {
+                  const next = !v;
+                  setJumpDraft(next ? String(page) : null);
+                  if (next) {
+                    setTimeout(() => jumpInputRef.current?.select(), 50);
+                  }
+                  return next;
+                });
               }}
-              className="px-2 text-[11.5px] font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 rounded py-0.5 transition cursor-pointer"
-              title="Clique para digitar o número da página"
+              className="min-h-6 px-2 text-[11.5px] font-bold text-foreground hover:bg-muted/60 rounded py-0.5 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
             >
               {page} / {loading ? '...' : totalPages}
             </button>
@@ -168,9 +188,12 @@ export function DataTablePagination({
             {jumpOpen && (
               <form
                 onSubmit={handleJumpSubmit}
-                className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 min-w-[140px]"
+                data-floating-open="true"
+                className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 z-[9200] flex items-center gap-1.5 rounded-xl border border-border bg-popover p-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 min-w-[144px]"
               >
-                <span className="text-[11px] text-zinc-500 font-medium whitespace-nowrap">Ir p/:</span>
+                <span className="text-[11px] text-muted-foreground font-medium whitespace-nowrap">
+                  Ir p/:
+                </span>
                 <input
                   data-component-id="erp.data-table.jump-input"
                   ref={jumpInputRef}
@@ -178,13 +201,14 @@ export function DataTablePagination({
                   min={1}
                   max={totalPages}
                   value={jumpValue}
-                  onChange={(e) => setJumpValue(e.target.value)}
-                  className="w-12 rounded-md border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-1 py-0.5 text-xs text-center font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  onChange={(e) => setJumpDraft(e.target.value)}
+                  aria-label="Número da página"
+                  className="w-12 rounded-md border border-border bg-muted/30 px-1 py-0.5 text-xs text-center font-bold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 />
                 <button
                   data-component-id="erp.data-table.jump-submit"
                   type="submit"
-                  className="px-2 py-0.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                  className="min-h-6 px-2 py-0.5 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
                   Ir
                 </button>
@@ -198,8 +222,7 @@ export function DataTablePagination({
             type="button"
             disabled={page >= totalPages || loading}
             onClick={() => handleNavigate(page + 1)}
-            className="flex h-7 items-center gap-1 px-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-[11.5px] font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition shadow-2xs"
-            title="Próxima página"
+            className="flex h-7 items-center gap-1 px-2 rounded-md border border-border bg-surface text-[11.5px] font-semibold text-foreground/80 hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer transition shadow-2xs"
             aria-label="Próxima página"
           >
             <span className="hidden sm:inline">Próxima</span>
@@ -212,8 +235,7 @@ export function DataTablePagination({
             type="button"
             disabled={page >= totalPages || loading}
             onClick={() => handleNavigate(totalPages)}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition shadow-2xs"
-            title="Última página"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-border bg-surface text-foreground/80 hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer transition shadow-2xs"
             aria-label="Última página"
           >
             <ChevronsRight size={13} />
@@ -222,26 +244,37 @@ export function DataTablePagination({
 
         {/* Seletor de Linhas */}
         {onPageSizeChange && (
-          <div ref={containerRef} className="relative flex items-center gap-1 shrink-0 ml-1 border-l border-zinc-200 dark:border-zinc-800 pl-2">
+          <div
+            ref={containerRef}
+            className="relative flex items-center gap-1 shrink-0 ml-1 border-l border-border pl-2"
+          >
             <button
               data-component-id="erp.data-table.page-size-toggle"
               type="button"
               onClick={() => setPageSizeOpen((v) => !v)}
               aria-expanded={pageSizeOpen}
               aria-haspopup="listbox"
-              className="flex h-7 items-center gap-1 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2 text-[11.5px] font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 shadow-2xs transition cursor-pointer select-none"
-              title="Linhas por página"
+              aria-label={`Linhas por página: ${pageSize}`}
+              className="flex h-7 items-center gap-1 rounded-md border border-border bg-surface px-2 text-[11.5px] font-semibold text-foreground/85 hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 shadow-2xs transition cursor-pointer select-none"
             >
               <span>{pageSize} lin.</span>
-              <ChevronDown size={11} className={twMerge('transition-transform duration-150', pageSizeOpen && 'rotate-180')} />
+              <ChevronDown
+                size={11}
+                className={twMerge(
+                  'transition-transform duration-150',
+                  pageSizeOpen && 'rotate-180',
+                )}
+              />
             </button>
 
             {pageSizeOpen && (
               <div
                 role="listbox"
-                className="absolute bottom-full mb-1 right-0 z-50 min-w-16 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-1 shadow-xl animate-in fade-in zoom-in-95 duration-150"
+                aria-label="Linhas por página"
+                data-floating-open="true"
+                className="absolute bottom-full mb-1 right-0 z-[9200] min-w-16 rounded-xl border border-border bg-popover p-1 shadow-xl animate-in fade-in zoom-in-95 duration-150"
               >
-                {pageSizeOptions.map((opt) => {
+                {resolvedOptions.map((opt) => {
                   const isSelected = opt === pageSize;
                   return (
                     <button
@@ -255,14 +288,14 @@ export function DataTablePagination({
                         setPageSizeOpen(false);
                       }}
                       className={twMerge(
-                        'flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1 text-xs font-semibold transition-colors cursor-pointer select-none',
+                        'flex min-h-7 w-full items-center justify-between gap-2 rounded-lg px-2 py-1 text-xs font-semibold transition-colors cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                         isSelected
-                          ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold'
-                          : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                          ? 'bg-primary/10 text-primary font-bold'
+                          : 'text-foreground/85 hover:bg-muted/60 hover:text-foreground',
                       )}
                     >
                       <span>{opt}</span>
-                      {isSelected && <Check size={11} className="text-blue-600 dark:text-blue-400 shrink-0" />}
+                      {isSelected && <Check size={11} className="text-primary shrink-0" />}
                     </button>
                   );
                 })}
