@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { cn } from '@/utils/cn';
+import React, { useState, useCallback, useSyncExternalStore } from 'react';
+import { cn } from '../utils/cn';
+import { hasOpenFloatingOverlay } from '../utils/overlay';
 import { AlertTriangle, Trash2, X, type LucideIcon } from 'lucide-react';
 import {
   AlertDialog,
@@ -35,18 +36,29 @@ const confirmSizeConfig: Record<
   ConfirmDialogSize,
   { maxWidth: string; height: string; maxHeight: string }
 > = {
-  xs: { maxWidth: '400px', height: 'auto', maxHeight: '80vh' },
-  compact: { maxWidth: '480px', height: 'auto', maxHeight: '85vh' },
-  sm: { maxWidth: '520px', height: 'auto', maxHeight: '88vh' },
-  md: { maxWidth: '640px', height: 'auto', maxHeight: '90vh' },
-  mdVertical: { maxWidth: '720px', height: '80vh', maxHeight: '98vh' },
-  lg: { maxWidth: '800px', height: 'auto', maxHeight: '92vh' },
-  xl: { maxWidth: '1100px', height: 'auto', maxHeight: '94vh' },
-  '2xl': { maxWidth: '1280px', height: 'auto', maxHeight: '95vh' },
-  full: { maxWidth: '96vw', height: '92vh', maxHeight: '96vh' },
-  fullscreen: { maxWidth: '100vw', height: '100vh', maxHeight: '100vh' },
-  xlVertical: { maxWidth: '1380px', height: '97vh', maxHeight: '98vh' },
+  xs: { maxWidth: '400px', height: 'auto', maxHeight: '80dvh' },
+  compact: { maxWidth: '480px', height: 'auto', maxHeight: '85dvh' },
+  sm: { maxWidth: '520px', height: 'auto', maxHeight: '88dvh' },
+  md: { maxWidth: '640px', height: 'auto', maxHeight: '90dvh' },
+  mdVertical: { maxWidth: '720px', height: '80dvh', maxHeight: '98dvh' },
+  lg: { maxWidth: '800px', height: 'auto', maxHeight: '92dvh' },
+  xl: { maxWidth: '1100px', height: 'auto', maxHeight: '94dvh' },
+  '2xl': { maxWidth: '1280px', height: 'auto', maxHeight: '95dvh' },
+  full: { maxWidth: '96vw', height: '92dvh', maxHeight: '96dvh' },
+  fullscreen: { maxWidth: '100vw', height: '100dvh', maxHeight: '100dvh' },
+  xlVertical: { maxWidth: '1380px', height: '97dvh', maxHeight: '98dvh' },
 };
+
+function subscribeMobileViewport(cb: () => void) {
+  if (typeof window === 'undefined') return () => {};
+  const mql = window.matchMedia('(max-width: 639px)');
+  mql.addEventListener('change', cb);
+  return () => mql.removeEventListener('change', cb);
+}
+
+function getMobileViewportSnapshot() {
+  return typeof window !== 'undefined' ? window.innerWidth < 640 : false;
+}
 
 export type ConfirmDialogProps = {
   open: boolean;
@@ -122,17 +134,14 @@ export default function ConfirmDialog({
   showCloseButton,
 }: ConfirmDialogProps) {
   const [busy, setBusy] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useSyncExternalStore(
+    subscribeMobileViewport,
+    getMobileViewportSnapshot,
+    () => false
+  );
   const cfg = VARIANTS[variant];
   const Icon = CustomIcon ?? cfg.icon;
   const isLoading = loading || busy;
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   const isFullMobile = fullMobile || size === 'fullscreen' || size === 'full';
   const cfgSize = size ? (confirmSizeConfig[size] ?? confirmSizeConfig.md) : confirmSizeConfig.md;
@@ -196,7 +205,13 @@ export default function ConfirmDialog({
       }}
     >
       <AlertDialogContent
-        overlayClassName="fixed inset-0 z-[7800] bg-black/60 backdrop-blur-xs data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+        overlayClassName="fixed inset-0 z-[7800] bg-black/60 backdrop-blur-xs data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 motion-reduce:animate-none"
+        onEscapeKeyDown={(e) => {
+          if (isLoading || hasOpenFloatingOverlay()) {
+            e.preventDefault();
+          }
+        }}
+        data-component-id={componentId}
         style={{
           width: isFullMobile && isMobile ? '100%' : undefined,
           maxWidth: isFullMobile && isMobile ? '100vw' : `min(${finalMaxWidth}, calc(100vw - 2rem))`,
@@ -205,8 +220,8 @@ export default function ConfirmDialog({
         }}
         className={cn(
           'fixed left-1/2 top-1/2 z-[7800] -translate-x-1/2 -translate-y-1/2',
-          'w-[calc(100vw-2rem)] sm:w-full max-w-[calc(100vw-2rem)] sm:max-w-none bg-card border border-border text-card-foreground shadow-[var(--shadow-overlay)] rounded-[var(--radius-overlay)] p-4 sm:p-6 overflow-hidden box-border',
-          'flex flex-col duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
+          'w-[calc(100vw-2rem)] sm:w-full max-w-[calc(100vw-2rem)] sm:max-w-none bg-card border border-border text-card-foreground shadow-[var(--shadow-overlay)] rounded-[var(--radius-overlay)] p-4 sm:p-6 overflow-hidden box-border overscroll-contain',
+          'flex flex-col duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] motion-reduce:animate-none',
           isFullMobile && [
             'max-sm:!fixed max-sm:!inset-0 max-sm:!top-0 max-sm:!left-0 max-sm:!right-0 max-sm:!bottom-0',
             'max-sm:!translate-x-0 max-sm:!translate-y-0',
@@ -247,7 +262,7 @@ export default function ConfirmDialog({
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="p-1.5 -mr-1 -mt-1 rounded-[var(--radius-control)] text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer shrink-0 disabled:opacity-50"
+              className="inline-flex h-7 w-7 items-center justify-center -mr-1 -mt-1 rounded-[var(--radius-control)] text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer shrink-0 disabled:opacity-50"
               aria-label="Fechar"
             >
               <X size={18} />
@@ -272,6 +287,7 @@ export default function ConfirmDialog({
           <AlertDialogCancel asChild>
             <Button
               componentId={componentId ? `${componentId}.cancel` : undefined}
+              hideIfDenied={false}
               data-component-id={componentId ? `${componentId}.cancel` : 'erp.components.confirm-dialog.btn.cancellabel'}
               type="button"
               variant="outline"
@@ -286,6 +302,7 @@ export default function ConfirmDialog({
           <AlertDialogAction asChild>
             <Button
               componentId={componentId ? `${componentId}.confirm` : undefined}
+              hideIfDenied={false}
               data-component-id={componentId ? `${componentId}.confirm` : 'erp.components.confirm-dialog.btn.confirmlabel'}
               type="button"
               variant={cfg.buttonVariant}
