@@ -39,6 +39,7 @@ import {
   UploadCloud,
   PenTool,
   Barcode,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function AppSidebar() {
@@ -71,6 +72,19 @@ export default function AppSidebar() {
               ],
             },
             { label: "UI Builder", href: "/ui-builder", icon: Wrench, badge: "Studio", badgeVariant: "info" },
+            {
+              label: "Padrões Corporativos & RBAC",
+              href: "/showcase/enterprise",
+              icon: ShieldCheck,
+              badge: "Novo",
+              badgeVariant: "success",
+              children: [
+                { label: "TenantSwitcher & ScopeSelector", href: "/showcase/enterprise#tenant-scope" },
+                { label: "CNPJ 2026 & SplitCounterBadge", href: "/showcase/enterprise#cnpj-smart-object" },
+                { label: "RichTextViewer & ActiveTimer", href: "/showcase/enterprise#viewer-timer" },
+                { label: "ErrorBoundary, RBAC & LGPD", href: "/showcase/enterprise#resilience-rbac-privacy" },
+              ],
+            },
           ],
         },
         {
