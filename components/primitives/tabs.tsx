@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { cn } from '@/utils/cn';
+import { cn } from '../../utils/cn';
 import { useAccessControl } from '../useAccessControl';
 
 type TabsContextValue = {
@@ -51,12 +51,17 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsPrimitiveRootProps>(
       [controlledValue, onValueChange]
     );
 
+    const ctxValue = React.useMemo<TabsContextValue>(
+      () => ({ value, orientation, onValueChange: handleValueChange, baseId }),
+      [value, orientation, handleValueChange, baseId]
+    );
+
     if (!hasPermission && hideIfDenied) {
       return null;
     }
 
     return (
-      <TabsContext.Provider value={{ value, orientation, onValueChange: handleValueChange, baseId }}>
+      <TabsContext.Provider value={ctxValue}>
         <div
           ref={ref}
           data-slot="tabs"
@@ -124,7 +129,7 @@ const TabsList = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEl
         data-slot="tabs-list"
         onKeyDown={handleKeyDown}
         className={cn(
-          'inline-flex max-w-full overflow-x-auto no-scrollbar h-auto min-h-10 items-center justify-start sm:justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800/80 p-1 text-zinc-500 dark:text-zinc-400',
+          'inline-flex max-w-full overflow-x-auto no-scrollbar h-auto min-h-10 items-center justify-start sm:justify-center rounded-[var(--radius-card)] bg-muted p-1 text-muted-foreground',
           className
         )}
         {...props}
@@ -174,7 +179,7 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
           onClick?.(e);
         }}
         className={cn(
-          'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-xs dark:data-[state=active]:bg-zinc-900 dark:data-[state=active]:text-zinc-100 cursor-pointer',
+          'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-[var(--radius-control)] px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs cursor-pointer',
           className
         )}
         {...props}
@@ -209,13 +214,11 @@ const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
         data-slot="tabs-content"
         data-state={isActive ? 'active' : 'inactive'}
         className={cn(
-          'mt-3 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2',
+          'mt-3 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2',
           className
         )}
         {...props}
-      >
-        {children}
-      </div>
+      />
     );
   }
 );
