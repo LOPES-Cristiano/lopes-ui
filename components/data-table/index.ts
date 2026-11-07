@@ -6,6 +6,7 @@ export * from './DataTableToolbar';
 export * from './DataTablePagination';
 export * from './DataTableFilterDialog';
 export * from './DataTableColumnPanel';
+export * from './DataTableMobileCard';
 export * from './DataTableMobileSortDialog';
 export * from './DataTableSummary';
 export * from './DataTableSkeleton';
