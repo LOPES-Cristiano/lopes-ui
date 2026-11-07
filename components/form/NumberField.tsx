@@ -94,12 +94,12 @@ export default function NumberField({
     normalizeNumDisplay(isControlled ? value : defaultValue)
   );
   const [isFocused, setIsFocused] = React.useState(false);
+  const [prevDisplayValue, setPrevDisplayValue] = React.useState(displayValue);
 
-  React.useEffect(() => {
-    if (isControlled && !isFocused) {
-      setLocalText(displayValue);
-    }
-  }, [displayValue, isControlled, isFocused]);
+  if (isControlled && !isFocused && prevDisplayValue !== displayValue) {
+    setPrevDisplayValue(displayValue);
+    setLocalText(displayValue);
+  }
 
   const numericStep = React.useMemo(() => {
     if (typeof step === "number" && !Number.isNaN(step) && step > 0) return step;
@@ -195,8 +195,12 @@ export default function NumberField({
       const validNum = !Number.isNaN(fallbackNum) ? fallbackNum : undefined;
 
       try {
-        (e as any).valueAsNumber = validNum;
-        (e as any).valueOf = () => (validNum ?? 0);
+        const mutableEvent = e as unknown as {
+          valueAsNumber?: number;
+          valueOf?: () => number;
+        };
+        mutableEvent.valueAsNumber = validNum;
+        mutableEvent.valueOf = () => validNum ?? 0;
       } catch {}
 
       onValueChange?.(validNum);
@@ -235,8 +239,12 @@ export default function NumberField({
     const validNumber = parsedNumber !== undefined && !Number.isNaN(parsedNumber) ? parsedNumber : undefined;
 
     try {
-      (e as any).valueAsNumber = validNumber;
-      (e as any).valueOf = () => (validNumber ?? 0);
+      const mutableEvent = e as unknown as {
+        valueAsNumber?: number;
+        valueOf?: () => number;
+      };
+      mutableEvent.valueAsNumber = validNumber;
+      mutableEvent.valueOf = () => validNumber ?? 0;
     } catch {}
 
     onValueChange?.(validNumber);
