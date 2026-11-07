@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DataTableQueryState, SortDir } from '../DataTable.types';
 
 export function useDataTableQuery({
@@ -36,8 +36,11 @@ export function useDataTableQuery({
   initialSearch?: string;
   searchDebounceMs?: number;
   onSearchChange?: (search: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   controlledFilters?: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   initialFilters?: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onFilterChange?: (filters: Record<string, any>) => void;
   onSortChange?: (sortKey: string | null, sortDir: SortDir) => void;
   onPageChange?: (page: number) => void;
@@ -47,69 +50,48 @@ export function useDataTableQuery({
   const [internalPage, setInternalPage] = useState(controlledPage ?? 1);
   const [internalPageSize, setInternalPageSize] = useState(controlledPageSize ?? defaultPageSize);
   const [searchQ, setSearchQ] = useState(initialSearch ?? '');
-  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch ?? '');
+  const [debouncedSearchState, setDebouncedSearchState] = useState(initialSearch ?? '');
   const [filters, setFilters] = useState<Record<string, string>>(initialFilters ?? {});
-  const [internalSortKey, setInternalSortKey] = useState<string | null>(defaultSortKey ?? null);
-  const [internalSortDir, setInternalSortDir] = useState<SortDir>(defaultSortDir ?? null);
-  const [activeTab, setActiveTabState] = useState(controlledActiveTab ?? defaultActiveTab);
+  const [internalSortKey, setInternalSortKey] = useState<string | null>(
+    controlledSortKey !== undefined ? controlledSortKey : (defaultSortKey ?? null),
+  );
+  const [internalSortDir, setInternalSortDir] = useState<SortDir>(
+    controlledSortDir !== undefined ? controlledSortDir : (defaultSortDir ?? null),
+  );
+  const [internalActiveTab, setInternalActiveTab] = useState(controlledActiveTab ?? defaultActiveTab);
+  const [prevDefaultTab, setPrevDefaultTab] = useState(defaultActiveTab);
 
-  useEffect(() => {
-    if (controlledActiveTab !== undefined) {
-      setActiveTabState(controlledActiveTab);
+  if (prevDefaultTab !== defaultActiveTab) {
+    setPrevDefaultTab(defaultActiveTab);
+    if (controlledActiveTab === undefined) {
+      setInternalActiveTab(defaultActiveTab);
     }
-  }, [controlledActiveTab]);
+  }
 
-  const activeFilters = controlledFilters ? (controlledFilters as Record<string, string>) : filters;
+  const controlledFiltersKey = controlledFilters ? JSON.stringify(controlledFilters) : null;
+  const stableControlledFilters = useMemo(
+    () =>
+      controlledFiltersKey !== null
+        ? (JSON.parse(controlledFiltersKey) as Record<string, string>)
+        : undefined,
+    [controlledFiltersKey],
+  );
+  const activeFilters = stableControlledFilters ?? filters;
 
-  const isFirstRender = useRef(true);
-
-  const isPageControlled = controlledPage !== undefined && Boolean(onPageChange || onQueryChange);
-  const isPageSizeControlled =
-    controlledPageSize !== undefined && Boolean(onPageSizeChange || onQueryChange);
-
-  const page = internalPage;
-  const pageSize = internalPageSize;
+  const page = controlledPage !== undefined ? controlledPage : internalPage;
+  const pageSize = controlledPageSize !== undefined ? controlledPageSize : internalPageSize;
   const sortKey = controlledSortKey !== undefined ? controlledSortKey : internalSortKey;
   const sortDir = controlledSortDir !== undefined ? controlledSortDir : internalSortDir;
+  const activeTab = controlledActiveTab !== undefined ? controlledActiveTab : internalActiveTab;
+  const debouncedSearch = searchDebounceMs <= 0 ? searchQ : debouncedSearchState;
 
-  useEffect(() => {
-    if (controlledSortKey !== undefined) {
-      setInternalSortKey(controlledSortKey);
-    }
-  }, [controlledSortKey]);
-
-  useEffect(() => {
-    if (controlledSortDir !== undefined) {
-      setInternalSortDir(controlledSortDir);
-    }
-  }, [controlledSortDir]);
-
-  useEffect(() => {
-    if (defaultActiveTab !== undefined) {
-      setActiveTabState(defaultActiveTab);
-    }
-  }, [defaultActiveTab]);
-
-  useEffect(() => {
-    if (controlledPage !== undefined) {
-      setInternalPage(controlledPage);
-    }
-  }, [controlledPage]);
-
-  useEffect(() => {
-    if (controlledPageSize !== undefined) {
-      setInternalPageSize(controlledPageSize);
-    }
-  }, [controlledPageSize]);
-
-  // Debounce da busca global para evitar spam no backend (Issue #7)
+  // Debounce da busca global para evitar excesso de requisições no backend
   useEffect(() => {
     if (searchDebounceMs <= 0) {
-      setDebouncedSearch(searchQ);
       return;
     }
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchQ);
+      setDebouncedSearchState(searchQ);
     }, searchDebounceMs);
     return () => clearTimeout(timer);
   }, [searchQ, searchDebounceMs]);
@@ -141,18 +123,16 @@ export function useDataTableQuery({
     onQueryChangeRef.current = onQueryChange;
   }, [onQueryChange]);
 
+  const isFirstRender = useRef(true);
   const prevPageSizeRef = useRef(pageSize);
+  const lastEmittedQueryKeyRef = useRef<string | null>(null);
 
-  // Emite onQueryChange de forma consistente e unificada (Issue #6)
+  // Emite onQueryChange de forma unificada e deduplicada
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
     const pageSizeChanged = prevPageSizeRef.current !== pageSize;
     prevPageSizeRef.current = pageSize;
     const nextPage = pageSizeChanged ? 1 : page;
-    onQueryChangeRef.current?.({
+    const nextState: DataTableQueryState = {
       page: nextPage,
       pageSize,
       search: debouncedSearch,
@@ -160,7 +140,20 @@ export function useDataTableQuery({
       sortKey,
       sortDir,
       activeTab,
-    });
+    };
+    const serialized = JSON.stringify(nextState);
+
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      lastEmittedQueryKeyRef.current = serialized;
+      return;
+    }
+
+    if (lastEmittedQueryKeyRef.current === serialized) {
+      return;
+    }
+    lastEmittedQueryKeyRef.current = serialized;
+    onQueryChangeRef.current?.(nextState);
   }, [page, pageSize, debouncedSearch, activeFilters, sortKey, sortDir, activeTab]);
 
   const handleSearchChange = useCallback(
@@ -220,10 +213,26 @@ export function useDataTableQuery({
 
   const setActiveTab = useCallback(
     (newTab: number) => {
-      setActiveTabState(newTab);
+      setInternalActiveTab(newTab);
       setResolvedPage(1);
+      if (onQueryChange) {
+        const nextState: DataTableQueryState = {
+          page: 1,
+          pageSize,
+          search: debouncedSearch,
+          filters: activeFilters,
+          sortKey,
+          sortDir,
+          activeTab: newTab,
+        };
+        const serialized = JSON.stringify(nextState);
+        if (lastEmittedQueryKeyRef.current !== serialized) {
+          lastEmittedQueryKeyRef.current = serialized;
+          onQueryChange(nextState);
+        }
+      }
     },
-    [setResolvedPage],
+    [pageSize, debouncedSearch, activeFilters, sortKey, sortDir, setResolvedPage, onQueryChange],
   );
 
   return {
