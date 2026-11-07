@@ -83,6 +83,7 @@ export function FormModal({
   headerActions,
   footerExtra,
   componentIdPrefix,
+  maxWidth,
   size = 'xlVertical',
   children,
 }: FormModalProps) {
@@ -124,7 +125,6 @@ export function FormModal({
 
     if (av.image) {
       return (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={av.image}
           alt="Avatar"
@@ -153,9 +153,11 @@ export function FormModal({
       open={open}
       onClose={onClose}
       size={size}
+      maxWidth={maxWidth}
       variant="rounded"
       noPadding
       hideCloseButton
+      componentId={componentIdPrefix}
       className="!rounded-[var(--radius-overlay)] border border-border shadow-[var(--shadow-overlay)] overflow-hidden"
       bodyClassName="!overflow-hidden flex flex-col h-full max-h-full"
       footerClassName="p-0 border-t border-border bg-card"
@@ -248,8 +250,7 @@ export function FormModal({
             aria-label="Fechar"
             data-component-id={`${domIdPrefix}.btn.fechar`}
             onClick={onClose}
-            className="p-1.5 rounded-[var(--radius-control)] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer shrink-0"
-            title="Fechar"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer shrink-0"
           >
             <X size={18} />
           </button>
@@ -260,7 +261,7 @@ export function FormModal({
         autoComplete="off"
         onSubmit={(e) => e.preventDefault()}
         onKeyDown={(e) => {
-          if (e.key !== 'Enter') return;
+          if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
           const target = e.target as HTMLElement | null;
           if (!target) return;
           const tag = target.tagName;
@@ -300,7 +301,7 @@ export function FormModal({
         <div
           className={twMerge(
             'min-h-0 flex-1 bg-background',
-            hasTabs && 'grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]'
+            hasTabs ? 'grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]' : 'flex flex-col'
           )}
         >
           {/* ── SIDEBAR DE NAVEGAÇÃO DAS ABAS (SE HOUVER TABS) ── */}
@@ -354,7 +355,7 @@ export function FormModal({
           )}
 
           {/* ── ÁREA CENTRAL DE CONTEÚDO ── */}
-          <div className="min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 bg-background">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 bg-background">
             {loading ? <FormModalSkeleton /> : children}
           </div>
         </div>
