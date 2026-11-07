@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 import { useAccessControl } from "./useAccessControl";
 import {
   Tabs as PrimitiveTabs,
@@ -160,6 +160,18 @@ export default function Tabs({
     ? rawValue
     : (accessibleItems?.[0]?.value ?? rawValue);
 
+  // Notify controlled parent when active tab becomes restricted by RBAC
+  useEffect(() => {
+    if (
+      controlledValue !== undefined &&
+      !isCurrentAccessible &&
+      effectiveValue &&
+      effectiveValue !== controlledValue
+    ) {
+      onValueChange?.(effectiveValue);
+    }
+  }, [controlledValue, isCurrentAccessible, effectiveValue, onValueChange]);
+
   if (!hasRootPermission && hideIfDenied) return null;
 
   const isVertical = orientation === "vertical";
@@ -228,7 +240,7 @@ export default function Tabs({
             className={cn(
               TRIGGER_VARIANT_CLS[variant],
               SIZE_CLS[size],
-              canClose && "pr-7",
+              canClose && "pr-8",
               fullWidth && !isVertical && (canClose ? "w-full" : "flex-1"),
               isVertical && "justify-start",
               triggerClassName,
@@ -265,7 +277,7 @@ export default function Tabs({
                 e.stopPropagation();
                 onRemove?.(item.value);
               }}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-sm text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
+              className="absolute right-1 top-1/2 -translate-y-1/2 inline-flex h-6 w-6 items-center justify-center rounded-sm text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
             >
               <X className="h-3 w-3" />
             </button>
@@ -278,9 +290,8 @@ export default function Tabs({
           type="button"
           onClick={onAdd}
           aria-label={addLabel}
-          title={addLabel}
           className={cn(
-            "inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+            "inline-flex min-h-7 min-w-7 items-center justify-center shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
             variant === "card" || variant === "editable-card"
               ? "-mb-px rounded-t-[var(--radius-control)] border border-border bg-surface-muted/60 px-2.5 py-2 text-muted-foreground hover:text-brand hover:bg-card"
               : "rounded-[var(--radius-control)] px-2 py-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground",
