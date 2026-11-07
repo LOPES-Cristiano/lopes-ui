@@ -86,23 +86,21 @@ export function formatDateTime(
 ): string {
   if (!data) return "-";
   const dataFmt = formatDate(data);
-  if (hora) return `${dataFmt}${separator}${hora}`;
+  if (hora && hora.trim() !== "") {
+    return `${dataFmt}${separator}${hora.trim()}`;
+  }
   if (data instanceof Date) {
     if (isNaN(data.getTime())) return "-";
     const hhmmss = `${pad2(data.getHours())}:${pad2(data.getMinutes())}:${pad2(data.getSeconds())}`;
-    return `${dataFmt}${separator}${hhmmss}`;
+    return hhmmss === "00:00:00" ? dataFmt : `${dataFmt}${separator}${hhmmss}`;
   }
   if (typeof data === "string" && data.includes("T")) {
-    try {
-      const d = new Date(data);
-      if (!isNaN(d.getTime())) {
-        const dStr = `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
-        const tStr = `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
-        return `${dStr}${separator}${tStr}`;
-      }
-    } catch {
-      // ignore
+    const rawTime = data.split("T")[1]?.replace(/Z|[+-]\d{2}:?\d{2}$/, "") ?? "";
+    const timeClean = rawTime.split(".")[0] ?? "";
+    if (timeClean && !/^00:00(?::00)?$/.test(timeClean)) {
+      return `${dataFmt}${separator}${timeClean}`;
     }
+    return dataFmt;
   }
   return dataFmt;
 }
