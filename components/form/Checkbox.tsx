@@ -72,7 +72,7 @@ export default function Checkbox({
       setInternalChecked(next);
     }
     onCheckedChange?.(next);
-    onChange?.({ target: { checked: next } } as any);
+    onChange?.({ target: { checked: next } });
   };
 
   const hiddenInput = name ? (
