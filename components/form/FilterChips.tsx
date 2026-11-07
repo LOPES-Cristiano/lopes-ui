@@ -2,7 +2,7 @@
 
 import React, { useId, useState } from "react";
 import { X } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "../../utils/cn";
 import FieldWrapper from "./FieldWrapper";
 import { useAccessControl } from "../useAccessControl";
 
@@ -18,14 +18,8 @@ export type FilterChipOption = {
   hideIfDenied?: boolean;
 };
 
-export type FilterChipsProps = {
+export type FilterChipsBaseProps = {
   options: FilterChipOption[];
-  /** Selected value (single mode) or array of values (multiple mode) */
-  value?: string | string[];
-  defaultValue?: string | string[];
-  onChange?: (value: any) => void;
-  /** Allow selecting multiple chips simultaneously (default: false) */
-  multiple?: boolean;
   /**
    * daisyUI `filter` pattern: when true in single-select mode, selecting an option
    * hides unselected options and reveals a dedicated `×` reset chip (default: false)
@@ -49,6 +43,24 @@ export type FilterChipsProps = {
   hideIfDenied?: boolean;
   className?: string;
 };
+
+export type FilterChipsSingleProps = FilterChipsBaseProps & {
+  /** Allow selecting multiple chips simultaneously (default: false) */
+  multiple?: false;
+  value?: string;
+  defaultValue?: string;
+  onChange?: (value: string) => void;
+};
+
+export type FilterChipsMultipleProps = FilterChipsBaseProps & {
+  /** Allow selecting multiple chips simultaneously */
+  multiple: true;
+  value?: string[];
+  defaultValue?: string[];
+  onChange?: (value: string[]) => void;
+};
+
+export type FilterChipsProps = FilterChipsSingleProps | FilterChipsMultipleProps;
 
 const SIZE_CLS = {
   xs: "h-7 px-2.5 text-xs gap-1",
@@ -104,7 +116,8 @@ export default function FilterChips({
     if (controlledValue === undefined) {
       setInternalValue(next);
     }
-    onChange?.(next);
+    const emit = onChange as ((value: string | string[]) => void) | undefined;
+    emit?.(next);
   };
 
   const toggleOption = (optVal: string) => {
