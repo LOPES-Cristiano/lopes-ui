@@ -135,17 +135,18 @@ export function SidebarNavItem({
   const hasChildren = Boolean(item.children?.length);
   const hasActiveChild = hasChildren && item.children!.some(hasActiveDescendant);
   const isSearching = Boolean(searchQuery && searchQuery.trim().length > 0);
-  const [subOpen, setSubOpen] = useState(() =>
-    Boolean(item.active || hasActiveChild || (isSearching && hasChildren))
-  );
+  const shouldForceOpen = Boolean(item.active || hasActiveChild || (isSearching && hasChildren));
+  const [subOpen, setSubOpen] = useState(shouldForceOpen);
+  const [prevShouldForceOpen, setPrevShouldForceOpen] = useState(shouldForceOpen);
   const [isHovered, setIsHovered] = useState(false);
 
   // Sync subOpen when active or descendant active state changes externally or during search
-  useEffect(() => {
-    if (item.active || hasActiveChild || (isSearching && hasChildren)) {
+  if (shouldForceOpen !== prevShouldForceOpen) {
+    setPrevShouldForceOpen(shouldForceOpen);
+    if (shouldForceOpen) {
       setSubOpen(true);
     }
-  }, [item.active, hasActiveChild, isSearching, hasChildren]);
+  }
 
   const Icon = item.icon;
   const isPinnedMode = variant === 'pinned';
