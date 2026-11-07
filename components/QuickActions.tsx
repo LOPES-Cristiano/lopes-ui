@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { twMerge } from 'tailwind-merge';
 import { clsx } from 'clsx';
@@ -33,6 +33,10 @@ export type QuickActionsProps = {
   mainButtonClassName?: string;
 };
 
+const subscribeNoop = () => () => {};
+const getClientMounted = () => true;
+const getServerMounted = () => false;
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function QuickActions({
@@ -43,7 +47,7 @@ export default function QuickActions({
   mainButtonClassName,
 }: QuickActionsProps) {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(subscribeNoop, getClientMounted, getServerMounted);
   const { canAccess } = useAccessControl();
   const hasRootPermission = !componentId || canAccess(componentId);
 
@@ -83,10 +87,6 @@ export default function QuickActions({
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Handlers para Arrastar com Suavidade (Pointer + Touch)
   const handlePointerDown = useCallback(
