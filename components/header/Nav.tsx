@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronRight, type LucideIcon } from "lucide-react";
-import { filterNavItems } from "@/utils/filterNavItems";
+import { filterNavItems } from "../../utils/filterNavItems";
 
 export type NavItem = {
   label: string;
