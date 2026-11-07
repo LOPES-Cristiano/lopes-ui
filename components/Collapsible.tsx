@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useId, useState } from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 
 type CollapsibleContextValue = {
   open: boolean;
