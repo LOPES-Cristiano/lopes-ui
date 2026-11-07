@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState } from "react";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 import { useAccessControl } from "./useAccessControl";
 
 export type ToggleVariant = "default" | "outline" | "pills";
@@ -110,11 +110,7 @@ type ToggleGroupContextValue = {
 
 const ToggleGroupContext = createContext<ToggleGroupContextValue | null>(null);
 
-export type ToggleGroupProps = {
-  type?: "single" | "multiple";
-  value?: string | string[];
-  defaultValue?: string | string[];
-  onValueChange?: (value: any) => void;
+export type ToggleGroupBaseProps = {
   options?: ToggleGroupOption[];
   variant?: ToggleVariant;
   size?: ToggleSize;
@@ -124,6 +120,22 @@ export type ToggleGroupProps = {
   className?: string;
   children?: React.ReactNode;
 };
+
+export type ToggleGroupSingleProps = ToggleGroupBaseProps & {
+  type?: "single";
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+};
+
+export type ToggleGroupMultipleProps = ToggleGroupBaseProps & {
+  type: "multiple";
+  value?: string[];
+  defaultValue?: string[];
+  onValueChange?: (value: string[]) => void;
+};
+
+export type ToggleGroupProps = ToggleGroupSingleProps | ToggleGroupMultipleProps;
 
 export function ToggleGroupItem({
   value,
@@ -194,15 +206,16 @@ export default function ToggleGroup({
 
   const toggleValue = (val: string) => {
     if (effectiveDisabled) return;
+    const emit = onValueChange as ((value: string | string[]) => void) | undefined;
     if (type === "multiple") {
       const arr = Array.isArray(current) ? current : [];
       const next = arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val];
       if (controlledValue === undefined) setInternalValue(next);
-      onValueChange?.(next);
+      emit?.(next);
     } else {
       const next = current === val ? "" : val;
       if (controlledValue === undefined) setInternalValue(next);
-      onValueChange?.(next);
+      emit?.(next);
     }
   };
 
