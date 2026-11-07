@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useId, useState } from "react";
-import { cn } from "@/utils/cn";
+import { cn } from "../../utils/cn";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
 import { useAccessControl } from "../useAccessControl";
 
@@ -10,13 +10,9 @@ export type SliderMark = {
   label?: React.ReactNode;
 };
 
-export type SliderFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
+export type SliderFieldBaseProps = Omit<FieldWrapperProps, "children" | "id"> & {
   id?: string;
   name?: string;
-  /** Single number or [min, max] range tuple */
-  value?: number | [number, number];
-  defaultValue?: number | [number, number];
-  onChange?: (value: any) => void;
   min?: number;
   max?: number;
   step?: number;
@@ -29,7 +25,14 @@ export type SliderFieldProps = Omit<FieldWrapperProps, "children" | "id"> & {
   hideIfDenied?: boolean;
 };
 
-export default function SliderField({
+export type SliderFieldProps<V extends number | [number, number] = number> = SliderFieldBaseProps & {
+  /** Single number or [min, max] range tuple */
+  value?: V;
+  defaultValue?: V;
+  onChange?: (value: V) => void;
+};
+
+export default function SliderField<V extends number | [number, number] = number>({
   label,
   labelInline,
   orientation,
@@ -45,7 +48,7 @@ export default function SliderField({
   id: idProp,
   name,
   value: controlledValue,
-  defaultValue = 0,
+  defaultValue,
   onChange,
   min = 0,
   max = 100,
@@ -56,10 +59,10 @@ export default function SliderField({
   marks,
   componentId,
   hideIfDenied = false,
-}: SliderFieldProps) {
+}: SliderFieldProps<V>) {
   const autoId = useId();
   const id = idProp ?? autoId;
-  const [internalValue, setInternalValue] = useState<number | [number, number]>(defaultValue);
+  const [internalValue, setInternalValue] = useState<number | [number, number]>(defaultValue ?? 0);
   const { canAccess } = useAccessControl();
   const hasPermission = !componentId || canAccess(componentId);
   const effectiveDisabled = Boolean(disabled || !hasPermission);
@@ -73,7 +76,8 @@ export default function SliderField({
   const updateValue = (next: number | [number, number]) => {
     if (effectiveDisabled) return;
     if (controlledValue === undefined) setInternalValue(next);
-    onChange?.(next);
+    const emit = onChange as ((value: number | [number, number]) => void) | undefined;
+    emit?.(next);
   };
 
   const valueDisplay = isRange
