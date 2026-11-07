@@ -13,14 +13,14 @@ import {
   XCircle,
   RefreshCw,
 } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 import Button from "./Button";
 import Badge from "./Badge";
 import StatusBadge, { type StatusTone } from "./StatusBadge";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export interface TransferListItem<T = any> {
+export interface TransferListItem<T = unknown> {
   id: string | number;
   title: string;
   subtitle?: string;
@@ -33,7 +33,7 @@ export interface TransferListItem<T = any> {
   raw?: T;
 }
 
-export interface TransferListProps<T = any> {
+export interface TransferListProps<T = unknown> {
   /** Items in the left/source list (Assigned / Selected / Authorized) */
   sourceItems: TransferListItem<T>[];
   /** Items in the right/target list (Available / Unassigned) */
@@ -85,7 +85,7 @@ function normalizeText(s: string): string {
     .toLowerCase();
 }
 
-export default function TransferList<T = any>({
+export default function TransferList<T = unknown>({
   sourceItems,
   targetItems,
   onChange,
