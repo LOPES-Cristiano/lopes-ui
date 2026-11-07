@@ -2,6 +2,7 @@ import type React from 'react';
 import type { LucideIcon } from 'lucide-react';
 
 export type SidebarMode = 'expanded' | 'collapsed' | 'peek';
+export type SidebarCollapsedGroupMode = 'flatten-items' | 'group-icons';
 
 export type SidebarNavItem = {
   id?: string;
@@ -22,13 +23,13 @@ export type SidebarNavItem = {
 
 export type SidebarNavGroup = {
   id?: string;
-  /** Título do grupo (hidden quando collapsed) */
+  /** Título do grupo (hidden quando collapsed em flatten-items) */
   label?: string;
   /** Ícone exibido ao lado do label do grupo */
   icon?: LucideIcon;
   /** Permite recolher o grupo clicando no label */
   collapsible?: boolean;
-  /** Marca se por padrão a sidebar vai iniciar colapsada */
+  /** Marca se por padrão o grupo inicia colapsado */
   defaultCollapsed?: boolean;
   /** Linha divisória antes do grupo */
   divider?: boolean;
@@ -103,7 +104,7 @@ export type SidebarProps = {
   onAddItem?: () => void;
   /** Quick action callback for creating a new group */
   onAddGroup?: () => void;
-  /** Placeholder for search input (default: "Buscar...") */
+  /** Placeholder for search input (default: "Filtrar itens...") */
   searchPlaceholder?: string;
   // ── Pins
   /** Allow users to pin nav items to the top Fixados section */
@@ -123,6 +124,12 @@ export type SidebarProps = {
   groups?: SidebarNavGroup[];
   groupsCollapsible?: boolean;
   groupsStorageKey?: string;
+  /**
+   * Comportamento dos grupos quando a sidebar está recolhida:
+   * - `'flatten-items'` (default): exibe os ícones individuais dos itens do grupo
+   * - `'group-icons'`: exibe apenas o ícone/inicial do grupo com tooltip, expandindo ao clicar
+   */
+  collapsedGroupMode?: SidebarCollapsedGroupMode;
   onNavigate?: (href: string) => void;
   autoCollapseAfterNavigation?: boolean;
   autoCollapseDelay?: number;
