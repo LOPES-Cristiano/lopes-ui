@@ -6,18 +6,23 @@ export type SortDir = 'asc' | 'desc' | null;
 export type DataTableVariant = 'minimal' | 'bordered' | 'striped' | 'default';
 export type DataTableSize = 'sm' | 'md' | 'lg';
 export type ActionsDisplay = 'menu' | 'inline' | 'auto' | 'icons';
+export type DataTableMobileRole = 'code' | 'title' | 'status';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DataTableColumn<T = any> = {
   key: string;
   header?: React.ReactNode;
   label?: React.ReactNode;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   accessor?: (row: T) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getValue?: (row: T) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sortValue?: (row: T) => any;
   align?: 'left' | 'center' | 'right';
   sortable?: boolean;
   sortAccessor?: (row: T) => string | number | Date;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   render?: (value: any, row: T, index: number) => React.ReactNode;
   summary?: 'sum' | 'avg' | 'min' | 'max' | 'count' | ((rows: T[]) => React.ReactNode);
   summaryLabel?: string;
@@ -27,6 +32,8 @@ export type DataTableColumn<T = any> = {
   headerClassName?: string;
   hidden?: boolean;
   required?: boolean;
+  /** Papel semântico explícito da coluna na visualização em cards mobile */
+  mobileRole?: DataTableMobileRole;
 };
 
 export type ActionTone = 'default' | 'info' | 'danger' | 'warning' | 'primary' | 'success';
@@ -49,6 +56,7 @@ export type DataTableAction<T = any> = {
   iconClassName?: string | ((row: T) => string);
   disabled?: (row: T) => boolean;
   hidden?: (row: T) => boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onClick: (row: T) => any;
   confirm?:
     | {
@@ -81,6 +89,7 @@ export type DataTableBulkAction<T = any> = {
   danger?: boolean;
   divider?: boolean;
   disabled?: (rows: T[]) => boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onClick: (rows: T[]) => any;
   buttonClassName?: string;
   componentId?: string;
@@ -176,8 +185,11 @@ export type DataTableProps<T = any> = {
   onSearchChange?: (search: string) => void;
   filterFields?: FilterField<T>[];
   filterVariant?: 'modal' | 'inline';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   filters?: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   initialFilters?: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onFilterChange?: (filters: Record<string, any>) => void;
   tabs?: DataTableTab<T>[];
   activeTab?: number;
@@ -227,18 +239,23 @@ export type DataTableProps<T = any> = {
     description?: string;
     actions: Array<{
       id: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       label: string | ((row?: any) => string);
       componentId?: string;
       placement: 'toolbar' | 'row';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       icon?: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       iconClassName?: string | ((row?: any) => string);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       buttonClassName?: string | ((row?: any) => string);
       variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       disabled?: boolean | ((row?: any) => boolean);
       tooltip?: string;
       permission?: string;
-      tabs?: any[];
-      states?: any;
+      tabs?: unknown[];
+      states?: unknown;
     }>;
   };
   screenActionHandlers?: Record<string, () => void | Promise<void>>;
