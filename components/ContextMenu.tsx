@@ -4,7 +4,7 @@ import React, { createContext, useContext, useCallback, useEffect, useMemo, useR
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { Check, ChevronRight, Circle, type LucideIcon } from "lucide-react";
-import { calcCursorPos, calcSubMenuPos } from "@/hooks/useSmartPosition";
+import { calcCursorPos, calcSubMenuPos } from "../hooks/useSmartPosition";
 import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
