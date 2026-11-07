@@ -10,7 +10,8 @@ import {
   DialogClose,
 } from '../../primitives/dialog';
 import { X, Check, type LucideIcon } from 'lucide-react';
-import { cn } from '@/utils/cn';
+import { cn } from '../../../utils/cn';
+import { hasOpenFloatingOverlay, isFloatingOverlayTarget } from '../../../utils/overlay';
 import Button from '../../Button';
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -59,7 +60,7 @@ export interface FormModalHeaderProps {
   subtitle?: React.ReactNode;
   description?: React.ReactNode;
   icon?: LucideIcon | React.ComponentType<{ size?: number; className?: string }> | React.ReactNode;
-  iconColor?: 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
+  iconColor?: 'default' | 'primary' | 'brand' | 'success' | 'warning' | 'danger' | 'info';
   onClose?: () => void;
   actions?: React.ReactNode;
   className?: string;
@@ -93,7 +94,7 @@ const SIZE_CLASSES: Record<FormModalSize, string> = {
   md: 'max-w-xl',
   lg: 'max-w-3xl',
   xl: 'max-w-5xl',
-  full: 'max-w-[96vw] h-[92vh]',
+  full: 'max-w-[96vw] h-[92dvh]',
 };
 
 // ── Root FormModal ────────────────────────────────────────────────────────────
@@ -126,30 +127,42 @@ export function FormModal({
     >
       <DialogContent
         hideCloseButton
-        overlayClassName="fixed inset-0 z-[7000] bg-black/60 backdrop-blur-xs data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+        overlayClassName="fixed inset-0 z-[7000] bg-black/55 backdrop-blur-xs data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 motion-reduce:animate-none"
         aria-modal="true"
         style={maxWidth ? { maxWidth } : undefined}
         onPointerDownOutside={(e) => {
-          if (preventCloseOnBackdrop || loading) {
+          const rawTarget = e.detail?.originalEvent?.target ?? e.target;
+          if (preventCloseOnBackdrop || loading || isFloatingOverlayTarget(rawTarget)) {
+            e.preventDefault();
+          }
+        }}
+        onInteractOutside={(e) => {
+          const rawTarget = e.detail?.originalEvent?.target ?? e.target;
+          if (preventCloseOnBackdrop || loading || isFloatingOverlayTarget(rawTarget)) {
+            e.preventDefault();
+          }
+        }}
+        onFocusOutside={(e) => {
+          const rawTarget = e.detail?.originalEvent?.target ?? e.target;
+          if (isFloatingOverlayTarget(rawTarget)) {
             e.preventDefault();
           }
         }}
         onEscapeKeyDown={(e) => {
-          if (loading) {
+          if (loading || hasOpenFloatingOverlay()) {
             e.preventDefault();
           }
         }}
         className={cn(
           'fixed left-[50%] top-[50%] z-[7000] translate-x-[-50%] translate-y-[-50%]',
-          'w-full flex flex-col',
-          'max-h-[calc(100dvh-2rem)]',
-          'bg-card border border-border text-card-foreground shadow-2xl overflow-hidden rounded-2xl p-0',
-          'max-sm:fixed max-sm:inset-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:w-full max-sm:max-w-none max-sm:h-full max-sm:max-h-[100dvh] max-sm:rounded-none max-sm:border-0',
-          'duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
+          'w-[calc(100vw-1.5rem)] sm:w-[calc(100vw-2.5rem)] max-h-[calc(100dvh-2rem)] flex flex-col',
+          'bg-card border border-border text-card-foreground shadow-[var(--shadow-overlay)] overflow-hidden rounded-[var(--radius-overlay)] p-0 overscroll-contain',
+          'duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] motion-reduce:animate-none',
           SIZE_CLASSES[size],
           className
         )}
-        >
+        {...(componentId ? { 'data-component-id': componentId } : {})}
+      >
         {/* Fallback accessible title when no FormModalHeader is present */}
         {!hasHeaderTitle && <DialogTitle className="sr-only">{accessibleTitle}</DialogTitle>}
 
@@ -186,10 +199,11 @@ export function FormModalHeader({
   const iconColorStyles: Record<string, string> = {
     default: 'bg-muted text-muted-foreground border border-border/60',
     primary: 'bg-primary/10 text-primary border border-primary/20',
-    success: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
-    warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
-    danger: 'bg-destructive/10 text-destructive border border-destructive/20',
-    info: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20',
+    brand: 'bg-brand-soft text-brand border border-brand-border/60',
+    success: 'bg-success-soft text-success border border-success-border/60',
+    warning: 'bg-warning-soft text-warning border border-warning-border/60',
+    danger: 'bg-danger-soft text-danger border border-danger-border/60',
+    info: 'bg-info-soft text-info border border-info-border/60',
   };
 
   const renderIcon = () => {
@@ -198,7 +212,7 @@ export function FormModalHeader({
       return (
         <span
           className={cn(
-            'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-xs',
+            'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-2xs',
             iconColorStyles[iconColor]
           )}
         >
@@ -211,7 +225,7 @@ export function FormModalHeader({
       return (
         <span
           className={cn(
-            'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-xs',
+            'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-2xs',
             iconColorStyles[iconColor]
           )}
         >
@@ -225,18 +239,18 @@ export function FormModalHeader({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-4 px-6 py-3.5 border-b border-border/40 bg-card shrink-0 select-none',
+        'flex items-center justify-between gap-4 px-5 sm:px-6 py-3.5 border-b border-border/70 bg-card shrink-0',
         className
       )}
     >
-      <div className="flex items-center gap-3.5 min-w-0">
+      <div className="flex items-center gap-3 min-w-0">
         {renderIcon()}
         <div className="min-w-0">
-          <DialogTitle className="text-sm sm:text-base font-bold text-foreground tracking-tight leading-tight truncate">
+          <DialogTitle className="text-sm sm:text-base font-bold text-foreground tracking-tight leading-snug truncate">
             {title}
           </DialogTitle>
           {desc && (
-            <DialogDescription className="mt-0.5 text-xs text-muted-foreground truncate">
+            <DialogDescription className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
               {desc}
             </DialogDescription>
           )}
@@ -259,7 +273,7 @@ export function FormModalHeader({
                 : undefined
             }
             aria-label="Fechar"
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors disabled:opacity-40 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             <X size={16} />
           </button>
@@ -273,7 +287,7 @@ export function FormModalHeader({
 
 export function FormModalBody({ children, className, noPadding = false }: FormModalBodyProps) {
   return (
-    <div className={cn('flex-1 overflow-y-auto min-h-0', !noPadding && 'px-6 py-5', className)}>
+    <div className={cn('flex-1 overflow-y-auto overscroll-contain min-h-0', !noPadding && 'px-5 sm:px-6 py-5', className)}>
       {children}
     </div>
   );
@@ -304,7 +318,7 @@ export function FormModalActions({
     return (
       <div
         className={cn(
-          'flex items-center justify-end gap-3 px-6 py-3.5 border-t border-border/40 bg-card shrink-0',
+          'flex items-center justify-end gap-2.5 px-5 sm:px-6 py-3.5 border-t border-border/70 bg-muted/20 shrink-0',
           className
         )}
       >
@@ -316,20 +330,21 @@ export function FormModalActions({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-3 px-6 py-3.5 border-t border-border/40 bg-card shrink-0',
+        'flex items-center justify-between gap-3 px-5 sm:px-6 py-3.5 border-t border-border/70 bg-muted/20 shrink-0',
         className
       )}
     >
-      <div className="flex items-center gap-2">{leftActions}</div>
+      <div className="flex items-center gap-2 min-w-0">{leftActions}</div>
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5 shrink-0">
         <Button
           type="button"
           variant="secondary"
           size="md"
           disabled={isLoading || disabled}
           onClick={handleCancel}
-          componentId={componentId ? `${componentId}.btn.cancelar` : 'erp.form-modal.btn.cancelar'}
+          componentId={componentId ? `${componentId}.btn.cancelar` : undefined}
+          data-component-id={componentId ? `${componentId}.btn.cancelar` : 'erp.form-modal.btn.cancelar'}
         >
           {cancelLabel}
         </Button>
@@ -347,7 +362,8 @@ export function FormModalActions({
               : undefined
           }
           leftIcon={submitIcon}
-          componentId={componentId ? `${componentId}.btn.salvar` : 'erp.form-modal.btn.salvar'}
+          componentId={componentId ? `${componentId}.btn.salvar` : undefined}
+          data-component-id={componentId ? `${componentId}.btn.salvar` : 'erp.form-modal.btn.salvar'}
         >
           {submitLabel}
         </Button>
