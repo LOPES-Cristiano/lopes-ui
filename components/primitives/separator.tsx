@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { cn } from '@/utils/cn';
+import { cn } from '../../utils/cn';
 
 export interface SeparatorPrimitiveProps extends React.HTMLAttributes<HTMLDivElement> {
   orientation?: 'horizontal' | 'vertical';
@@ -17,7 +17,7 @@ const Separator = React.forwardRef<HTMLDivElement, SeparatorPrimitiveProps>(
       data-slot="separator"
       data-orientation={orientation}
       className={cn(
-        'shrink-0 bg-zinc-200 dark:bg-zinc-800',
+        'shrink-0 bg-border',
         orientation === 'horizontal' ? 'h-px w-full' : 'h-full w-px self-stretch',
         className
       )}
