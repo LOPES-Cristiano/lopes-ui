@@ -510,7 +510,7 @@ export function DataTableRow<T = Record<string, unknown>>({
         (() => {
           const confirmProp = confirmAction.action.confirm;
           const confirmConfig =
-            typeof confirmProp === 'function' ? (confirmProp as (r: T) => any)(row) : confirmProp;
+            typeof confirmProp === 'function' ? confirmProp(row) : confirmProp;
           if (!confirmConfig) return null;
           return (
             <ConfirmDialog
