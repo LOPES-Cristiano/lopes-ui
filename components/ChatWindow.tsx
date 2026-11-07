@@ -3,15 +3,15 @@
 import React, { useRef, useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { MessageCircle, Minus, X, ChevronLeft, Search, Phone, Video, MoreHorizontal } from "lucide-react";
-import ChatMessage, { type ChatMessageProps } from "@/components/ChatMessage";
-import type { EntityResolver } from "@/components/ChatMessage";
-import ChatComposer from "@/components/ChatComposer";
-import type { EntitySuggestion } from "@/components/ChatComposer";
-import ChatConversationItem from "@/components/ChatConversationItem";
-import Avatar from "@/components/Avatar";
-import Drawer from "@/components/Drawer";
-import SmartObject from "@/components/SmartObject";
-import type { SmartObjectProps } from "@/components/SmartObject";
+import ChatMessage, { type ChatMessageProps } from "./ChatMessage";
+import type { EntityResolver } from "./ChatMessage";
+import ChatComposer from "./ChatComposer";
+import type { EntitySuggestion } from "./ChatComposer";
+import ChatConversationItem from "./ChatConversationItem";
+import Avatar from "./Avatar";
+import Drawer from "./Drawer";
+import SmartObject from "./SmartObject";
+import type { SmartObjectProps } from "./SmartObject";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
