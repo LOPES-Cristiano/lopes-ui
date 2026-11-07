@@ -1,7 +1,7 @@
 'use client';
 
 import { useAccessControl } from './useAccessControl';
-import { useEffect, useMemo, type CSSProperties, type ReactNode } from 'react';
+import React, { useEffect, useMemo, type CSSProperties, type ReactNode } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 
@@ -16,27 +16,27 @@ interface InfoFieldProps {
 }
 
 export function InfoField({ label, value, highlight, muted, variant, className }: InfoFieldProps) {
-  let colorClass = 'text-zinc-900 dark:text-zinc-100';
+  let colorClass = 'text-foreground';
   if (muted || variant === 'muted') {
-    colorClass = 'text-zinc-400 dark:text-zinc-500';
+    colorClass = 'text-muted-foreground';
   } else if (highlight || variant === 'primary') {
-    colorClass = 'text-indigo-600 dark:text-indigo-400';
+    colorClass = 'text-brand';
   } else if (variant === 'success') {
-    colorClass = 'text-emerald-600 dark:text-emerald-400';
+    colorClass = 'text-success';
   } else if (variant === 'warning') {
-    colorClass = 'text-amber-600 dark:text-amber-400';
+    colorClass = 'text-warning';
   } else if (variant === 'danger') {
-    colorClass = 'text-rose-600 dark:text-rose-400';
+    colorClass = 'text-danger';
   } else if (variant === 'info') {
-    colorClass = 'text-sky-600 dark:text-sky-400';
+    colorClass = 'text-info';
   }
 
   return (
     <div className={twMerge('flex flex-col gap-0.5 text-left', className)}>
-      <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-400 leading-none">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground leading-none">
         {label}
       </span>
-      <span className={twMerge('text-sm font-semibold leading-snug break-words', colorClass)}>
+      <span className={twMerge('text-sm font-semibold leading-snug break-words tabular-nums', colorClass)}>
         {value ?? '-'}
       </span>
     </div>
@@ -54,8 +54,8 @@ interface InfoChipProps {
 export function InfoChip({ label, value }: InfoChipProps) {
   return (
     <div className="text-right">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">{label}</p>
-      <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{value}</p>
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="text-sm font-semibold tabular-nums text-foreground">{value}</p>
     </div>
   );
 }
@@ -89,7 +89,7 @@ export function DetailHeader({
             type="button"
             onClick={onBack}
             aria-label={backAriaLabel || 'Voltar'}
-            className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 cursor-pointer"
+            className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-foreground transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
           >
             <ArrowLeft size={16} />
           </button>
@@ -97,11 +97,11 @@ export function DetailHeader({
         {avatar}
         <div className="min-w-0 flex-1 pr-6 sm:pr-0">
           {titleLabel ? (
-            <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-400 mb-0.5">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">
               {titleLabel}
             </p>
           ) : null}
-          <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight dark:text-zinc-100 break-words leading-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight break-words leading-tight">
             {titleValue}
           </h2>
         </div>
@@ -136,22 +136,24 @@ export function DetailGrid({ children, columns = 4, className }: DetailGridProps
 }
 
 // ─── DETAIL PANEL ────────────────────────────────────────────────────────────
+type DetailIconComponent = React.ComponentType<{ size?: number; className?: string }>;
+
 interface DetailPanelProps {
   title?: string;
-  icon?: any;
+  icon?: DetailIconComponent;
   action?: ReactNode;
   children: ReactNode;
 }
 
 export function DetailPanel({ title, icon: Icon, action, children }: DetailPanelProps) {
   return (
-    <section className="border-b border-zinc-200 pb-6 last:border-b-0 dark:border-zinc-800">
+    <section className="border-b border-border pb-6 last:border-b-0">
       {title || action || Icon ? (
         <div className="mb-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            {Icon ? <Icon size={16} className="text-zinc-600 dark:text-zinc-400" /> : null}
+            {Icon ? <Icon size={16} className="text-muted-foreground" /> : null}
             {title ? (
-              <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-zinc-700 dark:text-zinc-300">
+              <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-foreground">
                 {title}
               </h3>
             ) : null}
@@ -171,7 +173,7 @@ export interface TabItem {
   icon?: ReactNode;
   badge?: number;
   /** componentId específico para controle de acesso (ex: 'erp.cadastro.pessoa.tab-compras').
-   *  Se não informado, a aba é sempre visível (usa erp.detail-layout.tab-{id}). */
+   *  Se não informado, a aba usa `erp.detail-layout.tab-{id}`. */
   componentId?: string;
 }
 
@@ -186,7 +188,7 @@ export function DetailTabs({ tabs, activeTab, onChange }: DetailTabsProps) {
 
   const visibleTabs = useMemo(
     () => tabs.filter((t) => !t.componentId || canAccess(t.componentId)),
-    [tabs, canAccess]
+    [tabs, canAccess],
   );
 
   // Redireciona automaticamente para a primeira aba permitida caso a aba ativa esteja bloqueada
@@ -197,23 +199,26 @@ export function DetailTabs({ tabs, activeTab, onChange }: DetailTabsProps) {
   }, [visibleTabs, activeTab, onChange]);
 
   return (
-    <div className="border-b border-border w-full flex items-end gap-1 sm:gap-1.5 overflow-x-auto overflow-y-hidden scrollbar-none py-0.5">
+    <div
+      role="tablist"
+      className="border-b border-border w-full flex items-end gap-1 sm:gap-1.5 overflow-x-auto overflow-y-hidden scrollbar-none py-0.5"
+    >
       {visibleTabs.map((tab) => {
         const active = activeTab === tab.id;
-        // Se componentId específico não for informado → fallback para o prefixo
-        // 'erp.detail-layout.tab-*' que está na allowlist (sempre visível).
         const cid = tab.componentId ?? `erp.detail-layout.tab-${tab.id}`;
         return (
           <button
             data-component-id={cid}
             key={tab.id}
             type="button"
+            role="tab"
+            aria-selected={active}
             onClick={() => onChange(tab.id)}
             className={twMerge(
-              'group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 rounded-t-md',
+              'group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 rounded-t-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               active
                 ? '-mb-[1px] bg-primary text-primary-foreground border-t-2 border-t-primary border-x border-primary font-bold shadow-xs z-10'
-                : 'bg-zinc-50/90 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white border border-border/80 border-b-transparent'
+                : 'bg-surface-muted/80 hover:bg-surface-hover text-muted-foreground hover:text-foreground border border-border/80 border-b-transparent',
             )}
           >
             {tab.icon && (
@@ -231,10 +236,10 @@ export function DetailTabs({ tabs, activeTab, onChange }: DetailTabsProps) {
             {tab.badge != null && tab.badge > 0 ? (
               <span
                 className={twMerge(
-                  'inline-flex min-w-3.5 items-center justify-center rounded px-1 py-0.2 sm:px-1.5 sm:py-0.5 text-[9px] sm:text-[11px] font-bold leading-none transition-colors whitespace-nowrap shrink-0',
+                  'inline-flex min-w-3.5 items-center justify-center rounded px-1 py-0.5 sm:px-1.5 text-[9px] sm:text-[11px] font-bold leading-none tabular-nums transition-colors whitespace-nowrap shrink-0',
                   active
-                    ? 'bg-[#d9383a] text-white shadow-2xs'
-                    : 'bg-muted text-muted-foreground group-hover:bg-muted/80'
+                    ? 'bg-danger text-danger-foreground shadow-2xs'
+                    : 'bg-muted text-muted-foreground group-hover:bg-muted/80',
                 )}
               >
                 {tab.badge}
@@ -249,26 +254,20 @@ export function DetailTabs({ tabs, activeTab, onChange }: DetailTabsProps) {
 
 // ─── DETAIL SKELETON ──────────────────────────────────────────────────────────
 function Bone({ className, style }: { className?: string; style?: CSSProperties }) {
-  return (
-    <div className={twMerge('rounded-md bg-zinc-200 dark:bg-zinc-800', className)} style={style} />
-  );
+  return <div className={twMerge('rounded-md bg-surface-muted', className)} style={style} />;
 }
 
 export function DetailSkeleton() {
   return (
     <div className="animate-pulse space-y-5 text-left">
-      {/* ── Header: avatar + título + chips + badges ── */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
-          {/* Avatar */}
           <Bone className="h-14 w-14 shrink-0 rounded-full" />
           <div className="space-y-2">
-            {/* Título */}
             <Bone className="h-6 w-72 max-w-xs" />
             <Bone className="h-4 w-48" />
           </div>
         </div>
-        {/* Chips + badges */}
         <div className="flex items-center gap-2 pr-12 pt-1">
           <Bone className="h-6 w-20 rounded-full" />
           <Bone className="h-6 w-16 rounded-full" />
@@ -276,53 +275,44 @@ export function DetailSkeleton() {
         </div>
       </div>
 
-      {/* ── Metadados secundários em linha ── */}
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
         {[56, 80, 68, 72].map((w, i) => (
-          <Bone key={i} className={`h-3.5`} style={{ width: w }} />
+          <Bone key={i} className="h-3.5" style={{ width: w }} />
         ))}
       </div>
 
-      {/* ── KPI Cards ── */}
-      <section className="border-b border-zinc-200 pb-5 dark:border-zinc-800">
+      <section className="border-b border-border pb-5">
         <Bone className="mb-3 h-2.5 w-28" />
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="rounded-xl bg-zinc-100 p-3.5 space-y-3 dark:bg-zinc-800/50">
+            <div key={i} className="rounded-xl bg-surface-muted/60 p-3.5 space-y-3 border border-border/50">
               <div className="flex items-center gap-2">
-                <div className="h-5 w-5 rounded-lg bg-zinc-200 dark:bg-zinc-700" />
-                <div className="h-2.5 w-20 rounded bg-zinc-200 dark:bg-zinc-700" />
+                <div className="h-5 w-5 rounded-lg bg-surface-muted" />
+                <div className="h-2.5 w-20 rounded bg-surface-muted" />
               </div>
-              <div className="h-6 w-16 rounded bg-zinc-200 dark:bg-zinc-700" />
+              <div className="h-6 w-16 rounded bg-surface-muted" />
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── Tabs ── */}
-      <div className="flex flex-wrap gap-1 border-b border-zinc-200 pb-px dark:border-zinc-800">
+      <div className="flex flex-wrap gap-1 border-b border-border pb-px">
         {[64, 52, 48, 60, 52, 80, 84, 60].map((w, i) => (
           <div
             key={i}
-            className={twMerge(
-              'h-7 rounded bg-zinc-200 dark:bg-zinc-800',
-              i === 0 && 'bg-zinc-300 dark:bg-zinc-700'
-            )}
+            className={twMerge('h-7 rounded bg-surface-muted', i === 0 && 'bg-border-strong')}
             style={{ width: w }}
           />
         ))}
       </div>
 
-      {/* ── Panel content ── */}
       <div className="space-y-5 pt-1">
-        {/* Section title */}
         <Bone className="h-3 w-36" />
-        {/* Grid de fields */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-5 lg:grid-cols-4">
           {[48, 72, 56, 64, 40, 80, 52, 68].map((w, i) => (
             <div key={i} className="space-y-1.5">
               <Bone className="h-2 w-14" />
-              <div className="h-4 rounded bg-zinc-200 dark:bg-zinc-800" style={{ width: w + 32 }} />
+              <div className="h-4 rounded bg-surface-muted" style={{ width: w + 32 }} />
             </div>
           ))}
         </div>
@@ -339,11 +329,11 @@ interface DetailSeparatorProps {
 export function DetailSeparator({ label }: DetailSeparatorProps) {
   return (
     <div className="my-5 flex items-center gap-3">
-      <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
-      <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-400 leading-none">
+      <div className="h-px flex-1 bg-border" />
+      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground leading-none">
         {label}
       </span>
-      <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+      <div className="h-px flex-1 bg-border" />
     </div>
   );
 }
@@ -352,7 +342,7 @@ export function DetailSeparator({ label }: DetailSeparatorProps) {
 interface MetricFieldProps {
   label: string;
   value: ReactNode;
-  icon?: any;
+  icon?: DetailIconComponent;
   variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'primary';
   subtext?: ReactNode;
   trend?: ReactNode;
@@ -368,33 +358,33 @@ export function MetricField({
 }: MetricFieldProps) {
   const colors = {
     default: {
-      iconBg: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400',
-      valueText: 'text-zinc-900 dark:text-zinc-100',
+      iconBg: 'bg-surface-muted text-muted-foreground',
+      valueText: 'text-foreground',
     },
     success: {
-      iconBg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400',
-      valueText: 'text-emerald-600 dark:text-emerald-400',
+      iconBg: 'bg-success-soft text-success',
+      valueText: 'text-success',
     },
     warning: {
-      iconBg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400',
-      valueText: 'text-amber-600 dark:text-amber-400',
+      iconBg: 'bg-warning-soft text-warning',
+      valueText: 'text-warning',
     },
     danger: {
-      iconBg: 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400',
-      valueText: 'text-rose-600 dark:text-rose-400',
+      iconBg: 'bg-danger-soft text-danger',
+      valueText: 'text-danger',
     },
     info: {
-      iconBg: 'bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400',
-      valueText: 'text-sky-600 dark:text-sky-400',
+      iconBg: 'bg-info-soft text-info',
+      valueText: 'text-info',
     },
     primary: {
-      iconBg: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400',
-      valueText: 'text-indigo-600 dark:text-indigo-400',
+      iconBg: 'bg-brand-soft text-brand',
+      valueText: 'text-brand',
     },
   }[variant];
 
   return (
-    <div className="flex flex-col  dark:bg-zinc-900/30 text-left border-0">
+    <div className="flex flex-col text-left border-0">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0">
           {Icon ? (
@@ -402,7 +392,7 @@ export function MetricField({
               <Icon size={14} className="sm:w-4 sm:h-4" />
             </div>
           ) : null}
-          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 leading-none truncate">
+          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-none truncate">
             {label}
           </span>
         </div>
@@ -410,11 +400,16 @@ export function MetricField({
       </div>
 
       <div className="space-y-0.5 mt-0.5">
-        <p className={twMerge('text-base sm:text-lg lg:text-xl font-bold tracking-tight leading-tight', colors.valueText)}>
+        <p
+          className={twMerge(
+            'text-base sm:text-lg lg:text-xl font-bold tracking-tight leading-tight tabular-nums',
+            colors.valueText,
+          )}
+        >
           {value ?? '-'}
         </p>
         {subtext ? (
-          <p className="text-[9px] sm:text-[10px] text-zinc-600 dark:text-zinc-400 font-medium leading-tight truncate">
+          <p className="text-[9px] sm:text-[10px] text-muted-foreground font-medium leading-tight truncate">
             {subtext}
           </p>
         ) : null}
