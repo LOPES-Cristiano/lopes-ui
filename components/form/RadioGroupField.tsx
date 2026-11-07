@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useId, useState } from "react";
-import { cn } from "@/utils/cn";
+import { cn } from "../../utils/cn";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
 import { useAccessControl } from "../useAccessControl";
 
