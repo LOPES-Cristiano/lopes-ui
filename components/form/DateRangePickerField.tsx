@@ -6,6 +6,7 @@ import { CalendarDays, X } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
 import Calendar, { type CalendarPreset } from "../Calendar";
+import { useEscKey } from "../Modal";
 import { useAccessControl } from "../useAccessControl";
 
 export type DateRangeValue = {
@@ -107,6 +108,7 @@ export default function DateRangePickerField({
   width,
   className,
   id: idProp,
+  name,
   value: controlledValue,
   defaultValue,
   onChange,
@@ -136,7 +138,7 @@ export default function DateRangePickerField({
   const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({
     position: "fixed",
     visibility: "hidden",
-    zIndex: 99999,
+    zIndex: 9200,
   });
 
   const currentRange = controlledValue ?? internalRange;
@@ -144,6 +146,13 @@ export default function DateRangePickerField({
   const endDate = useMemo(() => parseIsoDate(currentRange.end), [currentRange.end]);
   const minDate = useMemo(() => parseIsoDate(min), [min]);
   const maxDate = useMemo(() => parseIsoDate(max), [max]);
+
+  const closePanel = useCallback(() => {
+    setOpen(false);
+    setPanelStyle({ position: "fixed", visibility: "hidden", zIndex: 9200 });
+  }, []);
+
+  useEscKey(closePanel, open);
 
   const effectivePresets = useMemo(
     () => presets ?? (showDefaultPresets ? buildDefaultPresets() : undefined),
@@ -188,7 +197,11 @@ export default function DateRangePickerField({
 
     const measuredRect = panelRef.current?.getBoundingClientRect();
     const isMobile = window.innerWidth < 768;
-    const fallbackWidth = isMobile ? Math.min(360, window.innerWidth - 24) : numberOfMonths === 2 ? 730 : 440;
+    const fallbackWidth = isMobile
+      ? Math.min(360, window.innerWidth - 24)
+      : numberOfMonths === 2
+        ? 730
+        : 440;
     const panelWidth = Math.min(
       measuredRect && measuredRect.width > 40 ? measuredRect.width : fallbackWidth,
       window.innerWidth - 24,
@@ -207,46 +220,33 @@ export default function DateRangePickerField({
       position: "fixed",
       left,
       top,
-      zIndex: 99999,
+      zIndex: 9200,
       pointerEvents: "auto",
       visibility: "visible",
     });
   }, [numberOfMonths]);
 
   useEffect(() => {
-    if (!open) {
-      setPanelStyle({ position: "fixed", visibility: "hidden", zIndex: 99999 });
-      return;
-    }
-    updatePosition();
+    if (!open) return;
     const rafId = window.requestAnimationFrame(updatePosition);
 
     const handleOutside = (e: MouseEvent) => {
       const target = e.target as Node;
       if (containerRef.current?.contains(target) || panelRef.current?.contains(target)) return;
-      setOpen(false);
-    };
-
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setOpen(false);
-      }
+      closePanel();
     };
 
     document.addEventListener("mousedown", handleOutside);
-    document.addEventListener("keydown", handleEsc);
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
 
     return () => {
       window.cancelAnimationFrame(rafId);
       document.removeEventListener("mousedown", handleOutside);
-      document.removeEventListener("keydown", handleEsc);
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [open, updatePosition]);
+  }, [open, updatePosition, closePanel]);
 
   const handleRangeChange = (range: [Date | null, Date | null]) => {
     if (effectiveDisabled || readOnly) return;
@@ -257,73 +257,98 @@ export default function DateRangePickerField({
     };
     setRange(next);
     if (start && end) {
-      setOpen(false);
+      closePanel();
     }
   };
 
   const handleQuickMonthClick = (mStart: Date, mEnd: Date) => {
     if (effectiveDisabled || readOnly) return;
     setRange({ start: toIsoDate(mStart), end: toIsoDate(mEnd) });
-    setOpen(false);
+    closePanel();
   };
 
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (effectiveDisabled || readOnly) return;
     setRange({});
-    setOpen(false);
+    closePanel();
   };
 
   if (!hasPermission && hideIfDenied) return null;
 
   const hasValue = Boolean(currentRange.start || currentRange.end);
+  const canClear = clearable && hasValue && !effectiveDisabled && !readOnly;
+  const describedBy = error ? `${id}-error` : (helpText || hint) ? `${id}-help` : undefined;
 
   const triggerElement = (
     <div ref={containerRef} className="relative">
+      {name && (
+        <input
+          type="hidden"
+          name={name}
+          value={
+            currentRange.start || currentRange.end
+              ? `${currentRange.start ?? ""}/${currentRange.end ?? ""}`
+              : ""
+          }
+        />
+      )}
       <button
         id={id}
         type="button"
         data-component-id={componentId ?? "erp.daterangepicker.trigger"}
         disabled={effectiveDisabled || readOnly}
-        onClick={() => !effectiveDisabled && !readOnly && setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
+        onClick={() => {
+          if (effectiveDisabled || readOnly) return;
+          if (open) closePanel();
+          else {
+            updatePosition();
+            setOpen(true);
+          }
+        }}
         className={twMerge(
-          "flex w-full items-center justify-between gap-2 border bg-white dark:bg-zinc-900 text-left outline-none transition-all duration-150 cursor-pointer",
+          "flex w-full items-center justify-between gap-2 rounded-[var(--radius-control)] border bg-input text-left outline-none transition-[background-color,border-color,box-shadow] duration-150 cursor-pointer",
           size === "sm"
-            ? "h-8 text-xs px-2.5 rounded-lg"
+            ? "h-8 text-xs px-2.5"
             : size === "lg"
-              ? "h-12 text-base px-4 rounded-xl"
-              : "h-10 text-sm px-3 rounded-lg",
+              ? "h-12 text-base px-4"
+              : "h-10 text-sm px-3",
+          canClear && "pr-14",
           error
-            ? "border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
+            ? "border-danger focus-visible:border-danger focus-visible:ring-3 focus-visible:ring-danger/15"
             : open
-              ? "border-blue-500 ring-2 ring-blue-500/15 dark:border-blue-500"
-              : "border-zinc-300 hover:border-zinc-400 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-zinc-700 dark:hover:border-zinc-600",
-          (effectiveDisabled || readOnly) && "cursor-not-allowed opacity-60",
+              ? "border-ring ring-3 ring-ring/12"
+              : "border-input-border hover:border-border-strong focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/12",
+          (effectiveDisabled || readOnly) && "cursor-not-allowed opacity-60 bg-surface-muted",
         )}
       >
         <span
           className={twMerge(
             "truncate tabular-nums",
-            hasValue ? "text-zinc-900 dark:text-zinc-100 font-medium" : "text-zinc-400 dark:text-zinc-500",
+            hasValue ? "text-input-foreground font-medium" : "text-input-placeholder",
           )}
         >
           {displayString || placeholder}
         </span>
-        <span className="flex items-center gap-1 shrink-0 text-zinc-400">
-          {clearable && hasValue && !effectiveDisabled && !readOnly && (
-            <span
-              role="button"
-              tabIndex={-1}
-              aria-label="Limpar período"
-              onClick={handleClear}
-              className="flex h-5 w-5 items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200"
-            >
-              <X size={13} />
-            </span>
-          )}
-          <CalendarDays size={15} className={open ? "text-blue-600 dark:text-blue-400" : undefined} />
-        </span>
+        <CalendarDays
+          size={15}
+          className={twMerge("shrink-0 text-muted-foreground", open && "text-primary")}
+        />
       </button>
+
+      {canClear && (
+        <button
+          type="button"
+          aria-label="Limpar período"
+          onClick={handleClear}
+          className="absolute right-7 top-1/2 -translate-y-1/2 inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
+        >
+          <X size={13} />
+        </button>
+      )}
 
       {open &&
         typeof document !== "undefined" &&
@@ -332,16 +357,19 @@ export default function DateRangePickerField({
             ref={panelRef}
             data-floating-open="true"
             style={panelStyle}
-            className="pointer-events-auto inline-flex flex-col max-w-[calc(100vw-24px)] max-h-[calc(100dvh-24px)] overflow-y-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xl"
+            className="pointer-events-auto z-[9200] inline-flex flex-col max-w-[calc(100vw-24px)] max-h-[calc(100dvh-24px)] overflow-y-auto overscroll-contain rounded-[var(--radius-card)] border border-border bg-popover text-popover-foreground p-3 shadow-[var(--shadow-floating)] animate-in fade-in-0 zoom-in-95 duration-150 motion-reduce:animate-none"
           >
             {quickMonths.length > 0 && (
-              <div className="mb-2.5 pb-2.5 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-1.5 overflow-x-auto">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 pr-1 shrink-0">
+              <div className="mb-2.5 pb-2.5 border-b border-border flex items-center gap-1.5 overflow-x-auto">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground pr-1 shrink-0">
                   Meses:
                 </span>
                 {quickMonths.map((qm) => {
                   const isActiveMonth = Boolean(
-                    startDate && endDate && isSameDay(startDate, qm.start) && isSameDay(endDate, qm.end),
+                    startDate &&
+                      endDate &&
+                      isSameDay(startDate, qm.start) &&
+                      isSameDay(endDate, qm.end),
                   );
                   return (
                     <button
@@ -349,10 +377,10 @@ export default function DateRangePickerField({
                       type="button"
                       onClick={() => handleQuickMonthClick(qm.start, qm.end)}
                       className={twMerge(
-                        "shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer tabular-nums",
+                        "shrink-0 min-h-6 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                         isActiveMonth
-                          ? "bg-blue-600 text-white shadow-xs"
-                          : "bg-zinc-100/80 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-zinc-700",
+                          ? "bg-primary text-primary-foreground shadow-xs"
+                          : "bg-surface-muted text-surface-foreground hover:bg-surface-hover",
                       )}
                     >
                       {qm.label}
@@ -380,11 +408,7 @@ export default function DateRangePickerField({
   );
 
   if (!label && !error && !helpText && !hint && !tooltip && !labelAction) {
-    return (
-      <div className={twMerge("min-w-0", width, className)}>
-        {triggerElement}
-      </div>
-    );
+    return <div className={twMerge("min-w-0", width, className)}>{triggerElement}</div>;
   }
 
   return (
