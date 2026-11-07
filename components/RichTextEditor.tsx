@@ -109,6 +109,21 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAccessControl } from "./useAccessControl";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
+import {
+  escapeHtml,
+  sanitizeMediaUrl,
+  sanitizeRichHtml,
+  sanitizeSafeHref,
+} from "../utils/sanitize";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./primitives/tooltip";
+
+const EditorTooltipScopeContext = createContext(false);
 
 // ═══════════ Types ═══════════
 
@@ -146,10 +161,14 @@ export type RichTextCalloutType = "info" | "success" | "warning" | "danger";
 
 export type RichTextAttachment = {
   id: string;
-  fileName: string;
-  fileSize?: number;
+  fileName?: string;
+  name?: string;
+  fileSize?: number | string;
+  size?: number | string;
   mimeType?: string;
+  extensao?: string;
   url?: string;
+  isPending?: boolean;
 };
 
 export type RichTextVariable = {
@@ -367,7 +386,17 @@ const CALLOUT_META: Record<
   },
 };
 
-function formatFileSizeShort(bytes?: number): string {
+function formatFileSizeShort(raw?: number | string): string {
+  if (raw === undefined || raw === null || raw === "") return "";
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed || trimmed === "0") return "";
+    if (!/^\d+(\.\d+)?$/.test(trimmed)) return trimmed;
+    const parsed = Number(trimmed);
+    if (!Number.isFinite(parsed) || parsed <= 0) return "";
+    raw = parsed;
+  }
+  const bytes = raw;
   if (!bytes || bytes <= 0) return "";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -828,20 +857,25 @@ export function RichTextControl({
   children,
   className,
 }: RichTextControlProps) {
-  return (
+  const hasSharedProvider = useContext(EditorTooltipScopeContext);
+  const [tipOpen, setTipOpen] = useState(false);
+  const hasChildren = children !== undefined && children !== null && children !== false;
+
+  const btn = (
     <button
       type="button"
-      title={label}
       aria-label={label}
       aria-pressed={active}
       onMouseDown={(e) => e.preventDefault()}
       onClick={(e) => {
         e.preventDefault();
+        setTipOpen(false);
         if (!disabled) onClick();
       }}
       disabled={disabled}
       className={twMerge(
-        "inline-flex h-7 min-w-7 items-center justify-center gap-1 rounded-md px-1.5 text-xs font-medium transition-colors duration-150 cursor-pointer",
+        "inline-flex h-7 min-w-7 items-center justify-center rounded-md text-xs font-medium transition-colors duration-150 cursor-pointer",
+        hasChildren ? "gap-1.5 px-2" : "gap-1 px-1.5",
         "text-muted-foreground hover:bg-surface-hover hover:text-foreground",
         "disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none",
         active &&
@@ -853,6 +887,23 @@ export function RichTextControl({
       {children}
     </button>
   );
+
+  const tooltipNode = (
+    <Tooltip
+      open={!disabled && tipOpen}
+      onOpenChange={setTipOpen}
+      disableHoverableContent
+    >
+      <TooltipTrigger asChild>{btn}</TooltipTrigger>
+      <TooltipContent side="top">{label}</TooltipContent>
+    </Tooltip>
+  );
+
+  if (hasSharedProvider) {
+    return tooltipNode;
+  }
+
+  return <TooltipProvider delayDuration={240}>{tooltipNode}</TooltipProvider>;
 }
 
 export function RichTextControlsGroup({
@@ -1266,16 +1317,19 @@ function Toolbar({
     if (!raw) {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
     } else {
-      const href = /^(https?:\/\/|mailto:|tel:|\/|#)/i.test(raw) ? raw : `https://${raw}`;
-      const attrs = { href, target: "_blank", rel: "noopener noreferrer" };
-      if (editor.state.selection.empty && !editor.isActive("link")) {
-        editor
-          .chain()
-          .focus()
-          .insertContent({ type: "text", text: raw, marks: [{ type: "link", attrs }] })
-          .run();
-      } else {
-        editor.chain().focus().extendMarkRange("link").setLink(attrs).run();
+      const candidate = /^(https?:\/\/|mailto:|tel:|\/|#)/i.test(raw) ? raw : `https://${raw}`;
+      const href = sanitizeSafeHref(candidate);
+      if (href) {
+        const attrs = { href, target: "_blank", rel: "noopener noreferrer" };
+        if (editor.state.selection.empty && !editor.isActive("link")) {
+          editor
+            .chain()
+            .focus()
+            .insertContent({ type: "text", text: raw, marks: [{ type: "link", attrs }] })
+            .run();
+        } else {
+          editor.chain().focus().extendMarkRange("link").setLink(attrs).run();
+        }
       }
     }
     setLinkOpen(false);
@@ -1283,8 +1337,9 @@ function Toolbar({
   }, [editor, linkUrl]);
 
   const applyImageUrl = useCallback(() => {
-    if (!imageUrl.trim()) return;
-    editor.chain().focus().setImage({ src: imageUrl.trim() }).run();
+    const safeSrc = sanitizeMediaUrl(imageUrl.trim());
+    if (!safeSrc) return;
+    editor.chain().focus().setImage({ src: safeSrc }).run();
     setImageUrl("");
     setImageModalOpen(false);
   }, [editor, imageUrl]);
@@ -1342,25 +1397,31 @@ function Toolbar({
       {has("font") && !sourceMode && (
         <>
           <div className="relative" ref={fontFamilyRef}>
-            <button
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => setFontFamilyOpen((p) => !p)}
-              className={twMerge(
-                "inline-flex items-center gap-1 h-7 px-2 rounded-md text-xs font-medium transition-colors cursor-pointer",
-                "text-muted-foreground hover:bg-surface-hover hover:text-foreground",
-                fontFamilyOpen && "bg-surface-hover text-foreground"
-              )}
-            >
-              <Type size={12} strokeWidth={2} />
-              <span
-                className="max-w-[60px] truncate"
-                style={{ fontFamily: currentFontFamily || undefined }}
-              >
-                {currentFontLabel}
-              </span>
-              <ChevronDown size={10} />
-            </button>
+            <Tooltip open={!fontFamilyOpen ? undefined : false} disableHoverableContent>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Família da fonte"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => setFontFamilyOpen((p) => !p)}
+                  className={twMerge(
+                    "inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-xs font-medium transition-colors cursor-pointer",
+                    "text-muted-foreground hover:bg-surface-hover hover:text-foreground",
+                    fontFamilyOpen && "bg-surface-hover text-foreground"
+                  )}
+                >
+                  <Type size={12} strokeWidth={2} />
+                  <span
+                    className="max-w-[68px] truncate"
+                    style={{ fontFamily: currentFontFamily || undefined }}
+                  >
+                    {currentFontLabel}
+                  </span>
+                  <ChevronDown size={10} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">Família da fonte</TooltipContent>
+            </Tooltip>
             {fontFamilyOpen && (
               <div className="absolute left-0 top-full mt-1 z-50 w-48 overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-xl animate-in fade-in duration-100">
                 {FONT_OPTIONS.map((f) => (
@@ -1540,13 +1601,12 @@ function Toolbar({
                     <button
                       key={c.color}
                       type="button"
-                      title={c.label}
                       aria-label={c.label}
                       onClick={() => {
                         editor.chain().focus().setColor(c.color).run();
                         setColorPickerOpen(false);
                       }}
-                      className="h-5 w-5 rounded-full border border-border hover:scale-110 transition cursor-pointer"
+                      className="h-6 w-6 rounded-full border border-border hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition cursor-pointer"
                       style={{ backgroundColor: c.color }}
                     />
                   ))}
@@ -1594,13 +1654,12 @@ function Toolbar({
                     <button
                       key={c.color}
                       type="button"
-                      title={c.label}
                       aria-label={c.label}
                       onClick={() => {
                         editor.chain().focus().setHighlight({ color: c.color }).run();
                         setHighlightPickerOpen(false);
                       }}
-                      className="h-5 w-5 rounded-full border border-border hover:scale-110 transition cursor-pointer"
+                      className="h-6 w-6 rounded-full border border-border hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition cursor-pointer"
                       style={{ backgroundColor: c.color }}
                     />
                   ))}
@@ -1869,28 +1928,36 @@ function Toolbar({
                 onClick={() => editor.chain().focus().addColumnAfter().run()}
               />
               <div className="mx-0.5 h-4 w-px bg-border shrink-0" />
-              <button
-                type="button"
-                title="Excluir linha"
-                aria-label="Excluir linha"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => editor.chain().focus().deleteRow().run()}
-                className="inline-flex h-7 items-center gap-0.5 rounded-md px-1.5 text-danger hover:bg-danger/10 transition cursor-pointer"
-              >
-                <Rows size={11} />
-                <X size={8} />
-              </button>
-              <button
-                type="button"
-                title="Excluir coluna"
-                aria-label="Excluir coluna"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => editor.chain().focus().deleteColumn().run()}
-                className="inline-flex h-7 items-center gap-0.5 rounded-md px-1.5 text-danger hover:bg-danger/10 transition cursor-pointer"
-              >
-                <Columns size={11} />
-                <X size={8} />
-              </button>
+              <Tooltip disableHoverableContent>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Excluir linha"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => editor.chain().focus().deleteRow().run()}
+                    className="inline-flex h-7 items-center gap-0.5 rounded-md px-1.5 text-danger hover:bg-danger/10 transition cursor-pointer"
+                  >
+                    <Rows size={11} />
+                    <X size={8} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Excluir linha</TooltipContent>
+              </Tooltip>
+              <Tooltip disableHoverableContent>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Excluir coluna"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => editor.chain().focus().deleteColumn().run()}
+                    className="inline-flex h-7 items-center gap-0.5 rounded-md px-1.5 text-danger hover:bg-danger/10 transition cursor-pointer"
+                  >
+                    <Columns size={11} />
+                    <X size={8} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Excluir coluna</TooltipContent>
+              </Tooltip>
               <div className="mx-0.5 h-4 w-px bg-border shrink-0" />
               <RichTextControl
                 icon={Merge}
@@ -2665,14 +2732,19 @@ function RichTextEditorBase({
     };
   }, [paletteState, filteredSlashItems.length, filteredVariables.length, executePaletteSelection]);
 
-  // Escape exits fullscreen
+  // Escape exits fullscreen + lock body scroll when fullscreen
+  useBodyScrollLock(fullscreen);
   useEffect(() => {
     if (!fullscreen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !paletteState) setFullscreen(false);
+      if (e.key === "Escape" && !paletteState) {
+        e.preventDefault();
+        e.stopPropagation();
+        setFullscreen(false);
+      }
     };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
   }, [fullscreen, paletteState]);
 
   // Search Matches inside ProseMirror Doc
@@ -2737,8 +2809,9 @@ function RichTextEditorBase({
       setRawHtml(editor.getHTML());
       setSourceMode(true);
     } else {
-      editor.commands.setContent(rawHtml);
-      onChange?.(rawHtml);
+      const cleanHtml = sanitizeRichHtml(rawHtml);
+      editor.commands.setContent(cleanHtml);
+      onChange?.(cleanHtml);
       setSourceMode(false);
     }
   }, [editor, sourceMode, rawHtml, onChange]);
@@ -2748,7 +2821,8 @@ function RichTextEditorBase({
     if (!editor || typeof window === "undefined") return;
     const printWin = window.open("", "_blank", "width=860,height=960");
     if (!printWin) return;
-    const title = documentTitle || "Documento";
+    const title = escapeHtml(documentTitle || "Documento");
+    const safeBodyHtml = sanitizeRichHtml(editor.getHTML());
     printWin.document.write(`<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2766,7 +2840,7 @@ function RichTextEditorBase({
     img { max-width: 100%; height: auto; }
   </style>
 </head>
-<body>${editor.getHTML()}</body>
+<body>${safeBodyHtml}</body>
 </html>`);
     printWin.document.close();
     printWin.focus();
@@ -2786,7 +2860,7 @@ function RichTextEditorBase({
     size === "sm" ? "px-3 py-2 text-xs" : size === "lg" ? "px-6 py-5 text-base" : "px-4 py-3 text-sm";
 
   const containerCls = twMerge(
-    "relative flex flex-col overflow-hidden text-sm transition-colors duration-150",
+    "relative flex flex-col text-sm transition-colors duration-150",
     !isBorderless &&
       !isMinimal &&
       "rounded-xl border bg-surface text-foreground shadow-xs",
@@ -2799,7 +2873,7 @@ function RichTextEditorBase({
     (isBorderless || isMinimal) && "bg-transparent border-0 shadow-none",
     (effectiveDisabled || readOnly) && "opacity-70",
     className,
-    fullscreen && "fixed inset-0 z-[100] !rounded-none !max-h-none bg-surface"
+    fullscreen && "fixed inset-0 z-[8500] !rounded-none !max-h-none bg-surface"
   );
 
   if (!editor) {
@@ -2830,13 +2904,21 @@ function RichTextEditorBase({
   }
 
   return (
+    <TooltipProvider delayDuration={240} skipDelayDuration={120}>
+    <EditorTooltipScopeContext.Provider value={true}>
     <RichTextEditorContext.Provider value={ctxValue}>
-      <div ref={wrapperRef} data-component-id={componentId} className={containerCls}>
+      <div
+        ref={wrapperRef}
+        data-component-id={componentId}
+        data-floating-open={fullscreen || Boolean(paletteState) ? "true" : undefined}
+        className={containerCls}
+      >
         {/* Top Toolbar (hidden in minimal/notion mode unless fullscreen) */}
         {!readOnly && (!isMinimal || fullscreen) && (
           <div
             className={twMerge(
               "relative border-b border-border bg-surface-muted/50",
+              !isBorderless && !isMinimal && !fullscreen && "rounded-t-xl",
               stickyToolbar && "sticky top-0 z-30 backdrop-blur-md bg-surface/90"
             )}
           >
@@ -2859,16 +2941,22 @@ function RichTextEditorBase({
                 onPrint={handlePrint}
               />
             </div>
-            <button
-              type="button"
-              title={fullscreen ? "Sair da tela cheia (Esc)" : "Tela cheia"}
-              aria-label={fullscreen ? "Sair da tela cheia" : "Tela cheia"}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => setFullscreen((p) => !p)}
-              className="absolute right-1.5 top-1.5 inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground cursor-pointer"
-            >
-              {fullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
-            </button>
+            <Tooltip disableHoverableContent>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={fullscreen ? "Sair da tela cheia" : "Tela cheia"}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => setFullscreen((p) => !p)}
+                  className="absolute right-1.5 top-1.5 inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground cursor-pointer"
+                >
+                  {fullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {fullscreen ? "Sair da tela cheia (Esc)" : "Tela cheia"}
+              </TooltipContent>
+            </Tooltip>
           </div>
         )}
 
@@ -2940,36 +3028,51 @@ function RichTextEditorBase({
                     : "0/0"}
                 </span>
               </div>
-              <button
-                type="button"
-                title="Anterior"
-                disabled={searchMatches.length === 0}
-                onClick={() => jumpToSearchMatch(activeMatchIdx - 1)}
-                className="rounded-md p-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground disabled:opacity-30 cursor-pointer"
-              >
-                <ChevronUp size={14} />
-              </button>
-              <button
-                type="button"
-                title="Próximo"
-                disabled={searchMatches.length === 0}
-                onClick={() => jumpToSearchMatch(activeMatchIdx + 1)}
-                className="rounded-md p-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground disabled:opacity-30 cursor-pointer"
-              >
-                <ChevronDown size={14} />
-              </button>
+              <Tooltip open={searchMatches.length === 0 ? false : undefined} disableHoverableContent>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Anterior"
+                    disabled={searchMatches.length === 0}
+                    onClick={() => jumpToSearchMatch(activeMatchIdx - 1)}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground disabled:opacity-30 cursor-pointer"
+                  >
+                    <ChevronUp size={14} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Anterior</TooltipContent>
+              </Tooltip>
+              <Tooltip open={searchMatches.length === 0 ? false : undefined} disableHoverableContent>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Próximo"
+                    disabled={searchMatches.length === 0}
+                    onClick={() => jumpToSearchMatch(activeMatchIdx + 1)}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground disabled:opacity-30 cursor-pointer"
+                  >
+                    <ChevronDown size={14} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Próximo</TooltipContent>
+              </Tooltip>
               {!readOnly && (
-                <button
-                  type="button"
-                  title="Substituir (Ctrl+H)"
-                  onClick={() => setReplaceOpen((p) => !p)}
-                  className={twMerge(
-                    "rounded-md p-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground cursor-pointer",
-                    replaceOpen && "bg-primary/10 text-primary"
-                  )}
-                >
-                  <Replace size={13} />
-                </button>
+                <Tooltip disableHoverableContent>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Substituir"
+                      onClick={() => setReplaceOpen((p) => !p)}
+                      className={twMerge(
+                        "rounded-md p-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground cursor-pointer",
+                        replaceOpen && "bg-primary/10 text-primary"
+                      )}
+                    >
+                      <Replace size={13} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Substituir (Ctrl+H)</TooltipContent>
+                </Tooltip>
               )}
               <button
                 type="button"
@@ -3221,58 +3324,71 @@ function RichTextEditorBase({
         {/* Optional Attachments Footer Bar */}
         {(showAttachments || attachments.length > 0 || Boolean(onAddAttachment)) && (
           <div className="flex flex-wrap items-center gap-2 border-t border-border bg-surface-muted/30 px-3 py-2">
-            {attachments.map((att) => (
-              <div
-                key={att.id}
-                className="inline-flex max-w-[240px] items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1 text-xs"
-              >
-                <Paperclip size={12} className="shrink-0 text-muted-foreground" />
-                {att.url ? (
-                  <a
-                    href={att.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="truncate font-medium text-foreground hover:underline"
-                  >
-                    {att.fileName}
-                  </a>
-                ) : (
-                  <span className="truncate font-medium text-foreground">{att.fileName}</span>
-                )}
-                {att.fileSize ? (
-                  <span className="shrink-0 text-[10px] text-muted-foreground">
-                    ({formatFileSizeShort(att.fileSize)})
-                  </span>
-                ) : null}
-                {onRemoveAttachment && !readOnly && !effectiveDisabled && (
-                  <button
-                    type="button"
-                    aria-label={`Remover anexo ${att.fileName}`}
-                    onClick={() => void onRemoveAttachment(att.id)}
-                    className="ml-0.5 shrink-0 rounded p-0.5 text-muted-foreground hover:bg-danger/10 hover:text-danger cursor-pointer"
-                  >
-                    <X size={11} />
-                  </button>
-                )}
-              </div>
-            ))}
+            {attachments.map((att) => {
+              const displayName = att.fileName || att.name || "Anexo";
+              const formattedSize = formatFileSizeShort(att.fileSize ?? att.size);
+              const safeAttUrl = sanitizeSafeHref(att.url);
+              return (
+                <div
+                  key={att.id}
+                  className="inline-flex max-w-[260px] items-center gap-1.5 rounded-lg border border-border bg-surface pl-2.5 pr-1 py-1 text-xs"
+                >
+                  <Paperclip size={12} className="shrink-0 text-muted-foreground" />
+                  {safeAttUrl ? (
+                    <a
+                      href={safeAttUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="truncate font-medium text-foreground hover:underline"
+                    >
+                      {displayName}
+                    </a>
+                  ) : (
+                    <span className="truncate font-medium text-foreground">{displayName}</span>
+                  )}
+                  {formattedSize ? (
+                    <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+                      ({formattedSize})
+                    </span>
+                  ) : null}
+                  {att.isPending ? (
+                    <span className="shrink-0 rounded bg-warning/15 px-1 py-0.5 text-[9px] font-semibold text-warning">
+                      Novo
+                    </span>
+                  ) : null}
+                  {onRemoveAttachment && !readOnly && !effectiveDisabled && (
+                    <button
+                      type="button"
+                      aria-label={`Remover anexo ${displayName}`}
+                      onClick={() => void onRemoveAttachment(att.id)}
+                      className="ml-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                    >
+                      <X size={11} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
 
             {onAddAttachment && !readOnly && !effectiveDisabled && (
               <>
                 <input
                   ref={attachInputRef}
                   type="file"
+                  multiple
                   className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) void onAddAttachment(f);
+                  onChange={async (e) => {
+                    const files = Array.from(e.target.files ?? []);
                     e.target.value = "";
+                    for (const f of files) {
+                      await onAddAttachment(f);
+                    }
                   }}
                 />
                 <button
                   type="button"
                   onClick={() => attachInputRef.current?.click()}
-                  className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border-strong px-2.5 py-1 text-xs font-medium text-muted-foreground hover:border-primary hover:text-foreground transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border-strong px-2.5 py-1 text-xs font-medium text-muted-foreground hover:border-primary hover:text-foreground transition-colors cursor-pointer"
                 >
                   <Paperclip size={12} />
                   <span>Anexar arquivo</span>
@@ -3320,6 +3436,8 @@ function RichTextEditorBase({
         )}
       </div>
     </RichTextEditorContext.Provider>
+    </EditorTooltipScopeContext.Provider>
+    </TooltipProvider>
   );
 }
 
