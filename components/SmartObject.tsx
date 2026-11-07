@@ -15,18 +15,44 @@ import {
   Loader,
   BarChart2,
   Package,
+  Scale,
+  ShieldCheck,
+  Layers,
+  DollarSign,
+  ListOrdered,
+  Truck,
+  FileSpreadsheet,
+  Hash,
 } from "lucide-react";
+import { useAccessControl } from "./useAccessControl";
 
 // ── Entity type registry ──────────────────────────────────────────────────────
 
-export type EntityKind = "VENDA" | "CLIENTE" | "DOCUMENTO" | "PEDIDO" | "CHAMADO";
+export type EntityKind =
+  | "VENDA"
+  | "CLIENTE"
+  | "DOCUMENTO"
+  | "PEDIDO"
+  | "CHAMADO"
+  | "PRODUTO"
+  | "PESSOA"
+  | "FORNECEDOR"
+  | "COMPRA"
+  | "TITULO"
+  | "NFE"
+  | "DFE"
+  | "REGRA"
+  | "NCM"
+  | "SPED"
+  | "DIVERGENCIA"
+  | "FILA";
 
 export type EntityStatus =
   | "pending" // Aguardando
-  | "analyzing" // Em análise
-  | "approved" // Aprovado
-  | "rejected" // Recusado
-  | "warning" // Atenção
+  | "analyzing" // Em análise / Executando
+  | "approved" // Aprovado / Ativo / Autorizada
+  | "rejected" // Recusado / Crítico / Rejeitada
+  | "warning" // Atenção / Divergência
   | "done"; // Concluído
 
 /** A single field row inside the detail panel */
@@ -53,28 +79,29 @@ export type SmartObjectAction = {
 export type SmartObjectProps = {
   /** Entity type, drives icons and color palette */
   kind: EntityKind;
-  /** e.g. "VENDA123" */
+  /** e.g. "VENDA123", "REGRA14", "SPED202610" */
   ref_id: string;
   /** Short human title */
   title: string;
   status: EntityStatus;
   /** Optional custom status text overriding the default status label */
   statusLabel?: string;
-  /** Summary fields shown in the compact inline chip */
+  /** Summary fields shown in the compact inline chip or subtitle */
   summary?: string;
   /** Full detail fields shown in expanded panel */
   fields?: SmartObjectField[];
   /** Primary CTA buttons */
   actions?: SmartObjectAction[];
-  /** Which user currently holds it (like a "physical object in someone's hands") */
+  /** Which user/module currently holds it */
   holder?: string;
-  /** ISO timestamp of last state change */
+  /** ISO timestamp or formatted string of last state change */
   updatedAt?: string;
   /** Whether this card is inside a chat bubble (inline chip) vs. the detail drawer */
   mode?: "chip" | "card";
   onOpen?: () => void;
   className?: string;
   componentId?: string;
+  hideIfDenied?: boolean;
 };
 
 // ── Config maps ────────────────────────────────────────────────────────────────
@@ -82,9 +109,25 @@ export type SmartObjectProps = {
 const kindConfig: Record<EntityKind, { icon: React.ReactNode; label: string; color: string }> = {
   VENDA: { icon: <ShoppingCart className="w-3.5 h-3.5" />, label: "Venda", color: "indigo" },
   CLIENTE: { icon: <User className="w-3.5 h-3.5" />, label: "Cliente", color: "blue" },
+  PESSOA: { icon: <User className="w-3.5 h-3.5" />, label: "Parceiro", color: "blue" },
+  FORNECEDOR: { icon: <Truck className="w-3.5 h-3.5" />, label: "Fornecedor", color: "cyan" },
   DOCUMENTO: { icon: <FileText className="w-3.5 h-3.5" />, label: "Documento", color: "zinc" },
   PEDIDO: { icon: <Package className="w-3.5 h-3.5" />, label: "Pedido", color: "amber" },
-  CHAMADO: { icon: <AlertTriangle className="w-3.5 h-3.5" />, label: "Chamado", color: "red" },
+  COMPRA: { icon: <Truck className="w-3.5 h-3.5" />, label: "Compra", color: "amber" },
+  PRODUTO: { icon: <Package className="w-3.5 h-3.5" />, label: "Produto", color: "emerald" },
+  TITULO: { icon: <DollarSign className="w-3.5 h-3.5" />, label: "Título Fin.", color: "violet" },
+  NFE: { icon: <FileText className="w-3.5 h-3.5" />, label: "NF-e", color: "indigo" },
+  DFE: { icon: <FileSpreadsheet className="w-3.5 h-3.5" />, label: "DF-e Entrada", color: "sky" },
+  REGRA: { icon: <Scale className="w-3.5 h-3.5" />, label: "Regra Fiscal", color: "emerald" },
+  NCM: { icon: <Hash className="w-3.5 h-3.5" />, label: "Matriz NCM", color: "purple" },
+  SPED: { icon: <ShieldCheck className="w-3.5 h-3.5" />, label: "SPED Fiscal", color: "indigo" },
+  DIVERGENCIA: {
+    icon: <AlertTriangle className="w-3.5 h-3.5" />,
+    label: "Divergência SPED",
+    color: "red",
+  },
+  FILA: { icon: <ListOrdered className="w-3.5 h-3.5" />, label: "Tarefa na Fila", color: "blue" },
+  CHAMADO: { icon: <Layers className="w-3.5 h-3.5" />, label: "Chamado", color: "red" },
 };
 
 const statusConfig: Record<
@@ -94,48 +137,47 @@ const statusConfig: Record<
   pending: {
     label: "Aguardando",
     icon: <Clock className="w-3 h-3" />,
-    chip: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800",
-    bar: "bg-amber-400",
+    chip: "bg-warning/15 text-warning border-warning/30",
+    bar: "bg-warning",
   },
   analyzing: {
     label: "Em análise",
     icon: <BarChart2 className="w-3 h-3 animate-pulse" />,
-    chip: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800",
-    bar: "bg-blue-400",
+    chip: "bg-info/15 text-info border-info/30",
+    bar: "bg-info",
   },
   approved: {
     label: "Aprovado",
     icon: <CheckCircle2 className="w-3 h-3" />,
-    chip: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800",
-    bar: "bg-emerald-400",
+    chip: "bg-success/15 text-success border-success/30",
+    bar: "bg-success",
   },
   rejected: {
     label: "Recusado",
     icon: <XCircle className="w-3 h-3" />,
-    chip: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
-    bar: "bg-red-400",
+    chip: "bg-danger/15 text-danger border-danger/30",
+    bar: "bg-danger",
   },
   warning: {
     label: "Atenção",
     icon: <AlertTriangle className="w-3 h-3" />,
-    chip: "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800",
-    bar: "bg-orange-400",
+    chip: "bg-warning/15 text-warning border-warning/30",
+    bar: "bg-warning",
   },
   done: {
     label: "Concluído",
     icon: <CheckCircle2 className="w-3 h-3" />,
-    chip: "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700",
-    bar: "bg-zinc-400",
+    chip: "bg-surface-muted text-muted-foreground border-border",
+    bar: "bg-muted-foreground/50",
   },
 };
 
 const variantBtn: Record<SmartObjectAction["variant"], string> = {
-  primary: "bg-indigo-600 hover:bg-indigo-500 text-white",
-  success: "bg-emerald-600 hover:bg-emerald-500 text-white",
-  danger: "bg-red-600 hover:bg-red-500 text-white",
-  warning: "bg-amber-500 hover:bg-amber-400 text-white",
-  secondary:
-    "bg-zinc-200 hover:bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:hover:bg-zinc-600 dark:text-zinc-100",
+  primary: "bg-primary hover:bg-primary-hover text-primary-foreground",
+  success: "bg-success hover:brightness-110 text-success-foreground",
+  danger: "bg-danger hover:brightness-110 text-danger-foreground",
+  warning: "bg-warning hover:brightness-110 text-warning-foreground",
+  secondary: "bg-surface-muted hover:bg-surface-hover text-foreground border border-border",
 };
 
 // ── Inline chip (inside chat bubble) ─────────────────────────────────────────
@@ -143,39 +185,46 @@ const variantBtn: Record<SmartObjectAction["variant"], string> = {
 export function SmartObjectChip({
   kind,
   ref_id,
+  title,
   status,
   statusLabel,
   onOpen,
   componentId,
+  hideIfDenied = false,
 }: Pick<
   SmartObjectProps,
-  "kind" | "ref_id" | "title" | "status" | "statusLabel" | "onOpen" | "componentId"
+  "kind" | "ref_id" | "title" | "status" | "statusLabel" | "onOpen" | "componentId" | "hideIfDenied"
 >) {
-  const kc = kindConfig[kind];
-  const sc = statusConfig[status];
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+  if (!hasPermission && hideIfDenied) return null;
+
+  const kc = kindConfig[kind] ?? kindConfig.DOCUMENTO;
+  const sc = statusConfig[status] ?? statusConfig.pending;
 
   return (
     <button
-      data-component-id={componentId ? `${componentId}.chip` : `erp.smart-object.${ref_id}.chip`}
+      data-component-id={componentId ? `${componentId}.chip` : `smart-object.${ref_id}.chip`}
       type="button"
+      disabled={!hasPermission}
       onClick={onOpen}
       className={twMerge(
         clsx(
-          "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold",
-          "border transition-all",
+          "inline-flex min-h-6 items-center gap-1.5 rounded-lg px-2.5 py-0.5 text-xs font-semibold align-baseline mx-0.5",
+          "border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           "hover:brightness-95 active:scale-95 cursor-pointer select-none",
+          "disabled:opacity-50 disabled:pointer-events-none",
           sc.chip,
         ),
       )}
-      aria-label={`Abrir ${kc.label} ${ref_id}`}
-      title={`Clique para ver detalhes de @${ref_id}`}
+      aria-label={title ? `Abrir ${kc.label} ${ref_id}: ${title}` : `Abrir ${kc.label} ${ref_id}`}
     >
       {kc.icon}
       <span className="font-bold">@{ref_id}</span>
       <span className="opacity-70 font-normal">·</span>
       <span className="flex items-center gap-1">
         {sc.icon}
-        {statusLabel ?? sc.label}
+        {statusLabel || sc.label}
       </span>
       <ChevronRight className="w-3 h-3 opacity-50 ml-0.5" />
     </button>
@@ -199,10 +248,16 @@ export default function SmartObject({
   onOpen,
   className,
   componentId,
+  hideIfDenied = false,
 }: SmartObjectProps) {
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const kc = kindConfig[kind];
-  const sc = statusConfig[status];
+
+  if (!hasPermission && hideIfDenied) return null;
+
+  const kc = kindConfig[kind] ?? kindConfig.DOCUMENTO;
+  const sc = statusConfig[status] ?? statusConfig.pending;
 
   if (mode === "chip") {
     return (
@@ -214,12 +269,14 @@ export default function SmartObject({
         statusLabel={statusLabel}
         onOpen={onOpen}
         componentId={componentId}
+        hideIfDenied={hideIfDenied}
       />
     );
   }
 
   const handleAction = async (action: SmartObjectAction) => {
-    if (busyId) return;
+    if (busyId || !hasPermission) return;
+    if (action.componentId && !canAccess(action.componentId)) return;
     setBusyId(action.id);
     try {
       await action.onClick();
@@ -230,12 +287,12 @@ export default function SmartObject({
 
   return (
     <div
-      {...(componentId ? { "data-component-id": componentId } : {})}
+      data-component-id={componentId}
       className={twMerge(
         clsx(
-          "rounded-2xl border bg-white dark:bg-zinc-900 overflow-hidden",
-          "border-zinc-200 dark:border-zinc-700",
-          "shadow-lg shadow-zinc-900/10",
+          "rounded-2xl border border-border bg-surface text-foreground overflow-hidden",
+          "shadow-lg shadow-zinc-900/5 dark:shadow-black/30",
+          !hasPermission && "opacity-60 pointer-events-none",
           className,
         ),
       )}
@@ -247,24 +304,20 @@ export default function SmartObject({
       <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-3 px-4 sm:px-5 pt-4 pb-3">
         <div className="flex items-center gap-3 min-w-0">
           {/* Kind icon */}
-          <div className="shrink-0 w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+          <div className="shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
             <span className="[&>svg]:w-5 [&>svg]:h-5">{kc.icon}</span>
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 {kc.label}
               </span>
-              <code className="text-[11px] font-mono font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-1.5 rounded">
+              <code className="text-[11px] font-mono font-bold text-primary bg-primary/10 px-1.5 rounded">
                 @{ref_id}
               </code>
             </div>
-            <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 truncate mt-0.5">
-              {title}
-            </h3>
-            {summary && (
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{summary}</p>
-            )}
+            <h3 className="text-base font-semibold text-foreground truncate mt-0.5">{title}</h3>
+            {summary && <p className="text-xs text-muted-foreground mt-0.5">{summary}</p>}
           </div>
         </div>
 
@@ -276,31 +329,28 @@ export default function SmartObject({
           )}
         >
           {sc.icon}
-          {statusLabel ?? sc.label}
+          {statusLabel || sc.label}
         </span>
       </div>
 
       {/* Fields */}
       {fields.length > 0 && (
-        <div className="mx-4 sm:mx-5 mb-3 rounded-xl border border-zinc-100 dark:border-zinc-800 overflow-x-auto">
+        <div className="mx-4 sm:mx-5 mb-3 rounded-xl border border-border overflow-x-auto">
           <table className="w-full text-sm">
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            <tbody className="divide-y divide-border">
               {fields.map((f, i) => (
-                <tr
-                  key={i}
-                  className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
-                >
-                  <td className="px-3.5 py-2 text-xs text-zinc-500 dark:text-zinc-400 whitespace-nowrap w-1/3">
+                <tr key={i} className="hover:bg-surface-hover/50 transition-colors">
+                  <td className="px-3.5 py-2 text-xs text-muted-foreground whitespace-nowrap w-1/3">
                     {f.label}
                   </td>
                   <td
                     className={clsx(
-                      "px-3.5 py-2 text-xs font-medium",
+                      "px-3.5 py-2 text-xs font-medium tabular-nums",
                       f.highlight
-                        ? "text-indigo-700 dark:text-indigo-300 font-semibold"
+                        ? "text-primary font-semibold"
                         : f.warning
-                          ? "text-amber-600 dark:text-amber-400 font-semibold"
-                          : "text-zinc-700 dark:text-zinc-300",
+                          ? "text-warning font-semibold"
+                          : "text-foreground",
                     )}
                   >
                     {f.value}
@@ -316,12 +366,12 @@ export default function SmartObject({
       <div className="flex items-center justify-between gap-3 px-4 sm:px-5 pb-4 flex-wrap">
         <div className="flex flex-col gap-0.5">
           {holder && (
-            <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
-              Com: <span className="font-semibold text-zinc-700 dark:text-zinc-300">{holder}</span>
+            <span className="text-[11px] text-muted-foreground">
+              Responsável: <span className="font-semibold text-foreground">{holder}</span>
             </span>
           )}
           {updatedAt && (
-            <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
+            <span className="text-[11px] tabular-nums text-muted-foreground">
               Atualizado: {updatedAt}
             </span>
           )}
@@ -329,29 +379,32 @@ export default function SmartObject({
 
         {actions.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
-            {actions.map((action) => (
-              <button
-                data-component-id={
-                  action.componentId ??
-                  (componentId
-                    ? `${componentId}.action.${action.id}`
-                    : `erp.smart-object.${ref_id}.action.${action.id}`)
-                }
-                key={action.id}
-                type="button"
-                disabled={action.disabled || busyId === action.id}
-                onClick={() => handleAction(action)}
-                className={clsx(
-                  "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium",
-                  "shadow-sm transition-all active:scale-95",
-                  "disabled:opacity-60 disabled:cursor-not-allowed",
-                  variantBtn[action.variant],
-                )}
-              >
-                {busyId === action.id ? <Loader className="w-3.5 h-3.5 animate-spin" /> : null}
-                {action.label}
-              </button>
-            ))}
+            {actions.map((action) => {
+              const actionAllowed = !action.componentId || canAccess(action.componentId);
+              return (
+                <button
+                  data-component-id={
+                    action.componentId ??
+                    (componentId
+                      ? `${componentId}.action.${action.id}`
+                      : `smart-object.${ref_id}.action.${action.id}`)
+                  }
+                  key={action.id}
+                  type="button"
+                  disabled={action.disabled || !actionAllowed || busyId === action.id}
+                  onClick={() => handleAction(action)}
+                  className={clsx(
+                    "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium cursor-pointer",
+                    "shadow-sm transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "disabled:opacity-60 disabled:cursor-not-allowed",
+                    variantBtn[action.variant],
+                  )}
+                >
+                  {busyId === action.id ? <Loader className="w-3.5 h-3.5 animate-spin" /> : null}
+                  {action.label}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -365,14 +418,33 @@ export default function SmartObject({
  * Parse raw message text and return segments:
  * plain strings and SmartObject references.
  *
- * Pattern: @[A-Z]+[0-9]+ e.g. @VENDA123, @CLIENTE42
+ * Pattern: @[A-Z]+[0-9A-Za-z_-]+ e.g. @VENDA123, @REGRA14, @NCM94036000, @SPED202610
  */
 export type MessageSegment =
   | { kind: "text"; text: string }
   | { kind: "entity"; ref_id: string; entityKind: EntityKind };
 
-const ENTITY_PATTERN = /@([A-Z]+)(\d+)/g;
-const KNOWN_KINDS = new Set<EntityKind>(["VENDA", "CLIENTE", "DOCUMENTO", "PEDIDO", "CHAMADO"]);
+const ENTITY_PATTERN =
+  /@(PRODUTO|PESSOA|CLIENTE|FORNECEDOR|VENDA|COMPRA|TITULO|NFE|DFE|REGRA|NCM|SPED|DIVERGENCIA|FILA|DOCUMENTO|PEDIDO|CHAMADO)([0-9A-Za-z_-]+)/gi;
+const KNOWN_KINDS = new Set<EntityKind>([
+  "VENDA",
+  "CLIENTE",
+  "DOCUMENTO",
+  "PEDIDO",
+  "CHAMADO",
+  "PRODUTO",
+  "PESSOA",
+  "FORNECEDOR",
+  "COMPRA",
+  "TITULO",
+  "NFE",
+  "DFE",
+  "REGRA",
+  "NCM",
+  "SPED",
+  "DIVERGENCIA",
+  "FILA",
+]);
 
 export function parseMessageEntities(text: string): MessageSegment[] {
   const segments: MessageSegment[] = [];
@@ -386,9 +458,9 @@ export function parseMessageEntities(text: string): MessageSegment[] {
     if (start > lastIndex) {
       segments.push({ kind: "text", text: text.slice(lastIndex, start) });
     }
-    const entityKind = kindStr as EntityKind;
-    if (KNOWN_KINDS.has(entityKind)) {
-      segments.push({ kind: "entity", ref_id: `${kindStr}${num}`, entityKind });
+    const upperKind = kindStr.toUpperCase() as EntityKind;
+    if (KNOWN_KINDS.has(upperKind)) {
+      segments.push({ kind: "entity", ref_id: `${upperKind}${num}`, entityKind: upperKind });
     } else {
       segments.push({ kind: "text", text: full });
     }
