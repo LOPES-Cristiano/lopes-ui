@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 import { Separator as PrimitiveSeparator } from "./primitives/separator";
 
 export type SeparatorProps = React.HTMLAttributes<HTMLDivElement> & {
