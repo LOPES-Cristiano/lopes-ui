@@ -3,7 +3,7 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
 import { BellOff, Pin } from "lucide-react";
-import Avatar from "@/components/Avatar";
+import Avatar from "./Avatar";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
