@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { cn } from '@/utils/cn';
+import { cn } from '../../utils/cn';
 
 const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto rounded-xl border border-border bg-card">
+  <div className="relative w-full overflow-auto rounded-[var(--radius-card)] border border-border bg-card lopes-scroll-shadow-x">
     <table
       ref={ref}
       className={cn('w-full caption-bottom text-sm', className)}
@@ -68,9 +68,10 @@ TableRow.displayName = 'TableRow';
 const TableHead = React.forwardRef<
   HTMLTableCellElement,
   React.ThHTMLAttributes<HTMLTableCellElement>
->(({ className, ...props }, ref) => (
+>(({ className, scope = 'col', ...props }, ref) => (
   <th
     ref={ref}
+    scope={scope}
     className={cn(
       'h-10 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
       className
