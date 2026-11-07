@@ -4,6 +4,7 @@ import React from "react";
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
 import { Paperclip, Star, StarOff } from "lucide-react";
+import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,6 +38,8 @@ export type InboxListProps = {
   loading?: boolean;
   skeletonCount?: number;
   className?: string;
+  componentId?: string;
+  hideIfDenied?: boolean;
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -67,11 +70,11 @@ function formatDate(raw: string | Date): string {
 function SkeletonRow() {
   return (
     <div className="flex items-start gap-3 px-4 py-3 animate-pulse">
-      <div className="shrink-0 w-9 h-9 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+      <div className="shrink-0 w-9 h-9 rounded-full bg-muted" />
       <div className="flex-1 space-y-2 min-w-0">
-        <div className="w-1/3 h-3 rounded bg-zinc-200 dark:bg-zinc-700" />
-        <div className="w-2/3 h-2.5 rounded bg-zinc-200 dark:bg-zinc-700" />
-        <div className="w-full h-2 rounded bg-zinc-100 dark:bg-zinc-800" />
+        <div className="w-1/3 h-3 rounded bg-muted" />
+        <div className="w-2/3 h-2.5 rounded bg-muted" />
+        <div className="w-full h-2 rounded bg-muted/70" />
       </div>
     </div>
   );
@@ -87,18 +90,37 @@ export default function InboxList({
   loading = false,
   skeletonCount = 6,
   className,
+  componentId,
+  hideIfDenied = true,
 }: InboxListProps) {
+  const { canAccess } = useAccessControl();
+  const hasPermission = componentId ? canAccess(componentId) : true;
+
+  if (!hasPermission && hideIfDenied) {
+    return null;
+  }
+
   if (loading) {
     return (
-      <div className={twMerge(clsx("divide-y divide-zinc-100 dark:divide-zinc-800", className))}>
-        {Array.from({ length: skeletonCount }).map((_, i) => <SkeletonRow key={i} />)}
+      <div
+        data-component-id={componentId || undefined}
+        className={twMerge(clsx("divide-y divide-border", className))}
+      >
+        {Array.from({ length: skeletonCount }).map((_, i) => (
+          <SkeletonRow key={i} />
+        ))}
       </div>
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className={twMerge(clsx("flex flex-col items-center justify-center py-16 text-zinc-400", className))}>
+      <div
+        data-component-id={componentId || undefined}
+        className={twMerge(
+          clsx("flex flex-col items-center justify-center py-16 text-muted-foreground", className),
+        )}
+      >
         <span className="text-sm">Nenhuma mensagem</span>
       </div>
     );
@@ -106,8 +128,8 @@ export default function InboxList({
 
   return (
     <ul
-      className={twMerge(clsx("divide-y divide-zinc-100 dark:divide-zinc-800", className))}
-      role="listbox"
+      data-component-id={componentId || undefined}
+      className={twMerge(clsx("divide-y divide-border", className))}
       aria-label="Caixa de entrada"
     >
       {items.map((item) => {
@@ -115,86 +137,101 @@ export default function InboxList({
         return (
           <li
             key={item.id}
-            role="option"
-            aria-selected={isSelected}
-            onClick={() => onSelect?.(item.id)}
             className={clsx(
-              "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors",
-              isSelected
-                ? "bg-blue-50 dark:bg-blue-950/30"
-                : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50",
+              "relative flex items-start transition-colors",
+              isSelected ? "bg-primary/10" : "hover:bg-muted/50",
             )}
           >
-            {/* Avatar */}
-            <div className="shrink-0 mt-0.5">
-              {item.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={item.avatarUrl}
-                  alt={item.from}
-                  className="w-9 h-9 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-xs font-semibold text-zinc-600 dark:text-zinc-300 select-none">
-                  {initials(item.from)}
-                </div>
+            <button
+              type="button"
+              aria-current={isSelected ? "true" : undefined}
+              onClick={() => onSelect?.(item.id)}
+              className={clsx(
+                "flex flex-1 min-w-0 items-start gap-3 px-4 py-3 text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                onToggleStar && "pr-11",
               )}
-            </div>
+            >
+              {/* Avatar */}
+              <div className="shrink-0 mt-0.5">
+                {item.avatarUrl ? (
+                  <img
+                    src={item.avatarUrl}
+                    alt={item.from}
+                    className="w-9 h-9 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-xs font-semibold text-foreground/80 select-none">
+                    {initials(item.from)}
+                  </div>
+                )}
+              </div>
 
-            {/* Body */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <span
+              {/* Body */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className={clsx(
+                      "text-sm truncate",
+                      item.unread
+                        ? "font-semibold text-foreground"
+                        : "font-normal text-foreground/80",
+                    )}
+                  >
+                    {item.from}
+                  </span>
+                  <span
+                    suppressHydrationWarning
+                    className="shrink-0 text-xs text-muted-foreground tabular-nums"
+                  >
+                    {formatDate(item.date)}
+                  </span>
+                </div>
+                <div
                   className={clsx(
                     "text-sm truncate",
-                    item.unread ? "font-semibold text-zinc-900 dark:text-zinc-100" : "font-normal text-zinc-700 dark:text-zinc-300",
+                    item.unread
+                      ? "font-medium text-foreground/95"
+                      : "text-muted-foreground",
                   )}
                 >
-                  {item.from}
-                </span>
-                <span suppressHydrationWarning className="shrink-0 text-xs text-zinc-400 dark:text-zinc-500">
-                  {formatDate(item.date)}
-                </span>
-              </div>
-              <div
-                className={clsx(
-                  "text-sm truncate",
-                  item.unread ? "font-medium text-zinc-800 dark:text-zinc-200" : "text-zinc-600 dark:text-zinc-400",
-                )}
-              >
-                {item.subject}
-              </div>
-              {item.preview && (
-                <p className="text-xs text-zinc-400 dark:text-zinc-500 truncate mt-0.5">
-                  {item.preview}
-                </p>
-              )}
-              {/* Badges row */}
-              {(item.hasAttachment || item.unread) && (
-                <div className="flex items-center gap-1.5 mt-1">
-                  {item.unread && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" aria-label="Não lido" />
-                  )}
-                  {item.hasAttachment && (
-                    <Paperclip className="w-3 h-3 text-zinc-400" aria-label="Anexo" />
-                  )}
+                  {item.subject}
                 </div>
-              )}
-            </div>
+                {item.preview && (
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">
+                    {item.preview}
+                  </p>
+                )}
+                {(item.hasAttachment || item.unread) && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    {item.unread && (
+                      <span
+                        className="w-1.5 h-1.5 rounded-full bg-primary"
+                        aria-label="Não lido"
+                      />
+                    )}
+                    {item.hasAttachment && (
+                      <Paperclip className="w-3 h-3 text-muted-foreground" aria-label="Anexo" />
+                    )}
+                  </div>
+                )}
+              </div>
+            </button>
 
-            {/* Star */}
+            {/* Sibling Star Button */}
             {onToggleStar && (
               <button
                 data-component-id={`erp.inbox.star-${item.id}`}
                 type="button"
                 aria-label={item.starred ? "Remover estrela" : "Marcar com estrela"}
-                onClick={(e) => { e.stopPropagation(); onToggleStar(item.id); }}
-                className="shrink-0 mt-0.5 p-1 rounded transition-colors text-zinc-300 hover:text-amber-400 dark:text-zinc-600 dark:hover:text-amber-400"
+                aria-pressed={Boolean(item.starred)}
+                onClick={() => onToggleStar(item.id)}
+                className="absolute right-2.5 top-3 inline-flex h-7 w-7 items-center justify-center rounded-lg transition-colors text-muted-foreground/60 hover:text-amber-400 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               >
-                {item.starred
-                  ? <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  : <StarOff className="w-4 h-4" />
-                }
+                {item.starred ? (
+                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                ) : (
+                  <StarOff className="w-4 h-4" />
+                )}
               </button>
             )}
           </li>
