@@ -12,7 +12,6 @@ import {
   Filter,
   Search,
   SlidersHorizontal,
-  Sparkles,
   X,
 } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
@@ -48,7 +47,6 @@ export function DataTableToolbar<T = Record<string, unknown>>({
   filterVariant,
   filters,
   safeRows,
-  totalRows,
   onFilterChange,
   onResetFilters,
   activeFilterCount,
@@ -85,7 +83,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
     icon?: React.ReactNode;
     onClick: () => void | Promise<void>;
     disabled?: boolean;
-    variant?: any;
+    variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
     componentId?: string;
     buttonClassName?: string;
     tooltip?: string;
@@ -114,7 +112,9 @@ export function DataTableToolbar<T = Record<string, unknown>>({
   selectedKeysCount?: number;
   bulkActions?: DataTableBulkAction<T>[];
   selectionBannerLabel?:
-    string | React.ReactNode | ((count: number, selectedRows: T[]) => React.ReactNode);
+    | string
+    | React.ReactNode
+    | ((count: number, selectedRows: T[]) => React.ReactNode);
   selectionBannerClassName?: string;
   selectionBannerSlot?:
     | React.ReactNode
@@ -171,9 +171,9 @@ export function DataTableToolbar<T = Record<string, unknown>>({
       maxInline = maxInlineTableActions;
     } else if (containerWidth !== null) {
       if (containerWidth < 740) {
-        maxInline = 0; // tela estreita / zoom alto: todas em "Mais Ações"
+        maxInline = 0;
       } else if (containerWidth < 980) {
-        maxInline = 1; // zoom moderado: mantém 1 ação primária inline
+        maxInline = 1;
       } else if (containerWidth < 1280) {
         maxInline = tableActions.length > 2 ? 1 : 2;
       } else {
@@ -187,18 +187,16 @@ export function DataTableToolbar<T = Record<string, unknown>>({
       return { inlineActions: tableActions, overflowActions: [] };
     }
 
-    // Prioriza ações de criação / primary para manter inline visível
     const primaryActions = tableActions.filter(
-      (a) => a.variant === 'primary' || a.id === 'criar' || a.id === 'novo'
+      (a) => a.variant === 'primary' || a.id === 'criar' || a.id === 'novo',
     );
     const secondaryActions = tableActions.filter(
-      (a) => a.variant !== 'primary' && a.id !== 'criar' && a.id !== 'novo'
+      (a) => a.variant !== 'primary' && a.id !== 'criar' && a.id !== 'novo',
     );
 
     const selectedInline: typeof tableActions = [];
     const selectedOverflow: typeof tableActions = [];
 
-    // Preenche slots inline preferindo primárias
     for (const action of primaryActions) {
       if (selectedInline.length < maxInline) {
         selectedInline.push(action);
@@ -207,7 +205,6 @@ export function DataTableToolbar<T = Record<string, unknown>>({
       }
     }
 
-    // Preenche slots inline restantes com secundárias
     for (const action of secondaryActions) {
       if (selectedInline.length < maxInline) {
         selectedInline.push(action);
@@ -220,12 +217,16 @@ export function DataTableToolbar<T = Record<string, unknown>>({
   }, [tableActions, maxInlineTableActions, containerWidth]);
 
   const hasHeaderContent =
-    title || description || toolbarLeftSlot || toolbarSlot || (tableActions && tableActions.length > 0) || Boolean(onClose);
+    title ||
+    description ||
+    toolbarLeftSlot ||
+    toolbarSlot ||
+    (tableActions && tableActions.length > 0) ||
+    Boolean(onClose);
   const isInline = filterVariant === 'inline';
 
   return (
     <div className="w-full space-y-2">
-      {/* Title & Custom Toolbar Slot (Sempre visível quando houver título, descrição ou ações) */}
       {hasHeaderContent && (
         <div
           ref={containerRef}
@@ -233,16 +234,16 @@ export function DataTableToolbar<T = Record<string, unknown>>({
         >
           <div className="flex items-start justify-between gap-3 min-w-0 w-full md:w-auto max-w-full md:max-w-md lg:max-w-xl">
             <div className="min-w-0">
-            {title && (
-              <div className="text-base sm:text-lg font-bold text-foreground tracking-tight">
-                {title}
-              </div>
-            )}
-            {description && (
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 whitespace-normal">
-                {description}
-              </p>
-            )}
+              {title && (
+                <div className="text-base sm:text-lg font-bold text-foreground tracking-tight">
+                  {title}
+                </div>
+              )}
+              {description && (
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 whitespace-normal">
+                  {description}
+                </p>
+              )}
             </div>
             {onClose && (
               <button
@@ -250,8 +251,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                 type="button"
                 onClick={onClose}
                 aria-label="Fechar e sair da tela"
-                title="Fechar e sair da tela"
-                className="md:hidden shrink-0 cursor-pointer rounded-xl p-1.5 text-muted-foreground opacity-70 transition-all hover:opacity-100 hover:bg-muted focus:outline-none active:scale-95 border-none"
+                className="md:hidden shrink-0 cursor-pointer rounded-xl p-1.5 text-muted-foreground opacity-70 transition-all hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 active:scale-95 border-none"
               >
                 <X size={18} />
               </button>
@@ -270,14 +270,18 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                   value={searchQ}
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder="Buscar..."
-                  className="w-full h-8 pl-8 pr-7 rounded-xl border border-border/80 bg-surface text-xs text-foreground placeholder-muted-foreground shadow-2xs focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
+                  aria-label="Buscar na tabela"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  className="w-full h-8 pl-8 pr-7 rounded-xl border border-border/80 bg-surface text-xs text-foreground placeholder-muted-foreground shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-all"
                 />
                 {searchQ && (
                   <button
                     data-component-id="erp.data-table.clear-search"
                     type="button"
                     onClick={() => onSearchChange('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
                     aria-label="Limpar busca"
                   >
                     <X size={13} />
@@ -287,7 +291,6 @@ export function DataTableToolbar<T = Record<string, unknown>>({
             )}
             {toolbarLeftSlot}
 
-            {/* Botão de Filtros no Header */}
             {filterFields && filterFields.length > 0 && !isInline && (
               <button
                 data-component-id="erp.data-table.header-toggle-filters"
@@ -297,23 +300,22 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                 aria-expanded={filterOpen}
                 aria-haspopup="dialog"
                 className={twMerge(
-                  'shrink-0 flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs',
+                  'shrink-0 flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                   activeFilterCount > 0
                     ? 'border-primary/50 bg-primary/10 text-primary'
-                    : 'border-border/80 bg-surface text-foreground hover:bg-muted/30'
+                    : 'border-border/80 bg-surface text-foreground hover:bg-muted/30',
                 )}
               >
                 <Filter size={13} className="text-muted-foreground" />
                 <span>Filtros</span>
                 {activeFilterCount > 0 && (
-                  <span className="flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-primary/20 text-[10px] text-primary font-bold">
+                  <span className="flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-primary/20 text-[10px] text-primary font-bold tabular-nums">
                     {activeFilterCount}
                   </span>
                 )}
               </button>
             )}
 
-            {/* Botão de Ordenação Mobile no Header */}
             {hasSortableColumns && onOpenMobileSort && (
               <button
                 data-component-id="erp.data-table.header-mobile-sort"
@@ -322,10 +324,10 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                 aria-haspopup="dialog"
                 aria-label={activeSortLabel ? `Ordenado por ${activeSortLabel}` : 'Ordenar'}
                 className={twMerge(
-                  'md:hidden shrink-0 inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs',
+                  'md:hidden shrink-0 inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                   sortKey
                     ? 'border-primary/50 bg-primary/10 text-primary'
-                    : 'border-border/80 bg-surface text-foreground hover:bg-muted/30'
+                    : 'border-border/80 bg-surface text-foreground hover:bg-muted/30',
                 )}
               >
                 {sortKey && sortDir === 'asc' ? (
@@ -339,7 +341,6 @@ export function DataTableToolbar<T = Record<string, unknown>>({
               </button>
             )}
 
-            {/* Botão de Colunas no Header */}
             {columnToggle && (
               <button
                 data-component-id="erp.data-table.header-toggle-columns"
@@ -348,12 +349,12 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                 onClick={onToggleColPanelOpen}
                 aria-expanded={colPanelOpen}
                 aria-haspopup="dialog"
-                className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-border/80 bg-surface text-xs font-semibold text-foreground hover:bg-muted/30 transition-all cursor-pointer shadow-2xs"
+                className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-border/80 bg-surface text-xs font-semibold text-foreground hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-all cursor-pointer shadow-2xs"
               >
                 <SlidersHorizontal size={13} />
                 <span>Colunas</span>
                 {hiddenColsCount > 0 && (
-                  <span className="flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-muted text-[10px] text-foreground font-bold">
+                  <span className="flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-muted text-[10px] text-foreground font-bold tabular-nums">
                     {hiddenColsCount}
                   </span>
                 )}
@@ -362,18 +363,17 @@ export function DataTableToolbar<T = Record<string, unknown>>({
 
             {toolbarSlot}
 
-            {/* Dropdown de Ações Agrupadas (Quick Actions Desktop) quando há muitas ações */}
             {overflowActions.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     data-component-id="erp.data-table.more-actions"
                     type="button"
-                    className="hidden md:inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-border/80 bg-surface text-xs font-semibold text-foreground hover:bg-muted/40 transition-all cursor-pointer shadow-2xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                    className="hidden md:inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-border/80 bg-surface text-xs font-semibold text-foreground hover:bg-muted/40 transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                   >
                     <ChevronsDown size={13} className="text-primary" />
                     <span>Mais Ações</span>
-                    <span className="flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-muted text-[10px] text-foreground font-bold">
+                    <span className="flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-muted text-[10px] text-foreground font-bold tabular-nums">
                       {overflowActions.length}
                     </span>
                     <ChevronDown size={13} className="text-muted-foreground opacity-70 ml-0.5" />
@@ -393,9 +393,9 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                         className={twMerge(
                           'flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-medium cursor-pointer transition-colors',
                           action.variant === 'danger'
-                            ? 'text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/30'
+                            ? 'text-danger focus:bg-danger/10'
                             : 'text-foreground focus:bg-muted/60',
-                          action.buttonClassName
+                          action.buttonClassName,
                         )}
                       >
                         {action.icon && (
@@ -419,19 +419,18 @@ export function DataTableToolbar<T = Record<string, unknown>>({
               </DropdownMenu>
             )}
 
-            {/* Ações exibidas diretamente (inline no desktop) */}
             {inlineActions.map((action) => (
               <Button
                 key={action.id}
                 size="sm"
-                variant={action.variant ?? 'outline'}
+                variant={action.variant === 'danger' ? 'destructive' : (action.variant ?? 'outline')}
                 leftIcon={action.icon}
                 onClick={action.onClick}
                 disabled={action.disabled}
                 componentId={action.componentId}
                 className={twMerge(
                   'hidden md:inline-flex w-full sm:w-auto h-8',
-                  action.buttonClassName
+                  action.buttonClassName,
                 )}
                 tooltip={action.tooltip}
                 tooltipPosition="bottom"
@@ -443,7 +442,6 @@ export function DataTableToolbar<T = Record<string, unknown>>({
         </div>
       )}
 
-      {/* Primary Toolbar (Search, Filter, Column Toggles - apenas quando não houver cabeçalho superior com busca) */}
       {!hasHeaderContent &&
         (globalSearch ||
           (filterFields && filterFields.length > 0) ||
@@ -459,12 +457,10 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                 !columnToggle &&
                 !toolbarLeftSlot &&
                 !toolbarSlot &&
-                'md:hidden'
+                'md:hidden',
             )}
           >
-            {/* Área Direita: Busca Global + Filtros Inline + ToolbarSlot + Colunas */}
             <div className="flex flex-wrap items-center gap-2 justify-start md:justify-end flex-1 w-full">
-              {/* Input de Busca Global Padrão */}
               {globalSearch && (
                 <div className="relative min-w-0 flex-1 sm:w-60 md:w-64 sm:flex-initial">
                   <Search
@@ -477,14 +473,18 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                     value={searchQ}
                     onChange={(e) => onSearchChange(e.target.value)}
                     placeholder="Buscar..."
-                    className="w-full h-8 pl-8 pr-7 rounded-xl border border-border/80 bg-surface text-xs text-foreground placeholder-muted-foreground shadow-2xs focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
+                    aria-label="Buscar na tabela"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    className="w-full h-8 pl-8 pr-7 rounded-xl border border-border/80 bg-surface text-xs text-foreground placeholder-muted-foreground shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-all"
                   />
                   {searchQ && (
                     <button
                       data-component-id="erp.data-table.clear-search"
                       type="button"
                       onClick={() => onSearchChange('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
                       aria-label="Limpar busca"
                     >
                       <X size={13} />
@@ -494,13 +494,11 @@ export function DataTableToolbar<T = Record<string, unknown>>({
               )}
               {toolbarLeftSlot}
 
-              {/* Filtros em linha (filterVariant="inline") */}
               {filterFields && filterFields.length > 0 && isInline && (
                 <div className="flex items-center gap-2 flex-wrap">
                   {filterFields.map((field) => {
                     const currentVal = filters?.[field.key] ?? '';
 
-                    // 1. Tipo: Segmented Control / Badge Selector
                     if ((field.type === 'segmented' || field.type === 'badge') && field.options) {
                       return (
                         <div
@@ -511,17 +509,17 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                             const isSelected =
                               currentVal === opt.value || (!currentVal && opt.value === '');
 
-                            // Cálculo do contador se showCount for true
                             let count: number | null = null;
                             if (field.showCount && safeRows) {
                               if (!opt.value) {
                                 count = safeRows.length;
                               } else if (field.predicate) {
                                 count = safeRows.filter((r) =>
-                                  field.predicate!(r, opt.value)
+                                  field.predicate!(r, opt.value),
                                 ).length;
                               } else {
                                 count = safeRows.filter((r) => {
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                   const rowVal = (r as any)?.[field.key];
                                   return (
                                     String(rowVal ?? '').toLowerCase() === opt.value.toLowerCase()
@@ -530,7 +528,6 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                               }
                             }
 
-                            // Cor do texto quando ativo
                             const colorCls =
                               opt.color === 'emerald'
                                 ? 'text-emerald-600 dark:text-emerald-400'
@@ -551,15 +548,17 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                                 type="button"
                                 onClick={() => onFilterChange?.(field.key, opt.value)}
                                 className={twMerge(
-                                  'px-2.5 py-0.5 rounded-md transition-all cursor-pointer text-xs shrink-0',
+                                  'min-h-6 px-2.5 py-0.5 rounded-md transition-all cursor-pointer text-xs shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                                   isSelected
                                     ? `bg-surface shadow-2xs font-bold ${colorCls}`
-                                    : 'text-muted-foreground hover:text-foreground'
+                                    : 'text-muted-foreground hover:text-foreground',
                                 )}
                               >
                                 <span>{opt.label}</span>
                                 {count !== null && (
-                                  <span className="opacity-70 text-[10px] ml-1">({count})</span>
+                                  <span className="opacity-70 text-[10px] ml-1 tabular-nums">
+                                    ({count})
+                                  </span>
                                 )}
                               </button>
                             );
@@ -568,7 +567,6 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                       );
                     }
 
-                    // 2. Tipo: Select Dropdown (Radix Select estilizado e premium)
                     if (field.type === 'select' && field.options) {
                       const selectedOpt = field.options.find((o) => o.value === currentVal);
                       const defaultOpt = field.options.find((o) => o.value === '');
@@ -603,7 +601,6 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                       );
                     }
 
-                    // 3. Tipo: Boolean Dropdown (Radix Select estilizado)
                     if (field.type === 'boolean') {
                       const labelText = field.label ?? 'Status';
                       const booleanDisplay =
@@ -648,7 +645,6 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                       );
                     }
 
-                    // 4. Tipo: Text / Busca com Ícone
                     return (
                       <div
                         key={field.key}
@@ -673,14 +669,17 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                             field.placeholder ??
                             (field.label ? `Buscar ${field.label.toLowerCase()}...` : 'Buscar...')
                           }
-                          className="w-full h-7 pl-7 pr-2.5 text-xs bg-surface border border-border/70 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck={false}
+                          className="w-full h-7 pl-7 pr-6 text-xs bg-surface border border-border/70 rounded-lg text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 shadow-2xs"
                         />
                         {currentVal && (
                           <button
                             data-component-id={`erp.data-table.clear-filter-${field.key}`}
                             type="button"
                             onClick={() => onFilterChange?.(field.key, '')}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
                             aria-label="Limpar campo"
                           >
                             <X size={12} />
@@ -695,8 +694,8 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                       data-component-id="erp.data-table.reset-filters"
                       type="button"
                       onClick={onResetFilters}
-                      className="inline-flex items-center gap-1 h-7 px-2 rounded-lg border border-border/70 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all cursor-pointer shadow-2xs"
-                      title="Limpar todos os filtros"
+                      aria-label="Limpar todos os filtros"
+                      className="inline-flex items-center gap-1 h-7 px-2 rounded-lg border border-border/70 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-all cursor-pointer shadow-2xs"
                     >
                       <X size={12} />
                       <span>Limpar</span>
@@ -705,7 +704,6 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                 </div>
               )}
 
-              {/* Botão Modal quando filterVariant="modal" */}
               {filterFields && filterFields.length > 0 && !isInline && (
                 <button
                   data-component-id="erp.data-table.toggle-filters"
@@ -715,16 +713,16 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                   aria-expanded={filterOpen}
                   aria-haspopup="dialog"
                   className={twMerge(
-                    'shrink-0 flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs',
+                    'shrink-0 flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                     activeFilterCount > 0
                       ? 'border-primary/50 bg-primary/10 text-primary'
-                      : 'border-border/80 bg-surface text-foreground hover:bg-muted/30'
+                      : 'border-border/80 bg-surface text-foreground hover:bg-muted/30',
                   )}
                 >
                   <Filter size={14} className="text-muted-foreground" />
                   <span>Filtros</span>
                   {activeFilterCount > 0 && (
-                    <span className="flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-blue-50 text-[11px] text-blue-600 font-bold">
+                    <span className="flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-primary/20 text-[11px] text-primary font-bold tabular-nums">
                       {activeFilterCount}
                     </span>
                   )}
@@ -739,10 +737,10 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                   aria-haspopup="dialog"
                   aria-label={activeSortLabel ? `Ordenado por ${activeSortLabel}` : 'Ordenar'}
                   className={twMerge(
-                    'md:hidden shrink-0 inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs',
+                    'md:hidden shrink-0 inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                     sortKey
                       ? 'border-primary/50 bg-primary/10 text-primary'
-                      : 'border-border/80 bg-surface text-foreground hover:bg-muted/30'
+                      : 'border-border/80 bg-surface text-foreground hover:bg-muted/30',
                   )}
                 >
                   {sortKey && sortDir === 'asc' ? (
@@ -764,12 +762,12 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                   onClick={onToggleColPanelOpen}
                   aria-expanded={colPanelOpen}
                   aria-haspopup="dialog"
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/80 bg-surface text-xs font-semibold text-foreground hover:bg-muted/30 transition-all cursor-pointer shadow-2xs"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/80 bg-surface text-xs font-semibold text-foreground hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-all cursor-pointer shadow-2xs"
                 >
                   <SlidersHorizontal size={14} />
                   <span>Colunas</span>
                   {hiddenColsCount > 0 && (
-                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-muted text-[10px] text-foreground font-bold">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-muted text-[10px] text-foreground font-bold tabular-nums">
                       {hiddenColsCount}
                     </span>
                   )}
@@ -781,7 +779,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
 
       {/* Barra de Ações em Lote */}
       {(() => {
-        const effectiveCount = selectedRows.length;
+        const effectiveCount = Math.max(selectedRows.length, selectedKeysCount ?? 0);
         if (effectiveCount <= 0) return null;
 
         if (selectionBannerSlot) {
@@ -798,10 +796,10 @@ export function DataTableToolbar<T = Record<string, unknown>>({
           <div
             className={twMerge(
               'flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-xs text-primary animate-in fade-in duration-150',
-              selectionBannerClassName
+              selectionBannerClassName,
             )}
           >
-            <div className="font-bold">
+            <div className="font-bold tabular-nums">
               {selectionBannerLabel
                 ? typeof selectionBannerLabel === 'function'
                   ? selectionBannerLabel(effectiveCount, selectedRows)
@@ -822,11 +820,11 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                     disabled={isDisabled || isRunning}
                     onClick={() => handleBulkClick(action, idx)}
                     className={twMerge(
-                      'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-bold transition-all cursor-pointer disabled:opacity-50',
+                      'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-bold transition-all cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                       action.danger
-                        ? 'border-red-300 bg-red-500/10 text-red-600 hover:bg-red-500/20'
+                        ? 'border-danger/40 bg-danger/10 text-danger hover:bg-danger/20'
                         : 'border-primary/40 bg-surface text-primary hover:bg-primary/20',
-                      action.buttonClassName
+                      action.buttonClassName,
                     )}
                   >
                     {isRunning ? (
@@ -842,7 +840,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                 data-component-id="erp.data-table.clear-selection"
                 type="button"
                 onClick={onClearSelection}
-                className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold opacity-75 hover:opacity-100 transition-opacity cursor-pointer"
+                className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold opacity-75 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-opacity cursor-pointer"
               >
                 <X size={13} />
                 Limpar
