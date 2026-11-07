@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 
 export type PaginationProps = {
   /** 1-based current page */
