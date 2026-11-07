@@ -1,11 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
-import { cn } from '@/utils/cn';
-import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { cn } from '../utils/cn';
+import { hasOpenFloatingOverlay } from '../utils/overlay';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 /**
  * Pilha global de callbacks de fechamento dos modais abertos.
@@ -34,30 +35,27 @@ function notifyModalListeners() {
   });
 }
 
+function subscribeModalStack(listener: () => void) {
+  modalListeners.add(listener);
+  return () => {
+    modalListeners.delete(listener);
+  };
+}
+
 export function useHasOpenModal(): boolean {
-  const [hasOpen, setHasOpen] = useState(false);
-  useEffect(() => {
-    const update = () => setHasOpen(modalStack.length > 0);
-    modalListeners.add(update);
-    update();
-    return () => {
-      modalListeners.delete(update);
-    };
-  }, []);
-  return hasOpen;
+  return useSyncExternalStore(
+    subscribeModalStack,
+    () => modalStack.length > 0,
+    () => false
+  );
 }
 
 export function useModalStackCount(): number {
-  const [count, setCount] = useState(() => modalStack.length);
-  useEffect(() => {
-    const update = () => setCount(modalStack.length);
-    modalListeners.add(update);
-    update();
-    return () => {
-      modalListeners.delete(update);
-    };
-  }, []);
-  return count;
+  return useSyncExternalStore(
+    subscribeModalStack,
+    () => modalStack.length,
+    () => 0
+  );
 }
 
 export function registerModal(onClose: () => void) {
@@ -104,17 +102,24 @@ export function useEscKey(onEsc: () => void, active: boolean = true) {
 
 function handleGlobalEsc(e: KeyboardEvent) {
   if (e.key !== 'Escape' || modalStack.length === 0) return;
-  if (
-    e.defaultPrevented ||
-    (typeof document !== 'undefined' &&
-      document.querySelector('[data-floating-open="true"], [data-radix-popper-content-wrapper]'))
-  ) {
+  if (e.defaultPrevented || hasOpenFloatingOverlay()) {
     return;
   }
   e.stopImmediatePropagation();
   e.preventDefault();
   const top = modalStack[modalStack.length - 1];
   top.onClose();
+}
+
+function subscribeMobileViewport(cb: () => void) {
+  if (typeof window === 'undefined') return () => {};
+  const mql = window.matchMedia('(max-width: 639px)');
+  mql.addEventListener('change', cb);
+  return () => mql.removeEventListener('change', cb);
+}
+
+function getMobileViewportSnapshot() {
+  return typeof window !== 'undefined' ? window.innerWidth < 640 : false;
 }
 
 export interface ModalProps {
@@ -130,16 +135,16 @@ export interface ModalProps {
   maxHeight?: string | number;
   compact?: boolean;
   size?:
-  | 'sm'
-  | 'md'
-  | 'lg'
-  | 'xl'
-  | '2xl'
-  | 'full'
-  | 'fullscreen'
-  | 'compact'
-  | 'xlVertical'
-  | 'mdVertical';
+    | 'sm'
+    | 'md'
+    | 'lg'
+    | 'xl'
+    | '2xl'
+    | 'full'
+    | 'fullscreen'
+    | 'compact'
+    | 'xlVertical'
+    | 'mdVertical';
   variant?: 'square' | 'rounded';
   footer?: React.ReactNode;
   footerClassName?: string;
@@ -162,17 +167,20 @@ const sizeConfig: Record<
   NonNullable<ModalProps['size']>,
   { maxWidth: string; height: string; maxHeight: string }
 > = {
-  compact: { maxWidth: '480px', height: 'auto', maxHeight: '85vh' },
-  sm: { maxWidth: '520px', height: '380px', maxHeight: '88vh' },
-  md: { maxWidth: '720px', height: '540px', maxHeight: '90vh' },
-  mdVertical: { maxWidth: '720px', height: '97vh', maxHeight: '90vh' },
-  lg: { maxWidth: '1100px', height: '82vh', maxHeight: '92vh' },
-  xl: { maxWidth: '1280px', height: '85vh', maxHeight: '94vh' },
-  '2xl': { maxWidth: '1440px', height: '88vh', maxHeight: '95vh' },
-  full: { maxWidth: '96vw', height: '98vh', maxHeight: '98vh' },
-  fullscreen: { maxWidth: '100vw', height: '100vh', maxHeight: '100vh' },
-  xlVertical: { maxWidth: '1380px', height: '97vh', maxHeight: '98vh' },
+  compact: { maxWidth: '480px', height: 'auto', maxHeight: '85dvh' },
+  sm: { maxWidth: '520px', height: '380px', maxHeight: '88dvh' },
+  md: { maxWidth: '720px', height: '540px', maxHeight: '90dvh' },
+  mdVertical: { maxWidth: '720px', height: '97dvh', maxHeight: '90dvh' },
+  lg: { maxWidth: '1100px', height: '82dvh', maxHeight: '92dvh' },
+  xl: { maxWidth: '1280px', height: '85dvh', maxHeight: '94dvh' },
+  '2xl': { maxWidth: '1440px', height: '88dvh', maxHeight: '95dvh' },
+  full: { maxWidth: '96vw', height: '98dvh', maxHeight: '98dvh' },
+  fullscreen: { maxWidth: '100vw', height: '100dvh', maxHeight: '100dvh' },
+  xlVertical: { maxWidth: '1380px', height: '97dvh', maxHeight: '98dvh' },
 };
+
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
 
 export default function Modal({
   open,
@@ -209,8 +217,16 @@ export default function Modal({
   const titleId = React.useId();
   const descriptionId = React.useId();
   const cardRef = React.useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const isMobile = useSyncExternalStore(
+    subscribeMobileViewport,
+    getMobileViewportSnapshot,
+    () => false
+  );
   const [rendered, setRendered] = useState(isActuallyOpen);
   const [prevOpen, setPrevOpen] = useState(isActuallyOpen);
 
@@ -259,15 +275,8 @@ export default function Modal({
     const handleTab = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
       const card = cardRef.current;
-      if (!card) return;
-      if (document.querySelector('[data-floating-open="true"], [data-radix-popper-content-wrapper]')) {
-        return;
-      }
-      const focusables = Array.from(
-        card.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        )
-      );
+      if (!card || hasOpenFloatingOverlay()) return;
+      const focusables = Array.from(card.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
       if (focusables.length === 0) {
         e.preventDefault();
         card.focus();
@@ -292,14 +301,6 @@ export default function Modal({
     };
   }, [isActuallyOpen, mounted]);
 
-  useEffect(() => {
-    setMounted(true);
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
   if ((!isActuallyOpen && !rendered) || !mounted) return null;
   const isClosing = !isActuallyOpen;
 
@@ -317,14 +318,14 @@ export default function Modal({
   const resolvedSize = size ?? (compact ? 'compact' : undefined);
   const cfg = resolvedSize ? sizeConfig[resolvedSize] : undefined;
 
-  const shouldUseShellPortal = (withinShell || offsetHeader);
+  const shouldUseShellPortal = withinShell || offsetHeader;
   const shellContainer =
     typeof document !== 'undefined' && shouldUseShellPortal
       ? document.getElementById('erp-workspace-container')
       : null;
 
   const animationClass = isClosing
-    ? 'animate-out fade-out-0 zoom-out-95 duration-150 pointer-events-none'
+    ? 'animate-out fade-out-0 zoom-out-95 duration-150 pointer-events-none motion-reduce:animate-none'
     : animation === 'drawer' || animation === 'slide-from-right' || (!animation && (isFullscreen || offsetHeader || withinShell))
       ? 'animate-drawer-slide-in'
       : animation === 'slide-left'
@@ -332,8 +333,8 @@ export default function Modal({
         : animation === 'slide-right'
           ? 'animate-slide-in-right'
           : animation === 'fade'
-            ? 'animate-in fade-in-0 duration-200'
-            : 'animate-in fade-in-0 zoom-in-95 duration-200';
+            ? 'animate-in fade-in-0 duration-200 motion-reduce:animate-none'
+            : 'animate-in fade-in-0 zoom-in-95 duration-200 motion-reduce:animate-none';
 
   const finalMaxWidth = isFullscreen
     ? shellContainer
@@ -393,14 +394,14 @@ export default function Modal({
           ? 'calc(100dvh - 56px)'
           : '100dvh'
       : isMobile
-        ? '92vh'
+        ? '92dvh'
         : maxHeight !== undefined
           ? typeof maxHeight === 'number'
             ? `${maxHeight}px`
             : maxHeight
           : shellContainer
             ? 'calc(100% - 1.5rem)'
-            : (cfg?.maxHeight ?? '90vh');
+            : (cfg?.maxHeight ?? '90dvh');
 
   const paddingClass = noPadding
     ? 'p-0'
@@ -415,6 +416,8 @@ export default function Modal({
     <div
       role="dialog"
       aria-modal="true"
+      data-lopes-modal={isActuallyOpen ? 'true' : undefined}
+      data-component-id={componentId}
       aria-labelledby={title ? titleId : undefined}
       aria-describedby={description ? descriptionId : undefined}
       style={zIndex ? { zIndex } : undefined}
@@ -436,11 +439,15 @@ export default function Modal({
             ? 'absolute inset-0 bg-black/55 backdrop-blur-xs transition-opacity'
             : 'fixed inset-0 bg-black/55 backdrop-blur-xs transition-opacity',
           isClosing
-            ? 'animate-out fade-out-0 duration-150 pointer-events-none'
-            : 'animate-in fade-in-0 duration-200',
+            ? 'animate-out fade-out-0 duration-150 pointer-events-none motion-reduce:animate-none'
+            : 'animate-in fade-in-0 duration-200 motion-reduce:animate-none',
           !shellContainer && offsetHeader && 'top-14'
         )}
-        onClick={onClose}
+        onClick={() => {
+          if (!hasOpenFloatingOverlay()) {
+            onClose();
+          }
+        }}
         aria-hidden="true"
       />
 
@@ -511,7 +518,7 @@ export default function Modal({
               type="button"
               onClick={onClose}
               className={cn(
-                'rounded-[var(--radius-control)] p-1.5 text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none cursor-pointer',
+                'inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none cursor-pointer shrink-0',
                 headerClassName && 'text-inherit opacity-85 hover:opacity-100 hover:bg-white/20 dark:hover:bg-white/20 focus-visible:ring-white/40',
                 closeButtonClassName
               )}
@@ -528,7 +535,7 @@ export default function Modal({
             data-component-id={componentId ? `${componentId}.close-icon` : 'erp.modal.close-icon'}
             type="button"
             onClick={onClose}
-            className="absolute top-3.5 right-3.5 z-20 rounded-[var(--radius-control)] p-1.5 text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
+            className="absolute top-3.5 right-3.5 z-20 inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
             aria-label="Fechar"
           >
             <X className="h-4 w-4" />
