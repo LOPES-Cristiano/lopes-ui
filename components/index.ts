@@ -6,11 +6,17 @@
 //   - CodeBlock                                    -> "lopes-ui/code-block"
 //   - Radix/CVA                                    -> "lopes-ui/primitives"
 
+export { default as AccessGuard, AccessDeniedState } from "./AccessGuard";
+export * from "./AccessGuard";
+
 export { default as Accordion } from "./Accordion";
 export * from "./Accordion";
 
 export { default as ActionGridCard, SwitchesCard } from "./ActionGridCard";
 export * from "./ActionGridCard";
+
+export { default as ActiveTimerWidget } from "./ActiveTimerWidget";
+export * from "./ActiveTimerWidget";
 
 export { default as ActivityFeed } from "./ActivityFeed";
 export * from "./ActivityFeed";
@@ -78,6 +84,9 @@ export * from "./ChatMessage";
 export { default as ChatWindow } from "./ChatWindow";
 export * from "./ChatWindow";
 
+export { default as CnpjLookupModal } from "./CnpjLookupModal";
+export * from "./CnpjLookupModal";
+
 export { default as CodeEditor } from "./CodeEditor";
 export * from "./CodeEditor";
 
@@ -92,6 +101,9 @@ export * from "./ConfirmDialog";
 
 export { default as ContextMenu } from "./ContextMenu";
 export * from "./ContextMenu";
+
+export { default as CookieBanner, getCookieConsent } from "./CookieBanner";
+export * from "./CookieBanner";
 
 export { default as Countdown } from "./Countdown";
 export * from "./Countdown";
@@ -118,6 +130,9 @@ export * from "./EmojiPicker";
 
 export { default as EmptyState } from "./EmptyState";
 export * from "./EmptyState";
+
+export { default as ErrorBoundary } from "./ErrorBoundary";
+export * from "./ErrorBoundary";
 
 export { default as FileDropzone } from "./FileDropzone";
 export * from "./FileDropzone";
@@ -246,6 +261,12 @@ export * from "./QuickActions";
 export { default as Result } from "./Result";
 export * from "./Result";
 
+export { default as RichTextViewer } from "./RichTextViewer";
+export * from "./RichTextViewer";
+
+export { default as ScopeSelector } from "./ScopeSelector";
+export * from "./ScopeSelector";
+
 export { default as ScrollArea } from "./ScrollArea";
 export * from "./ScrollArea";
 
@@ -293,6 +314,9 @@ export * from "./SortableList";
 export { default as SpeedDial } from "./SpeedDial";
 export * from "./SpeedDial";
 
+export { default as SplitCounterBadge } from "./SplitCounterBadge";
+export * from "./SplitCounterBadge";
+
 export { default as SplitPane } from "./SplitPane";
 export * from "./SplitPane";
 
@@ -325,6 +349,9 @@ export * from "./TableOfContents";
 
 export { default as Tabs } from "./Tabs";
 export * from "./Tabs";
+
+export { default as TenantSwitcherModal, TenantSwitcherTrigger } from "./TenantSwitcherModal";
+export * from "./TenantSwitcherModal";
 
 export { default as TextRotate } from "./TextRotate";
 export * from "./TextRotate";
