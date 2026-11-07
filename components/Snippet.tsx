@@ -2,8 +2,14 @@
 
 import React, { useState } from "react";
 import { Check, Copy, Eye, EyeOff } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 import { useAccessControl } from "./useAccessControl";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./primitives/tooltip";
 
 export interface CopyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   componentId?: string;
@@ -64,23 +70,25 @@ export function CopyButton({
   }[size];
 
   const variantClasses = {
-    ghost: "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800",
-    outline: "border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800",
-    subtle: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700",
+    ghost: "text-muted-foreground hover:text-foreground hover:bg-surface-hover",
+    outline: "border border-border bg-surface text-foreground hover:bg-surface-hover",
+    subtle: "bg-surface-muted text-foreground hover:bg-surface-hover",
   }[variant];
 
-  return (
+  const tooltipText = copied ? copiedLabel : label ?? "Copiar";
+
+  const btn = (
     <button
+      data-component-id={componentId}
       type="button"
       onClick={handleCopy}
       disabled={isDisabled}
-      title={copied ? copiedLabel : label ?? "Copiar"}
-      aria-label={copied ? copiedLabel : label ?? "Copiar"}
+      aria-label={tooltipText}
       className={cn(
-        "inline-flex items-center justify-center rounded-md font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none shrink-0",
+        "inline-flex items-center justify-center rounded-md font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none shrink-0 cursor-pointer",
         sizeClasses,
         variantClasses,
-        copied && "text-emerald-600 dark:text-emerald-400",
+        copied && "text-success",
         className
       )}
       {...props}
@@ -88,6 +96,17 @@ export function CopyButton({
       {copied ? <Check size={size === "xs" ? 12 : 14} /> : <Copy size={size === "xs" ? 12 : 14} />}
       {label && <span>{copied ? copiedLabel : label}</span>}
     </button>
+  );
+
+  if (label) return btn;
+
+  return (
+    <TooltipProvider delayDuration={250}>
+      <Tooltip>
+        <TooltipTrigger asChild>{btn}</TooltipTrigger>
+        <TooltipContent>{tooltipText}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -140,10 +159,10 @@ export default function Snippet({
   };
 
   const variantClasses = {
-    default: "bg-zinc-100/90 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200",
+    default: "bg-surface-muted border border-border text-foreground",
     dark: "bg-zinc-950 border border-zinc-800 text-zinc-100",
-    bordered: "bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200",
-    indigo: "bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/70 text-indigo-950 dark:text-indigo-200",
+    bordered: "bg-surface border border-border text-foreground",
+    indigo: "bg-primary/10 border border-primary/25 text-foreground",
   }[variant];
 
   const sizeClasses = {
@@ -152,67 +171,81 @@ export default function Snippet({
     lg: "px-4 py-2.5 text-sm rounded-xl gap-3.5",
   }[size];
 
-  return (
-    <div
-      className={cn(
-        "inline-flex items-center justify-between font-mono max-w-full",
-        variantClasses,
-        sizeClasses,
-        className
-      )}
-      {...props}
-    >
-      <div className="flex flex-col gap-0.5 overflow-x-auto no-scrollbar min-w-0">
-        {lines.map((line, idx) => (
-          <div key={idx} className="flex items-center gap-2 whitespace-pre">
-            {symbol !== false && (
-              <span
-                className={cn(
-                  "select-none font-semibold",
-                  variant === "dark"
-                    ? "text-indigo-400"
-                    : variant === "indigo"
-                    ? "text-indigo-600 dark:text-indigo-400"
-                    : "text-zinc-400 dark:text-zinc-500"
-                )}
-              >
-                {symbol}
-              </span>
-            )}
-            <span className="truncate">{maskLine(line)}</span>
-          </div>
-        ))}
-      </div>
+  const secretLabel = revealed ? "Ocultar segredo" : "Mostrar segredo";
 
-      <div className="flex items-center gap-1 shrink-0">
-        {maskSecret && (
-          <button
-            type="button"
-            onClick={() => setRevealed((r) => !r)}
-            title={revealed ? "Ocultar segredo" : "Mostrar segredo"}
-            className={cn(
-              "inline-flex size-7 items-center justify-center rounded-md transition-colors",
-              variant === "dark"
-                ? "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
-                : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200/60 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
-            )}
-          >
-            {revealed ? <EyeOff size={14} /> : <Eye size={14} />}
-          </button>
+  return (
+    <TooltipProvider delayDuration={250}>
+      <div
+        data-component-id={componentId}
+        className={cn(
+          "inline-flex items-center justify-between font-mono max-w-full",
+          variantClasses,
+          sizeClasses,
+          !hasAccess && "opacity-60 pointer-events-none",
+          className
         )}
-        {!hideCopyButton && (
-          <CopyButton
-            value={fullText}
-            size={size === "sm" ? "xs" : "sm"}
-            onCopied={onCopyCode}
-            className={
-              variant === "dark"
-                ? "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
-                : undefined
-            }
-          />
-        )}
+        {...props}
+      >
+        <div className="flex flex-col gap-0.5 overflow-x-auto no-scrollbar min-w-0">
+          {lines.map((line, idx) => (
+            <div key={idx} className="flex items-center gap-2 whitespace-pre">
+              {symbol !== false && (
+                <span
+                  className={cn(
+                    "select-none font-semibold",
+                    variant === "dark"
+                      ? "text-indigo-400"
+                      : variant === "indigo"
+                        ? "text-primary"
+                        : "text-muted-foreground"
+                  )}
+                >
+                  {symbol}
+                </span>
+              )}
+              <span className="truncate">{maskLine(line)}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          {maskSecret && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  data-component-id={componentId ? `${componentId}.toggle-secret` : undefined}
+                  type="button"
+                  aria-label={secretLabel}
+                  aria-pressed={revealed}
+                  onClick={() => setRevealed((r) => !r)}
+                  className={cn(
+                    "inline-flex size-7 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
+                    variant === "dark"
+                      ? "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+                      : "text-muted-foreground hover:text-foreground hover:bg-surface-hover"
+                  )}
+                >
+                  {revealed ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{secretLabel}</TooltipContent>
+            </Tooltip>
+          )}
+          {!hideCopyButton && (
+            <CopyButton
+              componentId={componentId ? `${componentId}.copy` : undefined}
+              value={fullText}
+              size={size === "sm" ? "xs" : "sm"}
+              onCopied={onCopyCode}
+              className={
+                variant === "dark"
+                  ? "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+                  : undefined
+              }
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
