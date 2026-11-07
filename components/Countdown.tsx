@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 import { useAccessControl } from "./useAccessControl";
 
 export type CountdownVariant = "inline" | "boxed" | "cards" | "compact";
@@ -200,45 +200,49 @@ export default function Countdown({
   }, [daysProp, hoursProp, minutesProp, secondsProp]);
 
   // Parse targetDate once and guard against inline `new Date(Date.now() + X)` re-renders
+  const targetTimestampKey = targetDate instanceof Date ? targetDate.getTime() : targetDate;
   const rawTargetMs = useMemo(() => {
-    if (targetDate === undefined) return undefined;
+    if (targetTimestampKey === undefined) return undefined;
     const ms =
-      targetDate instanceof Date
-        ? targetDate.getTime()
-        : typeof targetDate === "number"
-          ? targetDate
-          : new Date(targetDate).getTime();
+      typeof targetTimestampKey === "number"
+        ? targetTimestampKey
+        : new Date(targetTimestampKey).getTime();
     return Number.isNaN(ms) ? undefined : ms;
-  }, [targetDate instanceof Date ? targetDate.getTime() : targetDate]);
+  }, [targetTimestampKey]);
 
-  const stableTargetMsRef = useRef<number | undefined>(rawTargetMs);
-  if (rawTargetMs === undefined) {
-    stableTargetMsRef.current = undefined;
+  const [effectiveTargetMs, setEffectiveTargetMs] = useState<number | undefined>(rawTargetMs);
+  if (rawTargetMs === undefined && effectiveTargetMs !== undefined) {
+    setEffectiveTargetMs(undefined);
   } else if (
-    stableTargetMsRef.current === undefined ||
-    Math.abs(rawTargetMs - stableTargetMsRef.current) > 5000
+    rawTargetMs !== undefined &&
+    (effectiveTargetMs === undefined || Math.abs(rawTargetMs - effectiveTargetMs) > 5000)
   ) {
     // Only update target timestamp if it changed by > 5s (ignores inline Date.now() jitter on parent re-renders)
-    stableTargetMsRef.current = rawTargetMs;
+    setEffectiveTargetMs(rawTargetMs);
   }
-  const effectiveTargetMs = stableTargetMsRef.current;
 
-  const computeInitialSeconds = (): number => {
+  const [remaining, setRemaining] = useState<number>(() =>
+    durationSeconds !== undefined ? durationSeconds : effectiveTargetMs !== undefined ? 0 : 3600
+  );
+  const [prevDurationSeconds, setPrevDurationSeconds] = useState<number | undefined>(durationSeconds);
+  if (durationSeconds !== prevDurationSeconds) {
+    setPrevDurationSeconds(durationSeconds);
     if (durationSeconds !== undefined) {
-      return durationSeconds;
+      setRemaining(durationSeconds);
     }
-    if (effectiveTargetMs !== undefined) {
-      return Math.max(0, Math.floor((effectiveTargetMs - Date.now()) / 1000));
-    }
-    return 3600; // Default 1 hour fallback if neither duration nor targetDate is provided
-  };
+  }
 
-  const [remaining, setRemaining] = useState<number>(computeInitialSeconds);
-
-  // Sync when duration props or effectiveTargetMs meaningfully change
+  // Sync remaining immediately on client when targetDate is used or changes
   useEffect(() => {
-    setRemaining(computeInitialSeconds());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (durationSeconds !== undefined) return;
+    const timeout = setTimeout(() => {
+      if (effectiveTargetMs !== undefined) {
+        setRemaining(Math.max(0, Math.floor((effectiveTargetMs - Date.now()) / 1000)));
+      } else {
+        setRemaining(3600);
+      }
+    }, 0);
+    return () => clearTimeout(timeout);
   }, [durationSeconds, effectiveTargetMs]);
 
   // Main 1-second tick interval
