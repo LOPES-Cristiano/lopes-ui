@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { z } from 'zod';
-import { cn } from '@/utils/cn';
+import { cn } from '../../utils/cn';
 import { useAccessControl } from '../useAccessControl';
 
 // Deep equality check with support for Date, Array, primitives and nested objects
