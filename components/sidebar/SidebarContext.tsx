@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import type { SidebarMode } from './Sidebar.types';
+import type { SidebarCollapsedGroupMode, SidebarMode } from './Sidebar.types';
 
 export type SidebarContextValue = {
   collapsed: boolean;
@@ -13,6 +13,7 @@ export type SidebarContextValue = {
   pinnedIds: Set<string>;
   groupsCollapsible: boolean;
   collapsedGroupIds: Set<string>;
+  collapsedGroupMode: SidebarCollapsedGroupMode;
   allGroupsCollapsed: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -38,6 +39,7 @@ export const SidebarContext = createContext<SidebarContextValue>({
   pinnedIds: new Set(),
   groupsCollapsible: false,
   collapsedGroupIds: new Set(),
+  collapsedGroupMode: 'flatten-items',
   allGroupsCollapsed: false,
   searchQuery: '',
   setSearchQuery: () => {},
