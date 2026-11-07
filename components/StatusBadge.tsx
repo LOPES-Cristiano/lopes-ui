@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { cn } from '@/utils/cn';
+import { cn } from '../utils/cn';
 import type { LucideIcon } from 'lucide-react';
+import { useAccessControl } from './useAccessControl';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -28,6 +29,7 @@ export interface StatusBadgeProps {
   icon?: LucideIcon | React.ComponentType<{ size?: number; className?: string }> | React.ReactNode;
   className?: string;
   componentId?: string;
+  hideIfDenied?: boolean;
 }
 
 // ── Style Maps ────────────────────────────────────────────────────────────────
@@ -58,7 +60,7 @@ const TONE_STYLES: Record<StatusTone, { soft: string; solid: string; dot: string
     dotPulse: 'bg-sky-400',
   },
   neutral: {
-    soft: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-200/60 dark:border-zinc-700/50',
+    soft: 'bg-muted text-foreground/80 border border-border',
     solid: 'bg-zinc-700 text-white dark:bg-zinc-200 dark:text-zinc-900 border-transparent',
     dot: 'bg-zinc-400',
     dotPulse: 'bg-zinc-300',
@@ -97,7 +99,15 @@ export function StatusBadge({
   icon: IconProp,
   className,
   componentId,
+  hideIfDenied = true,
 }: StatusBadgeProps) {
+  const { canAccess } = useAccessControl();
+  const hasPermission = componentId ? canAccess(componentId) : true;
+
+  if (!hasPermission && hideIfDenied) {
+    return null;
+  }
+
   const content = children ?? label;
   const t = TONE_STYLES[tone] ?? TONE_STYLES.neutral;
   const s = SIZES[size] ?? SIZES.sm;
@@ -114,21 +124,22 @@ export function StatusBadge({
 
   return (
     <span
+      data-component-id={componentId || undefined}
       className={cn(
-        'inline-flex items-center font-medium leading-none select-none rounded-full whitespace-nowrap transition-colors',
+        'inline-flex items-center font-medium leading-none rounded-full whitespace-nowrap tabular-nums transition-colors',
         s.base,
         s.px,
         s.text,
         solid ? t.solid : t.soft,
         className
       )}
-      >
+    >
       {dot && !IconProp && (
         <span className="relative flex shrink-0 items-center justify-center">
           {pulse && (
             <span
               className={cn(
-                'absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping',
+                'absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping motion-reduce:animate-none',
                 t.dotPulse
               )}
             />
