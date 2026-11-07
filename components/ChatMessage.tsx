@@ -3,9 +3,9 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
 import { Check, CheckCheck, AlertCircle, Clock, Paperclip, Play, File } from "lucide-react";
-import Avatar from "@/components/Avatar";
-import { SmartObjectChip, parseMessageEntities } from "@/components/SmartObject";
-import type { SmartObjectProps, EntityStatus } from "@/components/SmartObject";
+import Avatar from "./Avatar";
+import { SmartObjectChip, parseMessageEntities } from "./SmartObject";
+import type { SmartObjectProps, EntityStatus } from "./SmartObject";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
