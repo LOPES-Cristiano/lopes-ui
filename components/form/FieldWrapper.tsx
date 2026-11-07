@@ -2,7 +2,7 @@
 
 import React from "react";
 import { HelpCircle, AlertCircle } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "../../utils/cn";
 import {
   Tooltip,
   TooltipContent,
@@ -39,18 +39,25 @@ export type FieldWrapperProps = {
 function FieldTooltip({ message }: { message: string }) {
   return (
     <TooltipProvider delayDuration={180}>
-      <Tooltip>
+      <Tooltip disableHoverableContent>
         <TooltipTrigger asChild>
           <button
             data-component-id="erp.field-wrapper.help-tooltip"
             type="button"
             aria-label="Mostrar ajuda"
-            className="ml-1 inline-flex h-4 w-4 items-center justify-center align-middle text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 rounded-full cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+            }}
+            className="ml-0.5 -m-1 inline-flex h-6 w-6 items-center justify-center align-middle text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 rounded-full cursor-pointer"
           >
             <HelpCircle size={13} className="text-muted-foreground/85 hover:text-foreground transition-colors" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs leading-relaxed">
+        <TooltipContent side="top" collisionPadding={10} className="max-w-xs whitespace-normal leading-relaxed">
           {message}
         </TooltipContent>
       </Tooltip>
@@ -137,6 +144,7 @@ export default function FieldWrapper({
       ? label.replace(/\s*\*+\s*$/, "")
       : label;
   const isRequired = required || (typeof label === "string" && /\*\s*$/.test(label));
+  const dataFieldLabel = typeof cleanLabel === "string" && cleanLabel ? cleanLabel : undefined;
 
   const labelNode = label ? (
     <label
@@ -181,7 +189,10 @@ export default function FieldWrapper({
 
   if (isHorizontal || isResponsive) {
     return (
-      <div className={cn("flex flex-col gap-1", width, className)}>
+      <div
+        data-field-label={dataFieldLabel}
+        className={cn("flex flex-col gap-1", width, className)}
+      >
         <div
           className={cn(
             "flex gap-3",
@@ -214,7 +225,10 @@ export default function FieldWrapper({
   }
 
   return (
-    <div className={cn("flex flex-col gap-1.5", width, className)}>
+    <div
+      data-field-label={dataFieldLabel}
+      className={cn("flex flex-col gap-1.5", width, className)}
+    >
       {(labelNode || labelAction) && (
         <div className="flex items-center justify-between gap-2">
           {labelNode ?? <span />}
