@@ -2,6 +2,7 @@
 
 import React from "react";
 import { twMerge } from "tailwind-merge";
+import { useAccessControl } from "../useAccessControl";
 
 // ── FormRow ───────────────────────────────────────────────────────────────────
 
@@ -49,7 +50,11 @@ export type FormSectionProps = {
 };
 
 export function FormSection({
-  title, description, divider = true, children, className,
+  title,
+  description,
+  divider = true,
+  children,
+  className,
 }: FormSectionProps) {
   return (
     <div className={twMerge("space-y-4", className)}>
@@ -85,19 +90,47 @@ export type FormProps = {
   /** Wrap in a card-style bordered container */
   card?: boolean;
   componentId?: string;
+  hideIfDenied?: boolean;
 };
 
 export default function Form({
-  title, description, footer, onSubmit,
-  className, children, compact = false, card = false, componentId,
+  title,
+  description,
+  footer,
+  onSubmit,
+  className,
+  children,
+  compact = false,
+  card = false,
+  componentId,
+  hideIfDenied = true,
 }: FormProps) {
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+
+  if (!hasPermission && hideIfDenied) {
+    return null;
+  }
+
   const sp = compact ? "space-y-4" : "space-y-6";
 
   const inner = (
     <form
-      onSubmit={onSubmit}
-      className={twMerge(sp, !card && className)}
-      >
+      data-component-id={componentId}
+      onSubmit={(e) => {
+        if (!hasPermission) {
+          e.preventDefault();
+          return;
+        }
+        onSubmit?.(e);
+      }}
+      aria-disabled={!hasPermission || undefined}
+      className={twMerge(
+        sp,
+        !hasPermission && "opacity-60 pointer-events-none",
+        !card && className,
+      )}
+    >
       {(title || description) && (
         <div>
           {title && (
@@ -126,7 +159,7 @@ export default function Form({
     return (
       <div
         className={twMerge(
-          "rounded-2xl border border-border bg-surface shadow-sm",
+          "rounded-[var(--radius-card)] border border-border bg-surface shadow-[var(--shadow-card)]",
           compact ? "p-4" : "p-6",
           className,
         )}
