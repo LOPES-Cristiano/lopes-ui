@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { cn } from "@/utils/cn";
+import { cn } from "../../utils/cn";
 import FieldWrapper from "./FieldWrapper";
 import { useAccessControl } from "../useAccessControl";
 
