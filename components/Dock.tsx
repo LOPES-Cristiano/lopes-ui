@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import type { LucideIcon } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 import { useAccessControl } from "./useAccessControl";
 
 export type DockSize = "xs" | "sm" | "md" | "lg";
