@@ -105,8 +105,7 @@ export function ShellProvider({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [customSidebar, setCustomSidebarState] = useState<React.ReactNode | null>(null);
   const [sidebarCount, setSidebarCount] = useState(0);
-  const [hasSidebar, setHasSidebar] = useState(defaultHasSidebar);
-  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [lingerSidebar, setLingerSidebar] = useState(defaultHasSidebar);
   const everHadSidebarRef = useRef(false);
 
   useEffect(() => {
@@ -120,26 +119,29 @@ export function ShellProvider({
   // Only hydrate from localStorage when SSR did not explicitly pass `defaultCollapsed`
   useEffect(() => {
     if (defaultCollapsed !== undefined) return;
-    try {
-      const hasCookie = document.cookie
-        .split(";")
-        .some((c) => c.trim().startsWith(`${COOKIE_KEY}=`));
-      if (hasCookie) {
-        const cookieVal = document.cookie
+    const timer = setTimeout(() => {
+      try {
+        const hasCookie = document.cookie
           .split(";")
-          .map((c) => c.trim())
-          .find((c) => c.startsWith(`${COOKIE_KEY}=`))
-          ?.split("=")[1];
-        if (cookieVal !== undefined) {
-          setSidebarCollapsedState(cookieVal === "true");
-          return;
+          .some((c) => c.trim().startsWith(`${COOKIE_KEY}=`));
+        if (hasCookie) {
+          const cookieVal = document.cookie
+            .split(";")
+            .map((c) => c.trim())
+            .find((c) => c.startsWith(`${COOKIE_KEY}=`))
+            ?.split("=")[1];
+          if (cookieVal !== undefined) {
+            setSidebarCollapsedState(cookieVal === "true");
+            return;
+          }
         }
-      }
-      const stored = localStorage.getItem(COOKIE_KEY);
-      if (stored !== null) {
-        setSidebarCollapsedState(stored === "true");
-      }
-    } catch {}
+        const stored = localStorage.getItem(COOKIE_KEY);
+        if (stored !== null) {
+          setSidebarCollapsedState(stored === "true");
+        }
+      } catch {}
+    }, 0);
+    return () => clearTimeout(timer);
   }, [defaultCollapsed]);
 
   const setSidebarCollapsed = useCallback((value: boolean | ((prev: boolean) => boolean)) => {
@@ -270,27 +272,24 @@ export function ShellProvider({
   }, []);
 
   const hasAnySidebar = sidebarCount > 0 || customSidebar !== null;
+  if (hasAnySidebar && !lingerSidebar) {
+    setLingerSidebar(true);
+  }
+
   useEffect(() => {
     if (hasAnySidebar) {
-      if (hideTimerRef.current !== null) {
-        clearTimeout(hideTimerRef.current);
-        hideTimerRef.current = null;
-      }
       everHadSidebarRef.current = true;
-      setHasSidebar(true);
-    } else if (everHadSidebarRef.current && !defaultHasSidebar) {
-      hideTimerRef.current = setTimeout(() => {
-        hideTimerRef.current = null;
-        setHasSidebar(false);
-      }, 300);
+      return;
     }
-    return () => {
-      if (hideTimerRef.current !== null) {
-        clearTimeout(hideTimerRef.current);
-        hideTimerRef.current = null;
-      }
-    };
+    if (everHadSidebarRef.current && !defaultHasSidebar) {
+      const timer = setTimeout(() => {
+        setLingerSidebar(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
   }, [hasAnySidebar, defaultHasSidebar]);
+
+  const hasSidebar = hasAnySidebar || lingerSidebar;
 
   const _registerSidebar = useCallback((): (() => void) => {
     setSidebarCount((n) => n + 1);
