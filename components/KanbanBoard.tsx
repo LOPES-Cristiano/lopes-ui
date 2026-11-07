@@ -6,27 +6,43 @@ import {
   MoreVertical,
   GripVertical,
   Calendar,
+  CheckSquare,
+  Paperclip,
+  MessageSquare,
   Clock,
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Trash2,
   Flame,
   ArrowUp,
   Minus,
   ArrowDown,
-  Pencil,
-  Trash2,
+  Columns,
+  Play,
+  Pause,
+  Square,
+  Lock,
+  CheckCircle2,
 } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
+import { formatDateBR } from "../utils/date";
+import { sanitizeCssColor } from "../utils/sanitize";
+import { useAccessControl } from "./useAccessControl";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./primitives/dropdown-menu";
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
 export function formatDuration(seconds: number): string {
-  if (!seconds || seconds <= 0 || isNaN(seconds)) return "0m";
+  if (!seconds || seconds <= 0 || Number.isNaN(seconds)) return "0m";
   const total = Math.round(seconds);
   const days = Math.floor(total / 86400);
   const hours = Math.floor((total % 86400) / 3600);
@@ -49,9 +65,10 @@ export function formatDuration(seconds: number): string {
 }
 
 export function formatClock(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
+  const safe = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(safe / 3600);
+  const m = Math.floor((safe % 3600) / 60);
+  const s = safe % 60;
   const pad = (n: number) => n.toString().padStart(2, "0");
   if (h > 0) {
     return `${pad(h)}:${pad(m)}:${pad(s)}`;
@@ -92,6 +109,8 @@ export type KanbanCardPriority = "BAIXA" | "MEDIA" | "ALTA" | "URGENTE";
 export type KanbanCard = {
   id: string;
   codigo?: number | string;
+  /** Alias em inglês para `codigo` */
+  code?: number | string;
   title: string;
   description?: string;
   tags?: Array<KanbanTag | string>;
@@ -101,6 +120,8 @@ export type KanbanCard = {
   assignee?: KanbanAssignee;
   dueDate?: string;
   isOverdue?: boolean;
+  blocked?: boolean;
+  bloqueada?: boolean;
   checklistTotal?: number;
   checklistDone?: number;
   attachmentsCount?: number;
@@ -124,6 +145,7 @@ export type KanbanCard = {
   pendingBlocksCount?: number;
   timeInQueue?: string;
   draggable?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawData?: any;
 };
 
@@ -140,6 +162,8 @@ export type KanbanColumn = {
 };
 
 export type KanbanBoardProps = {
+  componentId?: string;
+  hideIfDenied?: boolean;
   columns: KanbanColumn[];
   onChange?: (columns: KanbanColumn[]) => void;
   onAddCard?: (columnId: string) => void;
@@ -165,6 +189,18 @@ export type KanbanBoardProps = {
   className?: string;
 };
 
+const colorBorder: Record<KanbanCardColor, string> = {
+  zinc: "border-l-zinc-400 dark:border-l-zinc-500",
+  indigo: "border-l-indigo-500 dark:border-l-indigo-400",
+  blue: "border-l-blue-500 dark:border-l-blue-400",
+  emerald: "border-l-emerald-500 dark:border-l-emerald-400",
+  amber: "border-l-amber-500 dark:border-l-amber-400",
+  red: "border-l-red-500 dark:border-l-red-400",
+  violet: "border-l-violet-500 dark:border-l-violet-400",
+  pink: "border-l-pink-500 dark:border-l-pink-400",
+  teal: "border-l-teal-500 dark:border-l-teal-400",
+};
+
 // ── Priority Badge Helper ─────────────────────────────────────────────────────
 
 export function PriorityBadge({ priority }: { priority?: string }) {
@@ -173,7 +209,7 @@ export function PriorityBadge({ priority }: { priority?: string }) {
 
   if (p === "URGENTE" || p === "CRITICA") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold bg-rose-600 text-white shadow-2xs">
+      <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold bg-danger text-white shadow-2xs">
         <Flame className="w-2.5 h-2.5 text-white" />
         Urgente
       </span>
@@ -181,7 +217,7 @@ export function PriorityBadge({ priority }: { priority?: string }) {
   }
   if (p === "ALTA") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold bg-amber-500 text-white shadow-2xs">
+      <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold bg-warning text-white shadow-2xs">
         <ArrowUp className="w-2.5 h-2.5 text-white" />
         Alta
       </span>
@@ -189,7 +225,7 @@ export function PriorityBadge({ priority }: { priority?: string }) {
   }
   if (p === "MEDIA") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold bg-blue-600 text-white shadow-2xs">
+      <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold bg-info text-white shadow-2xs">
         <Minus className="w-2.5 h-2.5 text-white" />
         Média
       </span>
@@ -204,7 +240,7 @@ export function PriorityBadge({ priority }: { priority?: string }) {
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+    <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-medium bg-muted text-muted-foreground">
       {priority}
     </span>
   );
@@ -215,16 +251,16 @@ export function PriorityBadge({ priority }: { priority?: string }) {
 export function TagBadge({ tag, index = 0 }: { tag: KanbanTag | string; index?: number }) {
   const isObj = typeof tag === "object" && tag !== null;
   const name = isObj ? tag.name : tag;
-  const customBg = isObj ? tag.corFundo : undefined;
-  const customText = isObj ? tag.corTexto : undefined;
+  const safeBg = isObj ? sanitizeCssColor(tag.corFundo || tag.color) : undefined;
+  const safeText = isObj ? sanitizeCssColor(tag.corTexto) : undefined;
 
-  if (customBg) {
+  if (safeBg) {
     return (
       <span
         className="text-[9px] rounded-md px-1.5 py-0.5 font-bold uppercase tracking-wider shadow-2xs"
         style={{
-          backgroundColor: customBg,
-          color: customText || "#FFFFFF",
+          backgroundColor: safeBg,
+          color: safeText || "#FFFFFF",
         }}
       >
         {name}
@@ -267,8 +303,8 @@ export function AssigneesStack({ assignees }: { assignees: KanbanAssignee[] }) {
       {visible.map((a, i) => (
         <div
           key={a.id ?? i}
-          title={a.name}
-          className="w-5 h-5 rounded-full ring-2 ring-white dark:ring-zinc-900 bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[9px] font-bold text-zinc-700 dark:text-zinc-200 overflow-hidden shrink-0 shadow-2xs"
+          aria-label={a.name}
+          className="w-5 h-5 rounded-full ring-2 ring-surface bg-muted flex items-center justify-center text-[9px] font-bold text-foreground overflow-hidden shrink-0 shadow-2xs"
         >
           {a.avatarUrl ? (
             <img src={a.avatarUrl} alt={a.name} className="w-full h-full object-cover" />
@@ -286,7 +322,7 @@ export function AssigneesStack({ assignees }: { assignees: KanbanAssignee[] }) {
         </div>
       ))}
       {remaining > 0 && (
-        <div className="w-5 h-5 rounded-full ring-2 ring-white dark:ring-zinc-900 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-[9px] font-bold text-zinc-500 dark:text-zinc-400 shrink-0">
+        <div className="w-5 h-5 rounded-full ring-2 ring-surface bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground shrink-0 tabular-nums">
           +{remaining}
         </div>
       )}
@@ -300,6 +336,7 @@ function KanbanCardItem({
   card,
   cardIndex,
   columnId,
+  columnTipo,
   column,
   onDragStart,
   onDragEnd,
@@ -307,6 +344,13 @@ function KanbanCardItem({
   isDragging,
   onCardClick,
   renderCard,
+  onStartTimer,
+  onPauseTimer,
+  onResumeTimer,
+  onStopTimer,
+  activeTimerCardId,
+  activeTimerSeconds,
+  activeTimerStatus,
 }: {
   card: KanbanCard;
   cardIndex: number;
@@ -319,9 +363,17 @@ function KanbanCardItem({
   isDragging: boolean;
   onCardClick?: (card: KanbanCard, columnId: string) => void;
   renderCard?: (card: KanbanCard, column: KanbanColumn) => React.ReactNode;
+  onStartTimer?: (card: KanbanCard) => void;
+  onPauseTimer?: (card: KanbanCard) => void;
+  onResumeTimer?: (card: KanbanCard) => void;
+  onStopTimer?: (card: KanbanCard) => void;
+  activeTimerCardId?: string | null;
+  activeTimerSeconds?: number;
+  activeTimerStatus?: "RODANDO" | "PAUSADO" | null;
 }) {
+  const isCardDraggable = card.draggable !== false;
+
   if (renderCard) {
-    const isCardDraggable = card.draggable !== false;
     return (
       <div
         draggable={isCardDraggable}
@@ -339,8 +391,8 @@ function KanbanCardItem({
           onDropAtCard(columnId, cardIndex);
         }}
         className={twMerge(
-          "transition-all duration-150 cursor-pointer select-none",
-          isDragging && "opacity-40 scale-95 ring-2 ring-blue-500 shadow-xl rounded-lg"
+          "transition-all duration-150 cursor-pointer",
+          isDragging && "opacity-40 scale-95 ring-2 ring-primary shadow-xl rounded-lg",
         )}
       >
         {renderCard(card, column)}
@@ -355,10 +407,37 @@ function KanbanCardItem({
         ? [card.assignee]
         : [];
 
+  const displayCode = card.codigo ?? card.code;
+  const isBlocked = Boolean(card.blocked ?? card.bloqueada);
+  const isConcluido = columnTipo === "CONCLUIDO" || columnTipo === "DONE";
+
+  const isTimerActive = activeTimerCardId === card.id;
+  const resolvedTimerStatus = isTimerActive
+    ? (activeTimerStatus ?? card.timerStatus ?? "RODANDO")
+    : (card.timerStatus ?? null);
+  const hasTimerControls = Boolean(onStartTimer || onPauseTimer || onResumeTimer || onStopTimer);
+
+  const baseSpentSeconds = card.spentSeconds ?? (card.spentHours ? card.spentHours * 3600 : 0);
+  const totalSpentSeconds =
+    baseSpentSeconds + (isTimerActive ? Math.max(0, activeTimerSeconds ?? 0) : 0);
+  const estSec = card.estimatedHours ? card.estimatedHours * 3600 : 0;
+  const isTimeExceeded = estSec > 0 && totalSpentSeconds > estSec;
+  const showTimeChip =
+    totalSpentSeconds > 0 ||
+    estSec > 0 ||
+    card.spentSeconds !== undefined ||
+    card.spentHours !== undefined;
+
   return (
     <div
-      draggable
-      onDragStart={() => onDragStart(columnId, card.id)}
+      draggable={isCardDraggable}
+      onDragStart={(e) => {
+        if (!isCardDraggable) {
+          e.preventDefault();
+          return;
+        }
+        onDragStart(columnId, card.id);
+      }}
       onDragEnd={onDragEnd}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
@@ -366,44 +445,70 @@ function KanbanCardItem({
         onDropAtCard(columnId, cardIndex);
       }}
       onClick={() => onCardClick?.(card, columnId)}
+      aria-grabbed={isDragging}
       className={twMerge(
-        "group relative rounded-lg bg-white dark:bg-zinc-900",
-        "border border-zinc-200/80 dark:border-zinc-800",
-        "p-3.5 shadow-2xs hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-150 ease-out",
-        "cursor-grab active:cursor-grabbing select-none text-left",
-        isDragging && "opacity-40 scale-98 rotate-1 ring-2 ring-blue-500 shadow-xl"
+        "group relative rounded-xl bg-surface",
+        "border border-border/80",
+        "p-3.5 shadow-2xs hover:shadow-md hover:border-border transition-all duration-150 ease-out",
+        isCardDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+        "text-left",
+        card.color && `border-l-4 ${colorBorder[card.color]}`,
+        isDragging && "opacity-40 scale-98 rotate-1 ring-2 ring-primary shadow-xl",
+        isTimerActive &&
+          resolvedTimerStatus === "RODANDO" &&
+          "ring-2 ring-success border-success/70 bg-success/5",
+        isBlocked && "border-l-4 border-l-danger bg-danger/5",
       )}
     >
-      {/* Top row: Code + Priority + Special Badges */}
+      {/* Top row: Code + Priority + Sprint + Status Flags */}
       <div className="flex items-center justify-between gap-1.5 mb-2">
         <div className="flex items-center gap-1.5 flex-wrap">
-          {card.codigo && (
-            <span className="text-[11px] font-mono font-bold text-zinc-400 dark:text-zinc-500">
-              #{card.codigo}
+          {displayCode !== undefined && displayCode !== "" && (
+            <span className="text-[11px] font-mono font-bold text-muted-foreground tabular-nums">
+              #{displayCode}
             </span>
           )}
           <PriorityBadge priority={card.priority} />
           {card.semanaAno && (
-            <span
-              className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/60 shadow-2xs"
-            >
-              <Calendar className="w-2.5 h-2.5 text-indigo-500" />
-              <span>SEMANA {card.semanaAno}{card.ano ? `/${card.ano}` : ""}</span>
+            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold bg-primary/10 text-primary border border-primary/25 shadow-2xs tabular-nums">
+              <Calendar className="w-2.5 h-2.5" />
+              <span>
+                SEMANA {card.semanaAno}
+                {card.ano ? `/${card.ano}` : ""}
+              </span>
             </span>
           )}
         </div>
 
-        <GripVertical className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+        <div className="flex items-center gap-1.5 shrink-0">
+          {card.isOverdue && !isConcluido && (
+            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-danger text-white shadow-2xs animate-pulse">
+              <AlertTriangle className="w-2.5 h-2.5 text-white" />
+              Atrasada
+            </span>
+          )}
+
+          {isBlocked && (
+            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-bold bg-danger text-white shadow-2xs">
+              <Lock className="w-2.5 h-2.5 text-white" />
+              Bloqueada
+            </span>
+          )}
+
+          {isConcluido && <CheckCircle2 className="w-4 h-4 text-success shrink-0" />}
+
+          {isCardDraggable && (
+            <GripVertical className="w-3.5 h-3.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+          )}
+        </div>
       </div>
 
       {/* Card Title */}
-      <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-snug line-clamp-2">
-        {card.title}
-      </p>
+      <p className="text-xs font-bold text-foreground leading-snug line-clamp-2">{card.title}</p>
 
       {/* Card Description */}
       {card.description && (
-        <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">
+        <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
           {card.description}
         </p>
       )}
@@ -418,14 +523,151 @@ function KanbanCardItem({
       )}
 
       {/* Card Footer */}
-      <div className="mt-3 pt-2.5 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-[10px] text-zinc-500 dark:text-zinc-400 flex-wrap">
-          {card.spentSeconds !== undefined || card.spentHours !== undefined ? (
-            <div className="inline-flex items-center gap-1 font-semibold text-zinc-600 dark:text-zinc-300">
-              <Clock className="w-3 h-3 text-zinc-400" />
-              <span>{card.spentSeconds ? formatDuration(card.spentSeconds) : `${card.spentHours || 0}h`}</span>
+      <div className="mt-3 pt-2.5 border-t border-border/70 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground flex-wrap tabular-nums">
+          {showTimeChip && (
+            <div
+              className={twMerge(
+                "inline-flex items-center gap-1 font-semibold px-1.5 py-0.5 rounded-md text-[10px]",
+                isTimeExceeded
+                  ? "bg-warning/15 text-warning border border-warning/30"
+                  : "text-foreground/80",
+              )}
+            >
+              <Clock
+                className={twMerge(
+                  "w-3 h-3 shrink-0",
+                  isTimeExceeded ? "text-warning" : "text-muted-foreground",
+                )}
+              />
+              <span>
+                {isTimerActive && resolvedTimerStatus === "RODANDO"
+                  ? formatClock(totalSpentSeconds)
+                  : formatDuration(totalSpentSeconds)}
+              </span>
+              {estSec > 0 && <span> / {formatDuration(estSec)}</span>}
+              {isTimeExceeded && (
+                <span className="text-[9px] font-black text-warning bg-warning/20 px-1 rounded">
+                  +{formatDuration(totalSpentSeconds - estSec)}
+                </span>
+              )}
             </div>
-          ) : null}
+          )}
+
+          {isTimerActive && resolvedTimerStatus === "RODANDO" && (
+            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-success text-white animate-pulse shadow-2xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
+              Ativo
+            </span>
+          )}
+
+          {/* Inline Stopwatch Controls */}
+          {hasTimerControls && !isConcluido && (
+            <div
+              className="inline-flex items-center gap-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {resolvedTimerStatus === "RODANDO" ? (
+                <>
+                  {onPauseTimer && (
+                    <button
+                      type="button"
+                      aria-label="Pausar cronômetro"
+                      onClick={() => onPauseTimer(card)}
+                      className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-warning/30 bg-warning/10 text-warning hover:bg-warning/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer transition-colors"
+                    >
+                      <Pause className="w-3 h-3" />
+                    </button>
+                  )}
+                  {onStopTimer && (
+                    <button
+                      type="button"
+                      aria-label="Finalizar cronômetro"
+                      onClick={() => onStopTimer(card)}
+                      className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-danger/30 bg-danger/10 text-danger hover:bg-danger/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer transition-colors"
+                    >
+                      <Square className="w-2.5 h-2.5 fill-current" />
+                    </button>
+                  )}
+                </>
+              ) : resolvedTimerStatus === "PAUSADO" ? (
+                <>
+                  {(onResumeTimer || onStartTimer) && (
+                    <button
+                      type="button"
+                      aria-label="Retomar cronômetro"
+                      onClick={() => (onResumeTimer ? onResumeTimer(card) : onStartTimer?.(card))}
+                      className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-success/30 bg-success/10 text-success hover:bg-success/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer transition-colors"
+                    >
+                      <Play className="w-3 h-3 fill-current" />
+                    </button>
+                  )}
+                  {onStopTimer && (
+                    <button
+                      type="button"
+                      aria-label="Finalizar cronômetro"
+                      onClick={() => onStopTimer(card)}
+                      className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-danger/30 bg-danger/10 text-danger hover:bg-danger/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer transition-colors"
+                    >
+                      <Square className="w-2.5 h-2.5 fill-current" />
+                    </button>
+                  )}
+                </>
+              ) : (
+                onStartTimer && (
+                  <button
+                    type="button"
+                    aria-label="Iniciar cronômetro"
+                    onClick={() => onStartTimer(card)}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-muted/40 text-muted-foreground hover:border-success/40 hover:bg-success/10 hover:text-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer transition-colors"
+                  >
+                    <Play className="w-3 h-3" />
+                  </button>
+                )
+              )}
+            </div>
+          )}
+
+          {card.dueDate && (
+            <div
+              className={twMerge(
+                "inline-flex items-center gap-1 font-medium px-1.5 py-0.5 rounded-md text-[10px]",
+                card.isOverdue && !isConcluido
+                  ? "bg-danger/10 text-danger font-bold border border-danger/30"
+                  : "text-muted-foreground",
+              )}
+            >
+              {card.isOverdue && !isConcluido ? (
+                <AlertTriangle className="w-2.5 h-2.5 text-danger shrink-0" />
+              ) : (
+                <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
+              )}
+              <span>{formatDateBR(card.dueDate)}</span>
+            </div>
+          )}
+
+          {card.checklistTotal !== undefined && card.checklistTotal > 0 && (
+            <div className="inline-flex items-center gap-1 font-semibold bg-muted px-1.5 py-0.5 rounded-md border border-border/60">
+              <CheckSquare className="w-2.5 h-2.5 text-muted-foreground" />
+              <span>
+                {card.checklistDone ?? 0}/{card.checklistTotal}
+              </span>
+            </div>
+          )}
+
+          {card.attachmentsCount !== undefined && card.attachmentsCount > 0 && (
+            <div className="inline-flex items-center gap-0.5 font-medium text-muted-foreground">
+              <Paperclip className="w-2.5 h-2.5" />
+              <span>{card.attachmentsCount}</span>
+            </div>
+          )}
+
+          {card.commentsCount !== undefined && card.commentsCount > 0 && (
+            <div className="inline-flex items-center gap-0.5 font-medium text-muted-foreground">
+              <MessageSquare className="w-2.5 h-2.5" />
+              <span>{card.commentsCount}</span>
+            </div>
+          )}
         </div>
 
         <AssigneesStack assignees={assigneesList} />
@@ -437,13 +679,24 @@ function KanbanCardItem({
 // ── Main Board Component ──────────────────────────────────────────────────────
 
 export default function KanbanBoard({
+  componentId,
+  hideIfDenied = true,
   columns: initialColumns,
   onChange,
   onAddCard,
   onCardClick,
   onMoveCard,
+  onAddColumn,
   onEditColumn,
   onDeleteColumn,
+  onReorderColumns,
+  onStartTimer,
+  onPauseTimer,
+  onResumeTimer,
+  onStopTimer,
+  activeTimerCardId,
+  activeTimerSeconds,
+  activeTimerStatus,
   showColumnActions = true,
   renderCard,
   renderColumnHeader,
@@ -451,14 +704,19 @@ export default function KanbanBoard({
   addCardLabel = "Adicionar item",
   className,
 }: KanbanBoardProps) {
+  const { canAccess } = useAccessControl();
+  const hasAccess = componentId ? canAccess(componentId) : true;
+
   const [columns, setColumns] = useState<KanbanColumn[]>(initialColumns);
+  const [prevInitialColumns, setPrevInitialColumns] = useState<KanbanColumn[]>(initialColumns);
   const dragRef = useRef<{ sourceColId: string; cardId: string } | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverColId, setDragOverColId] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  if (prevInitialColumns !== initialColumns) {
+    setPrevInitialColumns(initialColumns);
     setColumns(initialColumns);
-  }, [initialColumns]);
+  }
 
   const handleDragStart = useCallback((colId: string, cardId: string) => {
     dragRef.current = { sourceColId: colId, cardId };
@@ -495,7 +753,7 @@ export default function KanbanBoard({
         nextCards.splice(sourceIdx, 1);
         nextCards.splice(destIdx, 0, draggedCard);
         const finalCols = columns.map((col) =>
-          col.id === sourceColId ? { ...col, cards: nextCards } : col
+          col.id === sourceColId ? { ...col, cards: nextCards } : col,
         );
         setColumns(finalCols);
         onChange?.(finalCols);
@@ -524,9 +782,33 @@ export default function KanbanBoard({
     [columns, onChange, onMoveCard],
   );
 
+  const moveColumnPosition = useCallback(
+    (colIndex: number, direction: "left" | "right") => {
+      const newIdx = direction === "left" ? colIndex - 1 : colIndex + 1;
+      if (newIdx < 0 || newIdx >= columns.length) return;
+      const copy = [...columns];
+      const [item] = copy.splice(colIndex, 1);
+      copy.splice(newIdx, 0, item);
+      setColumns(copy);
+      onChange?.(copy);
+      onReorderColumns?.(copy);
+    },
+    [columns, onChange, onReorderColumns],
+  );
+
+  if (!hasAccess && hideIfDenied) {
+    return null;
+  }
+
   return (
-    <div className="flex flex-col h-full min-h-0 w-full gap-2">
-      {/* ── Mobile/Tablet Quick Column Switcher (Acesso Rápido às Colunas) ── */}
+    <div
+      data-component-id={componentId}
+      className={twMerge(
+        "flex flex-col h-full min-h-0 w-full gap-2",
+        !hasAccess && "opacity-50 pointer-events-none",
+      )}
+    >
+      {/* Mobile/Tablet Quick Column Switcher */}
       {columns.length > 0 && (
         <div className="flex md:hidden items-center gap-1.5 overflow-x-auto pb-1 -mx-0.5 px-0.5 no-scrollbar shrink-0">
           {columns.map((col) => (
@@ -538,10 +820,10 @@ export default function KanbanBoard({
                 const el = document.getElementById(`kanban-col-${col.id}`);
                 el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
               }}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap bg-white dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-200 border border-zinc-200/90 dark:border-zinc-700/80 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-700/70 shrink-0 cursor-pointer active:scale-95 transition-all"
+              className="inline-flex min-h-7 items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap bg-surface text-foreground border border-border shadow-2xs hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 shrink-0 cursor-pointer active:scale-95 transition-all"
             >
               <span>{col.title}</span>
-              <span className="text-[10px] font-bold font-mono px-1 rounded bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">
+              <span className="text-[10px] font-bold font-mono tabular-nums px-1 rounded bg-muted text-muted-foreground">
                 {col.cards.length}
               </span>
             </button>
@@ -549,18 +831,55 @@ export default function KanbanBoard({
         </div>
       )}
 
-      {/* ── Main Board: Colunas com Snap no Mobile e Distribuição Flex no 2XL ── */}
+      {/* Main Board */}
       <div
         className={twMerge(
           "flex gap-2.5 sm:gap-3.5 xl:gap-4 overflow-x-auto pb-2 pt-0.5 items-stretch h-full min-h-0 w-full snap-x snap-mandatory md:snap-none scroll-smooth",
           className,
         )}
       >
-        {columns.map((column) => {
+        {columns.length === 0 && (
+          <div className="flex flex-col items-center justify-center w-full py-16 text-center border-2 border-dashed border-border rounded-2xl bg-muted/20">
+            <div className="p-3 rounded-full bg-primary/10 text-primary mb-3">
+              <Columns className="w-6 h-6" />
+            </div>
+            <h3 className="text-sm font-bold text-foreground">
+              Este quadro ainda não possui colunas
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+              Crie as etapas do seu fluxo de trabalho (ex: Backlog, Em Andamento, Revisão, Concluído).
+            </p>
+            {onAddColumn && (
+              <button
+                data-component-id="erp.kanban.create-first-col"
+                type="button"
+                onClick={onAddColumn}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors shadow-xs cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Criar Primeira Coluna</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {columns.map((column, colIndex) => {
           const isTarget = dragOverColId === column.id;
           const wipExceeded = column.limit !== undefined && column.cards.length > column.limit;
           const wipAtLimit = column.limit !== undefined && column.cards.length === column.limit;
-          const hasColMenu = showColumnActions && Boolean(onEditColumn || onDeleteColumn);
+          const canReorder = Boolean(onReorderColumns && columns.length > 1);
+          const hasColMenu =
+            showColumnActions && Boolean(onEditColumn || onDeleteColumn || canReorder);
+
+          const totalEstimatedSeconds = column.cards.reduce(
+            (sum, c) => sum + (c.estimatedHours ? c.estimatedHours * 3600 : 0),
+            0,
+          );
+          const totalSpentSeconds = column.cards.reduce(
+            (sum, c) => sum + (c.spentSeconds ?? (c.spentHours ? c.spentHours * 3600 : 0)),
+            0,
+          );
+          const hasTimeRollup = totalEstimatedSeconds > 0 || totalSpentSeconds > 0;
 
           return (
             <div
@@ -573,11 +892,12 @@ export default function KanbanBoard({
               onDragLeave={() => setDragOverColId(null)}
               onDrop={() => handleDropAt(column.id)}
               className={twMerge(
-                "flex flex-col w-[86vw] sm:w-[300px] lg:w-[320px] 2xl:flex-1 2xl:w-auto 2xl:min-w-[280px] shrink-0 snap-center snap-always md:snap-none rounded-xl bg-zinc-50/80 dark:bg-zinc-900/40 border border-zinc-200/80 dark:border-zinc-800/80 p-3 select-none transition-all duration-150 h-full max-h-full min-h-0",
-                isTarget && "bg-blue-50/30 dark:bg-blue-950/20 border-blue-400 dark:border-blue-500 ring-2 ring-blue-400/40"
+                "flex flex-col w-[86vw] sm:w-[300px] lg:w-[320px] 2xl:flex-1 2xl:w-auto 2xl:min-w-[280px] shrink-0 snap-center snap-always md:snap-none rounded-xl bg-muted/35 border border-border/80 p-3 transition-all duration-150 h-full max-h-full min-h-0",
+                isTarget && "bg-primary/5 border-primary ring-2 ring-primary/30",
+                wipExceeded && "border-danger/50 bg-danger/5",
               )}
             >
-              {/* ── Column Header ────────────────────────────────────────── */}
+              {/* Column Header */}
               <div className="shrink-0">
                 {renderColumnHeader ? (
                   renderColumnHeader(column, column.cards)
@@ -585,23 +905,18 @@ export default function KanbanBoard({
                   <div className="mb-2 px-0.5">
                     <div className="flex items-center justify-between gap-1.5">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                        <span className="text-xs font-bold text-foreground truncate">
                           {column.title}
                         </span>
                         <span
                           className={twMerge(
-                            "inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold border shadow-2xs font-mono",
+                            "inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold border shadow-2xs font-mono tabular-nums",
                             wipExceeded
-                              ? "bg-red-100 text-red-700 border-red-300 dark:bg-red-950/60 dark:text-red-300 dark:border-red-800"
+                              ? "bg-danger/15 text-danger border-danger/40"
                               : wipAtLimit
-                                ? "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
-                                : "bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200 border-zinc-300/60 dark:border-zinc-700"
+                                ? "bg-warning/15 text-warning border-warning/40"
+                                : "bg-muted text-foreground border-border",
                           )}
-                          title={
-                            column.limit !== undefined
-                              ? `Limite WIP: ${column.cards.length} / ${column.limit}`
-                              : undefined
-                          }
                         >
                           {column.limit !== undefined
                             ? `${column.cards.length}/${column.limit}`
@@ -609,14 +924,13 @@ export default function KanbanBoard({
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1 shrink-0 text-zinc-400">
+                      <div className="flex items-center gap-1 shrink-0 text-muted-foreground">
                         {onAddCard && (
                           <button
                             data-component-id={`erp.kanban.add-card-${column.id}`}
                             type="button"
                             onClick={() => onAddCard(column.id)}
-                            className="p-1 rounded-lg hover:bg-zinc-200/60 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
-                            title={addCardLabel}
+                            className="inline-flex h-6 w-6 items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
                             aria-label={addCardLabel}
                           >
                             <Plus className="w-3.5 h-3.5" />
@@ -629,7 +943,7 @@ export default function KanbanBoard({
                                 data-component-id={`erp.kanban.col-menu-${column.id}`}
                                 type="button"
                                 aria-label="Opções da coluna"
-                                className="p-1 rounded-lg hover:bg-zinc-200/60 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                                className="inline-flex h-6 w-6 items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
                               >
                                 <MoreVertical className="w-3.5 h-3.5" />
                               </button>
@@ -641,14 +955,33 @@ export default function KanbanBoard({
                                   Editar coluna
                                 </DropdownMenuItem>
                               )}
-                              {onDeleteColumn && (
+                              {canReorder && colIndex > 0 && (
                                 <DropdownMenuItem
-                                  onClick={() => onDeleteColumn(column.id)}
-                                  className="text-red-600 focus:text-red-600 dark:text-red-400"
+                                  onClick={() => moveColumnPosition(colIndex, "left")}
                                 >
-                                  <Trash2 className="w-3.5 h-3.5 mr-2" />
-                                  Excluir coluna
+                                  <ChevronLeft className="w-3.5 h-3.5 mr-2" />
+                                  Mover para esquerda
                                 </DropdownMenuItem>
+                              )}
+                              {canReorder && colIndex < columns.length - 1 && (
+                                <DropdownMenuItem
+                                  onClick={() => moveColumnPosition(colIndex, "right")}
+                                >
+                                  <ChevronRight className="w-3.5 h-3.5 mr-2" />
+                                  Mover para direita
+                                </DropdownMenuItem>
+                              )}
+                              {onDeleteColumn && (
+                                <>
+                                  {(onEditColumn || canReorder) && <DropdownMenuSeparator />}
+                                  <DropdownMenuItem
+                                    onClick={() => onDeleteColumn(column.id)}
+                                    className="text-danger focus:text-danger"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5 mr-2" />
+                                    Excluir coluna
+                                  </DropdownMenuItem>
+                                </>
                               )}
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -656,19 +989,26 @@ export default function KanbanBoard({
                       </div>
                     </div>
 
-                    {column.subtitle && (
-                      <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">
-                        {column.subtitle}
+                    {column.subtitle ? (
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{column.subtitle}</p>
+                    ) : hasTimeRollup ? (
+                      <p className="text-[11px] text-muted-foreground mt-0.5 tabular-nums">
+                        {totalEstimatedSeconds > 0
+                          ? `${formatDuration(totalEstimatedSeconds)} estimadas`
+                          : "Sem estimativa"}
+                        {totalSpentSeconds > 0
+                          ? ` · ${formatDuration(totalSpentSeconds)} registradas`
+                          : ""}
                       </p>
-                    )}
+                    ) : null}
                   </div>
                 )}
               </div>
 
-              {/* ── Cards List ───────────────────────────────────────────── */}
+              {/* Cards List */}
               <div className="flex flex-col gap-2.5 flex-1 min-h-0 overflow-y-auto pr-1">
                 {column.cards.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center flex-1 py-8 text-center text-xs text-zinc-400 dark:text-zinc-600">
+                  <div className="flex flex-col items-center justify-center flex-1 py-8 text-center text-xs text-muted-foreground">
                     <span>{emptyColumnLabel}</span>
                   </div>
                 ) : (
@@ -686,18 +1026,25 @@ export default function KanbanBoard({
                       isDragging={draggingId === card.id}
                       onCardClick={onCardClick}
                       renderCard={renderCard}
+                      onStartTimer={onStartTimer}
+                      onPauseTimer={onPauseTimer}
+                      onResumeTimer={onResumeTimer}
+                      onStopTimer={onStopTimer}
+                      activeTimerCardId={activeTimerCardId}
+                      activeTimerSeconds={activeTimerSeconds}
+                      activeTimerStatus={activeTimerStatus}
                     />
                   ))
                 )}
               </div>
 
-              {/* ── Add Card Footer Button ───────────────────────────────── */}
+              {/* Add Card Footer Button */}
               {onAddCard && (
                 <button
                   data-component-id={`erp.kanban.add-card-footer-${column.id}`}
                   type="button"
                   onClick={() => onAddCard(column.id)}
-                  className="shrink-0 mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 py-2 text-xs font-medium text-zinc-500 hover:border-zinc-300 hover:bg-zinc-100/80 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer"
+                  className="shrink-0 mt-2.5 flex min-h-8 w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2 text-xs font-medium text-muted-foreground hover:border-primary/50 hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>{addCardLabel}</span>
@@ -706,6 +1053,18 @@ export default function KanbanBoard({
             </div>
           );
         })}
+
+        {columns.length > 0 && onAddColumn && (
+          <button
+            data-component-id="erp.kanban.add-col-trailing"
+            type="button"
+            onClick={onAddColumn}
+            className="flex h-12 w-60 shrink-0 items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface/50 px-4 text-xs font-semibold text-muted-foreground hover:border-primary/50 hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Nova Coluna</span>
+          </button>
+        )}
       </div>
     </div>
   );
