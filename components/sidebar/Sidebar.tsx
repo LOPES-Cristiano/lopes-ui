@@ -1,12 +1,19 @@
 'use client';
 
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { useShell } from '../ShellContext';
 import { useAccessControl } from '../useAccessControl';
-import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
-import { filterNavGroups } from '@/utils/filterNavItems';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { filterNavGroups } from '../../utils/filterNavItems';
 
 import type {
   SidebarNavGroup as SidebarNavGroupType,
@@ -24,6 +31,33 @@ import { SidebarUserMenu } from './SidebarUserMenu';
 import { useSidebarAutoCollapse } from './hooks/useSidebarAutoCollapse';
 import { useSidebarGroups } from './hooks/useSidebarGroups';
 import { useSidebarPins } from './hooks/useSidebarPins';
+
+function normalizeSidebarSearch(text?: string): string {
+  if (!text) return '';
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function subscribeHash(callback: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener('hashchange', callback);
+  window.addEventListener('popstate', callback);
+  return () => {
+    window.removeEventListener('hashchange', callback);
+    window.removeEventListener('popstate', callback);
+  };
+}
+
+function getHashSnapshot(): string {
+  return typeof window !== 'undefined' ? window.location.hash : '';
+}
+
+function getServerHashSnapshot(): string {
+  return '';
+}
 
 function resolveActiveGroups(
   groups: SidebarNavGroupType[],
@@ -64,12 +98,20 @@ function resolveActiveGroups(
 }
 
 function filterGroupsBySearch(groups: SidebarNavGroupType[], query: string): SidebarNavGroupType[] {
-  const q = query.toLowerCase().trim();
+  const q = normalizeSidebarSearch(query);
   if (!q) return groups;
+  const tokens = q.split(/\s+/).filter(Boolean);
+
+  const matchesTokens = (haystack: string): boolean => {
+    if (!haystack) return false;
+    return tokens.every((tok) => haystack.includes(tok));
+  };
 
   const matchItem = (item: SidebarNavItemType): SidebarNavItemType | null => {
-    const labelMatches = item.label?.toLowerCase().includes(q);
-    const descMatches = item.description?.toLowerCase().includes(q);
+    const combinedText = normalizeSidebarSearch(
+      [item.label, item.description].filter(Boolean).join(' '),
+    );
+    const selfMatches = matchesTokens(combinedText);
     const childrenMatches: SidebarNavItemType[] = [];
 
     if (item.children && Array.isArray(item.children)) {
@@ -79,10 +121,14 @@ function filterGroupsBySearch(groups: SidebarNavGroupType[], query: string): Sid
       }
     }
 
-    if (labelMatches || descMatches || childrenMatches.length > 0) {
+    if (selfMatches || childrenMatches.length > 0) {
       return {
         ...item,
-        children: item.children ? (childrenMatches.length > 0 ? childrenMatches : item.children) : undefined,
+        children: item.children
+          ? childrenMatches.length > 0
+            ? childrenMatches
+            : item.children
+          : undefined,
       };
     }
     return null;
@@ -90,10 +136,10 @@ function filterGroupsBySearch(groups: SidebarNavGroupType[], query: string): Sid
 
   return groups
     .map((group) => {
-      const groupLabelMatches = group.label?.toLowerCase().includes(q);
+      const groupLabelMatches = matchesTokens(normalizeSidebarSearch(group.label));
       const filteredItems = group.items
         .map(matchItem)
-        .filter((item): item is any => item !== null);
+        .filter((item): item is SidebarNavItemType => item !== null);
 
       if (groupLabelMatches) {
         return group;
@@ -129,6 +175,7 @@ export function Sidebar({
   groups = [],
   groupsCollapsible = false,
   groupsStorageKey = 'sidebar-groups',
+  collapsedGroupMode = 'flatten-items',
   onNavigate,
   autoCollapseAfterNavigation = false,
   autoCollapseDelay = 0,
@@ -144,7 +191,6 @@ export function Sidebar({
   onMobileOpenChange,
   className = '',
   isolated = false,
-  variant = 'default',
   canAccess,
   showItemIcons = true,
 }: SidebarProps) {
@@ -155,22 +201,25 @@ export function Sidebar({
   const accessControl = useAccessControl();
   const effectiveCanAccess = canAccess ?? accessControl.canAccess;
 
-  const [currentHash, setCurrentHash] = useState('');
-
-  useEffect(() => {
-    if (isolated || typeof window === 'undefined') return;
-    const updateHash = () => setCurrentHash(window.location.hash);
-    updateHash();
-    window.addEventListener('hashchange', updateHash);
-    return () => window.removeEventListener('hashchange', updateHash);
-  }, [isolated, pathname]);
+  const externalHash = useSyncExternalStore(
+    subscribeHash,
+    getHashSnapshot,
+    getServerHashSnapshot,
+  );
+  const [manualHash, setManualHash] = useState<string | null>(null);
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    setManualHash(null);
+  }
+  const currentHash = isolated ? '' : (manualHash ?? externalHash);
 
   const visibleGroups = useMemo(
     () =>
       resolveActiveGroups(
         filterNavGroups(groups, effectiveCanAccess),
         isolated ? null : pathname,
-        isolated ? '' : currentHash,
+        currentHash,
       ),
     [groups, effectiveCanAccess, isolated, pathname, currentHash],
   );
@@ -179,27 +228,29 @@ export function Sidebar({
     [visibleGroups, searchQuery],
   );
 
-  const visibleFooterItems = footerItems.filter((fi) => !fi.componentId || effectiveCanAccess(fi.componentId));
+  const visibleFooterItems = footerItems.filter(
+    (fi) => !fi.componentId || effectiveCanAccess(fi.componentId),
+  );
   const visibleUserMenuItems = userMenuItems
     ? userMenuItems.filter((item) => !item.componentId || effectiveCanAccess(item.componentId))
     : visibleFooterItems;
 
-  const isWorkspace = variant === 'workspace';
   const isIsolated = isolated;
 
   const shellRaw = useShell();
   const shell = isIsolated ? null : shellRaw;
 
-  // Un-controlled collapse state
-  const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
-
-  useEffect(() => {
-    if (isIsolated || controlledCollapsed !== undefined) return;
+  // Uncontrolled collapse state (hydrated safely via lazy initializer on client)
+  const [internalCollapsed, setInternalCollapsed] = useState<boolean>(() => {
+    if (isIsolated || controlledCollapsed !== undefined || typeof window === 'undefined') {
+      return defaultCollapsed;
+    }
     try {
-      const stored = localStorage.getItem('shell_sidebar_collapsed');
-      if (stored !== null) setInternalCollapsed(stored === 'true');
+      const stored = window.localStorage.getItem('shell_sidebar_collapsed');
+      if (stored !== null) return stored === 'true';
     } catch {}
-  }, [isIsolated, controlledCollapsed]);
+    return defaultCollapsed;
+  });
 
   // Register sidebar with shell context cleanly
   useLayoutEffect(() => {
@@ -207,9 +258,7 @@ export function Sidebar({
   }, [shell]);
 
   // Resolve collapsed state: shell > controlled prop > internal state
-  const isCollapsed = shell
-    ? shell.sidebarCollapsed
-    : controlledCollapsed ?? internalCollapsed;
+  const isCollapsed = shell ? shell.sidebarCollapsed : (controlledCollapsed ?? internalCollapsed);
 
   // Unified collapse toggle callback
   const setCollapsed = useCallback(
@@ -269,7 +318,7 @@ export function Sidebar({
               if (targetEl) {
                 targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 window.history.pushState(window.history.state, '', href);
-                setCurrentHash(url.hash);
+                setManualHash(url.hash);
               } else {
                 void router.push(href);
               }
@@ -296,7 +345,7 @@ export function Sidebar({
   const isMobileDrawer = isMobileOpen;
   const effectiveCollapsed = isMobileDrawer ? false : isCollapsed ? !isHovered : false;
   const visuallyCollapsed = isMobileDrawer ? false : effectiveCollapsed;
-  const mode = isMobileDrawer ? 'expanded' : (!effectiveCollapsed ? 'expanded' : 'collapsed');
+  const mode = isMobileDrawer ? 'expanded' : !effectiveCollapsed ? 'expanded' : 'collapsed';
 
   // Custom hooks for safe, validated local storage persistence
   const { pinnedIds, togglePin } = useSidebarPins(pinnable, pinsStorageKey, visibleGroups);
@@ -307,11 +356,7 @@ export function Sidebar({
     expandAll: expandAllGroups,
     toggleAll: toggleAllGroups,
     allCollapsed: allGroupsCollapsed,
-  } = useSidebarGroups(
-    groupsCollapsible,
-    groupsStorageKey,
-    visibleGroups,
-  );
+  } = useSidebarGroups(groupsCollapsible, groupsStorageKey, visibleGroups);
 
   const activeAnnouncements = useMemo(() => {
     const dismissedSet = new Set(dismissedAnnouncementIds);
@@ -330,6 +375,7 @@ export function Sidebar({
         pinnedIds,
         groupsCollapsible,
         collapsedGroupIds,
+        collapsedGroupMode,
         allGroupsCollapsed,
         searchQuery,
         setSearchQuery,
@@ -347,7 +393,7 @@ export function Sidebar({
       {/* Mobile backdrop */}
       <div
         className={[
-          'fixed inset-0 z-[60] bg-black/50 md:hidden transition-opacity duration-300',
+          'fixed inset-0 z-[6000] bg-black/50 md:hidden transition-opacity duration-300',
           isMobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
         ].join(' ')}
         onClick={closeMobile}
@@ -356,6 +402,7 @@ export function Sidebar({
       {/* Sidebar panel */}
       <aside
         data-lopes-sidebar=""
+        data-floating-open={isMobileOpen ? 'true' : undefined}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onFocusCapture={(e) => {
@@ -372,10 +419,10 @@ export function Sidebar({
         }}
         className={[
           'flex flex-col h-screen md:h-full overflow-visible bg-[var(--sidebar-background)] text-[var(--sidebar-foreground)] border-r border-[var(--sidebar-border)] select-none',
-          effectiveCollapsed ? 'w-[var(--sidebar-collapsed-width)]' : 'w-[82vw] max-w-[280px] md:w-[var(--sidebar-width)]',
-          // Mobile: drawer fixed; desktop: part of layout flow
-          'fixed inset-y-0 left-0 z-[70] shadow-none md:shadow-none lg:shadow-[var(--sidebar-shadow)] md:relative md:inset-auto md:z-10 md:translate-x-0 md:h-full',
-          // Smooth transition for collapse width and mobile slide-in
+          effectiveCollapsed
+            ? 'w-[var(--sidebar-collapsed-width)]'
+            : 'w-[82vw] max-w-[280px] md:w-[var(--sidebar-width)]',
+          'fixed inset-y-0 left-0 z-[6010] shadow-none md:shadow-none lg:shadow-[var(--sidebar-shadow)] md:relative md:inset-auto md:z-10 md:translate-x-0 md:h-full',
           'transition-all duration-300 ease-in-out',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
           className,
@@ -391,7 +438,13 @@ export function Sidebar({
           {/* Logo + Título / Subtítulo */}
           <div className="flex items-center gap-2.5 min-w-0 flex-1 w-full justify-center">
             {logo && (
-              <div className={!title && !subtitle || effectiveCollapsed ? 'w-full flex items-center justify-center text-center' : 'shrink-0'}>
+              <div
+                className={
+                  (!title && !subtitle) || effectiveCollapsed
+                    ? 'w-full flex items-center justify-center text-center'
+                    : 'shrink-0'
+                }
+              >
                 {effectiveCollapsed && (title || subtitle) ? (
                   <SidebarTooltip label={subtitle ? `${title} — ${subtitle}` : (title ?? '')}>
                     <div className="flex items-center justify-center">{logo}</div>
@@ -419,9 +472,7 @@ export function Sidebar({
           </div>
 
           {/* headerExtra — expanded only */}
-          {!effectiveCollapsed && headerExtra && (
-            <div className="shrink-0 pl-1">{headerExtra}</div>
-          )}
+          {!effectiveCollapsed && headerExtra && <div className="shrink-0 pl-1">{headerExtra}</div>}
 
           {/* Mobile close button */}
           <button
@@ -429,7 +480,7 @@ export function Sidebar({
             type="button"
             aria-label="Fechar menu"
             onClick={closeMobile}
-            className="md:hidden rounded-lg p-1.5 shrink-0 text-[var(--sidebar-toggle-foreground)] hover:bg-[var(--sidebar-toggle-hover-background)] hover:text-[var(--sidebar-toggle-hover-foreground)] transition-colors cursor-pointer"
+            className="md:hidden rounded-lg p-1.5 shrink-0 text-[var(--sidebar-toggle-foreground)] hover:bg-[var(--sidebar-toggle-hover-background)] hover:text-[var(--sidebar-toggle-hover-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors cursor-pointer"
           >
             <X size={15} />
           </button>
@@ -485,7 +536,7 @@ export function Sidebar({
             </div>
           ) : null}
 
-          {/* Announcements — positioned cleanly at bottom of navigation */}
+          {/* Announcements */}
           {activeAnnouncements.length > 0 && (
             <div
               className={[
@@ -494,11 +545,7 @@ export function Sidebar({
               ].join(' ')}
             >
               {activeAnnouncements.map((a) => (
-                <SidebarAnnouncementCard
-                  key={a.id}
-                  item={a}
-                  onDismiss={onAnnouncementDismiss}
-                />
+                <SidebarAnnouncementCard key={a.id} item={a} onDismiss={onAnnouncementDismiss} />
               ))}
             </div>
           )}
@@ -508,9 +555,7 @@ export function Sidebar({
         {(visibleFooterItems.length > 0 || footerExtra || user) && (
           <div className="shrink-0 border-t border-[var(--sidebar-border)] px-2 py-3 space-y-0.5">
             {!user &&
-              visibleFooterItems.map((fi, i) => (
-                <SidebarFooterItem key={`fi-${i}`} item={fi} />
-              ))}
+              visibleFooterItems.map((fi, i) => <SidebarFooterItem key={`fi-${i}`} item={fi} />)}
             {footerExtra && (
               <div
                 className={[
