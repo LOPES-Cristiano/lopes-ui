@@ -1,22 +1,35 @@
 'use client';
 
-import React, { useCallback, useId, useState, useRef, useEffect } from 'react';
+import React, { useCallback, useId, useMemo, useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { twMerge } from 'tailwind-merge';
-import { ChevronDown, Loader2, Plus, X } from 'lucide-react';
+import { Check, ChevronDown, Loader2, Plus, X } from 'lucide-react';
 import FieldWrapper, { type FieldWrapperProps } from './FieldWrapper';
+import { useEscKey } from '../Modal';
 import { useAccessControl } from '../useAccessControl';
 
-export type AutocompleteOption = { value: string; label: string };
+export type AutocompleteOption = {
+  value: string;
+  label: string;
+  /** Optional subtitle displayed below the option label */
+  description?: string;
+};
 
 function normalise(o: AutocompleteOption | string): AutocompleteOption {
   return typeof o === 'string' ? { value: o, label: o } : o;
 }
 
+function normalizeForSearch(str: string): string {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
 export type AutocompleteFieldProps = Omit<FieldWrapperProps, 'children' | 'id'> & {
   id?: string;
   name?: string;
-  /** Options list — can be plain strings or { value, label } objects */
+  /** Options list — can be plain strings or { value, label, description } objects */
   options: readonly (AutocompleteOption | string)[];
   /** Controlled text value */
   value?: string;
@@ -102,47 +115,67 @@ export default function AutocompleteField({
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({
     position: 'fixed',
     visibility: 'hidden',
+    zIndex: 9200,
   });
 
-  const options = rawOptions.map(normalise);
+  const options = useMemo(() => rawOptions.map(normalise), [rawOptions]);
 
-  useEffect(() => {
-    if (controlledValue !== undefined && !hasTyped) {
-      setInputValue(controlledValue);
-    }
-  }, [controlledValue, hasTyped]);
-
-  const displayValue = hasTyped ? inputValue : (controlledValue !== undefined ? controlledValue : inputValue);
+  const displayValue = hasTyped
+    ? inputValue
+    : controlledValue !== undefined
+      ? controlledValue
+      : inputValue;
   const searchValue = hasTyped ? inputValue : '';
-
-  const normalizeForSearch = (str: string) =>
-    str
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
 
   const normSearch = normalizeForSearch(searchValue.trim());
   const searchDigits = searchValue.replace(/\D/g, '');
 
-  const filtered = options
-    .filter((o) => {
-      if (!normSearch) return true;
-      const normLabel = normalizeForSearch(o.label);
-      if (normLabel.includes(normSearch)) return true;
-      if (searchDigits.length >= 2) {
-        const labelDigits = o.label.replace(/\D/g, '');
-        if (labelDigits.includes(searchDigits)) return true;
-      }
-      return false;
-    })
-    .slice(0, maxSuggestions);
+  const filtered = useMemo(() => {
+    return options
+      .filter((o) => {
+        if (!normSearch) return true;
+        const normLabel = normalizeForSearch(o.label);
+        if (normLabel.includes(normSearch)) return true;
+        if (o.description && normalizeForSearch(o.description).includes(normSearch)) return true;
+        if (searchDigits.length >= 2) {
+          const labelDigits = `${o.label} ${o.description ?? ''}`.replace(/\D/g, '');
+          if (labelDigits.includes(searchDigits)) return true;
+        }
+        return false;
+      })
+      .slice(0, maxSuggestions);
+  }, [options, normSearch, searchDigits, maxSuggestions]);
 
   const trimmedQuery = searchValue.trim();
-  const hasExactMatch = options.some(
-    (o) => normalizeForSearch(o.label) === normSearch,
+  const hasExactMatch = options.some((o) => normalizeForSearch(o.label) === normSearch);
+  const showCreateItem = Boolean(
+    (creatable || onCreateOption) && trimmedQuery.length > 0 && !hasExactMatch,
   );
-  const showCreateItem = Boolean((creatable || onCreateOption) && trimmedQuery.length > 0 && !hasExactMatch);
   const totalNavigable = filtered.length + (showCreateItem ? 1 : 0);
+
+  const closeDropdown = useCallback(
+    (resetTyped = false) => {
+      setOpen(false);
+      setHighlighted(-1);
+      if (resetTyped) {
+        setHasTyped(false);
+        if (controlledValue !== undefined) {
+          setInputValue(controlledValue);
+        }
+      }
+      setDropdownStyle({
+        position: 'fixed',
+        visibility: 'hidden',
+        zIndex: 9200,
+      });
+    },
+    [controlledValue],
+  );
+
+  useEscKey(() => {
+    closeDropdown(true);
+    inputRef.current?.focus();
+  }, open);
 
   const updateDropdownPosition = useCallback(() => {
     const container = containerRef.current;
@@ -155,13 +188,13 @@ export default function AutocompleteField({
     const availableAbove = rect.top - viewportMargin;
     const openAbove = availableBelow < 180 && availableAbove > availableBelow;
     const maxHeight = Math.min(
-      260,
-      Math.max(120, openAbove ? availableAbove - gap : availableBelow - gap)
+      280,
+      Math.max(120, openAbove ? availableAbove - gap : availableBelow - gap),
     );
     const width = Math.min(rect.width, window.innerWidth - viewportMargin * 2);
     const left = Math.min(
       Math.max(viewportMargin, rect.left),
-      window.innerWidth - viewportMargin - width
+      window.innerWidth - viewportMargin - width,
     );
 
     setDropdownStyle({
@@ -171,20 +204,14 @@ export default function AutocompleteField({
       bottom: openAbove ? window.innerHeight - rect.top + gap : undefined,
       width,
       maxHeight,
-      zIndex: 999999,
+      visibility: 'visible',
+      zIndex: 9200,
     });
   }, []);
 
   useEffect(() => {
-    if (!open) {
-      setDropdownStyle({
-        position: 'fixed',
-        visibility: 'hidden',
-        zIndex: 999999,
-      });
-      return;
-    }
-    updateDropdownPosition();
+    if (!open) return;
+    const rafId = window.requestAnimationFrame(updateDropdownPosition);
 
     const handleWindowScroll = (e: Event) => {
       if (
@@ -199,6 +226,7 @@ export default function AutocompleteField({
     window.addEventListener('resize', updateDropdownPosition);
     window.addEventListener('scroll', handleWindowScroll, true);
     return () => {
+      window.cancelAnimationFrame(rafId);
       window.removeEventListener('resize', updateDropdownPosition);
       window.removeEventListener('scroll', handleWindowScroll, true);
     };
@@ -211,69 +239,55 @@ export default function AutocompleteField({
 
     const handleWheel = (e: WheelEvent) => {
       e.stopPropagation();
-      if (el.scrollHeight > el.clientHeight) {
-        el.scrollTop += e.deltaY;
-      }
     };
-
-    let touchStartY = 0;
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartY = e.touches[0]?.clientY ?? 0;
-      e.stopPropagation();
-    };
-
     const handleTouchMove = (e: TouchEvent) => {
       e.stopPropagation();
-      const touchY = e.touches[0]?.clientY ?? 0;
-      const diff = touchStartY - touchY;
-      if (el.scrollHeight > el.clientHeight) {
-        el.scrollTop += diff;
-      }
-      touchStartY = touchY;
     };
 
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    el.addEventListener('touchstart', handleTouchStart, { passive: true });
-    el.addEventListener('touchmove', handleTouchMove, { passive: false });
+    el.addEventListener('wheel', handleWheel, { passive: true });
+    el.addEventListener('touchmove', handleTouchMove, { passive: true });
 
     return () => {
       el.removeEventListener('wheel', handleWheel);
-      el.removeEventListener('touchstart', handleTouchStart);
       el.removeEventListener('touchmove', handleTouchMove);
     };
   }, [open]);
 
   // Close on outside click
   useEffect(() => {
+    if (!open) return;
     const handler = (e: MouseEvent) => {
       if (
         containerRef.current &&
         !containerRef.current.contains(e.target as Node) &&
         (!listRef.current || !listRef.current.contains(e.target as Node))
       ) {
-        setOpen(false);
-        setHasTyped(false);
-        if (controlledValue !== undefined) {
-          setInputValue(controlledValue);
-        }
+        closeDropdown(true);
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [controlledValue]);
+  }, [open, closeDropdown]);
 
   // Scroll highlighted option into view
   useEffect(() => {
     if (highlighted >= 0 && listRef.current) {
-      (listRef.current.children[highlighted] as HTMLElement)?.scrollIntoView({ block: 'nearest' });
+      const targetEl = listRef.current.querySelector<HTMLElement>(`#${CSS.escape(`${id}-opt-${highlighted}`)}`);
+      targetEl?.scrollIntoView({ block: 'nearest' });
     }
-  }, [highlighted]);
+  }, [highlighted, id]);
+
+  const openDropdown = () => {
+    if (effectiveDisabled) return;
+    updateDropdownPosition();
+    setOpen(true);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
     setInputValue(v);
     setHasTyped(true);
-    setOpen(true);
+    if (!open) openDropdown();
     setHighlighted(-1);
     onChange?.(v);
   };
@@ -281,8 +295,7 @@ export default function AutocompleteField({
   const handleSelect = (opt: AutocompleteOption) => {
     setInputValue(opt.label);
     setHasTyped(false);
-    setOpen(false);
-    setHighlighted(-1);
+    closeDropdown(false);
     onChange?.(opt.label);
     onSelect?.(opt);
     inputRef.current?.focus();
@@ -292,8 +305,7 @@ export default function AutocompleteField({
     const created: AutocompleteOption = { value: rawQuery, label: rawQuery };
     setInputValue(rawQuery);
     setHasTyped(false);
-    setOpen(false);
-    setHighlighted(-1);
+    closeDropdown(false);
     onChange?.(rawQuery);
     onCreateOption?.(rawQuery);
     onSelect?.(created);
@@ -309,7 +321,8 @@ export default function AutocompleteField({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!open && (e.key === 'ArrowDown' || e.key === 'Enter')) {
-      setOpen(true);
+      if (e.key === 'Enter' && (e.nativeEvent.isComposing || e.keyCode === 229)) return;
+      openDropdown();
       return;
     }
     switch (e.key) {
@@ -322,6 +335,7 @@ export default function AutocompleteField({
         setHighlighted((h) => Math.max(h - 1, 0));
         break;
       case 'Enter':
+        if (e.nativeEvent.isComposing || e.keyCode === 229) return;
         e.preventDefault();
         if (highlighted >= 0 && highlighted < filtered.length && filtered[highlighted]) {
           handleSelect(filtered[highlighted]);
@@ -330,8 +344,16 @@ export default function AutocompleteField({
         }
         break;
       case 'Escape':
-        setOpen(false);
-        setHighlighted(-1);
+        if (open) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeDropdown(true);
+        }
+        break;
+      case 'Tab':
+        if (open) {
+          closeDropdown(true);
+        }
         break;
     }
   };
@@ -345,7 +367,7 @@ export default function AutocompleteField({
       : 'bg-input border-input-border hover:border-border-strong focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/12',
     error &&
       'border-danger hover:border-danger focus-within:border-danger focus-within:ring-3 focus-within:ring-danger/15',
-    effectiveDisabled && 'opacity-60 pointer-events-none bg-surface-muted'
+    effectiveDisabled && 'opacity-60 pointer-events-none bg-surface-muted',
   );
 
   const hasClear = clearable && !!displayValue;
@@ -356,8 +378,11 @@ export default function AutocompleteField({
     s.h,
     s.text,
     s.px,
-    hasClear && loading ? 'pr-20' : hasClear || loading ? 'pr-14' : 'pr-9'
+    hasClear && loading ? 'pr-20' : hasClear || loading ? 'pr-14' : 'pr-9',
   );
+
+  const showInitialLoading = loading && filtered.length === 0 && !showCreateItem;
+  const showRefreshingBanner = loading && !showInitialLoading;
 
   return (
     <FieldWrapper
@@ -378,7 +403,7 @@ export default function AutocompleteField({
       <div ref={containerRef} className="relative">
         <div className={wrapCls}>
           <input
-            data-component-id={componentId ? `${componentId}.input` : "erp.autocomplete.input"}
+            data-component-id={componentId ? `${componentId}.input` : 'erp.autocomplete.input'}
             ref={inputRef}
             id={id}
             name={name ?? `autocomplete_off_${id}`}
@@ -403,12 +428,12 @@ export default function AutocompleteField({
             onChange={handleInputChange}
             onFocus={() => {
               setHasTyped(false);
-              setOpen(true);
+              openDropdown();
             }}
             onClick={() => {
               if (!open) {
                 setHasTyped(false);
-                setOpen(true);
+                openDropdown();
               }
             }}
             onKeyDown={handleKeyDown}
@@ -422,7 +447,7 @@ export default function AutocompleteField({
             )}
             {hasClear && (
               <button
-                data-component-id={componentId ? `${componentId}.clear` : "erp.autocomplete.clear"}
+                data-component-id={componentId ? `${componentId}.clear` : 'erp.autocomplete.clear'}
                 type="button"
                 aria-label="Limpar"
                 onClick={(e) => {
@@ -436,21 +461,28 @@ export default function AutocompleteField({
               </button>
             )}
             <button
-              data-component-id={componentId ? `${componentId}.toggle` : "erp.autocomplete.toggle"}
+              data-component-id={componentId ? `${componentId}.toggle` : 'erp.autocomplete.toggle'}
               type="button"
               tabIndex={-1}
               aria-label={open ? 'Fechar' : 'Abrir'}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setOpen((o) => !o);
+                if (open) {
+                  closeDropdown(true);
+                } else {
+                  openDropdown();
+                }
                 inputRef.current?.focus();
               }}
               className="pointer-events-auto flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground cursor-pointer"
             >
               <ChevronDown
                 size={14}
-                className={twMerge('transition-transform duration-150 motion-reduce:transition-none', open && 'rotate-180 text-foreground')}
+                className={twMerge(
+                  'transition-transform duration-150 motion-reduce:transition-none',
+                  open && 'rotate-180 text-foreground',
+                )}
               />
             </button>
           </span>
@@ -458,55 +490,75 @@ export default function AutocompleteField({
 
         {/* Dropdown */}
         {open &&
+          typeof document !== 'undefined' &&
           createPortal(
             <ul
               ref={listRef}
               id={`${id}-listbox`}
               role="listbox"
+              data-floating-open="true"
               style={{
                 ...dropdownStyle,
                 touchAction: 'pan-y',
               }}
               onWheel={(e) => e.stopPropagation()}
               className={twMerge(
-                'z-[999999] overflow-y-auto overscroll-contain rounded-[var(--radius-card)] border border-border bg-popover text-popover-foreground p-1.5 shadow-[var(--shadow-floating)] animate-in fade-in-0 zoom-in-95 duration-150 motion-reduce:animate-none space-y-0.5 pointer-events-auto',
-                s.text
+                'z-[9200] overflow-y-auto overscroll-contain rounded-[var(--radius-card)] border border-border bg-popover text-popover-foreground p-1.5 shadow-[var(--shadow-floating)] animate-in fade-in-0 zoom-in-95 duration-150 motion-reduce:animate-none space-y-0.5 pointer-events-auto',
+                s.text,
               )}
             >
-              {loading ? (
+              {showInitialLoading ? (
                 <li className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
-                  <Loader2 size={14} className="animate-spin" />
+                  <Loader2 size={14} className="animate-spin shrink-0" />
                   <span>Carregando...</span>
                 </li>
               ) : filtered.length === 0 && !showCreateItem ? (
-                <li className="px-3 py-2 text-xs text-muted-foreground">
-                  {emptyMessage}
-                </li>
+                <li className="px-3 py-2 text-xs text-muted-foreground">{emptyMessage}</li>
               ) : (
                 <>
-                  {filtered.map((opt, i) => (
+                  {showRefreshingBanner && (
                     <li
-                      key={opt.value}
-                      id={`${id}-opt-${i}`}
-                      role="option"
-                      aria-selected={displayValue === opt.label}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleSelect(opt);
-                      }}
-                      onMouseEnter={() => setHighlighted(i)}
-                      className={twMerge(
-                        'flex cursor-pointer items-center px-2.5 py-2 rounded-[var(--radius-control)] text-xs sm:text-sm transition-colors select-none',
-                        displayValue === opt.label
-                          ? 'bg-primary-soft text-primary-soft-foreground font-semibold'
-                          : i === highlighted
-                            ? 'bg-surface-hover text-foreground'
-                            : 'text-surface-foreground hover:bg-surface-hover'
-                      )}
+                      role="presentation"
+                      className="flex items-center gap-1.5 border-b border-border px-2.5 py-1.5 mb-1 text-[11px] text-muted-foreground select-none"
                     >
-                      {opt.label}
+                      <Loader2 size={12} className="animate-spin shrink-0 text-primary" />
+                      <span>Atualizando sugestões...</span>
                     </li>
-                  ))}
+                  )}
+                  {filtered.map((opt, i) => {
+                    const isSelected = displayValue === opt.label;
+                    return (
+                      <li
+                        key={opt.value}
+                        id={`${id}-opt-${i}`}
+                        role="option"
+                        aria-selected={isSelected}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSelect(opt);
+                        }}
+                        onMouseEnter={() => setHighlighted(i)}
+                        className={twMerge(
+                          'flex cursor-pointer items-center justify-between gap-2 px-2.5 py-2 rounded-[var(--radius-control)] text-xs sm:text-sm transition-colors select-none',
+                          isSelected
+                            ? 'bg-primary-soft text-primary-soft-foreground font-semibold'
+                            : i === highlighted
+                              ? 'bg-surface-hover text-foreground'
+                              : 'text-surface-foreground hover:bg-surface-hover',
+                        )}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate">{opt.label}</div>
+                          {opt.description && (
+                            <div className="truncate text-[11px] font-normal text-muted-foreground">
+                              {opt.description}
+                            </div>
+                          )}
+                        </div>
+                        {isSelected && <Check size={14} className="shrink-0 text-primary" />}
+                      </li>
+                    );
+                  })}
                   {showCreateItem && (
                     <li
                       id={`${id}-opt-${filtered.length}`}
@@ -521,7 +573,7 @@ export default function AutocompleteField({
                         'flex cursor-pointer items-center gap-1.5 px-2.5 py-2 rounded-[var(--radius-control)] text-xs sm:text-sm font-medium text-brand transition-colors select-none',
                         highlighted === filtered.length
                           ? 'bg-brand-soft text-brand-soft-foreground'
-                          : 'hover:bg-brand-soft/60'
+                          : 'hover:bg-brand-soft/60',
                       )}
                     >
                       <Plus size={14} className="shrink-0" />
@@ -531,7 +583,7 @@ export default function AutocompleteField({
                 </>
               )}
             </ul>,
-            document.body
+            document.body,
           )}
       </div>
     </FieldWrapper>
