@@ -14,23 +14,26 @@ export function useSidebarPins(
   // Hydrate safely from localStorage once on mount or key change
   useEffect(() => {
     if (!pinnable) return;
-    try {
-      const stored = localStorage.getItem(pinsStorageKey);
-      const validIds = safeParseStringArray(stored);
-      if (validIds.length > 0) {
-        // Intersect with currently available items
-        const allItems = flattenNavItems(groups);
-        const availablePinIds = new Set(allItems.map(getItemPinId));
-        const filtered = validIds.filter((id) => availablePinIds.has(id));
-        if (filtered.length > 0) {
-          setPinnedIds(new Set(filtered));
+    const timer = setTimeout(() => {
+      try {
+        const stored = localStorage.getItem(pinsStorageKey);
+        const validIds = safeParseStringArray(stored);
+        if (validIds.length > 0) {
+          // Intersect with currently available items
+          const allItems = flattenNavItems(groups);
+          const availablePinIds = new Set(allItems.map(getItemPinId));
+          const filtered = validIds.filter((id) => availablePinIds.has(id));
+          if (filtered.length > 0) {
+            setPinnedIds(new Set(filtered));
+          }
         }
+      } catch {
+        // ignore
+      } finally {
+        isHydratedRef.current = true;
       }
-    } catch {
-      // ignore
-    } finally {
-      isHydratedRef.current = true;
-    }
+    }, 0);
+    return () => clearTimeout(timer);
     // Only run on mount / when key changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pinnable, pinsStorageKey]);
