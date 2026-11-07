@@ -2,7 +2,7 @@
 
 import React, { useId, useState } from "react";
 import { Check, Pipette } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "../../utils/cn";
 import FieldWrapper from "./FieldWrapper";
 import { CopyButton } from "../Snippet";
 import { useAccessControl } from "../useAccessControl";
@@ -12,6 +12,8 @@ export interface ColorPickerFieldProps {
   hideIfDenied?: boolean;
   /** Rótulo do campo */
   label?: string;
+  /** Dica contextual exibida no ícone (?) ao lado do rótulo */
+  tooltip?: string;
   /** Cor selecionada em formato HEX (controlado) */
   value?: string;
   /** Cor inicial (não-controlado) */
@@ -22,7 +24,7 @@ export interface ColorPickerFieldProps {
   swatches?: string[];
   /** Texto de ajuda no rodapé */
   helpText?: string;
-  /** Dica no cabeçalho */
+  /** Alias para helpText */
   hint?: string;
   /** Mensagem de erro */
   error?: string;
@@ -37,20 +39,21 @@ export interface ColorPickerFieldProps {
 }
 
 const DEFAULT_SWATCHES = [
-  "#4f46e5", // indigo
-  "#0ea5e9", // sky
-  "#10b981", // emerald
-  "#f59e0b", // amber
-  "#f43f5e", // rose
-  "#8b5cf6", // violet
-  "#ec4899", // pink
-  "#14b8a6", // teal
-  "#18181b", // zinc-900
-  "#71717a", // zinc-500
+  "#4f46e5",
+  "#0ea5e9",
+  "#10b981",
+  "#f59e0b",
+  "#f43f5e",
+  "#8b5cf6",
+  "#ec4899",
+  "#14b8a6",
+  "#18181b",
+  "#71717a",
 ];
 
 export default function ColorPickerField({
   label,
+  tooltip,
   value: controlledValue,
   defaultValue = "#4f46e5",
   onChange,
@@ -86,20 +89,23 @@ export default function ColorPickerField({
     <FieldWrapper
       id={id}
       label={label}
+      tooltip={tooltip}
       hint={hint}
       helpText={helpText}
       error={error}
       required={required}
       className={className}
     >
-      <div className={cn("space-y-2.5", disabled && "opacity-60 pointer-events-none")}>
-        {/* Input bar */}
+      <div
+        data-component-id={componentId}
+        className={cn("space-y-2.5", disabled && "opacity-60 pointer-events-none")}
+      >
         <div className="flex items-center gap-2">
           <label
             htmlFor={`${id}-native`}
-            className="relative flex size-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-xs"
+            aria-label="Abrir seletor de cor do sistema"
+            className="relative flex size-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-border shadow-xs focus-within:ring-2 focus-within:ring-ring/40"
             style={{ backgroundColor: currentColor }}
-            title="Abrir seletor de cor do sistema"
           >
             <input
               id={`${id}-native`}
@@ -119,19 +125,22 @@ export default function ColorPickerField({
             onChange={(e) => handleSelect(e.target.value)}
             disabled={disabled}
             maxLength={9}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
             placeholder="#4F46E5"
             className={cn(
-              "h-8 w-32 rounded-lg border bg-input px-2.5 font-mono text-xs uppercase text-foreground transition-all focus:outline-none focus:ring-2",
+              "h-8 w-32 rounded-[var(--radius-control)] border bg-input px-2.5 font-mono text-xs uppercase text-input-foreground placeholder:text-input-placeholder transition-[border-color,box-shadow] focus:outline-none focus:ring-3",
               error
-                ? "border-red-400 focus:ring-red-500/20"
-                : "border-input-border focus:border-ring focus:ring-ring/20"
+                ? "border-danger focus:border-danger focus:ring-danger/15"
+                : "border-input-border hover:border-border-strong focus:border-ring focus:ring-ring/12"
             )}
           />
 
           {showCopy && <CopyButton value={currentColor} size="sm" variant="outline" />}
         </div>
 
-        {/* Swatches */}
         {swatches.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5">
             {swatches.map((swatch) => {
@@ -142,12 +151,12 @@ export default function ColorPickerField({
                   type="button"
                   disabled={disabled}
                   onClick={() => handleSelect(swatch)}
-                  title={swatch}
                   aria-label={`Selecionar cor ${swatch}`}
+                  aria-pressed={isSelected}
                   style={{ backgroundColor: swatch }}
                   className={cn(
-                    "relative flex size-6 items-center justify-center rounded-md border border-black/10 dark:border-white/15 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1",
-                    isSelected && "ring-2 ring-indigo-600 ring-offset-1 dark:ring-offset-zinc-900 scale-105"
+                    "relative flex size-6 items-center justify-center rounded-md border border-black/10 dark:border-white/15 transition-transform hover:scale-110 motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background cursor-pointer",
+                    isSelected && "ring-2 ring-primary ring-offset-1 ring-offset-background scale-105"
                   )}
                 >
                   {isSelected && <Check size={12} className="text-white drop-shadow" />}
