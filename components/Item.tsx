@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { cn } from "@/utils/cn";
+import { cn } from "../utils/cn";
 
 export type ItemVariant = "default" | "outline" | "muted";
 export type ItemSize = "sm" | "md" | "lg";
