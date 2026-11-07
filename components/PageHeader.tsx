@@ -3,6 +3,7 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
 import { ChevronRight, X, type LucideIcon } from "lucide-react";
+import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -30,6 +31,7 @@ export type PageHeaderProps = {
   noPadding?: boolean;
   className?: string;
   componentId?: string;
+  hideIfDenied?: boolean;
   /** Callback para fechar / sair da tela */
   onClose?: () => void;
 };
@@ -42,21 +44,22 @@ function Crumbs({ items }: { items: PageHeaderCrumb[] }) {
       {items.map((item, i) => {
         const isLast = i === items.length - 1;
         return (
-          <React.Fragment key={i}>
+          <React.Fragment key={`${item.label}-${i}`}>
             {i > 0 && (
               <ChevronRight
                 size={12}
-                className="text-zinc-300 dark:text-zinc-600 shrink-0"
+                className="text-muted-foreground/50 shrink-0"
                 strokeWidth={2}
               />
             )}
             {isLast || !item.href ? (
               <span
+                aria-current={isLast ? "page" : undefined}
                 className={twMerge(
                   "text-xs font-medium",
                   isLast
-                    ? "text-zinc-500 dark:text-zinc-400"
-                    : "text-zinc-400 dark:text-zinc-500",
+                    ? "text-foreground/80"
+                    : "text-muted-foreground",
                 )}
               >
                 {item.label}
@@ -64,7 +67,7 @@ function Crumbs({ items }: { items: PageHeaderCrumb[] }) {
             ) : (
               <a
                 href={item.href}
-                className="text-xs font-medium text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {item.label}
               </a>
@@ -89,12 +92,20 @@ export default function PageHeader({
   noPadding = false,
   className,
   componentId,
+  hideIfDenied = true,
   onClose,
 }: PageHeaderProps) {
+  const { canAccess } = useAccessControl();
+  const hasPermission = componentId ? canAccess(componentId) : true;
+
+  if (!hasPermission && hideIfDenied) {
+    return null;
+  }
+
   const wrapCls = twMerge(
     "w-full",
-    variant === "bordered" && "border-b border-zinc-200 dark:border-zinc-800 pb-5",
-    variant === "muted" && "bg-zinc-50 dark:bg-zinc-900/60 rounded-xl px-5 py-4",
+    variant === "bordered" && "border-b border-border pb-5",
+    variant === "muted" && "bg-muted/60 rounded-xl px-5 py-4",
     !noPadding && variant === "default" && "py-1",
     className,
   );
@@ -102,7 +113,8 @@ export default function PageHeader({
   return (
     <div
       className={wrapCls}
-      >
+      data-component-id={componentId || undefined}
+    >
       {/* Breadcrumbs */}
       {breadcrumbs && breadcrumbs.length > 0 && (
         <div className="mb-2">
@@ -115,19 +127,19 @@ export default function PageHeader({
         <div className="flex items-start sm:items-center justify-between gap-2.5 sm:gap-3 min-w-0 w-full sm:w-auto">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             {Icon && (
-              <div className="shrink-0 flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+              <div className="shrink-0 flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-muted text-muted-foreground">
                 <Icon size={18} />
               </div>
             )}
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-zinc-900 dark:text-zinc-50 leading-tight truncate">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground leading-tight truncate">
                   {title}
                 </h1>
                 {badge && <div className="shrink-0">{badge}</div>}
               </div>
               {description && (
-                <p className="mt-0.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-snug line-clamp-2 sm:line-clamp-none">
+                <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground leading-snug line-clamp-2 sm:line-clamp-none">
                   {description}
                 </p>
               )}
@@ -140,8 +152,7 @@ export default function PageHeader({
               type="button"
               onClick={onClose}
               aria-label="Fechar e sair da tela"
-              title="Fechar e sair da tela"
-              className="sm:hidden shrink-0 cursor-pointer rounded-xl p-1.5 text-muted-foreground opacity-70 transition-all hover:opacity-100 hover:bg-muted focus:outline-none active:scale-95 border-none"
+              className="sm:hidden inline-flex min-h-8 min-w-8 items-center justify-center shrink-0 cursor-pointer rounded-xl p-1.5 text-muted-foreground opacity-75 transition-all hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 border-none"
             >
               <X size={18} />
             </button>
@@ -157,8 +168,7 @@ export default function PageHeader({
                 type="button"
                 onClick={onClose}
                 aria-label="Fechar e sair da tela"
-                title="Fechar e sair da tela"
-                className="hidden sm:inline-flex shrink-0 cursor-pointer items-center justify-center rounded-xl p-1.5 text-muted-foreground opacity-70 transition-all hover:opacity-100 hover:bg-muted focus:outline-none active:scale-95 border-none"
+                className="hidden sm:inline-flex min-h-8 min-w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl p-1.5 text-muted-foreground opacity-75 transition-all hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 border-none"
               >
                 <X size={18} />
               </button>
