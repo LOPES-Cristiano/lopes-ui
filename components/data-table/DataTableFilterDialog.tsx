@@ -17,13 +17,15 @@ export function DataTableFilterDialog<T = Record<string, unknown>>({
   onClose: () => void;
   onReset: () => void;
 }) {
-  // Fechar ao pressionar tecla Escape (Issue #10)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [onClose]);
 
   return (
@@ -31,7 +33,8 @@ export function DataTableFilterDialog<T = Record<string, unknown>>({
       role="dialog"
       aria-modal="true"
       aria-labelledby="filter-dialog-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150"
+      data-floating-open="true"
+      className="fixed inset-0 z-[7000] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150 overscroll-contain"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -49,7 +52,7 @@ export function DataTableFilterDialog<T = Record<string, unknown>>({
             data-component-id="erp.data-table.close-filter-dialog"
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+            className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
             aria-label="Fechar filtros"
           >
             <X size={18} />
@@ -57,18 +60,28 @@ export function DataTableFilterDialog<T = Record<string, unknown>>({
         </div>
 
         {/* Campos de Filtro */}
-        <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+        <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto overscroll-contain">
           {fields.map((field) => {
             const currentVal = values[field.key] ?? '';
             const fieldLabel = field.label ?? field.key;
+            const fieldId = `dt-filter-${field.key}`;
 
             return (
               <div key={field.key} className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">
+                <label htmlFor={fieldId} className="text-xs font-semibold text-foreground">
                   {fieldLabel}
                 </label>
-                {(field.type === 'select' || field.type === 'segmented' || field.type === 'badge') && field.options ? (
-                  <select data-component-id={`erp.data-table.filter-select-${field.key}`} value={currentVal} onChange={(e) => onChange(field.key, e.target.value)} className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer">
+                {(field.type === 'select' ||
+                  field.type === 'segmented' ||
+                  field.type === 'badge') &&
+                field.options ? (
+                  <select
+                    id={fieldId}
+                    data-component-id={`erp.data-table.filter-select-${field.key}`}
+                    value={currentVal}
+                    onChange={(e) => onChange(field.key, e.target.value)}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
+                  >
                     <option value="">Todos</option>
                     {field.options.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -77,19 +90,37 @@ export function DataTableFilterDialog<T = Record<string, unknown>>({
                     ))}
                   </select>
                 ) : field.type === 'boolean' ? (
-                  <select data-component-id={`erp.data-table.filter-select-${field.key}`} value={currentVal} onChange={(e) => onChange(field.key, e.target.value)} className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer">
+                  <select
+                    id={fieldId}
+                    data-component-id={`erp.data-table.filter-select-${field.key}`}
+                    value={currentVal}
+                    onChange={(e) => onChange(field.key, e.target.value)}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
+                  >
                     <option value="">Todos</option>
                     <option value="true">Sim / Ativo</option>
                     <option value="false">Não / Inativo</option>
                   </select>
                 ) : (
                   <input
+                    id={fieldId}
                     data-component-id={`erp.data-table.filter-input-${field.key}`}
-                    type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
+                    type={
+                      field.type === 'number'
+                        ? 'number'
+                        : field.type === 'date'
+                          ? 'date'
+                          : 'text'
+                    }
                     value={currentVal}
                     onChange={(e) => onChange(field.key, e.target.value)}
-                    placeholder={field.placeholder ?? `Filtrar por ${fieldLabel.toLowerCase()}...`}
-                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    placeholder={
+                      field.placeholder ?? `Filtrar por ${fieldLabel.toLowerCase()}...`
+                    }
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                   />
                 )}
               </div>
@@ -106,7 +137,7 @@ export function DataTableFilterDialog<T = Record<string, unknown>>({
               onReset();
               onClose();
             }}
-            className="text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+            className="text-xs font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 rounded px-1.5 py-1 cursor-pointer transition-colors"
           >
             Limpar Filtros
           </button>
@@ -114,7 +145,7 @@ export function DataTableFilterDialog<T = Record<string, unknown>>({
             data-component-id="erp.data-table.apply-filter-dialog"
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer shadow-xs"
+            className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer shadow-xs"
           >
             Aplicar
           </button>
