@@ -3,8 +3,9 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
-import { Search, ExternalLink, X, Star, type LucideIcon } from "lucide-react";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { Search, ExternalLink, X, Star, Lock, type LucideIcon } from "lucide-react";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
+import { sanitizeSafeHref } from "../utils/sanitize";
 import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -41,7 +42,17 @@ export type AppItem = {
   /** Category for grouping */
   category?: string;
   /** Highlight with an accent color */
-  color?: "indigo" | "blue" | "emerald" | "amber" | "red" | "violet" | "pink" | "teal" | "orange" | "zinc";
+  color?:
+    | "indigo"
+    | "blue"
+    | "emerald"
+    | "amber"
+    | "red"
+    | "violet"
+    | "pink"
+    | "teal"
+    | "orange"
+    | "zinc";
   /** Mark as unavailable / maintenance */
   disabled?: boolean;
   /** Opens link in new tab (default true when href is set) */
@@ -86,29 +97,29 @@ export type AppLauncherProps = {
 // ── Color palettes ────────────────────────────────────────────────────────────
 
 const COLOR_BG: Record<string, string> = {
-  indigo:  "bg-indigo-50  dark:bg-indigo-950/40",
-  blue:    "bg-blue-50    dark:bg-blue-950/40",
+  indigo: "bg-indigo-50 dark:bg-indigo-950/40",
+  blue: "bg-blue-50 dark:bg-blue-950/40",
   emerald: "bg-emerald-50 dark:bg-emerald-950/40",
-  amber:   "bg-amber-50   dark:bg-amber-950/40",
-  red:     "bg-red-50     dark:bg-red-950/40",
-  violet:  "bg-violet-50  dark:bg-violet-950/40",
-  pink:    "bg-pink-50    dark:bg-pink-950/40",
-  teal:    "bg-teal-50    dark:bg-teal-950/40",
-  orange:  "bg-orange-50  dark:bg-orange-950/40",
-  zinc:    "bg-zinc-100   dark:bg-zinc-800",
+  amber: "bg-amber-50 dark:bg-amber-950/40",
+  red: "bg-red-50 dark:bg-red-950/40",
+  violet: "bg-violet-50 dark:bg-violet-950/40",
+  pink: "bg-pink-50 dark:bg-pink-950/40",
+  teal: "bg-teal-50 dark:bg-teal-950/40",
+  orange: "bg-orange-50 dark:bg-orange-950/40",
+  zinc: "bg-zinc-100 dark:bg-zinc-800",
 };
 
 const COLOR_ICON: Record<string, string> = {
-  indigo:  "text-indigo-600  dark:text-indigo-400",
-  blue:    "text-blue-600    dark:text-blue-400",
+  indigo: "text-indigo-600 dark:text-indigo-400",
+  blue: "text-blue-600 dark:text-blue-400",
   emerald: "text-emerald-600 dark:text-emerald-400",
-  amber:   "text-amber-600   dark:text-amber-400",
-  red:     "text-red-600     dark:text-red-400",
-  violet:  "text-violet-600  dark:text-violet-400",
-  pink:    "text-pink-600    dark:text-pink-400",
-  teal:    "text-teal-600    dark:text-teal-400",
-  orange:  "text-orange-600  dark:text-orange-400",
-  zinc:    "text-zinc-600    dark:text-zinc-400",
+  amber: "text-amber-600 dark:text-amber-400",
+  red: "text-red-600 dark:text-red-400",
+  violet: "text-violet-600 dark:text-violet-400",
+  pink: "text-pink-600 dark:text-pink-400",
+  teal: "text-teal-600 dark:text-teal-400",
+  orange: "text-orange-600 dark:text-orange-400",
+  zinc: "text-zinc-600 dark:text-zinc-400",
 };
 
 const BADGE_COLOR: Record<AppBadgeColor, string> = {
@@ -124,8 +135,6 @@ const BADGE_COLOR: Record<AppBadgeColor, string> = {
   teal: "bg-teal-600 text-white",
   orange: "bg-orange-600 text-white",
 };
-
-// ── Single app card ───────────────────────────────────────────────────────────
 
 const SIZE_ICON: Record<string, string> = {
   sm: "h-9 w-9 rounded-xl text-xs",
@@ -153,6 +162,17 @@ const SIZE_PAD: Record<string, string> = {
   lg: "gap-3 p-5",
 };
 
+function normalizeLauncherSearch(value?: string): string {
+  if (!value) return "";
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+// ── Single app card (sibling interactive elements — zero nested buttons!) ────
+
 function AppCard({
   app,
   size = "md",
@@ -167,9 +187,10 @@ function AppCard({
   const color = app.color ?? "zinc";
   const Icon = app.icon;
   const iconSz = SIZE_ICON_PX[size];
+  const safeHref = sanitizeSafeHref(app.href);
 
   const iconBg = twMerge(
-    "flex items-center justify-center shrink-0 font-bold",
+    "relative flex items-center justify-center shrink-0 font-bold transition-transform duration-200 group-hover/card:scale-105",
     SIZE_ICON[size],
     COLOR_BG[color],
     COLOR_ICON[color],
@@ -180,42 +201,113 @@ function AppCard({
       {Icon ? (
         <Icon size={iconSz} strokeWidth={1.75} />
       ) : app.logoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={app.logoUrl} alt={app.label} width={iconSz} height={iconSz} className="object-contain" />
+        <img
+          src={app.logoUrl}
+          alt={app.label}
+          width={iconSz}
+          height={iconSz}
+          className="object-contain"
+        />
       ) : (
         <span>{app.initials ?? app.label.slice(0, 2).toUpperCase()}</span>
       )}
     </div>
   );
 
-  const inner = (
-    <div
-      className={twMerge(
-        "relative flex flex-col items-center text-center",
-        SIZE_PAD[size],
-        "rounded-2xl border border-border",
-        "bg-surface text-surface-foreground",
-        "transition-all duration-150",
-        app.disabled
-          ? "opacity-50 cursor-not-allowed pointer-events-none"
-          : "cursor-pointer hover:border-border-strong hover:bg-surface-hover hover:shadow-md hover:shadow-zinc-900/5 dark:hover:shadow-black/20 hover:-translate-y-0.5 active:translate-y-0 active:shadow-none",
+  const cardSurfaceCls = twMerge(
+    "relative flex w-full flex-col items-center text-center",
+    SIZE_PAD[size],
+    "rounded-2xl border border-border",
+    "bg-surface text-surface-foreground",
+    "transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    app.disabled
+      ? "opacity-55 cursor-not-allowed"
+      : "cursor-pointer hover:border-border-strong hover:bg-surface-hover hover:shadow-md hover:shadow-zinc-900/5 dark:hover:shadow-black/20 hover:-translate-y-0.5 active:translate-y-0 active:shadow-none",
+  );
+
+  const bodyContent = (
+    <>
+      {visual}
+      <div className="w-full mt-0.5 min-w-0">
+        <p className={twMerge(SIZE_LABEL[size], "truncate text-surface-foreground leading-snug")}>
+          {app.label}
+        </p>
+        {showDescription && app.description && (
+          <p
+            className={twMerge(
+              SIZE_DESC[size],
+              "text-muted-foreground truncate mt-0.5 leading-snug",
+            )}
+          >
+            {app.description}
+          </p>
+        )}
+      </div>
+      {app.disabled ? (
+        <Lock
+          size={11}
+          aria-hidden="true"
+          className="absolute bottom-2 right-2 text-muted-foreground"
+        />
+      ) : safeHref && app.external !== false ? (
+        <ExternalLink
+          size={10}
+          aria-hidden="true"
+          className="absolute bottom-2 right-2 text-muted-foreground opacity-0 group-hover/card:opacity-100 transition-opacity"
+        />
+      ) : null}
+    </>
+  );
+
+  return (
+    <div className="group/card relative">
+      {safeHref && !app.disabled ? (
+        <a
+          data-component-id={app.componentId || undefined}
+          href={safeHref}
+          target={app.external !== false ? "_blank" : undefined}
+          rel="noopener noreferrer"
+          className={cardSurfaceCls}
+          onClick={() => app.onClick?.()}
+        >
+          {bodyContent}
+        </a>
+      ) : app.onClick ? (
+        <button
+          data-component-id={app.componentId || undefined}
+          type="button"
+          disabled={app.disabled}
+          onClick={app.disabled ? undefined : app.onClick}
+          className={cardSurfaceCls}
+        >
+          {bodyContent}
+        </button>
+      ) : (
+        <div
+          data-component-id={app.componentId || undefined}
+          aria-disabled={app.disabled || undefined}
+          className={cardSurfaceCls}
+        >
+          {bodyContent}
+        </div>
       )}
-    >
-      {/* Favorite toggle / indicator */}
-      {(onToggleFavorite || app.favorite) && (
+
+      {/* Sibling favorite toggle / indicator (never nested inside <a> or <button>) */}
+      {(onToggleFavorite || app.favorite) && !app.disabled && (
         <button
           type="button"
           aria-label={app.favorite ? "Remover dos favoritos" : "Fixar nos favoritos"}
+          aria-pressed={Boolean(app.favorite)}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             onToggleFavorite?.(app.id, !app.favorite);
           }}
           className={twMerge(
-            "absolute top-2 left-2 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full transition-all",
+            "absolute top-2 left-2 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             app.favorite
               ? "text-amber-500 opacity-100"
-              : "text-muted-foreground opacity-0 group-hover/card:opacity-80 hover:text-amber-500",
+              : "text-muted-foreground opacity-0 group-hover/card:opacity-80 focus-visible:opacity-100 hover:text-amber-500",
             onToggleFavorite ? "cursor-pointer hover:bg-muted/80" : "pointer-events-none",
           )}
         >
@@ -227,59 +319,13 @@ function AppCard({
       {app.badge && (
         <span
           className={twMerge(
-            "absolute -top-1.5 -right-1.5 z-10 inline-flex items-center justify-center min-w-5 h-5 rounded-full px-1.5 text-[10px] font-bold ring-2 ring-surface",
+            "pointer-events-none absolute -top-1.5 -right-1.5 z-10 inline-flex items-center justify-center min-w-5 h-5 rounded-full px-1.5 text-[10px] font-bold tabular-nums ring-2 ring-surface",
             BADGE_COLOR[app.badgeColor ?? "primary"],
           )}
         >
           {app.badge}
         </span>
       )}
-
-      {visual}
-
-      <div className="w-full mt-0.5 min-w-0">
-        <p className={twMerge(SIZE_LABEL[size], "truncate text-surface-foreground leading-snug")}>
-          {app.label}
-        </p>
-        {showDescription && app.description && (
-          <p className={twMerge(SIZE_DESC[size], "text-muted-foreground truncate mt-0.5 leading-snug")}>
-            {app.description}
-          </p>
-        )}
-      </div>
-
-      {/* External hint */}
-      {app.href && app.external !== false && (
-        <ExternalLink size={10} className="absolute bottom-2 right-2 text-muted-foreground opacity-0 group-hover/card:opacity-100 transition-opacity" />
-      )}
-    </div>
-  );
-
-  if (app.href && !app.disabled) {
-    return (
-      <a
-        data-component-id={app.componentId || undefined}
-        href={app.href}
-        target={app.external !== false ? "_blank" : undefined}
-        rel="noopener noreferrer"
-        className="group/card block"
-        onClick={() => app.onClick?.()}
-      >
-        {inner}
-      </a>
-    );
-  }
-
-  return (
-    <div
-      data-component-id={app.componentId || undefined}
-      className="group/card"
-      role={app.onClick ? "button" : undefined}
-      tabIndex={app.onClick && !app.disabled ? 0 : undefined}
-      onClick={app.disabled ? undefined : app.onClick}
-      onKeyDown={app.disabled ? undefined : (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); app.onClick?.(); } }}
-    >
-      {inner}
     </div>
   );
 }
@@ -287,12 +333,12 @@ function AppCard({
 // ── Grid ──────────────────────────────────────────────────────────────────────
 
 const COLS_CLS: Record<string | number, string> = {
-  2:      "grid-cols-2",
-  3:      "grid-cols-2 sm:grid-cols-3",
-  4:      "grid-cols-2 sm:grid-cols-4",
-  5:      "grid-cols-2 sm:grid-cols-3 md:grid-cols-5",
-  6:      "grid-cols-2 sm:grid-cols-3 md:grid-cols-6",
-  auto:   "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6",
+  2: "grid-cols-2",
+  3: "grid-cols-2 sm:grid-cols-3",
+  4: "grid-cols-2 sm:grid-cols-4",
+  5: "grid-cols-2 sm:grid-cols-3 md:grid-cols-5",
+  6: "grid-cols-2 sm:grid-cols-3 md:grid-cols-6",
+  auto: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6",
 };
 
 function AppGrid({
@@ -378,22 +424,25 @@ export function AppLauncher({
     if (!isModalOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
         handleClose();
       }
     };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
   }, [isModalOpen, handleClose]);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalizeLauncherSearch(query);
     if (!q) return permittedApps;
-    return permittedApps.filter(
-      (a) =>
-        a.label.toLowerCase().includes(q) ||
-        a.description?.toLowerCase().includes(q) ||
-        a.category?.toLowerCase().includes(q),
-    );
+    const tokens = q.split(/\s+/).filter(Boolean);
+    return permittedApps.filter((a) => {
+      const hay = normalizeLauncherSearch(
+        [a.label, a.description, a.category].filter(Boolean).join(" "),
+      );
+      return tokens.every((tok) => hay.includes(tok));
+    });
   }, [permittedApps, query]);
 
   const groupMap = useMemo(() => {
@@ -411,8 +460,12 @@ export function AppLauncher({
 
   const launcherContent = (
     <div
-      data-component-id={!isModalMode ? (componentId || undefined) : undefined}
-      className={twMerge("flex flex-col gap-5", !hasRootPermission && "opacity-50 pointer-events-none", className)}
+      data-component-id={!isModalMode ? componentId || undefined : undefined}
+      className={twMerge(
+        "flex flex-col gap-5",
+        !hasRootPermission && "opacity-50 pointer-events-none",
+        className,
+      )}
     >
       {/* Header */}
       {(title || showSearch || isModalMode) && (
@@ -422,14 +475,21 @@ export function AppLauncher({
           )}
           {showSearch && (
             <div className="relative flex-1 max-w-xs">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+              />
               <input
                 data-component-id="erp.app-launcher.search"
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar aplicativo..."
-                className="w-full rounded-lg border border-input-border bg-input pl-8 pr-3 py-2 text-sm text-input-foreground placeholder-input-placeholder focus:outline-none focus:border-ring transition-colors"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                className="w-full rounded-lg border border-input-border bg-input pl-8 pr-3 py-2 text-sm text-input-foreground placeholder-input-placeholder focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
               />
             </div>
           )}
@@ -439,7 +499,7 @@ export function AppLauncher({
               type="button"
               aria-label="Fechar"
               onClick={handleClose}
-              className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-hover hover:text-surface-foreground transition-colors cursor-pointer"
+              className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-hover hover:text-surface-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors cursor-pointer"
             >
               <X size={16} />
             </button>
@@ -453,7 +513,9 @@ export function AppLauncher({
           <Search size={28} className="text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             {query ? (
-              <>Nenhum aplicativo encontrado para <strong>&ldquo;{query}&rdquo;</strong></>
+              <>
+                Nenhum aplicativo encontrado para <strong>&ldquo;{query}&rdquo;</strong>
+              </>
             ) : (
               "Nenhum aplicativo disponível."
             )}
@@ -485,8 +547,7 @@ export function AppLauncher({
               showDescription={showDescription}
               onToggleFavorite={onToggleFavorite}
             />
-          )
-      }
+          )}
     </div>
   );
 
@@ -494,7 +555,8 @@ export function AppLauncher({
     if (!isModalOpen || typeof document === "undefined") return null;
     return createPortal(
       <div
-        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
+        data-floating-open="true"
+        className="fixed inset-0 z-[7500] flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
         onClick={(e) => {
           if (e.target === e.currentTarget) handleClose();
         }}
@@ -504,7 +566,7 @@ export function AppLauncher({
           role="dialog"
           aria-modal="true"
           aria-label={title || "Aplicativos"}
-          className="w-full max-w-3xl max-h-[88dvh] overflow-y-auto rounded-2xl border border-border bg-surface p-4 sm:p-6 text-surface-foreground shadow-2xl"
+          className="w-full max-w-3xl max-h-[88dvh] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-surface p-4 sm:p-6 text-surface-foreground shadow-2xl"
         >
           {launcherContent}
         </div>
