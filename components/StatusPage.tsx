@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
+import { useAccessControl } from './useAccessControl';
 
 export type PageVariant = '401' | '404' | '403' | '500' | 'info' | 'custom';
 
@@ -20,58 +21,67 @@ const variantStyles: Record<
   '401': {
     codeGradient: 'from-amber-500 to-orange-600 dark:from-amber-300 dark:to-orange-400',
     iconGradient: 'from-amber-500 to-orange-600',
-    pillBg: 'bg-amber-50 dark:bg-amber-950/60',
-    pillText: 'text-amber-600 dark:text-amber-400',
-    pillBorder: 'border-amber-200 dark:border-amber-800',
-    hr: 'bg-zinc-200 dark:bg-zinc-800',
-    accentText: 'text-amber-500 dark:text-amber-400',
+    pillBg: 'bg-warning-soft',
+    pillText: 'text-warning-soft-foreground',
+    pillBorder: 'border-warning-border',
+    hr: 'bg-border',
+    accentText: 'text-warning',
   },
   '404': {
     codeGradient: 'from-indigo-400 to-blue-500 dark:from-indigo-300 dark:to-blue-400',
     iconGradient: 'from-indigo-500 to-blue-600',
-    pillBg: 'bg-indigo-50 dark:bg-indigo-950/60',
-    pillText: 'text-indigo-600 dark:text-indigo-400',
-    pillBorder: 'border-indigo-200 dark:border-indigo-800',
-    hr: 'bg-zinc-200 dark:bg-zinc-800',
-    accentText: 'text-indigo-500 dark:text-indigo-400',
+    pillBg: 'bg-brand-soft',
+    pillText: 'text-brand-soft-foreground',
+    pillBorder: 'border-brand-border',
+    hr: 'bg-border',
+    accentText: 'text-brand',
   },
   '403': {
     codeGradient: 'from-amber-400 to-orange-500 dark:from-amber-300 dark:to-orange-400',
     iconGradient: 'from-amber-500 to-orange-500',
-    pillBg: 'bg-amber-50 dark:bg-amber-950/60',
-    pillText: 'text-amber-600 dark:text-amber-400',
-    pillBorder: 'border-amber-200 dark:border-amber-800',
-    hr: 'bg-zinc-200 dark:bg-zinc-800',
-    accentText: 'text-zinc-500 dark:text-zinc-400',
+    pillBg: 'bg-warning-soft',
+    pillText: 'text-warning-soft-foreground',
+    pillBorder: 'border-warning-border',
+    hr: 'bg-border',
+    accentText: 'text-muted-foreground',
   },
   '500': {
     codeGradient: 'from-red-600 to-rose-500 dark:from-rose-300 dark:to-red-400',
     iconGradient: 'from-rose-500 to-red-600',
-    pillBg: 'bg-rose-50 dark:bg-rose-950/60',
-    pillText: 'text-rose-600 dark:text-rose-400',
-    pillBorder: 'border-rose-200 dark:border-rose-800',
-    hr: 'bg-zinc-200 dark:bg-zinc-800',
-    accentText: 'text-rose-500 dark:text-rose-400',
+    pillBg: 'bg-danger-soft',
+    pillText: 'text-danger-soft-foreground',
+    pillBorder: 'border-danger-border',
+    hr: 'bg-border',
+    accentText: 'text-danger',
   },
   info: {
     codeGradient: 'from-sky-400 to-cyan-500 dark:from-sky-300 dark:to-cyan-400',
     iconGradient: 'from-sky-500 to-cyan-500',
-    pillBg: 'bg-sky-50 dark:bg-sky-950/60',
-    pillText: 'text-sky-600 dark:text-sky-400',
-    pillBorder: 'border-sky-200 dark:border-sky-800',
-    hr: 'bg-zinc-200 dark:bg-zinc-800',
-    accentText: 'text-sky-500 dark:text-sky-400',
+    pillBg: 'bg-info-soft',
+    pillText: 'text-info-soft-foreground',
+    pillBorder: 'border-info-border',
+    hr: 'bg-border',
+    accentText: 'text-info',
   },
   custom: {
     codeGradient: 'from-zinc-400 to-slate-600 dark:from-zinc-300 dark:to-slate-400',
     iconGradient: 'from-zinc-500 to-slate-600',
-    pillBg: 'bg-zinc-50 dark:bg-zinc-800/60',
-    pillText: 'text-zinc-600 dark:text-zinc-400',
-    pillBorder: 'border-zinc-200 dark:border-zinc-700',
-    hr: 'bg-zinc-200 dark:bg-zinc-800',
-    accentText: 'text-zinc-500 dark:text-zinc-400',
+    pillBg: 'bg-surface-muted',
+    pillText: 'text-muted-foreground',
+    pillBorder: 'border-border',
+    hr: 'bg-border',
+    accentText: 'text-muted-foreground',
   },
 };
+
+/** Deriva automaticamente sufixo `_dark` (ex: `/404.svg` -> `/404_dark.svg`) quando `darkImageSrc` não é fornecido */
+function deriveDarkImageSrc(src?: string): string | undefined {
+  if (!src) return undefined;
+  if (/_dark\.[a-z0-9]+(\?.*)?$/i.test(src)) return src;
+  const match = src.match(/^(.*?)(\.[a-z0-9]+)(\?.*)?$/i);
+  if (!match) return undefined;
+  return `${match[1]}_dark${match[2]}${match[3] ?? ''}`;
+}
 
 /* ── Rotating words ──────────────────────────────────────────────────────── */
 function RotatingWords({ words }: { words: string[] }) {
@@ -110,16 +120,19 @@ function RotatingWords({ words }: { words: string[] }) {
 /* ── Props ───────────────────────────────────────────────────────────────── */
 export type StatusPageProps = {
   componentId?: string;
+  hideIfDenied?: boolean;
   variant?: PageVariant;
   code?: string | number;
   pill?: string;
   title: string;
   description?: React.ReactNode;
   icon?: React.ReactElement<{ className?: string }>;
-  /** URL da ilustração/imagem customizada (modo claro ou ambos os temas) */
+  /** URL da ilustração/imagem customizada (modo claro ou base para derivação automática `_dark`) */
   imageSrc?: string;
-  /** URL opcional da ilustração/imagem para modo escuro */
+  /** URL opcional da ilustração/imagem para modo escuro (se omitida, tenta `<nome>_dark.<ext>` com fallback) */
   darkImageSrc?: string;
+  /** Desativa derivação automática de `<nome>_dark.<ext>` quando `darkImageSrc` não for informada */
+  autoDeriveDarkImage?: boolean;
   /** Alias legado para `imageSrc` */
   image?: string;
   /** Palavras que rotacionam abaixo do título */
@@ -139,20 +152,43 @@ export function StatusPage({
   icon,
   imageSrc,
   darkImageSrc,
+  autoDeriveDarkImage = true,
   image,
   rotatingWords,
   actions,
   homeHref = '/',
   className,
   componentId,
+  hideIfDenied = false,
   inline = false,
 }: StatusPageProps) {
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+
+  const [failedSrcs, setFailedSrcs] = useState<Record<string, boolean>>({});
+
+  if (!hasPermission && hideIfDenied) return null;
+
   const s = variantStyles[variant] || variantStyles.custom;
 
-  const resolvedLightImage = imageSrc ?? image;
-  const resolvedDarkImage = darkImageSrc;
-  const hasCustomImage = Boolean(resolvedLightImage || resolvedDarkImage);
+  const rawLightImage = imageSrc ?? image;
+  const candidateDarkImage =
+    darkImageSrc ?? (autoDeriveDarkImage ? deriveDarkImageSrc(rawLightImage) : undefined);
+
+  const resolvedLightImage =
+    rawLightImage && !failedSrcs[rawLightImage] ? rawLightImage : undefined;
+  const resolvedDarkImage =
+    candidateDarkImage && !failedSrcs[candidateDarkImage]
+      ? candidateDarkImage
+      : resolvedLightImage;
+
   const primaryImage = resolvedLightImage ?? resolvedDarkImage;
+  const hasCustomImage = Boolean(primaryImage);
+
+  const markFailed = (srcUrl?: string) => {
+    if (!srcUrl) return;
+    setFailedSrcs((prev) => (prev[srcUrl] ? prev : { ...prev, [srcUrl]: true }));
+  };
 
   const displayCode =
     code ??
@@ -160,17 +196,20 @@ export function StatusPage({
       ? variant
       : undefined);
 
-  /* ── Layout split — apenas quando imagem customizada é fornecida ───────── */
+  /* ── Layout split — apenas quando imagem customizada é fornecida e válida ─ */
   if (hasCustomImage && primaryImage) {
-    const hasSeparateDark = Boolean(resolvedLightImage && resolvedDarkImage);
+    const hasSeparateDark = Boolean(
+      resolvedLightImage && resolvedDarkImage && resolvedLightImage !== resolvedDarkImage,
+    );
 
     return (
       <div
         data-component-id={componentId || undefined}
         className={twMerge(
-          'relative isolate overflow-hidden bg-[var(--status-page-background)] dark:bg-black',
+          'relative isolate overflow-hidden bg-[var(--status-page-background)] text-foreground',
           inline ? 'flex items-center py-16 px-6' : 'flex min-h-screen',
-          className
+          !hasPermission && 'opacity-60 pointer-events-none',
+          className,
         )}
       >
         {/* Dot grid */}
@@ -187,72 +226,70 @@ export function StatusPage({
         <div className="relative hidden lg:flex lg:w-[55%] items-center justify-center p-12">
           {hasSeparateDark ? (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={resolvedLightImage}
                 alt={title}
+                onError={() => markFailed(resolvedLightImage)}
                 className="w-full max-w-[680px] select-none object-contain dark:hidden"
               />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={resolvedDarkImage}
                 alt={title}
+                onError={() => markFailed(resolvedDarkImage)}
                 className="w-full max-w-[680px] select-none object-contain hidden dark:block"
               />
             </>
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={primaryImage}
               alt={title}
+              onError={() => markFailed(primaryImage)}
               className="w-full max-w-[680px] select-none object-contain"
             />
           )}
         </div>
 
-        {/* Coluna conteudo — 45% */}
+        {/* Coluna conteúdo — 45% */}
         <div className="relative z-10 flex w-full flex-col items-center justify-center px-8 py-16 text-center lg:w-[45%] lg:items-start lg:text-left">
           {/* Imagem no mobile */}
           <div className="mb-8 flex w-full justify-center lg:hidden">
             {hasSeparateDark ? (
               <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={resolvedLightImage}
                   alt={title}
+                  onError={() => markFailed(resolvedLightImage)}
                   className="w-full max-w-xs select-none object-contain dark:hidden"
                 />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={resolvedDarkImage}
                   alt={title}
+                  onError={() => markFailed(resolvedDarkImage)}
                   className="w-full max-w-xs select-none object-contain hidden dark:block"
                 />
               </>
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={primaryImage}
                 alt={title}
+                onError={() => markFailed(primaryImage)}
                 className="w-full max-w-xs select-none object-contain"
               />
             )}
           </div>
 
-          {/* Codigo pequeno e clean */}
           {displayCode && (
-            <span className="mb-2 text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+            <span className="mb-2 text-xs font-semibold uppercase tracking-widest tabular-nums text-muted-foreground">
               Erro {displayCode}
             </span>
           )}
 
-          <h1 className="text-4xl font-black tracking-tight text-zinc-900 sm:text-5xl lg:text-6xl dark:text-zinc-50">
+          <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl lg:text-6xl">
             {title}
           </h1>
 
-          {/* Rotating words */}
           {rotatingWords && rotatingWords.length > 0 && (
-            <div className="mt-4 text-lg font-medium text-zinc-400 dark:text-zinc-500 h-7 overflow-hidden">
+            <div className="mt-4 text-lg font-medium text-muted-foreground h-7 overflow-hidden">
               <RotatingWords words={rotatingWords} />
             </div>
           )}
@@ -260,7 +297,7 @@ export function StatusPage({
           <div className={twMerge('mt-6 h-px w-12 rounded-full', s.hr)} />
 
           {description && (
-            <p className="mt-5 max-w-sm text-base leading-relaxed text-zinc-500 dark:text-zinc-400">
+            <p className="mt-5 max-w-sm text-base leading-relaxed text-muted-foreground">
               {description}
             </p>
           )}
@@ -269,9 +306,9 @@ export function StatusPage({
             {actions ?? (
               <a
                 href={homeHref}
-                className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-700 active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary-hover active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                {'<-'} Voltar para Inicio
+                ← Voltar para Início
               </a>
             )}
           </div>
@@ -285,9 +322,10 @@ export function StatusPage({
     <div
       data-component-id={componentId || undefined}
       className={twMerge(
-        'relative isolate flex items-center justify-center overflow-hidden bg-white px-6 dark:bg-zinc-950',
+        'relative isolate flex items-center justify-center overflow-hidden bg-background text-foreground px-6',
         inline ? 'py-16' : 'min-h-screen',
-        className
+        !hasPermission && 'opacity-60 pointer-events-none',
+        className,
       )}
     >
       <div
@@ -303,8 +341,8 @@ export function StatusPage({
         {displayCode ? (
           <span
             className={twMerge(
-              'block select-none bg-gradient-to-br bg-clip-text text-[clamp(96px,20vw,200px)] font-black leading-none tracking-tighter text-transparent',
-              s.codeGradient
+              'block select-none bg-gradient-to-br bg-clip-text text-[clamp(96px,20vw,200px)] font-black leading-none tracking-tighter tabular-nums text-transparent',
+              s.codeGradient,
             )}
           >
             {displayCode}
@@ -313,7 +351,7 @@ export function StatusPage({
           <div
             className={twMerge(
               'flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg',
-              s.iconGradient
+              s.iconGradient,
             )}
           >
             {React.cloneElement(icon, { className: 'h-8 w-8 text-white' })}
@@ -326,7 +364,7 @@ export function StatusPage({
               'mt-5 inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-medium tracking-wide',
               s.pillBg,
               s.pillText,
-              s.pillBorder
+              s.pillBorder,
             )}
           >
             {pill}
@@ -335,15 +373,15 @@ export function StatusPage({
 
         <h1
           className={twMerge(
-            'font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50',
-            displayCode ? 'mt-5 text-4xl sm:text-5xl' : 'mt-4 text-4xl'
+            'font-extrabold tracking-tight text-foreground',
+            displayCode ? 'mt-5 text-4xl sm:text-5xl' : 'mt-4 text-4xl',
           )}
         >
           {title}
         </h1>
 
         {rotatingWords && rotatingWords.length > 0 && (
-          <div className="mt-3 text-base font-medium text-zinc-400 dark:text-zinc-500 h-6 overflow-hidden">
+          <div className="mt-3 text-base font-medium text-muted-foreground h-6 overflow-hidden">
             <RotatingWords words={rotatingWords} />
           </div>
         )}
@@ -351,7 +389,7 @@ export function StatusPage({
         <div className={twMerge('mt-5 h-px w-12 rounded-full', s.hr)} />
 
         {description && (
-          <p className="mt-5 max-w-md text-base leading-relaxed text-zinc-500 dark:text-zinc-400">
+          <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
             {description}
           </p>
         )}
@@ -360,9 +398,9 @@ export function StatusPage({
           {actions ?? (
             <a
               href={homeHref}
-              className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-700 active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary-hover active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {'<-'} Voltar para Inicio
+              ← Voltar para Início
             </a>
           )}
         </div>
