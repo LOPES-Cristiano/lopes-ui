@@ -2,7 +2,7 @@
 
 import React, { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 import { twMerge } from "tailwind-merge";
 import { X, CheckCircle2, AlertTriangle, Info, XCircle, type LucideIcon } from "lucide-react";
 
