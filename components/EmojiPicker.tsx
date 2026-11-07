@@ -317,6 +317,22 @@ const EMOJI_CATEGORIES: EmojiCategory[] = [
 
 const LOCAL_STORAGE_RECENT_KEY = 'lopes_ui_recent_emojis_v1';
 
+function loadStoredRecentEmojis(storageKey: string): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((x): x is string => typeof x === 'string').slice(0, 16);
+      }
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return [];
+}
+
 export default function EmojiPicker({
   onSelectEmoji,
   onClose,
@@ -327,24 +343,14 @@ export default function EmojiPicker({
 }: EmojiPickerProps) {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('smileys');
-  const [recentEmojis, setRecentEmojis] = useState<string[]>([]);
+  const [recentEmojis, setRecentEmojis] = useState<string[]>(() => loadStoredRecentEmojis(storageKey));
+  const [prevStorageKey, setPrevStorageKey] = useState(storageKey);
+  if (prevStorageKey !== storageKey) {
+    setPrevStorageKey(storageKey);
+    setRecentEmojis(loadStoredRecentEmojis(storageKey));
+  }
   const searchInputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // Carrega recentes do storage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          setRecentEmojis(parsed.slice(0, 16));
-        }
-      }
-    } catch {
-      // ignore storage errors
-    }
-  }, [storageKey]);
 
   useEffect(() => {
     if (autoFocus) {
