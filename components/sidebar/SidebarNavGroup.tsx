@@ -4,6 +4,7 @@ import { ChevronDown } from 'lucide-react';
 import type { SidebarNavGroup as SidebarNavGroupType } from './Sidebar.types';
 import { useSidebar } from './SidebarContext';
 import { SidebarNavItem } from './SidebarNavItem';
+import { SidebarTooltip } from './SidebarTooltip';
 import { resolveGroupId, hasActiveDescendant } from './utils/navigation';
 
 export function SidebarNavGroup({
@@ -19,21 +20,29 @@ export function SidebarNavGroup({
     effectiveCollapsed,
     groupsCollapsible,
     collapsedGroupIds,
+    collapsedGroupMode,
     toggleGroup,
+    setCollapsed,
     searchQuery,
   } = useSidebar();
 
   const groupId = resolveGroupId(group, index);
-  const canCollapse = Boolean(group.label) && (group.collapsible ?? groupsCollapsible);
+  const hasGroupLabel = Boolean(group.label);
+  const canCollapse = hasGroupLabel && (group.collapsible ?? groupsCollapsible);
   const isSearching = Boolean(searchQuery && searchQuery.trim().length > 0);
-  const open = effectiveCollapsed || isSearching || !canCollapse || !collapsedGroupIds.has(groupId);
+  const useCollapsedGroupIcon =
+    effectiveCollapsed && hasGroupLabel && collapsedGroupMode === 'group-icons';
+
+  const open = useCollapsedGroupIcon
+    ? false
+    : effectiveCollapsed || isSearching || !canCollapse || !collapsedGroupIds.has(groupId);
   const groupContentId = `nav-group-content-${groupId}`;
   const GroupIcon = group.icon;
   const isGroupActive = group.items.some(hasActiveDescendant);
 
   return (
     <div className={effectiveCollapsed ? 'w-full my-0.5' : 'w-full'}>
-      {index > 0 && (
+      {index > 0 && !useCollapsedGroupIcon && (
         <div
           className={
             effectiveCollapsed
@@ -42,7 +51,33 @@ export function SidebarNavGroup({
           }
         />
       )}
-      {!effectiveCollapsed && group.label ? (
+
+      {useCollapsedGroupIcon ? (
+        <SidebarTooltip label={group.label!} delayMs={120}>
+          <button
+            data-component-id={`erp.sidebar.nav-group-collapsed-${groupId}`}
+            type="button"
+            aria-label={group.label}
+            onClick={() => {
+              if (collapsedGroupIds.has(groupId)) {
+                toggleGroup(groupId);
+              }
+              setCollapsed(false);
+            }}
+            className={`relative w-9 h-9 mx-auto flex items-center justify-center rounded-lg cursor-pointer select-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              isGroupActive
+                ? 'bg-[var(--sidebar-item-active-background)] text-[var(--sidebar-item-active-foreground)] shadow-xs'
+                : 'text-[var(--sidebar-icon-foreground)] hover:bg-[var(--sidebar-item-hover-background)] hover:text-[var(--sidebar-item-hover-foreground)]'
+            }`}
+          >
+            {GroupIcon ? (
+              <GroupIcon size={18} strokeWidth={1.8} className="shrink-0" />
+            ) : (
+              <span className="text-[11px] font-bold">{group.label!.charAt(0).toUpperCase()}</span>
+            )}
+          </button>
+        </SidebarTooltip>
+      ) : !effectiveCollapsed && group.label ? (
         <div className="mb-1">
           {canCollapse ? (
             <button
@@ -51,7 +86,7 @@ export function SidebarNavGroup({
               aria-expanded={open}
               aria-controls={groupContentId}
               onClick={() => toggleGroup(groupId)}
-              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer select-none group/grp text-left focus:outline-none hover:bg-[var(--sidebar-item-hover-background)] transition-all duration-150"
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer select-none group/grp text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-[var(--sidebar-item-hover-background)] transition-all duration-150"
             >
               <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[var(--sidebar-group-foreground)] group-hover/grp:text-[var(--sidebar-group-hover-foreground)] transition-colors">
                 {GroupIcon && (
@@ -103,7 +138,7 @@ export function SidebarNavGroup({
                 key={item.id ?? `${item.label}-${i}`}
                 item={item}
                 onNavigate={onNavigate}
-                isTopLevelWithoutGroup={effectiveCollapsed || !group.label}
+                isTopLevelWithoutGroup={effectiveCollapsed || !hasGroupLabel}
               />
             ))}
           </div>
