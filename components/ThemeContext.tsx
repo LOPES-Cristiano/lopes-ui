@@ -141,7 +141,7 @@ const ThemeContext = createContext<ThemeCtx | null>(null);
  */
 export function ThemeScript({ storageKey = STORAGE_KEY }: { storageKey?: string }) {
   const code = `(function(){try{var s=localStorage.getItem(${JSON.stringify(
-    storageKey
+    storageKey,
   )});var d=s==='dark'||((!s||s==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`;
   return <script dangerouslySetInnerHTML={{ __html: code }} />;
 }
@@ -151,15 +151,36 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     initStoreOnClient();
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    const mql = window.matchMedia('(prefers-color-scheme: dark)');
-    const onChange = () => {
+    if (typeof window === 'undefined') return;
+
+    const mql =
+      typeof window.matchMedia === 'function'
+        ? window.matchMedia('(prefers-color-scheme: dark)')
+        : null;
+
+    const onMediaChange = () => {
       if (currentMode === 'system') {
         applyThemeTransitionFree('system', false);
       }
     };
-    mql.addEventListener('change', onChange);
-    return () => mql.removeEventListener('change', onChange);
+
+    const onStorageChange = (e: StorageEvent) => {
+      if (e.key !== STORAGE_KEY && e.key !== null) return;
+      const next: ThemeMode =
+        e.newValue === 'light' || e.newValue === 'dark' || e.newValue === 'system'
+          ? e.newValue
+          : 'system';
+      if (next !== currentMode) {
+        applyThemeTransitionFree(next, false);
+      }
+    };
+
+    mql?.addEventListener('change', onMediaChange);
+    window.addEventListener('storage', onStorageChange);
+    return () => {
+      mql?.removeEventListener('change', onMediaChange);
+      window.removeEventListener('storage', onStorageChange);
+    };
   }, []);
 
   const value = React.useMemo<ThemeCtx>(
@@ -169,7 +190,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       toggle: toggleTheme,
       setTheme,
     }),
-    [snap.theme, snap.mode]
+    [snap.theme, snap.mode],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
