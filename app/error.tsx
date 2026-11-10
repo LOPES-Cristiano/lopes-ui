@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import StatusPage from "@/components/StatusPage";
+import State from "@/components/State";
 import { AlertTriangle } from "lucide-react";
 
 export default function GlobalError({ error, reset }: { error: Error; reset: () => void }) {
   return (
-    <StatusPage
+    <State kind="page"
       variant="500"
       code={500}
       pill="500 · Erro Interno"
