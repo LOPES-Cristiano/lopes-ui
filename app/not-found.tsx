@@ -1,11 +1,11 @@
 "use client";
 
-import StatusPage from "@/components/StatusPage";
+import State from "@/components/State";
 import { FileSearch } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <StatusPage
+    <State kind="page"
       variant="404"
       code={404}
       pill="404 · Página não encontrada"
