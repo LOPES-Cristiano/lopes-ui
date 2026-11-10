@@ -128,8 +128,8 @@ export * from "./Drawer";
 export { default as EmojiPicker } from "./EmojiPicker";
 export * from "./EmojiPicker";
 
-export { default as EmptyState } from "./EmptyState";
-export * from "./EmptyState";
+export { default as State } from "./State";
+export * from "./State";
 
 export { default as ErrorBoundary } from "./ErrorBoundary";
 export * from "./ErrorBoundary";
@@ -253,9 +253,6 @@ export * from "./QRCode";
 export { default as QuickActions } from "./QuickActions";
 export * from "./QuickActions";
 
-export { default as Result } from "./Result";
-export * from "./Result";
-
 export { default as RichTextViewer } from "./RichTextViewer";
 export * from "./RichTextViewer";
 
@@ -326,9 +323,6 @@ export * from "./StatCard";
 
 export { default as StatusBadge } from "./StatusBadge";
 export * from "./StatusBadge";
-
-export { default as StatusPage } from "./StatusPage";
-export * from "./StatusPage";
 
 export { default as Stepper } from "./Stepper";
 export * from "./Stepper";
