@@ -204,6 +204,9 @@ export * from "./Loading";
 export { default as LoginForm } from "./LoginForm";
 export * from "./LoginForm";
 
+export { default as Map, MapView, MapMarker, MapControls, useMap } from "./Map";
+export * from "./Map";
+
 export { default as Marquee } from "./Marquee";
 export * from "./Marquee";
 
