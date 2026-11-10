@@ -57,6 +57,7 @@ export default function AppSidebar() {
           items: [
             { label: "Visão geral", href: "/#overview", icon: Home },
             { label: "Instalação", href: "/#install", icon: Zap },
+            { label: "Todos os componentes (A–Z)", href: "/components", icon: ListChecks, badge: "Índice", badgeVariant: "success" },
             {
               label: "Páginas Exemplo",
               href: "/templates",
@@ -225,9 +226,9 @@ export default function AppSidebar() {
               children: [
                 { label: "Modal, FormModal & Câmera", href: "/showcase/actions#modals" },
                 { label: "Drawer", href: "/showcase/actions#drawer" },
-                { label: "ConfirmDialog", href: "/showcase/actions#confirm-dialog" },
-                { label: "Popconfirm", href: "/showcase/actions#popconfirm" },
-                { label: "PasswordConfirmDialog", href: "/showcase/actions#password-confirm" },
+                { label: "Confirm · dialog", href: "/showcase/actions#confirm-dialog" },
+                { label: "Confirm · popover", href: "/showcase/actions#popconfirm" },
+                { label: "Confirm · password", href: "/showcase/actions#password-confirm" },
               ],
             },
             {
