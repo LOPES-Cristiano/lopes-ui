@@ -16,14 +16,13 @@ import SpeedDial from "@/components/SpeedDial";
 import Swap from "@/components/Swap";
 import Loading, { Spin } from "@/components/Loading";
 import SortableList from "@/components/SortableList";
-import Result, { type ResultStatus } from "@/components/Result";
+import State from "@/components/State";
+import { type ResultStatus } from "@/components/Result";
 import FloatButton, { FloatButtonGroup, BackTop } from "@/components/FloatButton";
 import TextField from "@/components/form/TextField";
 import SelectField from "@/components/form/SelectField";
 import NumberField from "@/components/form/NumberField";
 import StatusBadge from "@/components/StatusBadge";
-import EmptyState from "@/components/EmptyState";
-import StatusPage from "@/components/StatusPage";
 import CodeBlock from "@/components/CodeBlock";
 import toast, { ToastPreview } from "@/components/Toast";
 import { useAsyncButton } from "@/hooks/useAsyncButton";
@@ -1526,7 +1525,7 @@ const [open, setOpen] = useState(false);
         <section id="empty-state" className="space-y-10 pb-10 sm:pb-14">
           <SectionHeader
             label="Utilitários"
-            title="Empty State"
+            title="State · kind=empty"
             description="Tela de estado vazio com preset, ícone, título, descrição e ações. Cobre: lista vazia, sem resulados de busca, erro, sem permissão, offline e 404 inline."
           />
 
@@ -1546,7 +1545,7 @@ const [open, setOpen] = useState(false);
                   key={p}
                   className="bg-white dark:bg-zinc-900 flex items-center justify-center"
                 >
-                  <EmptyState preset={p} size="sm" />
+                  <State kind="empty" preset={p} size="sm" />
                 </div>
               ))}
             </div>
@@ -1554,7 +1553,7 @@ const [open, setOpen] = useState(false);
 
           <DemoCard id="empty-state-actions" title="Com ações">
             <div className="p-6">
-              <EmptyState
+              <State kind="empty"
                 preset="empty"
                 title="Nenhum pedido ainda"
                 description="Crie seu primeiro pedido para começar a usar o sistema."
@@ -1577,14 +1576,14 @@ const [open, setOpen] = useState(false);
           <DemoCard id="empty-state-sizes" title="Tamanhos">
             <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-zinc-100 dark:divide-zinc-800">
               {(["sm", "md", "lg"] as const).map((s) => (
-                <EmptyState key={s} preset="search" size={s} />
+                <State kind="empty" key={s} preset="search" size={s} />
               ))}
             </div>
           </DemoCard>
 
           <DemoCard id="empty-state-fill" title="fill — ocupa 100% da altura">
             <div className="h-72 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden">
-              <EmptyState
+              <State kind="empty"
                 preset="empty"
                 title="Nenhum resultado"
                 description="Tente ajustar os filtros para encontrar o que procura."
@@ -1667,8 +1666,8 @@ const [open, setOpen] = useState(false);
 
         <section id="status-pages">
           <SectionHeader
-            label="StatusPage"
-            title="StatusPage"
+            label="State · page"
+            title="State · kind=page"
             description="Páginas de erro prontas para 404, 403 e 500. Podem ser usadas em tela cheia ou embutidas (inline) em qualquer container."
           />
 
@@ -1679,7 +1678,7 @@ const [open, setOpen] = useState(false);
                   key={v}
                   className="overflow-hidden rounded-xl border border-zinc-200"
                 >
-                  <StatusPage
+                  <State kind="page"
                     inline
                     variant={v}
                     code={Number(v)}
@@ -1764,7 +1763,7 @@ const [open, setOpen] = useState(false);
             <CodeBlock
               filename="not-found.tsx"
               language="tsx"
-              code={`<StatusPage\n  variant="404"\n  code={404}\n  title="Página não encontrada"\n  description="O endereço que você acessou não existe."\n  primaryAction={{ label: "Voltar ao início", onClick: () => router.push("/") }}\n/>`}
+              code={`<State\n  kind="page"\n  variant="404"\n  code={404}\n  title="Página não encontrada"\n  description="O endereço que você acessou não existe."\n  primaryAction={{ label: "Voltar ao início", onClick: () => router.push("/") }}\n/>`}
             />
           </div>
         </section>
@@ -1934,7 +1933,7 @@ toast.promise(salvarConfiguracoes(), {
         <section id="result" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
             label="Desfecho de Fluxos"
-            title="Result (Sucesso, Aviso, Erro & HTTP 403/404/500)"
+            title="State · kind=result (Sucesso, Aviso, Erro & HTTP 403/404/500)"
             description="Painel estruturado para conclusão de pedidos, confirmações de pagamento, alertas fiscais e estados HTTP (success, info, warning, error, 403, 404, 500) com halo ilustrado, ações e bloco de recibo."
           />
 
@@ -2668,7 +2667,7 @@ function ResultShowcaseDemo() {
         ))}
       </div>
 
-      <Result
+      <State kind="result"
         bordered
         size="sm"
         status={status}
@@ -2693,7 +2692,7 @@ function ResultShowcaseDemo() {
             <strong>Itens:</strong> Sofá Retrátil 3L + Geladeira Inverter 450L
           </span>
         </div>
-      </Result>
+      </State>
     </div>
   );
 }
