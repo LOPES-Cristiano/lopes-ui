@@ -232,13 +232,13 @@ export default function AppSidebar() {
               ],
             },
             {
-              label: "Estados, Result & Loading",
+              label: "Estados & Loading",
               href: "/showcase/actions#empty-state",
               icon: PackageOpen,
               children: [
-                { label: "EmptyState", href: "/showcase/actions#empty-state" },
-                { label: "Result (Sucesso & HTTP)", href: "/showcase/actions#result" },
-                { label: "StatusPage (403/404/500)", href: "/showcase/actions#status-pages" },
+                { label: "State · empty", href: "/showcase/actions#empty-state" },
+                { label: "State · result (Sucesso & HTTP)", href: "/showcase/actions#result" },
+                { label: "State · page (403/404/500)", href: "/showcase/actions#status-pages" },
                 { label: "Loading & Spin Overlay", href: "/showcase/actions#loading" },
                 { label: "SortableList (Drag & Drop)", href: "/showcase/actions#sortable-list" },
                 { label: "PullToRefresh", href: "/showcase/actions#pull-to-refresh" },
