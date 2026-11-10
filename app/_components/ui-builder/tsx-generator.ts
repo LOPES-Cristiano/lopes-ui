@@ -523,17 +523,17 @@ function renderElementJsx(el: UICanvasElement, ctx: GenContext, nestedChildrenJs
     }
 
     case "empty_state": {
-      ctx.lopesImports.add("EmptyState");
-      return `<EmptyState${cidProp} preset=${q(p.preset, "search")} title=${q(p.title)} description=${q(p.description)} size=${q(p.size, "sm")} />`;
+      ctx.lopesImports.add("State");
+      return `<State${cidProp} kind="empty" preset=${q(p.preset, "search")} title=${q(p.title)} description=${q(p.description)} size=${q(p.size, "sm")} />`;
     }
 
     case "result": {
-      ctx.lopesImports.add("Result");
+      ctx.lopesImports.add("State");
       const primary = asStr(p.primaryAction);
       const secondary = asStr(p.secondaryAction);
       if (primary || secondary) ctx.lopesImports.add("Button");
       return [
-        `<Result${cidProp}`,
+        `<State${cidProp} kind="result"`,
         `  status=${q(p.status, "success")}`,
         `  title=${q(p.title)}`,
         `  subTitle=${q(p.subTitle)}`,
