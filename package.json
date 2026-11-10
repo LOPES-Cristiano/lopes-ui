@@ -68,7 +68,8 @@
     "prepare": "tsup",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:registry": "node scripts/check-registry.mjs"
   },
   "peerDependencies": {
     "@tanstack/react-table": ">=8.0.0",
