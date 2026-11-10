@@ -60,7 +60,7 @@ const EXAMPLE_TEMPLATES = [
     icon: Briefcase,
     badge: "Comercial",
     title: "CRM & Pipeline",
-    description: "Quadro Kanban drag-and-drop, FilterChips por etapa e FormDrawer de negociação.",
+    description: "Quadro Kanban drag-and-drop, FilterChips por etapa e Drawer de negociação.",
   },
   {
     href: "/templates#helpdesk",
@@ -111,7 +111,7 @@ const CATEGORIES = [
     href: "/showcase/actions",
     icon: Zap,
     title: "Ações & Feedback",
-    description: "Button (Dashed/Tonal/Round), Popconfirm, Result, FloatButton & BackTop, Spin Overlay, PasswordConfirmDialog, SortableList, Modal e Toast.",
+    description: "Button (Dashed/Tonal/Round), Confirm, Result, FloatButton & BackTop, Spin Overlay, SortableList, Modal e Toast.",
     count: 20,
   },
   {
