@@ -4,11 +4,10 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import Alert from "@/components/Alert";
-import ConfirmDialog from "@/components/ConfirmDialog";
+import Confirm from "@/components/Confirm";
 import Drawer from "@/components/Drawer";
 import Modal from "@/components/Modal";
 import FormModal, { FormSectionHeader } from "@/components/FormModal";
-import FormDrawer from "@/components/FormDrawer";
 import { CameraCaptureModal } from "@/components/CameraCaptureModal";
 import PullToRefresh from "@/components/PullToRefresh";
 import ButtonGroup from "@/components/ButtonGroup";
@@ -16,9 +15,7 @@ import ToggleGroup, { Toggle } from "@/components/ToggleGroup";
 import SpeedDial from "@/components/SpeedDial";
 import Swap from "@/components/Swap";
 import Loading, { Spin } from "@/components/Loading";
-import PasswordConfirmDialog from "@/components/PasswordConfirmDialog";
 import SortableList from "@/components/SortableList";
-import Popconfirm from "@/components/Popconfirm";
 import Result, { type ResultStatus } from "@/components/Result";
 import FloatButton, { FloatButtonGroup, BackTop } from "@/components/FloatButton";
 import TextField from "@/components/form/TextField";
@@ -216,8 +213,8 @@ function ModalAndFormModalDemo() {
   );
 }
 
-function FormDrawerAndCameraDemo() {
-  const [formDrawerOpen, setFormDrawerOpen] = React.useState(false);
+function DrawerFormAndCameraDemo() {
+  const [drawerFormOpen, setDrawerFormOpen] = React.useState(false);
   const [cameraOpen, setCameraOpen] = React.useState(false);
 
   return (
@@ -225,17 +222,17 @@ function FormDrawerAndCameraDemo() {
       <Button
         variant="primary"
         size="sm"
-        onClick={() => setFormDrawerOpen(true)}
+        onClick={() => setDrawerFormOpen(true)}
       >
-        Abrir FormDrawer
+        Abrir Drawer (form)
       </Button>
       <Button variant="outline" size="sm" onClick={() => setCameraOpen(true)}>
         Abrir CameraCaptureModal
       </Button>
 
-      <FormDrawer
-        open={formDrawerOpen}
-        onClose={() => setFormDrawerOpen(false)}
+      <Drawer form
+        open={drawerFormOpen}
+        onClose={() => setDrawerFormOpen(false)}
         title="Agendar Manutenção"
         description="Ordem de Serviço #OS-6912 · Ambiente de Produção"
         summary={
@@ -256,7 +253,7 @@ function FormDrawerAndCameraDemo() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setFormDrawerOpen(false)}
+              onClick={() => setDrawerFormOpen(false)}
             >
               Cancelar
             </Button>
@@ -264,7 +261,7 @@ function FormDrawerAndCameraDemo() {
               variant="primary"
               size="sm"
               onClick={() => {
-                setFormDrawerOpen(false);
+                setDrawerFormOpen(false);
                 toast.success("Manutenção agendada!");
               }}
             >
@@ -281,7 +278,7 @@ function FormDrawerAndCameraDemo() {
           label="Observações de Acesso"
           placeholder="Ponto de referência da residência..."
         />
-      </FormDrawer>
+      </Drawer>
 
       <CameraCaptureModal
         open={cameraOpen}
@@ -407,9 +404,9 @@ function ConfirmDialogDemo({
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
         {triggerLabel}
       </Button>
-      <ConfirmDialog
+      <Confirm
         open={open}
-        variant={variant}
+        tone={variant}
         title={title}
         description={description}
         confirmLabel={confirmLabel}
@@ -417,7 +414,7 @@ function ConfirmDialogDemo({
         onCancel={() => setOpen(false)}
       >
         {children}
-      </ConfirmDialog>
+      </Confirm>
     </>
   );
 }
@@ -1325,7 +1322,7 @@ const [open, setOpen] = useState(false);
         <section id="confirm-dialog" className="space-y-10 pb-10 sm:pb-14">
           <SectionHeader
             label="Utilitários"
-            title="Confirm Dialog"
+            title="Confirm · mode=dialog"
             description="Dialog de confirmação focado em ações destrutivas. Suporta variantes danger, warning e info, estado de loading, conteúdo extra e foco automático no botão Cancelar."
           />
 
@@ -1498,6 +1495,9 @@ const [open, setOpen] = useState(false);
                   "true",
                   "Fecha ao clicar no backdrop",
                 ],
+                 ["form", "boolean", "false", "Layout de formulário (corpo espaçado com padding padrão); substitui o antigo FormDrawer"],
+                 ["summary", "ReactNode", "—", "Bloco de resumo acima do corpo (usar com form)"],
+                 ["summaryClassName / bodyClassName", "string", "—", "Classes extras do resumo e do corpo (usar com form)"],
               ]}
             />
           </div>
@@ -1508,7 +1508,7 @@ const [open, setOpen] = useState(false);
         <section id="modals" className="space-y-8 scroll-mt-20">
           <SectionHeader
             label="Modais & Painéis"
-            title="Modal, FormModal, FormDrawer & CameraCaptureModal"
+            title="Modal, FormModal, Drawer (form) & CameraCaptureModal"
             description="Modais empilháveis com controle global de ESC, formulários CRUD em abas, gavetas laterais de agendamento e captura de câmera integrada."
           />
 
@@ -1516,8 +1516,8 @@ const [open, setOpen] = useState(false);
             <ModalAndFormModalDemo />
           </DemoCard>
 
-          <DemoCard id="formdrawer-camera-demo" title="FormDrawer & CameraCaptureModal">
-            <FormDrawerAndCameraDemo />
+          <DemoCard id="formdrawer-camera-demo" title="Drawer form & CameraCaptureModal">
+            <DrawerFormAndCameraDemo />
           </DemoCard>
         </section>
 
@@ -1904,7 +1904,7 @@ toast.promise(salvarConfiguracoes(), {
         <section id="popconfirm" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
             label="Confirmação Contextual"
-            title="Popconfirm (Confirmação Leve Ancorada)"
+            title="Confirm · mode=popover (Confirmação Leve Ancorada)"
             description="Popover ancorado ao botão acionador para confirmações rápidas sem bloquear toda a tela com um modal, suportando promessas assíncronas com spinner automático e 4 variantes semânticas."
           />
 
@@ -1919,7 +1919,7 @@ toast.promise(salvarConfiguracoes(), {
         <section id="password-confirm" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
             label="Autorização & Auditoria"
-            title="PasswordConfirmDialog"
+            title="Confirm · mode=password"
             description="Modal reutilizável de autenticação de senha do operador ou liberação gerencial por supervisor, com detecção de Caps Lock, justificativa obrigatória para trilha de auditoria e tratamento de erro inline."
           />
 
@@ -2413,7 +2413,7 @@ function PasswordConfirmShowcaseDemo() {
         Liberação de Desconto por Supervisor
       </Button>
 
-      <PasswordConfirmDialog
+      <Confirm mode="password"
         open={mode === "operator"}
         onClose={() => setMode(null)}
         title="Confirmar emissão de nota"
@@ -2429,7 +2429,7 @@ function PasswordConfirmShowcaseDemo() {
         }}
       />
 
-      <PasswordConfirmDialog
+      <Confirm mode="password"
         open={mode === "supervisor"}
         onClose={() => setMode(null)}
         tone="warning"
@@ -2575,8 +2575,8 @@ function AlertBannerShowcaseDemo() {
 function PopconfirmShowcaseDemo() {
   return (
     <div className="flex flex-wrap items-center gap-4">
-      <Popconfirm
-        variant="danger"
+      <Confirm mode="popover"
+        tone="danger"
         title="Cancelar agendamento de montagem?"
         description="A equipe técnica de Porto Velho (RO) liberará este horário na rota."
         confirmLabel="Sim, cancelar"
@@ -2589,10 +2589,10 @@ function PopconfirmShowcaseDemo() {
         <Button variant="danger-outline" size="sm" leftIcon={<Trash2 size={14} />}>
           Cancelar Montagem (Async)
         </Button>
-      </Popconfirm>
+      </Confirm>
 
-      <Popconfirm
-        variant="warning"
+      <Confirm mode="popover"
+        tone="warning"
         title="Reemitir etiqueta de volume?"
         description="Uma nova etiqueta será enviada para a impressora térmica do CD Manaus (AM)."
         confirmLabel="Reimprimir"
@@ -2601,10 +2601,10 @@ function PopconfirmShowcaseDemo() {
         <Button variant="outline" size="sm" leftIcon={<Printer size={14} />}>
           Reimprimir Etiqueta
         </Button>
-      </Popconfirm>
+      </Confirm>
 
-      <Popconfirm
-        variant="primary"
+      <Confirm mode="popover"
+        tone="primary"
         side="right"
         title="Liberar pedido para expedição?"
         description="Confirma que a voltagem 127V dos eletrodomésticos foi validada com o cliente?"
@@ -2614,7 +2614,7 @@ function PopconfirmShowcaseDemo() {
         <Button variant="tonal" size="sm" leftIcon={<Send size={14} />}>
           Liberar Expedição
         </Button>
-      </Popconfirm>
+      </Confirm>
     </div>
   );
 }
