@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import StatusPage from "@/components/StatusPage";
+import State from "@/components/State";
 import { Lock } from "lucide-react";
 
 export default function AccessDenied() {
   return (
-    <StatusPage
+    <State kind="page"
       variant="403"
       code={403}
       pill="403 · Acesso Negado"
