@@ -105,6 +105,14 @@ export type DrawerProps = {
   resizable?: boolean;
   /** Remove default padding on the scrollable content container */
   noPadding?: boolean;
+  /** Form layout: spaced body with standard padding (replaces the former FormDrawer). Default: false */
+  form?: boolean;
+  /** Highlighted summary block shown above the body (only with `form`) */
+  summary?: React.ReactNode;
+  /** Additional class names for the summary block (only with `form`) */
+  summaryClassName?: string;
+  /** Additional class names for the inner body wrapper (only with `form`) */
+  bodyClassName?: string;
   /** Additional class names for the panel */
   className?: string;
   /** Additional class names for the scrollable body content area */
@@ -177,6 +185,10 @@ export default function Drawer({
   showHandle,
   resizable = false,
   noPadding = false,
+  form = false,
+  summary,
+  summaryClassName,
+  bodyClassName,
   className,
   contentClassName,
   footerClassName,
@@ -471,11 +483,27 @@ export default function Drawer({
         <div
           className={cn(
             "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-card",
-            !noPadding && "px-4 sm:px-5 py-4 sm:py-5",
+            !noPadding && !form && "px-4 sm:px-5 py-4 sm:py-5",
             contentClassName
           )}
         >
-          {children}
+          {form ? (
+            <div className={cn("space-y-5", !noPadding && "p-5 md:p-6")}>
+              {summary && (
+                <div
+                  className={cn(
+                    "rounded-[var(--radius-card)] border border-border bg-muted/40 p-4 shadow-[var(--shadow-card)]",
+                    summaryClassName
+                  )}
+                >
+                  {summary}
+                </div>
+              )}
+              <div className={cn("space-y-5", bodyClassName)}>{children}</div>
+            </div>
+          ) : (
+            children
+          )}
         </div>
 
         {/* Footer */}
