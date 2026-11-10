@@ -105,7 +105,7 @@ const SITE_NAV: NavItem[] = [
         label: "Ações & Feedback",
         href: "/showcase/actions",
         icon: Zap,
-        description: "Button, Confirm (dialog/popover/password), Result, FloatButton & BackTop, SortableList, Alert…",
+        description: "Button, Confirm (dialog/popover/password), State, FloatButton & BackTop, SortableList, Alert…",
       },
       {
         label: "Dados, Tabelas & Gráficos",
@@ -149,7 +149,7 @@ const SITE_COMMANDS: CommandItem[] = [
   // Categorias de Componentes
   { id: "sc-forms", label: "Formulários & Inputs", icon: FormInput, href: "/showcase/forms", group: "Categorias", keywords: ["form", "input", "login", "otp", "select", "datepicker", "zod", "colorpicker", "taginput", "slider", "radiogroup", "cascader", "treeselect", "mentions"] },
   { id: "sc-display", label: "Display & Vitrine", icon: Layers, href: "/showcase/display", group: "Categorias", keywords: ["avatar", "badge", "statusbadge", "bento", "card", "carousel", "countdown", "diff", "hovercard", "mockup", "qrcode", "watermark", "skeleton", "masonry"] },
-  { id: "sc-actions", label: "Ações & Feedback", icon: Zap, href: "/showcase/actions", group: "Categorias", keywords: ["button", "buttongroup", "togglegroup", "speeddial", "swap", "loading", "spin", "alert", "toast", "drawer", "modal", "popconfirm", "confirm", "result", "floatbutton"] },
+  { id: "sc-actions", label: "Ações & Feedback", icon: Zap, href: "/showcase/actions", group: "Categorias", keywords: ["button", "buttongroup", "togglegroup", "speeddial", "swap", "loading", "spin", "alert", "toast", "drawer", "modal", "popconfirm", "confirm", "state", "result", "emptystate", "statuspage", "floatbutton"] },
   { id: "sc-data", label: "Dados, Tabelas & Gráficos", icon: BarChart2, href: "/showcase/data", group: "Categorias", keywords: ["chart", "grafico", "datatable", "spreadsheet", "descriptionlist", "transferlist", "kanban", "treeview", "table", "jsonviewer", "barcode", "stats"] },
   { id: "sc-comm", label: "Comunicação", icon: MessageCircle, href: "/showcase/communication", group: "Categorias", keywords: ["chat", "email", "notification", "smartobject", "composer"] },
   { id: "sc-nav", label: "Navegação & Layout", icon: Navigation, href: "/showcase/navigation", group: "Categorias", keywords: ["tabs", "pagination", "dock", "sidebar", "breadcrumb", "accordion", "command", "kbd", "splitter", "splitpane", "toc"] },
@@ -174,7 +174,7 @@ const SITE_COMMANDS: CommandItem[] = [
   { id: "cmp-stats", label: "StatCard, StatsSegmentsCard & StatsRingCard", icon: BarChart2, href: "/showcase/display#stat-card", group: "Componentes em Destaque", keywords: ["statcard", "stats", "ring", "segments", "kpi"] },
   { id: "cmp-lightbox", label: "ImageLightbox, Callout, Spoiler & HighlightText", icon: Sparkles, href: "/showcase/display#callout-spoiler-highlight", group: "Componentes em Destaque", keywords: ["lightbox", "zoom", "callout", "spoiler", "highlight"] },
   { id: "cmp-popconfirm", label: "Confirm · popover (Confirmação Leve Ancorada)", icon: HelpCircle, href: "/showcase/actions#popconfirm", group: "Componentes em Destaque", keywords: ["popconfirm", "confirm", "popover", "excluir"] },
-  { id: "cmp-result", label: "Result (Sucesso, Erro, 403, 404, 500)", icon: CheckCircle2, href: "/showcase/actions#result", group: "Componentes em Destaque", keywords: ["result", "sucesso", "403", "404", "500", "comprovante"] },
+  { id: "cmp-result", label: "State · result (Sucesso, Erro, 403, 404, 500)", icon: CheckCircle2, href: "/showcase/actions#result", group: "Componentes em Destaque", keywords: ["state", "result", "sucesso", "403", "404", "500", "comprovante"] },
   { id: "cmp-float", label: "FloatButton, FloatButtonGroup & BackTop", icon: Zap, href: "/showcase/actions#float-button", group: "Componentes em Destaque", keywords: ["floatbutton", "fab", "backtop", "topo", "scroll"] },
   { id: "cmp-pwdconfirm", label: "Confirm · password (Autorização & Senha)", icon: ShieldCheck, href: "/showcase/actions#password-confirm", group: "Componentes em Destaque", keywords: ["password", "senha", "confirm", "auditoria"] },
   { id: "cmp-sortable", label: "SortableList (Drag & Drop Acessível)", icon: ListChecks, href: "/showcase/actions#sortable-list", group: "Componentes em Destaque", keywords: ["sortable", "drag", "dnd", "lista", "reordenar"] },
