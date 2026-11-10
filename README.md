@@ -96,12 +96,12 @@ lopes-ui/
 │   ├── ChatWindow.tsx        # Janela de chat completa
 │   ├── CodeBlock.tsx         # Bloco de código com syntax highlight (Shiki)
 │   ├── CommandMenu.tsx       # Paleta de comandos (⌘K / Ctrl+K)
-│   ├── ConfirmDialog.tsx     # Dialog de confirmação genérico
+│   ├── Confirm.tsx           # Confirmação unificada (dialog | popover | password)
 │   ├── ContextMenu.tsx       # Menu de contexto com sub-menus
 │   ├── DataTable.tsx         # Tabela avançada com todas as features
 │   ├── Drawer.tsx            # Painel lateral deslizante (right/left/top/bottom)
 │   ├── EmailComposer.tsx     # Compositor de e-mail com destinatários e anexos
-│   ├── EmptyState.tsx        # Estado vazio configurável para listas
+│   ├── State.tsx             # Estado unificado (empty | result | page)
 │   ├── FilterBar.tsx         # Barra de filtros por chip com dialog avançado
 │   ├── Footer.tsx            # Rodapé genérico
 │   ├── Header.tsx            # Header genérico reutilizável
@@ -704,10 +704,10 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 />
 ```
 
-#### `EmptyState`
+#### `State` (`kind="empty"`)
 
 ```tsx
-<EmptyState
+<State kind="empty"
   title="Nenhum resultado"
   description="Tente ajustar seus filtros."
   icon={SearchX}
@@ -752,10 +752,10 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 />
 ```
 
-#### `StatusPage`
+#### `State` (`kind="page"`)
 
 ```tsx
-<StatusPage variant="404" /> // 404 | 403 | 500 | maintenance | empty | success
+<State kind="page" variant="404" /> // 404 | 403 | 500 | maintenance | empty | success
 ```
 
 #### `Toast`
@@ -1293,10 +1293,10 @@ Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
 />
 ```
 
-#### `StatusPage`
+#### `State` (`kind="page"`)
 
 ```tsx
-<StatusPage variant="404" /> // 404 | 403 | 500 | maintenance | empty | success
+<State kind="page" variant="404" /> // 404 | 403 | 500 | maintenance | empty | success
 ```
 
 #### `Toast`
