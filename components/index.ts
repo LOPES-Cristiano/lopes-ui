@@ -96,8 +96,8 @@ export * from "./Collapsible";
 export { default as CommandMenu } from "./CommandMenu";
 export * from "./CommandMenu";
 
-export { default as ConfirmDialog } from "./ConfirmDialog";
-export * from "./ConfirmDialog";
+export { default as Confirm } from "./Confirm";
+export * from "./Confirm";
 
 export { default as ContextMenu } from "./ContextMenu";
 export * from "./ContextMenu";
@@ -146,8 +146,6 @@ export * from "./FloatButton";
 export { default as Footer } from "./Footer";
 export * from "./Footer";
 
-export { default as FormDrawer } from "./FormDrawer";
-export * from "./FormDrawer";
 
 export {
   default as FormModal,
@@ -234,17 +232,11 @@ export * from "./PageHeader";
 export { default as Pagination } from "./Pagination";
 export * from "./Pagination";
 
-export { default as PasswordConfirmDialog } from "./PasswordConfirmDialog";
-export * from "./PasswordConfirmDialog";
-
 export { default as PasswordStrength } from "./PasswordStrength";
 export * from "./PasswordStrength";
 
 export { default as PingIndicator } from "./PingIndicator";
 export * from "./PingIndicator";
-
-export { default as Popconfirm } from "./Popconfirm";
-export * from "./Popconfirm";
 
 export { default as PriceInput, CurrencyField } from "./PriceInput";
 export * from "./PriceInput";
