@@ -6,8 +6,12 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const registry = readFileSync(join(root, "app/components/registry.ts"), "utf8");
 
-// Infraestrutura (providers, hooks, wrappers) que não precisa de página de demonstração
-const IGNORE = new Set(["ShellContext", "ThemeContext", "Controllable", "HeaderWrapper", "useAccessControl", "DataTable", "Sidebar"]);
+// Infraestrutura (providers, hooks, wrappers) e motores internos que não precisam de página própria
+// (ConfirmDialog, PasswordConfirmDialog e Popconfirm são motores de `Confirm`; EmptyState, Result e StatusPage são motores de `State`)
+const IGNORE = new Set([
+  "ShellContext", "ThemeContext", "Controllable", "HeaderWrapper", "useAccessControl", "DataTable", "Sidebar",
+  "ConfirmDialog", "PasswordConfirmDialog", "Popconfirm", "EmptyState", "Result", "StatusPage",
+]);
 
 const files = [...readdirSync(join(root, "components")), ...readdirSync(join(root, "components/form")).map((f) => f)]
   .filter((f) => f.endsWith(".tsx"))
