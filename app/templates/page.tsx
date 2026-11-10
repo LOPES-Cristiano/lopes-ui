@@ -42,7 +42,7 @@ import Marquee from "@/components/Marquee";
 import HoverGallery from "@/components/HoverGallery";
 import Stepper from "@/components/Stepper";
 import TransferList, { type TransferListItem } from "@/components/TransferList";
-import FormDrawer from "@/components/FormDrawer";
+import Drawer from "@/components/Drawer";
 import TextField from "@/components/form/TextField";
 import SelectField from "@/components/form/SelectField";
 import RadioGroupField from "@/components/form/RadioGroupField";
@@ -142,7 +142,7 @@ export default function ExecutiveDashboard() {
     </div>
   );
 }`,
-  crm: `import { PageHeader, FilterChips, KanbanBoard, FormDrawer, TextField, PriceInput } from "lopes-ui";
+  crm: `import { PageHeader, FilterChips, KanbanBoard, Drawer, TextField, PriceInput } from "lopes-ui";
 
 export default function CrmPipelinePage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -154,10 +154,10 @@ export default function CrmPipelinePage() {
         actions={<Button variant="primary" onClick={() => setDrawerOpen(true)}>Nova Oportunidade</Button>}
       />
       <KanbanBoard columns={PIPELINE_COLUMNS} />
-      <FormDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Nova Oportunidade">
+      <Drawer form open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Nova Oportunidade">
         <TextField label="Empresa / Cliente" required />
         <PriceInput label="Valor Estimado" />
-      </FormDrawer>
+      </Drawer>
     </div>
   );
 }`,
@@ -770,7 +770,7 @@ function CrmTemplate() {
       <KanbanBoard columns={filteredColumns} />
 
       {/* Drawer for New Deal */}
-      <FormDrawer
+      <Drawer form
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         title="Cadastrar Nova Oportunidade"
@@ -826,7 +826,7 @@ function CrmTemplate() {
           />
           <RatingField label="Temperatura do Lead (Fit)" defaultValue={4} showValue />
         </div>
-      </FormDrawer>
+      </Drawer>
     </div>
   );
 }
