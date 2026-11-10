@@ -111,7 +111,7 @@ const CATEGORIES = [
     href: "/showcase/actions",
     icon: Zap,
     title: "Ações & Feedback",
-    description: "Button (Dashed/Tonal/Round), Confirm, Result, FloatButton & BackTop, Spin Overlay, SortableList, Modal e Toast.",
+    description: "Button (Dashed/Tonal/Round), Confirm, State, FloatButton & BackTop, Spin Overlay, SortableList, Modal e Toast.",
     count: 20,
   },
   {
@@ -262,7 +262,7 @@ export default function Home() {
               icon={Terminal}
               badge={<Badge label="Ecossistema Completo" variant="info" size="xs" />}
               title="Componentes inspirados no melhor do Ant Design, Mantine UI, shadcn/ui e Radix UI"
-              description="De seletores corporativos (CascaderField, TreeSelectField, MentionsField, QRCode ISO 18004, Watermark, Popconfirm, Result) e editores avançados (RichTextEditor com Slash Commands & Documento A4, CodeEditor) até SegmentedControl, FileDropzone e Kanban."
+              description="De seletores corporativos (CascaderField, TreeSelectField, MentionsField, QRCode ISO 18004, Watermark, Confirm, State) e editores avançados (RichTextEditor com Slash Commands & Documento A4, CodeEditor) até SegmentedControl, FileDropzone e Kanban."
             >
               <Marquee duration={34} className="mt-2">
                 {[
@@ -272,8 +272,8 @@ export default function Home() {
                   "TagsInput & CheckableTag",
                   "QRCode (ISO 18004)",
                   "Watermark",
-                  "Popconfirm",
-                  "Result",
+                  "Confirm",
+                  "State",
                   "Skeleton Suite",
                   "FloatButton & BackTop",
                   "Masonry & BadgeRibbon",
