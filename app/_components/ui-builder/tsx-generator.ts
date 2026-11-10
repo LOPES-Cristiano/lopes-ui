@@ -622,20 +622,20 @@ function renderElementJsx(el: UICanvasElement, ctx: GenContext, nestedChildrenJs
 
     case "confirm_dialog_trigger": {
       ctx.lopesImports.add("Button");
-      ctx.lopesImports.add("ConfirmDialog");
+      ctx.lopesImports.add("Confirm");
       const idx = ctx.stateVars.length + 1;
       const varName = `confirmOpen${idx}`;
       const setterName = `setConfirmOpen${idx}`;
       ctx.stateVars.push({ varName, setterName, comment: el.name });
       ctx.overlayModalsJsx.push(
         [
-          `<ConfirmDialog`,
+          `<Confirm`,
           `  open={${varName}}`,
           `  onClose={() => ${setterName}(false)}`,
           `  onConfirm={() => ${setterName}(false)}`,
           `  title=${q(p.dialogTitle)}`,
           `  description=${q(p.dialogDescription)}`,
-          `  variant=${q(p.variant, "danger")}`,
+          `  tone=${q(p.variant, "danger")}`,
           `  confirmLabel=${q(p.confirmLabel, "Confirmar")}`,
           `  cancelLabel=${q(p.cancelLabel, "Cancelar")}`,
           `/>`,
