@@ -7,6 +7,7 @@ const LIB_EXTERNALS = [
   "next",
   /^next\//,
   "lucide-react",
+  "maplibre-gl",
   "motion",
   /^motion\//,
   "shiki",
