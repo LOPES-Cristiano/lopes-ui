@@ -33,7 +33,6 @@ import Tabs, { TabsList, TabsTrigger, TabsContent } from "@/components/Tabs";
 import Button from "@/components/Button";
 import ToggleGroup, { ToggleGroupItem } from "@/components/ToggleGroup";
 import Badge from "@/components/Badge";
-import StatusBadge from "@/components/StatusBadge";
 import Card, { CardHeader, CardBody } from "@/components/Card";
 import Alert from "@/components/Alert";
 import Snippet from "@/components/Snippet";
@@ -419,7 +418,7 @@ const INVOICE_COLS: DataTableColumn<InvoiceRow>[] = [
     render: (v) => {
       const s = v as InvoiceRow["status"];
       const tone = s === "Pago" ? "success" : s === "Processando" ? "info" : "warning";
-      return <StatusBadge label={s} tone={tone} size="sm" dot />;
+      return <Badge label={s} tone={tone} size="sm" dot />;
     },
   },
   { key: "date", label: "Data", width: "130px" },
@@ -904,7 +903,7 @@ function HelpdeskTemplate() {
       <PageHeader
         title="Central Helpdesk Omnichannel"
         description="Atendimento unificado via Chat ao vivo, E-mail e histórico completo do cliente."
-        badge={<StatusBadge label="SLA 99,4% no prazo" tone="success" dot size="sm" />}
+        badge={<Badge label="SLA 99,4% no prazo" tone="success" dot size="sm" />}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
@@ -958,7 +957,7 @@ function HelpdeskTemplate() {
               { label: "Plano Contratado", value: <Badge label="Enterprise Anual" variant="primary" size="xs" /> },
               { label: "ID da Organização", value: "org_99481a7b", copyValue: "org_99481a7b" },
               { label: "Gerente de Conta (CSM)", value: "Ana Souza" },
-              { label: "Saúde da Conta (Health)", value: <StatusBadge label="Saudável (96/100)" tone="success" size="xs" dot /> },
+              { label: "Saúde da Conta (Health)", value: <Badge label="Saudável (96/100)" tone="success" size="xs" dot /> },
             ]}
           />
 
