@@ -60,7 +60,6 @@ import Badge from "@/components/Badge";
 import Button from "@/components/Button";
 import CodeEditor from "@/components/CodeEditor";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import StatusBadge from "@/components/StatusBadge";
 import toast from "@/components/Toast";
 import { cn } from "@/utils/cn";
 import {
@@ -2619,7 +2618,7 @@ function UIBuilderStudioCore() {
             {/* Preview Sub-Toolbar */}
             <div className="h-10 shrink-0 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 flex items-center justify-between gap-2 select-none">
               <div className="flex items-center gap-2 text-xs">
-                <StatusBadge
+                <Badge
                   label="Preview Interativo Ao Vivo"
                   tone="success"
                   size="xs"
