@@ -54,7 +54,7 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   e("Button", "Ações", "actions", "button", "Botão com variantes, tamanhos e estado de carregamento."),
   e("ButtonGroup", "Ações", "actions", "button-group", "Agrupa botões em uma única barra."),
   e("ToggleGroup", "Ações", "actions", "toggle-group", "Grupo de alternadores (seleção única ou múltipla)."),
-  e("Alert", "Ações", "actions", "alerts", "Mensagem inline por tom (info, sucesso, aviso, perigo)."),
+  e("Alert", "Ações", "actions", "alerts", "Mensagem inline por tom (info, dica, sucesso, aviso, perigo); recolhível e com ações."),
   e("Confirm", "Ações", "actions", "confirm-dialog", "Confirmação unificada: modal (dialog), popover ou com senha (password)."),
   e("Drawer", "Ações", "actions", "drawer", "Painel lateral deslizante (prop `form` para formulários)."),
   e("Modal", "Ações", "actions", "modals", "Janela modal centralizada."),
@@ -101,14 +101,12 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
 
   // Exibição
   e("Avatar", "Exibição", "display", "avatars", "Avatar com iniciais, imagem e grupo."),
-  e("Badge", "Exibição", "display", "badges", "Selo de status ou contagem."),
+  e("Badge", "Exibição", "display", "badges", "Selo de status, contagem ou ponto (dot/pulse); substitui StatusBadge e PingIndicator."),
   e("Card", "Exibição", "display", "cards", "Contêiner de conteúdo."),
   e("Carousel", "Exibição", "display", "carousel", "Carrossel de itens."),
-  e("PingIndicator", "Exibição", "display", "ping-indicator", "Indicador pulsante."),
   e("ServiceStatusCard", "Exibição", "display", "service-status", "Card de status de serviço."),
   e("StatCard", "Exibição", "display", "stat-card", "Card de métrica."),
   e("Calendar", "Exibição", "display", "calendar", "Calendário."),
-  e("StatusBadge", "Exibição", "display", "status-badge", "Selo de status semântico."),
   e("DetailLayout", "Exibição", "display", "detail-layout", "Layout de página de detalhe."),
   e("EmojiPicker", "Exibição", "display", "emoji-picker", "Seletor de emoji."),
   e("Progress", "Exibição", "display", "progress", "Barra de progresso."),
@@ -122,7 +120,6 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   e("Mockup", "Exibição", "display", "mockups", "Molduras de dispositivos."),
   e("BentoGrid", "Exibição", "display", "bento-grid", "Grade tipo bento."),
   e("ActionGridCard", "Exibição", "display", "action-grid-switches", "Card em grade de ações e switches."),
-  e("Callout", "Exibição", "display", "callout-spoiler-highlight", "Destaque de informação."),
   e("Spoiler", "Exibição", "display", "callout-spoiler-highlight", "Conteúdo recolhível por altura."),
   e("HighlightText", "Exibição", "display", "callout-spoiler-highlight", "Realce de termos em texto."),
   e("ImageLightbox", "Exibição", "display", "image-lightbox", "Visualizador de imagem ampliada."),
@@ -131,7 +128,7 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   e("Watermark", "Exibição", "display", "watermark", "Marca d'água."),
   e("Skeleton", "Exibição", "display", "skeleton-suite", "Placeholders de carregamento."),
   e("Masonry", "Exibição", "display", "masonry", "Grade em alvenaria."),
-  e("SplitCounterBadge", "Exibição", "display", null, "Selo com contador dividido."),
+  e("SplitCounterBadge", "Exibição", "enterprise", "cnpj-smart-object", "Selo com contador dividido em segmentos (liberado/pendente/negado)."),
   e("Mask", "Exibição", "display", "indicator-stack-mask", "Máscara de visualização."),
 
   // Corporativo
@@ -219,3 +216,25 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   e("ContextMenu", "Navegação", "navigation", null, "Menu de contexto (botão direito)."),
   e("ThemeToggle", "Layout & Utilitários", "navigation", "header", "Alternador de tema claro/escuro."),
 ];
+
+// ── Ordem A–Z, slugs e navegação anterior/próximo ─────────────────────────────
+
+/** Slug estável usado na rota /components/[slug]. */
+export const slugify = (name: string) => name.toLowerCase();
+
+/** Todos os componentes em ordem alfabética (base da navegação anterior/próximo). */
+export const SORTED_REGISTRY: ComponentEntry[] = [...COMPONENT_REGISTRY].sort((a, b) =>
+  a.name.localeCompare(b.name),
+);
+
+export function getComponentBySlug(slug: string) {
+  const index = SORTED_REGISTRY.findIndex((c) => slugify(c.name) === slug);
+  if (index === -1) return null;
+  return {
+    entry: SORTED_REGISTRY[index],
+    index,
+    total: SORTED_REGISTRY.length,
+    prev: index > 0 ? SORTED_REGISTRY[index - 1] : null,
+    next: index < SORTED_REGISTRY.length - 1 ? SORTED_REGISTRY[index + 1] : null,
+  };
+}
