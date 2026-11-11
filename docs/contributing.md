@@ -239,3 +239,20 @@ import CodeBlock from "@/components/CodeBlock";
 
 <CodeBlock lang="tsx" code={`const x = 1;`} />
 ```
+
+## Página de componentes (`/components`)
+
+`/components` é uma página única e corrida, em ordem alfabética, com a demonstração de cada componente renderizada direto na página (sem iframe). Ela usa três peças:
+
+- [`app/components/registry.ts`](../app/components/registry.ts): lista de componentes (nome, categoria, descrição e a seção da demonstração).
+- [`app/components/demos/<categoria>.tsx`](../app/components/demos): **fonte das demonstrações**. Cada arquivo exporta `use<Categoria>Sections()`, que devolve `{ [idDaSeção]: <section id="…"> }`.
+- [`app/components/ComponentsFeed.tsx`](../app/components/ComponentsFeed.tsx): chama os hooks de todas as categorias e monta só as demos próximas da tela.
+
+As páginas antigas (`app/showcase/<categoria>/page.tsx`) são **cascas finas**: mantêm o layout e os links da sidebar/nav e leem as mesmas seções do módulo de demos. Para criar ou editar uma demonstração, altere o arquivo em `app/components/demos/`, nunca a casca.
+
+Ao **criar ou renomear** um componente:
+
+- Adicione/atualize a entrada em `registry.ts` com `e("Nome", "Categoria", "página", "id-da-seção", "descrição")`. O `id-da-seção` precisa existir em `demos/<página>.tsx`.
+- Componentes que compartilham a mesma seção mostram a demonstração apenas no primeiro (em ordem A–Z).
+- O feed desmonta demos longe da tela: mantenha estado que precise sobreviver **no corpo do hook** da categoria, não dentro da seção.
+- `npm run check:registry` falha se algum arquivo de `components/` ou `components/form/` não estiver no registro.
