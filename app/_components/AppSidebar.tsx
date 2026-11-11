@@ -259,8 +259,8 @@ export default function AppSidebar() {
                 { label: "Avatar & AvatarGroup", href: "/showcase/display#avatars" },
                 { label: "Badge — Soft, Solid & Dot", href: "/showcase/display#badges" },
                 { label: "Badge Status & BadgeRibbon", href: "/showcase/display#badge-status-ribbon" },
-                { label: "StatusBadge", href: "/showcase/display#status-badge" },
-                { label: "PingIndicator", href: "/showcase/display#ping-indicator" },
+                { label: "Badge · Tom, ponto & sólido", href: "/showcase/display#status-badge" },
+                { label: "Badge · Ponto & pulso", href: "/showcase/display#ping-indicator" },
               ],
             },
             {
@@ -298,12 +298,12 @@ export default function AppSidebar() {
               ],
             },
             {
-              label: "Calendar, Callout & Skeleton",
+              label: "Calendar, Alert & Skeleton",
               href: "/showcase/display#calendar",
               icon: CalendarDays,
               children: [
                 { label: "Calendar (Eventos & Range)", href: "/showcase/display#calendar" },
-                { label: "Callout, Spoiler & Highlight", href: "/showcase/display#callout-spoiler-highlight" },
+                { label: "Alert (dica), Spoiler & Highlight", href: "/showcase/display#callout-spoiler-highlight" },
                 { label: "HoverCard & ItemList", href: "/showcase/display#hover-card" },
                 { label: "Skeleton Suite", href: "/showcase/display#skeleton-suite" },
                 { label: "Progress & RadialProgress", href: "/showcase/display#progress" },
