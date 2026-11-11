@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect, useId, useRef } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 import { twMerge } from "tailwind-merge";
-import { X, CheckCircle2, AlertTriangle, Info, XCircle, type LucideIcon } from "lucide-react";
+import { X, CheckCircle2, AlertTriangle, Info, XCircle, Lightbulb, ChevronDown, type LucideIcon } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type AlertVariant = "info" | "success" | "warning" | "danger" | "neutral";
+export type AlertVariant = "info" | "tip" | "success" | "warning" | "danger" | "neutral";
 export type AlertAccent = "none" | "left" | "top";
 
 export type AlertAction = {
@@ -24,8 +24,12 @@ export type AlertProps = {
   variant?: AlertVariant;
   /** Thick colored accent border on left or top */
   accent?: AlertAccent;
-  /** Override the default icon */
-  icon?: LucideIcon | null;
+  /** Override the default icon: a Lucide icon, any node, or `null`/`false` to hide it */
+  icon?: LucideIcon | React.ReactNode | null | false;
+  /** Allow collapsing/expanding the body (description, children and actions) */
+  collapsible?: boolean;
+  /** Initial expanded state when `collapsible` is true. Default: true */
+  defaultOpen?: boolean;
   /** Show × dismiss button */
   dismissible?: boolean;
   /** Ant Design custom close text button (e.g. "Entendi" or "Ocultar") instead of × icon */
@@ -36,8 +40,8 @@ export type AlertProps = {
   onDismiss?: () => void;
   /** Automatically call onDismiss/onClose after N milliseconds */
   autoCloseMs?: number;
-  /** CTA buttons */
-  actions?: AlertAction[];
+  /** CTA buttons: a list of actions, or any custom node (e.g. your own `<Button>`s) */
+  actions?: AlertAction[] | React.ReactNode;
   /** When true, renders as a modal dialog instead of an inline banner */
   dialog?: boolean;
   /** Controls visibility (required when dialog=true) */
@@ -120,6 +124,14 @@ const STYLES: Record<AlertVariant, S> = {
     actionSolid: "bg-danger text-danger-foreground hover:opacity-90",
     actionGhost: "text-danger-soft-foreground hover:bg-danger/15",
   },
+  tip: {
+    bg: "bg-violet-50/75 dark:bg-violet-950/30", border: "border-violet-200/80 dark:border-violet-900/60",
+    accentLeft: "border-l-4 border-l-violet-500 dark:border-l-violet-400", accentTop: "border-t-4 border-t-violet-500 dark:border-t-violet-400",
+    title: "text-violet-900 dark:text-violet-200", body: "text-violet-950 dark:text-violet-100", icon: "text-violet-600 dark:text-violet-400", iconBg: "bg-violet-500/15",
+    dismiss: "text-violet-900/70 hover:text-violet-900 hover:bg-violet-500/15 dark:text-violet-200/70 dark:hover:text-violet-200",
+    actionSolid: "bg-violet-600 text-white hover:opacity-90",
+    actionGhost: "text-violet-900 hover:bg-violet-500/15 dark:text-violet-200",
+  },
   neutral: {
     bg: "bg-muted/60", border: "border-border",
     accentLeft: "border-l-4 border-l-muted-foreground", accentTop: "border-t-4 border-t-muted-foreground",
@@ -132,6 +144,7 @@ const STYLES: Record<AlertVariant, S> = {
 
 const DEFAULT_ICON: Record<AlertVariant, LucideIcon> = {
   info:    Info,
+  tip:     Lightbulb,
   success: CheckCircle2,
   warning: AlertTriangle,
   danger:  XCircle,
@@ -141,11 +154,27 @@ const DEFAULT_ICON: Record<AlertVariant, LucideIcon> = {
 // ── Inner content ─────────────────────────────────────────────────────────────
 
 function AlertContent({
-  title, description, children, variant = "neutral", accent = "none", icon, dismissible, closeText, banner = false, onDismiss, actions,
+  title, description, children, variant = "neutral", accent = "none", icon, collapsible = false, defaultOpen = true,
+  dismissible, closeText, banner = false, onDismiss, actions,
   dialog, s, className, componentId, titleId, descriptionId,
 }: AlertProps & { s: S; titleId?: string; descriptionId?: string }) {
-  const IconComponent = icon === null ? null : (icon ?? DEFAULT_ICON[variant ?? "neutral"]);
+  const [open, setOpen] = useState(defaultOpen);
+  const actionList = Array.isArray(actions) ? (actions as AlertAction[]) : null;
+  const actionNode = actions && !Array.isArray(actions) ? (actions as React.ReactNode) : null;
+  const hideIcon = icon === null || icon === false;
+  const fallbackIcon = DEFAULT_ICON[variant ?? "neutral"];
+  const isIconComponent =
+    typeof icon === "function" || (typeof icon === "object" && icon !== null && "render" in icon);
+  const IconComponent: LucideIcon | null = hideIcon
+    ? null
+    : icon === undefined
+      ? fallbackIcon
+      : isIconComponent
+        ? (icon as LucideIcon)
+        : null;
+  const iconNode = !hideIcon && icon !== undefined && !isIconComponent ? (icon as React.ReactNode) : null;
   const showDismiss = Boolean(dismissible || closeText);
+  const bodyVisible = !collapsible || open;
 
   if (dialog) {
     return (
@@ -172,9 +201,9 @@ function AlertContent({
           </div>
         </div>
 
-        {actions && actions.length > 0 && (
+        {actionList && actionList.length > 0 && (
           <div className="flex justify-end gap-3 mt-6">
-            {actions.map((a, i) => (
+            {actionList.map((a, i) => (
               <button
                 data-component-id={`erp.alert.action-${i}`}
                 key={i}
@@ -241,20 +270,45 @@ function AlertContent({
           <IconComponent size={banner ? 14 : 16} strokeWidth={2} className={s.icon} />
         </span>
       )}
+      {iconNode && <span className={twMerge("shrink-0 mt-0.5", s.icon)}>{iconNode}</span>}
 
       <div className={twMerge("flex-1 min-w-0", s.body)}>
-        {title && (
-          <p className={twMerge("font-semibold text-sm leading-snug text-balance", s.title)}>{title}</p>
+        {(title || collapsible) && (
+          <div
+            onClick={collapsible ? () => setOpen((v) => !v) : undefined}
+            className={twMerge("flex items-center justify-between gap-2", collapsible && "cursor-pointer select-none")}
+          >
+            {title ? (
+              <p className={twMerge("font-semibold text-sm leading-snug text-balance", s.title)}>{title}</p>
+            ) : (
+              <span />
+            )}
+            {collapsible && (
+              <button
+                type="button"
+                aria-expanded={open}
+                aria-label={open ? "Recolher detalhes" : "Expandir detalhes"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen((v) => !v);
+                }}
+                className="inline-flex h-6 w-6 items-center justify-center rounded-md opacity-70 hover:bg-black/5 dark:hover:bg-white/10 hover:opacity-100 transition-all cursor-pointer"
+              >
+                <ChevronDown size={15} className={twMerge("transition-transform duration-150", open && "rotate-180")} />
+              </button>
+            )}
+          </div>
         )}
-        {description && (
+        {bodyVisible && description && (
           <div className={twMerge("text-sm leading-relaxed mt-0.5 text-pretty", s.body, !title && "mt-0")}>
             {description}
           </div>
         )}
-        {children}
-        {actions && actions.length > 0 && (
+        {bodyVisible && children}
+        {bodyVisible && actionNode && <div className="mt-3 flex flex-wrap items-center gap-2">{actionNode}</div>}
+        {bodyVisible && actionList && actionList.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
-            {actions.map((a, i) => (
+            {actionList.map((a, i) => (
               <button
                 data-component-id={`erp.alert.banner-action-${i}`}
                 key={i}
