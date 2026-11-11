@@ -1465,11 +1465,11 @@ export const COMPONENT_CATALOG: UICatalogEntry[] = [
   },
   {
     type: "status_badge",
-    label: "StatusBadge",
+    label: "Badge",
     category: "Ações & Identidade",
     iconName: "CheckCircle2",
     accent: "teal",
-    lopesComponent: "StatusBadge",
+    lopesComponent: "Badge",
     description: "Selo semântico com indicador luminoso pulsante de status operacional",
     defaultWidth: 184,
     defaultHeight: 32,
@@ -1575,11 +1575,11 @@ export const COMPONENT_CATALOG: UICatalogEntry[] = [
   },
   {
     type: "callout",
-    label: "Callout",
+    label: "Alert (Destaque)",
     category: "Feedback & Overlays",
     iconName: "Sparkles",
     accent: "rose",
-    lopesComponent: "Callout",
+    lopesComponent: "Alert",
     description: "Destaque informativo retrátil com borda lateral para regras comerciais",
     defaultWidth: 600,
     defaultHeight: 96,
@@ -1985,7 +1985,7 @@ export const COMPOSITE_BLOCKS: UICompositeBlockDefinition[] = [
     id: "blk_form_footer_actions",
     name: "Barra Inferior de Ações do Formulário",
     category: "Formulários ERP",
-    description: "Container de rodapé com StatusBadge + botões Cancelar, Salvar Rascunho e Faturar Pedido",
+    description: "Container de rodapé com Badge + botões Cancelar, Salvar Rascunho e Faturar Pedido",
     iconName: "Save",
     build: (startX, startY, usableWidth) => {
       const gid = newGroupId();
