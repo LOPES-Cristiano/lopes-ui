@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cn } from "../utils/cn";
 import { X, type LucideIcon } from "lucide-react";
+import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -27,6 +28,9 @@ export type BadgeAppearance = "soft" | "solid" | "outline";
 
 export type BadgeSize = "xs" | "sm" | "md" | "lg";
 
+/** Dot animation preset */
+export type BadgePulse = "ping" | "bounce" | "pulse";
+
 /** Ant Design status indicator preset */
 export type BadgeStatus = "processing" | "success" | "error" | "warning" | "default";
 
@@ -42,6 +46,17 @@ export type BadgeProps = {
   /** Maximum numeric count before showing "{maxCount}+" (default: 99) */
   maxCount?: number;
   variant?: BadgeVariant;
+  /** Alias of `variant` (shared tone vocabulary with Alert, Confirm and other components). Wins over `variant`. */
+  tone?: BadgeVariant;
+  /**
+   * Animate the dot: `true`/`"ping"` (expanding ring), `"bounce"` or `"pulse"`.
+   * Combine with `dot`, with or without a label. Respects `prefers-reduced-motion`.
+   */
+  pulse?: boolean | BadgePulse;
+  /** Accessible name for the dot-only mode (`dot` without label, icon or count) */
+  "aria-label"?: string;
+  /** Hide (instead of disabling) when `componentId` is denied. Default: false */
+  hideIfDenied?: boolean;
   /** Visual style: soft (default), solid, or outline */
   appearance?: BadgeAppearance;
   size?: BadgeSize;
@@ -163,6 +178,38 @@ const STATUS_DOTS: Record<BadgeStatus, { dot: string; ring?: string }> = {
   default:    { dot: "bg-muted-foreground/70" },
 };
 
+/** Size of the bare dot (dot-only mode), by badge size */
+const DOT_ONLY_SIZES: Record<BadgeSize, string> = {
+  xs: "h-1.5 w-1.5",
+  sm: "h-2 w-2",
+  md: "h-2.5 w-2.5",
+  lg: "h-3 w-3",
+};
+
+/** Dot with optional animation (`ping` draws an expanding ring behind it). */
+function PulseDot({ className, dotClassName, pulse }: { className: string; dotClassName: string; pulse?: BadgePulse }) {
+  return (
+    <span className={cn("relative inline-flex shrink-0", className)} aria-hidden="true">
+      {pulse === "ping" && (
+        <span
+          className={cn(
+            "absolute inline-flex h-full w-full animate-ping motion-reduce:animate-none rounded-full opacity-75",
+            dotClassName,
+          )}
+        />
+      )}
+      <span
+        className={cn(
+          "relative inline-flex h-full w-full rounded-full",
+          dotClassName,
+          pulse === "bounce" && "animate-bounce motion-reduce:animate-none",
+          pulse === "pulse" && "animate-pulse motion-reduce:animate-none",
+        )}
+      />
+    </span>
+  );
+}
+
 // ── Badge ─────────────────────────────────────────────────────────────────────
 
 export default function Badge({
@@ -173,6 +220,10 @@ export default function Badge({
   count,
   maxCount = 99,
   variant = "default",
+  tone,
+  pulse = false,
+  hideIfDenied = false,
+  "aria-label": ariaLabel,
   appearance,
   size = "sm",
   solid = false,
@@ -185,6 +236,10 @@ export default function Badge({
   style,
   componentId,
 }: BadgeProps) {
+  const { canAccess } = useAccessControl();
+  const hasPermission = !componentId || canAccess(componentId);
+  if (!hasPermission && hideIfDenied) return null;
+
   if (status) {
     const st = STATUS_DOTS[status] ?? STATUS_DOTS.default;
     const statusText = text ?? children ?? label;
@@ -214,11 +269,15 @@ export default function Badge({
     );
   }
 
-  const v = VARIANTS[variant] ?? VARIANTS.default;
+  // "brand" (former StatusBadge tone) maps to "primary": keeps saved UI Builder layouts working.
+  const requestedVariant = (tone ?? variant) as BadgeVariant | "brand";
+  const resolvedVariant: BadgeVariant = requestedVariant === "brand" ? "primary" : requestedVariant;
+  const v = VARIANTS[resolvedVariant] ?? VARIANTS.default;
   const s = SIZES[size] ?? SIZES.sm;
+  const pulseKind: BadgePulse | undefined = pulse === true ? "ping" : pulse || undefined;
 
   const resolvedAppearance: BadgeAppearance =
-    appearance ?? (variant === "outline" ? "outline" : solid ? "solid" : "soft");
+    appearance ?? (resolvedVariant === "outline" ? "outline" : solid ? "solid" : "soft");
 
   const colorCls =
     resolvedAppearance === "solid"
@@ -242,6 +301,23 @@ export default function Badge({
     return null;
   };
 
+  const hasContent = content !== undefined && content !== null && content !== false && content !== "";
+
+  // Dot-only mode: compact indicator with optional animation (replaces the former PingIndicator).
+  if (dot && !hasContent && !icon && !onRemove && !asChild) {
+    return (
+      <span
+        {...(componentId ? { "data-component-id": componentId } : {})}
+        role="status"
+        aria-label={ariaLabel}
+        style={style}
+        className={cn("inline-flex", !hasPermission && "opacity-60", className)}
+      >
+        <PulseDot className={DOT_ONLY_SIZES[size] ?? DOT_ONLY_SIZES.sm} dotClassName={v.dot} pulse={pulseKind} />
+      </span>
+    );
+  }
+
   const Comp = asChild ? Slot : "span";
 
   return (
@@ -252,6 +328,7 @@ export default function Badge({
         "inline-flex items-center font-semibold leading-none select-none whitespace-nowrap transition-colors",
         typeof count === "number" && "tabular-nums",
         s.base, s.px, s.text, colorCls, shapeCls,
+        !hasPermission && "opacity-60 pointer-events-none",
         className,
       )}
     >
@@ -259,9 +336,7 @@ export default function Badge({
         content
       ) : (
         <>
-          {dot && !icon && (
-            <span className={cn("shrink-0 rounded-full", s.dot, v.dot)} aria-hidden="true" />
-          )}
+          {dot && !icon && <PulseDot className={s.dot} dotClassName={v.dot} pulse={pulseKind} />}
           {renderIcon()}
           {content !== undefined && content !== null && (
             <span className="lopes-trim-cap">{content}</span>
