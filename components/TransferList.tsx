@@ -15,8 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "../utils/cn";
 import Button from "./Button";
-import Badge from "./Badge";
-import StatusBadge, { type StatusTone } from "./StatusBadge";
+import Badge, { type BadgeVariant } from "./Badge";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -28,7 +27,7 @@ export interface TransferListItem<T = unknown> {
   avatarUrl?: string;
   avatarInitials?: string;
   tag?: string;
-  tagTone?: StatusTone;
+  tagTone?: BadgeVariant;
   disabled?: boolean;
   raw?: T;
 }
@@ -385,9 +384,9 @@ export default function TransferList<T = unknown>({
 
                   <div className="flex items-center gap-1.5 shrink-0 ml-2">
                     {item.tag && (
-                      <StatusBadge tone={item.tagTone || "success"}>
+                      <Badge dot tone={item.tagTone || "success"}>
                         {item.tag}
-                      </StatusBadge>
+                      </Badge>
                     )}
                     <button
                       data-component-id={componentId ? `${componentId}.source.item-remove` : undefined}
