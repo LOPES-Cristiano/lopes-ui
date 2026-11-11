@@ -104,7 +104,7 @@ const CATEGORIES = [
     href: "/showcase/display",
     icon: Layers,
     title: "Display & Vitrine",
-    description: "StatCard (StatsSegmentsCard & StatsRingCard), Badge & BadgeRibbon, QRCode, Watermark, Skeleton Suite, Masonry, Callout, ImageLightbox e BentoGrid.",
+    description: "StatCard (StatsSegmentsCard & StatsRingCard), Badge & BadgeRibbon, QRCode, Watermark, Skeleton Suite, Masonry, Alert, ImageLightbox e BentoGrid.",
     count: 32,
   },
   {
