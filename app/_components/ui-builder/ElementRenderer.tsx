@@ -10,7 +10,6 @@ import Barcode from "@/components/Barcode";
 import Breadcrumb, { type BreadcrumbItem, type BreadcrumbSeparator } from "@/components/Breadcrumb";
 import Button, { type ButtonProps } from "@/components/Button";
 import Calendar from "@/components/Calendar";
-import Callout, { type CalloutVariant } from "@/components/Callout";
 import Card, {
   CardBody,
   CardFooter,
@@ -64,7 +63,6 @@ import ServiceStatusCard, { type ServiceStatus } from "@/components/ServiceStatu
 import SignaturePad from "@/components/SignaturePad";
 import Skeleton, { type SkeletonAnimation } from "@/components/Skeleton";
 import StatCard, { type StatCardColor } from "@/components/StatCard";
-import StatusBadge, { type StatusBadgeSize, type StatusTone } from "@/components/StatusBadge";
 import Stepper, {
   type StepItem,
   type StepperOrientation,
@@ -171,7 +169,7 @@ export interface ElementRendererProps {
   onCancelInlineEdit?: () => void;
 }
 
-function resolveStatusToneFromText(text: string): StatusTone {
+function resolveBadgeVariantFromText(text: string): BadgeVariant {
   const lower = text.toLowerCase();
   if (
     lower.includes("entregue") ||
@@ -433,7 +431,7 @@ export default function ElementRenderer({
               variant={asStr(p.variant, "default") as "default" | "muted" | "bordered"}
               badge={
                 badgeText ? (
-                  <StatusBadge label={badgeText} tone="success" size="xs" dot pulse />
+                  <Badge label={badgeText} tone="success" size="xs" dot pulse />
                 ) : undefined
               }
               actions={
@@ -705,9 +703,9 @@ export default function ElementRenderer({
               ? (val) => {
                   const text = asStr(val, "Ativo");
                   return (
-                    <StatusBadge
+                    <Badge
                       label={text}
-                      tone={resolveStatusToneFromText(text)}
+                      tone={resolveBadgeVariantFromText(text)}
                       size="xs"
                       dot
                     />
@@ -875,7 +873,7 @@ export default function ElementRenderer({
                 <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                   {feedTitle}
                 </h4>
-                <StatusBadge label="Ao Vivo" tone="success" size="xs" dot pulse />
+                <Badge label="Ao Vivo" tone="success" size="xs" dot pulse />
               </div>
             )}
             <div className="flex-1 min-h-0 overflow-auto">
@@ -1277,11 +1275,11 @@ export default function ElementRenderer({
       case "status_badge": {
         return (
           <div className="h-full w-full flex items-center">
-            <StatusBadge
+            <Badge
               componentId={element.componentId}
               label={asStr(p.label, "Operacional")}
-              tone={asStr(p.tone, "success") as StatusTone}
-              size={asStr(p.size, "md") as StatusBadgeSize}
+              tone={asStr(p.tone, "success") as BadgeVariant}
+              size={asStr(p.size, "md") as BadgeSize}
               dot={asBool(p.dot, true)}
               pulse={asBool(p.pulse, true)}
               solid={asBool(p.solid, false)}
@@ -1380,15 +1378,16 @@ export default function ElementRenderer({
 
       case "callout": {
         return (
-          <Callout
+          <Alert
             componentId={element.componentId}
-            variant={asStr(p.variant, "tip") as CalloutVariant}
+            accent="left"
+            variant={asStr(p.variant, "tip") as AlertVariant}
             title={asStr(p.title, "Destaque Comercial")}
             collapsible={asBool(p.collapsible, false)}
             className="h-full w-full"
           >
             {asStr(p.body)}
-          </Callout>
+          </Alert>
         );
       }
 
