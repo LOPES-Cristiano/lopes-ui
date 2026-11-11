@@ -173,7 +173,7 @@ function renderElementJsx(el: UICanvasElement, ctx: GenContext, nestedChildrenJs
       const badgeText = asStr(p.badgeText);
       const primary = asStr(p.primaryAction);
       const secondary = asStr(p.secondaryAction);
-      if (badgeText) ctx.lopesImports.add("StatusBadge");
+      if (badgeText) ctx.lopesImports.add("Badge");
       if (primary || secondary) ctx.lopesImports.add("Button");
 
       return [
@@ -181,7 +181,7 @@ function renderElementJsx(el: UICanvasElement, ctx: GenContext, nestedChildrenJs
         `  title=${q(p.title, "Título da Página")}`,
         `  description=${q(p.description)}`,
         ...(iconSym ? [`  icon={${iconSym}}`] : []),
-        ...(badgeText ? [`  badge={<StatusBadge label=${q(badgeText)} tone="success" size="xs" dot pulse />}`] : []),
+        ...(badgeText ? [`  badge={<Badge label=${q(badgeText)} tone="success" size="xs" dot pulse />}`] : []),
         ...(primary || secondary
           ? [
               `  actions={`,
@@ -484,8 +484,8 @@ function renderElementJsx(el: UICanvasElement, ctx: GenContext, nestedChildrenJs
     }
 
     case "status_badge": {
-      ctx.lopesImports.add("StatusBadge");
-      return `<StatusBadge${cidProp} label=${q(p.label)} tone=${q(p.tone, "success")} size=${q(p.size, "md")} dot={${asBool(p.dot, true)}} pulse={${asBool(p.pulse, true)}} />`;
+      ctx.lopesImports.add("Badge");
+      return `<Badge${cidProp} label=${q(p.label)} tone=${q(p.tone, "success")} size=${q(p.size, "md")} dot={${asBool(p.dot, true)}} pulse={${asBool(p.pulse, true)}} />`;
     }
 
     case "avatar": {
@@ -518,8 +518,8 @@ function renderElementJsx(el: UICanvasElement, ctx: GenContext, nestedChildrenJs
     }
 
     case "callout": {
-      ctx.lopesImports.add("Callout");
-      return `<Callout${cidProp} variant=${q(p.variant, "tip")} title=${q(p.title)} collapsible={${asBool(p.collapsible, false)}}>${escJsxText(asStr(p.body))}</Callout>`;
+      ctx.lopesImports.add("Alert");
+      return `<Alert${cidProp} variant=${q(p.variant, "tip")} accent="left" title=${q(p.title)} collapsible={${asBool(p.collapsible, false)}}>${escJsxText(asStr(p.body))}</Alert>`;
     }
 
     case "empty_state": {
