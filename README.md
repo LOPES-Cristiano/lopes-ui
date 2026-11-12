@@ -1,1431 +1,349 @@
-# Lopes UI
+# Lopes UI — Design System & Biblioteca de Componentes (`v1.2.0`)
 
-> Biblioteca de componentes React construída com **Next.js 16**, **Tailwind CSS v4** e **TypeScript** — sem dependências de UI externas.
+> Biblioteca corporativa de componentes React construída com **Next.js 16.4**, **React 19.2**, **Tailwind CSS v4**, **Radix UI Primitives** e **TypeScript** — empacotada via `tsup` (ESM + CJS + `.d.ts`) com CLI de configuração automática e playground interativo integrado.
 
-## Stack
+Atualizado em `2026-11-12`.
 
-| Tecnologia          | Versão |
-| ------------------- | ------ |
-| Next.js             | 16.2.2 |
-| React               | 19.2.4 |
-| Tailwind CSS        | 4.2    |
-| TypeScript          | 5      |
-| lucide-react        | 1.7    |
-| tailwind-merge      | 3.5    |
-| motion              | 12.38  |
-| shiki               | 4.0    |
-| clsx                | 2.1    |
-| @tiptap/starter-kit | 3.22   |
+---
 
-## Rodando o projeto
+## Sumário
+
+1. [Visão Geral e Arquitetura Dual](#1-visão-geral-e-arquitetura-dual)
+2. [Stack Tecnológica Real](#2-stack-tecnológica-real)
+3. [Instalação e CLI (`npx lopes-ui init`)](#3-instalação-e-cli-npx-lopes-ui-init)
+4. [Subpath Exports e Tree-Shaking](#4-subpath-exports-e-tree-shaking)
+5. [Executando o Playground Local (`:3002`)](#5-executando-o-playground-local-3002)
+6. [Estrutura Real de Diretórios](#6-estrutura-real-de-diretórios)
+7. [Catálogo Completo de Componentes](#7-catálogo-completo-de-componentes)
+8. [Exemplos Práticos de Uso](#8-exemplos-práticos-de-uso)
+9. [Controle de Acesso Declarativo (RBAC)](#9-controle-de-acesso-declarativo-rbac)
+10. [Hooks (`lopes-ui/hooks`)](#10-hooks-lopes-uihooks)
+11. [Utilitários (`lopes-ui/utils`)](#11-utilitários-lopes-uiutils)
+12. [Governança do Registry e Documentação Técnica](#12-governança-do-registry-e-documentação-técnica)
+
+---
+
+## 1. Visão Geral e Arquitetura Dual
+
+O repositório **`lopes-ui`** opera simultaneamente em duas frentes complementares dentro do ecossistema **BigLar Móveis & Eletro**:
+
+1. **Biblioteca Empacotada (`dist/`)**: compilada com `tsup` em `ESM` e `CJS` com declarações TypeScript (`.d.ts`), diretiva `"use client"` injetada automaticamente para compatibilidade nativa com React Server Components (RSC), folha de tokens `lopes-ui/styles.css` e **8 subpaths modulares** que isolam dependências opcionais pesadas (Tiptap, TanStack Table/Virtual, Shiki, MapLibre GL).
+2. **Showcase Interativo & UI Builder (`app/`)**: aplicação Next.js 16 executada na porta **`3002`** com catálogo vivo de **165 entradas auditadas** em `app/components/registry.ts`, vitrines temáticas (`/showcase/*`), templates corporativos (`/templates`) e construtor visual (`/ui-builder`).
+
+---
+
+## 2. Stack Tecnológica Real
+
+| Camada / Pacote | Versão (`package.json`) | Papel Arquitetural |
+| :--- | :--- | :--- |
+| **Next.js (App Router)** | `^16.4.3` | Showcase interativo, páginas de demonstração e compatibilidade RSC |
+| **React / React DOM** | `19.2.4` | Renderização concorrente, `flushSync` para temas e Compound Components |
+| **Tailwind CSS** | `^4.2.2` | Tokens semânticos CSS-first (`@theme`), dark mode e `@source` |
+| **TypeScript** | `^5` | Tipagem estrita ponta a ponta e geração de `.d.ts` (`tsconfig.build.json`) |
+| **Radix UI Primitives** | `^1.x` / `^2.x` | Acessibilidade WAI-ARIA (`Dialog`, `AlertDialog`, `Popover`, `Select`, `DropdownMenu`, `Switch`, `Tooltip`, `Slot`) |
+| **Class Variance Authority** | `^0.7.1` + `tailwind-merge ^3.6.0` | Variantes tipadas de componentes e resolução determinística de classes |
+| **Lucide React** | `^1.29.0` | Biblioteca oficial de ícones vetoriais |
+| **Motion** | `^12.40.0` | Micro-interações, transições fluidas de drawers, tabs e modais |
+| **Zod** | `^4.4.3` | Validação de schemas em `<ZodForm />` e contratos de formulários |
+| **Tiptap v3** *(opcional)* | `^3.31.3` | Editor rich-text completo em `lopes-ui/rich-text` |
+| **TanStack Table & Virtual** *(opcional)* | `^8.21.3` / `^3.14.15` | Planilha virtualizada de alta densidade em `lopes-ui/spreadsheet` |
+| **Shiki** *(opcional)* | `^4.4.2` | Syntax highlighting em `lopes-ui/code-block` |
+| **MapLibre GL** *(opcional)* | `>=4.0.0` | Mapas vetoriais interativos em `<Map />` / `<MapView />` |
+| **tsup** | `8.5.1` | Empacotador da biblioteca (`dist/`) e do binário CLI (`dist/cli.js`) |
+
+---
+
+## 3. Instalação e CLI (`npx lopes-ui init`)
+
+Em um projeto consumidor Next.js / React com Tailwind CSS v4, instale o pacote e execute o assistente CLI:
 
 ```bash
+# Instalação básica (core: lucide-react, motion, zod + configuração automática do globals.css)
+npx lopes-ui init
+
+# Incluindo grupos opcionais conforme a necessidade da aplicação
+npx lopes-ui init --tiptap        # Instala extensões @tiptap/* para RichTextEditor e EmailComposer
+npx lopes-ui init --spreadsheet   # Instala @tanstack/react-table e @tanstack/react-virtual
+npx lopes-ui init --code          # Instala shiki para CodeBlock
+npx lopes-ui init --all           # Instala todos os grupos opcionais acima
+```
+
+### O que o comando `init` realiza automaticamente:
+1. Detecta o gerenciador de pacotes ativo (`npm`, `pnpm`, `yarn` ou `bun`) a partir do lockfile.
+2. Instala apenas as `peerDependencies` ausentes no `package.json` do projeto consumidor.
+3. Localiza o `globals.css` (`app/globals.css`, `src/app/globals.css`, etc.) e injeta logo após `@import "tailwindcss";`:
+
+```css
+@import "tailwindcss";
+@import "lopes-ui/styles.css";
+@source "../node_modules/lopes-ui/dist";
+```
+
+---
+
+## 4. Subpath Exports e Tree-Shaking
+
+Para evitar que projetos consumidores precisem instalar editores ou motores gráficos que não utilizam, o `package.json` expõe **8 entrypoints independentes**:
+
+| Subpath Import | Conteúdo Principal | Peer Dependencies Extras |
+| :--- | :--- | :--- |
+| `lopes-ui` | Todos os componentes core, campos de formulário (`form/*`), header (`header/*`), `FormModal`, RBAC (`Can`, `AccessGuard`, `useAccessControl`), `ThemeContext`, `ShellContext` | `lucide-react`, `motion`, `zod` *(opcional)*, `maplibre-gl` *(apenas se usar `<Map>`)* |
+| `lopes-ui/primitives` | 18 primitivas headless/estilizadas Radix + CVA (`Button`, `Badge`, `Input`, `Textarea`, `Skeleton`, `Dialog`, `AlertDialog`, `Sheet`, `Table`, `Popover`, `Tooltip`, `Switch`, `DropdownMenu`, `Select`, `Tabs`, `HoverCard`, `Separator`, `ScrollArea`) | Nenhuma extra |
+| `lopes-ui/rich-text` | `RichTextEditor`, `RichTextField`, `RichTextViewer`, `EmailComposer` | `@tiptap/*` (`--tiptap`) |
+| `lopes-ui/spreadsheet` | `Spreadsheet` e tipos associados | `@tanstack/react-table`, `@tanstack/react-virtual` (`--spreadsheet`) |
+| `lopes-ui/code-block` | `CodeBlock` com realce sintático multi-tema | `shiki` (`--code`) |
+| `lopes-ui/hooks` | 8 hooks utilitários de interface, atalhos, posicionamento e áudio | Nenhuma extra |
+| `lopes-ui/utils` | 12 módulos utilitários (moeda BRL, datas, CPF/CNPJ alfanumérico, extenso, exportação CSV/JSON, sync entre abas) | Nenhuma extra |
+| `lopes-ui/styles.css` | Tokens CSS, variáveis semânticas light/dark, animações e scrollbars | Tailwind CSS v4 |
+
+---
+
+## 5. Executando o Playground Local (`:3002`)
+
+```bash
+cd c:\Biglar\lopes-ui
 npm install
 npm run dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000) para o playground interativo com todos os componentes.
+Acesse **`http://localhost:3002`** para explorar o catálogo interativo de componentes.
 
-## Scripts
+### Scripts Disponíveis (`package.json`)
 
-| Comando         | Descrição                   |
-| --------------- | --------------------------- |
-| `npm run dev`   | Servidor de desenvolvimento |
-| `npm run build` | Build de produção           |
-| `npm run start` | Servidor de produção        |
-| `npm run lint`  | ESLint                      |
+| Comando | Descrição |
+| :--- | :--- |
+| `npm run dev` | Inicia o servidor Next.js de desenvolvimento em `0.0.0.0:3002` |
+| `npm run build` | Compila a aplicação Next.js do showcase para produção |
+| `npm run build:lib` | Empacota a biblioteca e a CLI em `dist/` via `tsup` (executado também em `prepare`) |
+| `npm run start` | Inicia o servidor Next.js compilado |
+| `npm run lint` | Executa análise estática com ESLint 9 |
+| `npm run typecheck` | Validação completa de tipos TypeScript (`tsc --noEmit`) |
+| `npm run check:registry` | Audita integridade entre os componentes exportados e as **165 entradas** de `app/components/registry.ts` |
 
 ---
 
-## Estrutura
+## 6. Estrutura Real de Diretórios
 
-```
+```text
 lopes-ui/
-├── app/
-│   ├── page.tsx              # Landing page com links para showcase
-│   ├── layout.tsx            # Shell com Sidebar + SiteHeader
-│   ├── globals.css           # Estilos base, dark mode, scrollbar
-│   ├── access-denied/        # Página de acesso negado (403)
-│   ├── cause-error/          # Página de teste de error boundary
-│   └── showcase/             # Demos por categoria
-│       ├── actions/          # Botões, modais, drawers, alertas
-│       ├── animation/        # CodeBlock, Stepper, TextRotate, Timeline
-│       ├── communication/    # Chat, e-mail, notificações, inbox
-│       ├── data/             # DataTable, KanbanBoard, FilterBar, InboxList, ActivityFeed
-│       ├── display/          # Avatar, Badge, Card, Carousel, Calendar, Agenda, StatCard
-│       ├── forms/            # Todos os campos de formulário
-│       └── navigation/       # Sidebar, Breadcrumb, CommandMenu, TabBar, AppLauncher
+├── app/                          # Aplicação Next.js 16 (Showcase & Playground na porta 3002)
+│   ├── _components/              # Componentes exclusivos da casca do showcase (AppSidebar, SiteHeader, UIBuilder)
+│   ├── components/               # Catálogo pesquisável (/components), demos isoladas e registry.ts (165 itens)
+│   ├── showcase/                 # Vitrines por domínio: actions, animation, communication, data,
+│   │                             #   display, enterprise, forms e navigation
+│   ├── templates/                # Layouts corporativos prontos (/templates)
+│   ├── ui-builder/               # Construtor visual interativo (/ui-builder)
+│   ├── access-denied/            # Demonstração de bloqueio RBAC 403 (/access-denied)
+│   └── cause-error/              # Teste interativo de ErrorBoundary (/cause-error)
 │
-├── components/
-│   ├── form/                 # Campos de formulário
-│   │   ├── FieldWrapper      # Wrapper base: label, erro, tooltip, helpText
-│   │   ├── TextField         # Input texto / email / url / password / search
-│   │   ├── NumberField       # Input numérico com spin buttons
-│   │   ├── DateField         # Input data e datetime
-│   │   ├── TimeField         # Input de horário
-│   │   ├── CheckboxGroup     # Grupo de checkboxes com layout grid
-│   │   ├── Switch            # Toggle on/off
-│   │   ├── AutocompleteField # Dropdown pesquisável (combobox)
-│   │   ├── MultiSelectField  # Seleção múltipla com chips
-│   │   └── FileField         # Upload com drag-and-drop
-│   │
-│   ├── header/               # Partes do SiteHeader
-│   │   ├── Brand             # Logo + nome da aplicação
-│   │   ├── Nav               # Navegação com dropdowns aninhados
-│   │   ├── SearchInput       # Campo de busca do header
-│   │   ├── ProfileMenu       # Dropdown de perfil do usuário
-│   │   └── ProfileActions    # Ações do header (notificações, tema…)
-│   │
-│   ├── Accordion.tsx         # Painéis colapsáveis com animação
-│   ├── ActionDialog.tsx      # Dialog de confirmação de ações críticas
-│   ├── ActivityFeed.tsx      # Feed de eventos com ícones, actor e timestamps
-│   ├── Agenda.tsx            # Lista de eventos por dia com localização e participantes
-│   ├── Alert.tsx             # Alertas inline e modais
-│   ├── AppLauncher.tsx       # Grade de apps/módulos acessíveis
-│   ├── AppSidebar.tsx        # Instância de Sidebar configurada para o projeto
-│   ├── Avatar.tsx            # Avatar com imagem, iniciais e status
-│   ├── Badge.tsx             # Badges com variantes e cores
-│   ├── Breadcrumb.tsx        # Trilha de navegação
-│   ├── Button.tsx            # Botão base com variantes e loading
-│   ├── Calendar.tsx          # Calendário mensal com seleção e eventos
-│   ├── Card.tsx              # Cards com header/body/footer compostos
-│   ├── Carousel.tsx          # Carrossel com navegação e autoplay
-│   ├── ChatComposer.tsx      # Área de composição de mensagens
-│   ├── ChatConversationItem.tsx # Item de lista de conversas
-│   ├── ChatMessage.tsx       # Bolha de mensagem (texto, imagem, áudio…)
-│   ├── ChatWindow.tsx        # Janela de chat completa
-│   ├── CodeBlock.tsx         # Bloco de código com syntax highlight (Shiki)
-│   ├── CommandMenu.tsx       # Paleta de comandos (⌘K / Ctrl+K)
-│   ├── Confirm.tsx           # Confirmação unificada (dialog | popover | password)
-│   ├── ContextMenu.tsx       # Menu de contexto com sub-menus
-│   ├── DataTable.tsx         # Tabela avançada com todas as features
-│   ├── Drawer.tsx            # Painel lateral deslizante (right/left/top/bottom)
-│   ├── EmailComposer.tsx     # Compositor de e-mail com destinatários e anexos
-│   ├── State.tsx             # Estado unificado (empty | result | page)
-│   ├── FilterBar.tsx         # Barra de filtros por chip com dialog avançado
-│   ├── Footer.tsx            # Rodapé genérico
-│   ├── Header.tsx            # Header genérico reutilizável
-│   ├── HeaderWrapper.tsx     # Wrapper do Header que lê ShellContext
-│   ├── InboxList.tsx         # Lista de e-mails com estrela, anexos e timestamps
-│   ├── KanbanBoard.tsx       # Quadro Kanban com drag-and-drop entre colunas
-│   ├── LoginForm.tsx         # Formulário de login com OAuth e OTP
-│   ├── NotificationBell.tsx  # Sino de notificações com painel dropdown
-│   ├── OTPInput.tsx          # Input de código OTP/2FA
-│   ├── PageHeader.tsx        # Cabeçalho de página com título, breadcrumb e ações
-│   ├── PasswordStrength.tsx  # Indicador visual de força de senha
-│   ├── PingIndicator.tsx     # Indicador de status com pulse animado
-│   ├── PriceInput.tsx        # Input de valor monetário com formatação automática
-│   ├── QuickActions.tsx      # Grade de ações rápidas configuráveis
-│   ├── RichTextEditor.tsx    # Editor rich-text (Tiptap v3) com toolbar completa
-│   ├── ServiceStatusCard.tsx # Card de status de serviço com histórico de uptime
-│   ├── ShellContext.tsx      # Provider global de layout (sidebar + header)
-│   ├── ShortcutHint.tsx      # Badge de atalho de teclado (ex.: ⌘K)
-│   ├── Sidebar.tsx           # Sidebar colapsável com navegação aninhada
-│   ├── SiteHeader.tsx        # Header do site com CommandMenu integrado
-│   ├── SmartObject.tsx       # Cartão de entidade estruturada (person, product…)
-│   ├── SplitPane.tsx         # Divisor de painel redimensionável
-│   ├── StatCard.tsx          # Card de métrica com sparkline e tendência
-│   ├── StatusPage.tsx        # Páginas de status (404, 403, 500…)
-│   ├── Stepper.tsx           # Wizard multi-steps
-│   ├── Table.tsx             # Tabela simples e configurável
-│   ├── TextRotate.tsx        # Texto animado com rotação de itens
-│   ├── ThemeContext.tsx      # Provider de tema dark/light
-│   ├── ThemeToggle.tsx       # Botão de alternância de tema
-│   ├── Timeline.tsx          # Linha do tempo vertical
-│   ├── Toast.tsx             # Sistema de notificações (toast)
-│   ├── TreeView.tsx          # Árvore navegável com expand/collapse
-│   └── UIBuilder.tsx         # Construtor visual de UI interativo
+├── cli/
+│   └── index.ts                  # Fonte do binário `npx lopes-ui init`
 │
-├── hooks/
-│   ├── useAsyncButton.ts     # Gerencia estado de loading de botões async
-│   └── useBodyScrollLock.ts  # Bloqueia scroll do body (modais)
+├── components/                   # Código-fonte da biblioteca exportada
+│   ├── primitives/               # 18 primitivas base Radix UI + CVA (`lopes-ui/primitives`)
+│   ├── form/                     # 28 componentes de formulário, seletores e `<ZodForm />`
+│   ├── header/                   # Subcomponentes de cabeçalho (`Brand`, `Nav`, `SearchInput`, `ProfileMenu`, `ProfileActions`, `ProfileTrigger`)
+│   ├── patterns/form-modal/      # Padrão composto `CompoundFormModal` / `FormDialog`
+│   ├── data-table/               # Submódulos internos do `<DataTable />`
+│   ├── sidebar/                  # Submódulos internos do `<Sidebar />` (pins, grupos, popover)
+│   ├── rich-text/                # Entrypoint `lopes-ui/rich-text` (Tiptap v3)
+│   ├── spreadsheet/              # Entrypoint `lopes-ui/spreadsheet` (TanStack Virtual)
+│   ├── schemas/                  # Schemas compartilhados de validação
+│   └── *.tsx                     # Componentes corporativos, feedbacks, gráficos, mapas e RBAC
 │
-└── utils/
+├── hooks/                        # 8 hooks reutilizáveis (`lopes-ui/hooks`)
+├── utils/                        # 12 módulos utilitários puros (`lopes-ui/utils`)
+├── styles/
+│   └── lopes-ui.css              # Design tokens copiados para `dist/styles.css` no build
+├── scripts/
+│   └── check-registry.mjs        # Validador automatizado do catálogo de componentes
+├── docs/                         # Wiki técnica interna (arquitetura, temas, sidebar, RBAC)
+└── tsup.config.ts                # Pipeline dual-bundle (biblioteca ESM/CJS + CLI Node 18+)
 ```
+
+> [!NOTE]
+> `AppSidebar`, `SiteHeader` e `UIBuilder` residem em `app/_components/` por serem exclusivos da aplicação de demonstração. Aplicações consumidoras utilizam `<Sidebar />`, `<Header />` e `<HeaderWrapper />` exportados pela raiz `lopes-ui`.
 
 ---
 
-## Componentes
+## 7. Catálogo Completo de Componentes
 
-### Formulários
+### 7.1. Formulários e Entrada de Dados (`components/form/*` & Raiz)
+- **Texto, Números e Moeda**: `TextField`, `TextareaField`, `NumberField`, `PriceInput` / `CurrencyField`, `InputGroup`, `OTPInput`, `PasswordStrength`, `InlineEdit`, `MentionsField` (`Mentions`).
+- **Seleção e Listas**: `SelectField`, `NativeSelect` (`Select`), `AutocompleteField`, `MultiSelectField`, `CascaderField` (`Cascader`), `TreeSelectField` (`TreeSelect`), `RadioGroupField`, `Checkbox`, `CheckboxGroup`, `Switch`, `SegmentedControl`, `ToggleGroup`, `TransferList`, `ScopeSelector`.
+- **Datas e Horários**: `DateField`, `DatePickerField`, `DateRangePickerField`, `MonthPickerField`, `TimeField`, `TimePickerField`.
+- **Tags, Cores, Avaliação e Upload**: `TagInputField`, `TagsInput` (`CheckableTag`, `CheckableTagGroup`), `FilterChips`, `ColorPickerField`, `SliderField`, `RatingField`, `FileField`, `FileDropzone`, `SignaturePad` (`SignatureField`).
+- **Estrutura e Validação**: `FieldWrapper` (`FormField`), `Form`, `ZodForm` (`useFormContext`).
 
-#### `TextField`
+### 7.2. Tabelas, Dados, Visualização e Códigos Fiscais/Logísticos
+- **Tabelas e Grade de Dados**: `DataTable` (ordenação, seleção, paginação, ações em lote, expansão, exportação), `Table`, `Spreadsheet` (`lopes-ui/spreadsheet`), `FilterBar`, `Pagination`.
+- **Métricas, Listas e Estruturas**: `StatCard` (`StatsSegmentsCard`, `StatsRingCard`), `Chart`, `DescriptionList`, `DetailLayout`, `TreeView`, `KanbanBoard`, `SortableList`, `Timeline`, `ActivityFeed`, `Agenda`, `Calendar`, `SmartObject`, `JsonViewer`, `Diff`, `CodeBlock` (`lopes-ui/code-block`), `CodeEditor`.
+- **Identificação Comercial, Mapas e Destaque**: `Barcode` (EAN-13/Code128 para etiquetas de móveis e eletrodomésticos), `QRCode` (PIX / autenticação / etiquetas), `Map` (`MapView`, `MapMarker`, `MapControls`, `useMap` via MapLibre GL), `HighlightText`.
 
-```tsx
-<TextField
-  label="E-mail"
-  type="email"
-  placeholder="voce@empresa.com"
-  leftIcon={<Mail />}
-  helpText="Usado para notificações"
-  size="md" // xs | sm | md | lg
-  variant="default" // default | filled
-/>
-```
+### 7.3. Navegação, Shell Corporativo e Layout
+- **Casca da Aplicação**: `ShellProvider` / `useShell` (`ShellContext`), `Sidebar`, `Header`, `HeaderWrapper`, `Footer`, `PageHeader`, `Breadcrumb`, `AppLauncher`, `TenantSwitcherModal` (`TenantSwitcherTrigger` — seletor multi-filial RO/AM).
+- **Menus e Comandos**: `CommandMenu` (`Ctrl+K` / `⌘K`), `ContextMenu`, `Tabs`, `Stepper`, `TableOfContents`, `Dock`, `SpeedDial`, `FloatButton` (`FloatButtonGroup`, `BackTop`), `QuickActions`, `ActionGridCard` (`SwitchesCard`).
+- **Containers e Divisores**: `Card`, `BentoGrid` (`BentoCard`), `SplitPane`, `Accordion`, `Collapsible`, `ScrollArea`, `Separator`, `Stack`, `AspectRatio`, `Masonry`, `Carousel`, `Watermark`.
 
-#### `NumberField`
+### 7.4. Modais, Confirmações, Estados e Feedback
+- **Modais e Painéis**: `Modal`, `FormModal` (`FormSectionHeader`, `FormEmptyLine`, `FormModalSkeleton`), `CompoundFormModal` / `FormDialog` (`FormModalHeader`, `FormModalBody`, `FormModalActions`, `useFormModal`), `Drawer`, `CnpjLookupModal` (consulta cadastral CNPJ), `CameraCaptureModal` (captura de câmera para ponto/cadastro).
+- **Confirmação Unificada**: `Confirm` (`mode="dialog" | "popover" | "password"` — substitui diálogos legados de confirmação crítica).
+- **Estados e Alertas**: `State` (`variant="empty" | "result" | "page"` para estados vazios, sucesso/erro de operação e páginas HTTP 403/404/500), `Alert`, `Toast` (`toast` + `ToastProvider`), `ErrorBoundary`, `CookieBanner`.
+- **Indicadores e Carregamento**: `Badge` (com suporte a `dot` e `pulse`), `Indicator`, `SplitCounterBadge`, `Progress`, `Loading`, `Skeleton` (`SkeletonAvatar`, `SkeletonButton`, `SkeletonInput`, `SkeletonImage`, `SkeletonCard`, `SkeletonTable`), `ServiceStatusCard`, `Countdown`, `ActiveTimerWidget`, `PullToRefresh`, `Tour`.
 
-```tsx
-<NumberField label="Preço" prefix="R$" suffix="por kg" min={0} step={0.01} />
-```
-
-#### `DateField`
-
-```tsx
-<DateField label="Data de nascimento" mode="date" /> // date | datetime
-```
-
-#### `CheckboxGroup`
-
-```tsx
-<CheckboxGroup
-  label="Permissões"
-  options={["Ler", "Editar", "Excluir"]}
-  value={selecionados}
-  onChange={setSelecionados}
-  columns={3}
-/>
-```
-
-#### `Switch`
-
-```tsx
-<Switch label="Ativar notificações" checked={on} onChange={setOn} size="md" />
-```
-
-#### `AutocompleteField`
-
-```tsx
-<AutocompleteField
-  label="Departamento"
-  options={["Produto", "Engenharia", "Design"]}
-  onSelect={(opt) => console.log(opt.value)}
-  clearable
-/>
-```
-
-#### `MultiSelectField`
-
-```tsx
-<MultiSelectField
-  label="Tags"
-  options={tags}
-  value={selected}
-  onChange={setSelected}
-  maxItems={5}
-/>
-```
-
-#### `FileField`
-
-```tsx
-<FileField label="Contrato" accept=".pdf,.docx" maxSizeMB={5} multiple />
-```
-
-#### `PriceInput`
-
-```tsx
-<PriceInput
-  value={price}
-  onChange={setPrice}
-  currency="BRL" // ISO 4217
-  locale="pt-BR" // BCP 47
-/>
-```
-
-#### `RichTextEditor`
-
-```tsx
-<RichTextEditor
-  value={html}
-  onChange={setHtml}
-  placeholder="Escreva aqui..."
-  showCount
-  maxLength={2000}
-  toolbar={[
-    "history",
-    "block",
-    "inline",
-    "align",
-    "list",
-    "link",
-    "table",
-    "media",
-  ]}
-/>
-```
-
-#### `OTPInput`
-
-```tsx
-<OTPInput length={6} onComplete={(code) => verificar(code)} />
-```
-
-#### `PasswordStrength`
-
-```tsx
-<PasswordStrength password={senha} />
-```
+### 7.5. Comunicação, Mídia e Utilitários Visuais
+- **Chat, E-mail e Notificações**: `ChatWindow`, `ChatMessage`, `ChatComposer`, `ChatConversationItem`, `InboxList`, `EmailComposer` (`lopes-ui/rich-text`), `RichTextEditor` / `RichTextField` / `RichTextViewer`, `NotificationBell`, `EmojiPicker`.
+- **Mídia e Tipografia**: `Avatar`, `HoverCard`, `HoverGallery`, `ImageLightbox`, `Snippet` (`CopyButton`), `Kbd`, `ShortcutHint`, `Spoiler`, `Swap`, `TextRotate`, `Marquee`, `Mask`, `Mockup`, `ThemeProvider` / `ThemeToggle`, `LoginForm`.
 
 ---
 
-### Layout
+## 8. Exemplos Práticos de Uso
 
-#### `Sidebar`
+### Campos Numéricos e Monetários (Varejo de Móveis & Eletrodomésticos)
 
 ```tsx
-<Sidebar
-  title="Minha App"
-  groups={[
-    {
-      label: "Principal",
-      items: [
-        { label: "Dashboard", href: "/", icon: LayoutDashboard },
-        {
-          label: "Relatórios",
-          icon: BarChart2,
-          children: [
-            { label: "Mensal", href: "/reports/monthly" },
-            { label: "Anual", href: "/reports/yearly" },
-          ],
-        },
-      ],
-    },
-  ]}
-  user={{ name: "Cristiano", role: "Admin", initials: "CL", status: "online" }}
+import { useState } from "react";
+import { NumberField, PriceInput } from "lopes-ui";
+
+export function PrecificacaoProdutoFilial() {
+  const [precoVista, setPrecoVista] = useState(2899.9);
+  const [garantiaMeses, setGarantiaMeses] = useState(12);
+
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <PriceInput
+        label="Preço à Vista — Roupeiro Casal 6 Portas (Filial Porto Velho - RO)"
+        value={precoVista}
+        onChange={setPrecoVista}
+        currency="BRL"
+        locale="pt-BR"
+      />
+      <NumberField
+        label="Garantia de Fábrica"
+        value={garantiaMeses}
+        onChange={setGarantiaMeses}
+        suffix="meses"
+        min={3}
+        max={60}
+        step={3}
+      />
+    </div>
+  );
+}
+```
+
+### Confirmação Unificada (`<Confirm />`) e Estado Unificado (`<State />`)
+
+```tsx
+import { Confirm, State, Button } from "lopes-ui";
+
+// Modo Dialog, Popover ou Revalidação de Senha do Operador
+<Confirm
+  mode="password"
+  title="Autorizar Desconto Comercial"
+  description="Confirme sua senha para liberar a condição especial no pedido de eletrodomésticos."
+  confirmLabel="Autorizar Pedido"
+  onConfirm={async (senha) => {
+    await autorizarDesconto(senha);
+  }}
+>
+  <Button variant="primary">Liberar Desconto</Button>
+</Confirm>
+
+// Estado Vazio / Resultado / Página de Status
+<State
+  variant="empty"
+  title="Nenhuma entrega programada para Manaus (AM)"
+  description="Selecione outra praça ou crie um novo romaneio de expedição."
 />
 ```
 
-#### `Drawer`
+### Modal de Formulário Composto (`CompoundFormModal` / `FormModal`)
 
 ```tsx
-<Drawer
+import { FormModal, TextField, SelectField } from "lopes-ui";
+
+<FormModal
   open={open}
   onClose={() => setOpen(false)}
-  side="right" // right | left | top | bottom
-  size="md" // sm | md | lg | xl
-  title="Filtros"
+  title="Cadastrar Depósito / Loja"
+  subtitle="Unidades operacionais de Rondônia (69) e Amazonas (92)"
+  onSubmit={salvarFilial}
+  submitLabel="Salvar Filial"
 >
-  {/* conteúdo */}
-</Drawer>
-```
-
-#### `SplitPane`
-
-```tsx
-<SplitPane direction="horizontal" defaultSplit={30}>
-  <div>Painel esquerdo</div>
-  <div>Painel direito</div>
-</SplitPane>
-```
-
-#### `PageHeader`
-
-```tsx
-<PageHeader
-  title="Clientes"
-  description="Gerencie sua base de clientes."
-  breadcrumbs={[{ label: "Home", href: "/" }, { label: "Clientes" }]}
-  actions={<Button>Novo cliente</Button>}
-/>
-```
-
----
-
-### Card
-
-```tsx
-<Card
-  variant="elevated"
-  shadow="md"
-  color="primary"
-  accent
-  radius="xl"
-  hoverable
->
-  <CardHeader
-    icon={TrendingUp}
-    iconColor="primary"
-    title="Receita"
-    description="vs. mês anterior"
-    action={<Badge variant="success" label="+12%" />}
+  <TextField label="Nome da Filial" placeholder="Ex.: Loja 04 — Ji-Paraná (RO)" required />
+  <TextField label="Telefone Comercial" placeholder="(69) 3421-0000" />
+  <SelectField
+    label="UF de Atuação"
+    options={[
+      { label: "Rondônia (RO)", value: "RO" },
+      { label: "Amazonas (AM)", value: "AM" },
+    ]}
   />
-  <CardBody>
-    <p className="text-3xl font-bold">R$ 48.230</p>
-  </CardBody>
-  <CardFooter divider align="between">
-    <span>Atualizado agora</span>
-    <Button size="sm">Ver mais</Button>
-  </CardFooter>
-</Card>
-```
-
-**Variantes:** `default` · `outlined` · `elevated` · `filled` · `ghost`  
-**Cores:** `default` · `primary` · `success` · `warning` · `danger` · `info` · `violet` · `pink` · `teal`
-
----
-
-### Calendário e Agenda
-
-#### `Calendar`
-
-Calendário mensal com seleção simples, intervalo e visualização de eventos.
-
-```tsx
-// Seleção simples
-<Calendar value={date} onChange={setDate} size="md" />
-
-// Seleção de intervalo
-<Calendar
-  rangeMode
-  rangeValue={range}
-  onRangeChange={setRange}
-  firstDayOfWeek={1}        // 0=domingo, 1=segunda
-/>
-
-// Com eventos
-<Calendar
-  events={[
-    { id: "1", date: "2026-04-05", title: "Stand-up", color: "primary" },
-    { id: "2", date: "2026-04-07", title: "Sprint review", color: "success", allDay: true },
-  ]}
-  eventDisplay="chip"        // dot | chip
-  showWeekNumbers
-/>
-```
-
-| Prop                  | Tipo                       | Padrão  | Descrição                        |
-| --------------------- | -------------------------- | ------- | -------------------------------- |
-| `value`               | `Date\|null`               | —       | Data selecionada (controlado)    |
-| `defaultValue`        | `Date\|null`               | —       | Data inicial (não-controlado)    |
-| `onChange`            | `(date: Date) => void`     | —       | Callback ao selecionar dia       |
-| `rangeMode`           | `boolean`                  | `false` | Ativa seleção de intervalo       |
-| `rangeValue`          | `[Date\|null, Date\|null]` | —       | Intervalo controlado             |
-| `onRangeChange`       | `(range) => void`          | —       | Callback de intervalo            |
-| `events`              | `CalendarEvent[]`          | `[]`    | Eventos a exibir                 |
-| `eventDisplay`        | `'dot'\|'chip'`            | `'dot'` | Forma de exibição dos eventos    |
-| `size`                | `'sm'\|'md'\|'lg'`         | `'md'`  | Tamanho do calendário            |
-| `firstDayOfWeek`      | `0\|1`                     | `0`     | 0=domingo, 1=segunda             |
-| `showWeekNumbers`     | `boolean`                  | `false` | Exibe coluna de número de semana |
-| `minDate` / `maxDate` | `Date`                     | —       | Limites de seleção               |
-| `disabledDate`        | `(date: Date) => boolean`  | —       | Desabilita datas individuais     |
-
-#### `Agenda`
-
-Lista de eventos organizada por dia com localização e participantes.
-
-```tsx
-<Agenda
-  events={[
-    {
-      id: "1",
-      date: "2026-04-05",
-      title: "Stand-up diário",
-      color: "primary",
-      startTime: "09:00",
-      endTime: "09:15",
-      location: "Google Meet",
-      attendees: [{ name: "Ana Lima" }, { name: "Bruno Costa" }],
-    },
-  ]}
-  daysAhead={14} // 0 = todos os eventos futuros
-  dateFormat="both" // relative | date | both
-  size="md" // sm | md | lg
-/>
-```
-
-| Prop            | Tipo                         | Padrão   | Descrição                        |
-| --------------- | ---------------------------- | -------- | -------------------------------- |
-| `events`        | `AgendaEvent[]`              | required | Lista de eventos                 |
-| `startDate`     | `Date`                       | hoje     | Primeira data a exibir           |
-| `daysAhead`     | `number`                     | `0`      | Janela de dias (0 = todos)       |
-| `dateFormat`    | `'relative'\|'date'\|'both'` | `'both'` | Formato do rótulo de dia         |
-| `showTime`      | `boolean`                    | `true`   | Exibe horário                    |
-| `showLocation`  | `boolean`                    | `true`   | Exibe localização                |
-| `showAttendees` | `boolean`                    | `true`   | Exibe avatares dos participantes |
-| `size`          | `'sm'\|'md'\|'lg'`           | `'md'`   | Tamanho                          |
-| `emptyMessage`  | `string`                     | —        | Texto quando não há eventos      |
-
----
-
-### Tabelas
-
-#### `Table` — tabela estática configurável
-
-```tsx
-<Table
-  variant="striped" // default | striped | bordered | minimal
-  size="md" // xs | sm | md | lg
-  hoverable
-  stickyHeader
-  columns={[
-    { key: "name", label: "Nome" },
-    {
-      key: "status",
-      label: "Status",
-      align: "center",
-      render: (v) => <Badge variant="success" label={v as string} />,
-    },
-  ]}
-  rows={dados}
-  rowKey={(r) => r.id}
-  onRowClick={(row) => console.log(row)}
-/>
-```
-
-#### `DataTable` — tabela completa com estado interno
-
-```tsx
-<DataTable
-  columns={colunas} // sortable, hidden, required, summary, getValue
-  rows={dados}
-  rowKey={(r) => r.id}
-  actions={acoes} // menu ⋯ por linha, com danger / divider / disabled
-  globalSearch // barra de busca na toolbar
-  filterFields={filtros} // dialog com TextField / NumberField / DateField / Autocomplete
-  columnToggle // painel de visibilidade de colunas
-  showSummary // rodapé com sum | avg | min | max | count
-  pagination
-  defaultPageSize={10}
-  pageSizeOptions={[10, 25, 50]}
-  title="Funcionários"
-  toolbarSlot={<Button size="sm">Exportar</Button>}
-/>
-```
-
-#### `KanbanBoard`
-
-```tsx
-<KanbanBoard
-  columns={colunas} // { id, title, color, limit, items[] }
-  onCardMove={(cardId, targetColumnId) => mover(cardId, targetColumnId)}
-/>
-```
-
-#### `FilterBar`
-
-```tsx
-<FilterBar
-  fields={[
-    {
-      key: "status",
-      label: "Status",
-      type: "autocomplete",
-      options: statusOptions,
-    },
-    { key: "date", label: "Data", type: "date" },
-    { key: "amount", label: "Valor", type: "number" },
-  ]}
-  value={filtros}
-  onChange={setFiltros}
-/>
+</FormModal>
 ```
 
 ---
 
-### Dados e Feed
+## 9. Controle de Acesso Declarativo (RBAC)
 
-#### `StatCard`
+A biblioteca fornece primitivas nativas de governança de permissões alinhadas ao catálogo de tarefas do `biglar-api`:
 
-```tsx
-<StatCard
-  title="Receita mensal"
-  value="R$ 48.230"
-  trend={{ pct: 12.4, direction: "up" }}
-  spark={[4, 6, 5, 8, 7, 9, 8, 10, 11, 13, 12, 15].map((v) => ({ value: v }))}
-  icon={DollarSign}
-  color="success"
-/>
-```
+- **`<AccessControlProvider>` & `useAccessControl()`**: injeta tarefas autorizadas (`tasks`), flag `isAdmin` e helpers `can(task)` / `canAny(tasks)`.
+- **`<Can task="ERP.VENDA.APROVAR">`**: renderiza condicionalmente botões, abas ou ações conforme a permissão do operador.
+- **`<AccessGuard>` & `<AccessDeniedState>`**: protege páginas inteiras exibindo bloqueio padronizado (`403`) quando o usuário não detém a tarefa exigida.
+- **`<Controllable>`**: acopla `componentId` para inspeção e governança granular de componentes.
 
-#### `ActivityFeed`
-
-```tsx
-<ActivityFeed
-  events={[
-    {
-      id: "1",
-      title: "Pedido aprovado",
-      description: "#PD-2024-00841",
-      icon: CheckCircle,
-      color: "emerald",
-      actor: { name: "Ana Souza", initials: "AS" },
-      timestamp: new Date(),
-    },
-  ]}
-  maxHeight="320px"
-/>
-```
-
-#### `InboxList`
-
-```tsx
-<InboxList
-  items={mensagens}
-  selectedId={selecionado}
-  onSelect={setSelecionado}
-  onToggleStar={(id) => alternarEstrela(id)}
-/>
-```
-
-#### `ServiceStatusCard`
-
-```tsx
-<ServiceStatusCard
-  service={{ name: "API Gateway", status: "operational" }}
-  history={historico} // UptimeDay[]
-  incidents={incidentes} // ServiceIncident[]
-/>
-```
+Consulte [docs/ACCESS_CONTROL.md](file:///c:/Biglar/lopes-ui/docs/ACCESS_CONTROL.md) para detalhes completos.
 
 ---
 
-### Interação
+## 10. Hooks (`lopes-ui/hooks`)
 
-#### `CommandMenu`
-
-Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
-
-```tsx
-<CommandMenu
-  items={[
-    {
-      group: "Navegação",
-      label: "Dashboard",
-      icon: LayoutDashboard,
-      href: "/",
-    },
-    {
-      group: "Ações",
-      label: "Novo pedido",
-      icon: Plus,
-      onSelect: criarPedido,
-      shortcut: "⌘N",
-    },
-  ]}
-  triggerLabel="Buscar..."
-/>
-```
-
-#### `ContextMenu`
-
-```tsx
-<ContextMenu trigger="contextmenu" items={menuItems} onSelect={handleSelect}>
-  <div>Clique com botão direito aqui</div>
-</ContextMenu>
-```
-
-#### `ActionDialog`
-
-```tsx
-<ActionDialog
-  title="Excluir registro"
-  description="Esta ação não pode ser desfeita."
-  variant="danger"
-  onConfirm={excluir}
-  trigger={<Button variant="destructive">Excluir</Button>}
-/>
-```
-
-#### `Alert`
-
-```tsx
-// Inline
-<Alert variant="warning" title="Atenção" description="Campos obrigatórios não preenchidos." />
-
-// Modal
-<Alert
-  mode="dialog"
-  variant="danger"
-  title="Erro crítico"
-  description="Verifique os logs."
-  open={open}
-  onClose={() => setOpen(false)}
-/>
-```
-
-#### `NotificationBell`
-
-```tsx
-<NotificationBell
-  notifications={notificacoes}
-  onMarkRead={(id) => marcarLida(id)}
-  onMarkAllRead={() => marcarTodas()}
-  onDismiss={(id) => remover(id)}
-/>
-```
-
-#### `QuickActions`
-
-```tsx
-<QuickActions
-  actions={[
-    { id: "new-order", label: "Novo pedido", icon: Plus, color: "indigo" },
-    { id: "export", label: "Exportar", icon: Download, color: "emerald" },
-  ]}
-  onAction={(id) => executar(id)}
-/>
-```
+| Hook / Função | Descrição |
+| :--- | :--- |
+| `useAsyncButton` | Gerencia estados de `loading`, bloqueio contra duplo clique e tratamento de erro em ações assíncronas |
+| `useAsyncAutocomplete` | Busca assíncrona com debounce, cache de opções, cancelamento (`AbortController`) e estado de carregamento |
+| `useModal` | Controle tipado de abertura, fechamento e payload (`ModalState<T>`) para modais e drawers |
+| `useToast` | Hook reativo para disparo de notificações empilhadas |
+| `useGlobalKeyShortcuts` | Registro declarativo de atalhos globais de teclado (ignorando inputs focados quando configurado) |
+| `useBodyScrollLock` | Bloqueia o scroll do `document.body` preservando compensação de largura da scrollbar |
+| `useSmartPosition` | Cálculo geométrico anti-colisão na viewport (`calcCursorPos`, `calcSmartPos`, `calcSubMenuPos`) |
+| `useSoundNotification` | Alerta sonoro sintetizado via Web Audio API (`playNotificationChime`) para chat e fila de atendimento |
 
 ---
 
-### Outros
+## 11. Utilitários (`lopes-ui/utils`)
 
-#### `Avatar` / `AvatarGroup`
-
-```tsx
-<Avatar name="Cristiano Lopes" src="/foto.jpg" status="online" size="md" />
-
-<AvatarGroup
-  users={[{ name: "Ana" }, { name: "Bruno" }, { name: "Carla" }]}
-  max={3}
-/>
-```
-
-#### `Badge`
-
-```tsx
-<Badge variant="success" label="Ativo"   size="sm" />
-<Badge variant="danger"  label="Erro"    dot />
-<Badge variant="primary" label="Beta"    solid />
-<Badge variant="warning" label="Remover" onRemove={() => {}} />
-```
-
-#### `Accordion`
-
-```tsx
-<Accordion
-  items={[
-    { title: "O que é Lopes UI?", content: <p>...</p> },
-    { title: "Como instalar?", content: <p>...</p> },
-  ]}
-  multiple
-  variant="bordered" // default | bordered | separated
-/>
-```
-
-#### `State` (`kind="empty"`)
-
-```tsx
-<State kind="empty"
-  title="Nenhum resultado"
-  description="Tente ajustar seus filtros."
-  icon={SearchX}
-  action={<Button>Limpar filtros</Button>}
-/>
-```
-
-#### `PingIndicator`
-
-```tsx
-<PingIndicator status="operational" label="Todos os sistemas normais" />
-// status: operational | degraded | outage | unknown
-```
-
-#### `ShortcutHint`
-
-```tsx
-<ShortcutHint keys={["⌘", "K"]} /> // renders ⌘ K badges
-```
-
-#### `Breadcrumb`
-
-```tsx
-<Breadcrumb
-  items={[
-    { label: "Home", href: "/" },
-    { label: "Clientes", href: "/clients" },
-    { label: "Editar" },
-  ]}
-/>
-```
-
-#### `AppLauncher`
-
-```tsx
-<AppLauncher
-  apps={[
-    { id: "hub", label: "Project Hub", icon: LayoutDashboard, color: "indigo" },
-    { id: "billing", label: "Faturamento", icon: DollarSign, color: "emerald" },
-  ]}
-  onSelect={(id) => navegarPara(id)}
-/>
-```
-
-#### `State` (`kind="page"`)
-
-```tsx
-<State kind="page" variant="404" /> // 404 | 403 | 500 | maintenance | empty | success
-```
-
-#### `Toast`
-
-Sistema de notificações próprio, sem dependências externas.
-
-```tsx
-import { toast, Toaster } from "@/components/Toast";
-
-// No layout
-<Toaster position="top-right" />;
-
-// Em qualquer componente
-toast.success("Salvo com sucesso!");
-toast.error("Algo deu errado.");
-toast.warning("Atenção: ação irreversível.");
-toast.info("Nova atualização disponível.", {
-  action: { label: "Atualizar", onClick: () => {} },
-});
-toast.loading("Carregando...");
-toast.promise(minhaPromise, {
-  loading: "Salvando...",
-  success: "Pronto!",
-  error: "Falha ao salvar.",
-});
-```
-
-#### `TextRotate`
-
-Texto animado que alterna entre itens com animações de entrada/saída.
-
-```tsx
-<TextRotate
-  items={["velocidade", "qualidade", "beleza"]}
-  duration={2500}
-  animation="slide" // slide | discrete | fade | rise
-  className="text-indigo-600 font-bold"
-/>
-```
-
-#### `Timeline`
-
-```tsx
-<Timeline
-  items={[
-    {
-      title: "Criação",
-      description: "Projeto iniciado.",
-      date: "Jan 2024",
-      status: "done",
-    },
-    {
-      title: "Beta",
-      description: "Primeira versão.",
-      date: "Mar 2024",
-      status: "current",
-    },
-    {
-      title: "v1.0",
-      description: "Lançamento.",
-      date: "Jun 2024",
-      status: "upcoming",
-    },
-  ]}
-/>
-```
-
-#### `Stepper`
-
-```tsx
-<Stepper
-  steps={["Dados pessoais", "Endereço", "Confirmação"]}
-  currentStep={1}
-  variant="default" // default | compact | dots
-/>
-```
-
-#### `TreeView`
-
-```tsx
-<TreeView
-  nodes={[
-    {
-      id: "docs",
-      label: "Documentos",
-      icon: Folder,
-      children: [
-        { id: "readme", label: "README.md", icon: FileText },
-        { id: "license", label: "LICENSE", icon: FileText },
-      ],
-    },
-  ]}
-  onSelect={(node) => console.log(node.id)}
-/>
-```
-
-#### `SmartObject`
-
-Cartão de entidade estruturada com campos, ações e metadata.
-
-```tsx
-<SmartObject
-  type="person"
-  name="Ana Lima"
-  subtitle="Engenheira de Software"
-  fields={[
-    { label: "E-mail", value: "ana@empresa.com", type: "email" },
-    { label: "Time", value: "Plataforma" },
-  ]}
-  actions={[{ label: "Ver perfil", href: "/team/ana" }]}
-/>
-```
-
-#### `ChatWindow`
-
-```tsx
-<ChatWindow
-  conversations={conversas}
-  onSend={(msg) => enviar(msg)}
-  currentUserId="user-1"
-/>
-```
+| Módulo | Principais Funções / Responsabilidade |
+| :--- | :--- |
+| `cn` | Combinação inteligente de classes condicionais (`clsx` + `tailwind-merge`) |
+| `currency` | Formatação e parsing monetário em Real (`BRL`) e moedas ISO 4217 |
+| `date` | Formatação, parsing ISO e datas relativas em `pt-BR` |
+| `document` | Validação e máscara de **CPF** e **CNPJ numérico e alfanumérico** (compatível com o padrão RFB) |
+| `extenso` | Escrita de valores monetários e numéricos por extenso em português (contratos, promissórias e recibos) |
+| `exporters` | Exportação client-side estruturada de coleções para CSV/TSV/JSON com BOM UTF-8 |
+| `crossTabSync` | Canal tipado (`BroadcastChannel` + fallback `storage`) para sincronização instantânea entre abas |
+| `filterNavItems` | Filtragem recursiva de árvores de navegação do `<Sidebar>` por busca textual e permissões RBAC |
+| `file` | Formatação de bytes, extração de extensão, leitura Base64 e validação de MIME types |
+| `overlay` | Pilha global de overlays abertos para coordenação da tecla `Escape` e foco |
+| `sanitize` | Sanitização defensiva de HTML e strings contra injeção XSS em visualizadores ricos |
+| `string` | Normalização sem acentos (`slugify`), iniciais de nomes, truncamento e capitalização |
 
 ---
 
-## Dark Mode
+## 12. Governança do Registry e Documentação Técnica
 
-Tema dark/light baseado em classe (`class="dark"` no `<html>`), sem flash no reload: o tema é aplicado via `<script>` inline no `<head>` antes de qualquer renderização React.
-
-```tsx
-import { useTheme } from "@/components/ThemeContext";
-
-const { theme, toggle } = useTheme();
-```
-
----
-
-## Controle de Acesso
-
-Todos os componentes aceitam a prop `componentId` que é emitida como `data-component-id` no DOM, permitindo integração com qualquer sistema de controle de acesso baseado em atributos (ABAC).
-
-```tsx
-<Button componentId="btn-excluir-pedido">Excluir</Button>
-// → <button data-component-id="btn-excluir-pedido">Excluir</button>
-```
-
-Consulte [docs/ACCESS_CONTROL.md](docs/ACCESS_CONTROL.md) para detalhes sobre a implementação.
-
----
-
-<p align="center">
-  Feito por <strong>Cristiano Lopes</strong> · construído com Next.js, Tailwind CSS e lucide-react
-</p>
-
-## Rodando o projeto
+Sempre que um novo componente público for adicionado em `components/index.ts`, registre sua entrada correspondente em `app/components/registry.ts` e execute:
 
 ```bash
-npm install
-npm run dev
+npm run check:registry && npm run typecheck && npm run build:lib
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000) para o playground interativo com todos os componentes.
-
-## Scripts
-
-| Comando         | Descrição                   |
-| --------------- | --------------------------- |
-| `npm run dev`   | Servidor de desenvolvimento |
-| `npm run build` | Build de produção           |
-| `npm run start` | Servidor de produção        |
-| `npm run lint`  | ESLint                      |
-
----
-
-## Estrutura
-
-```
-lopes-ui/
-├── app/
-│   ├── page.tsx              # Playground interativo com todos os demos
-│   ├── layout.tsx            # Shell com Sidebar + SiteHeader
-│   ├── globals.css           # Estilos base, dark mode, scrollbar
-│   ├── access-denied/        # Página de acesso negado (403)
-│   └── cause-error/          # Página de teste de error boundary
-│
-├── components/
-│   ├── form/                 # Campos de formulário
-│   │   ├── FieldWrapper      # Wrapper base: label, erro, tooltip, helpText
-│   │   ├── TextField         # Input texto / email / url / password / search
-│   │   ├── NumberField       # Input numérico com spin buttons
-│   │   ├── DateField         # Input data e datetime
-│   │   ├── TimeField         # Input de horário
-│   │   ├── CheckboxGroup     # Grupo de checkboxes com layout grid
-│   │   ├── Switch            # Toggle on/off
-│   │   ├── AutocompleteField # Dropdown pesquisável (combobox)
-│   │   ├── MultiSelectField  # Seleção múltipla com chips
-│   │   └── FileField         # Upload com drag-and-drop
-│   │
-│   ├── header/               # Partes do SiteHeader
-│   │   ├── Brand             # Logo + nome da aplicação
-│   │   ├── Nav               # Navegação com dropdowns aninhados
-│   │   ├── SearchInput       # Campo de busca do header
-│   │   ├── ProfileMenu       # Dropdown de perfil do usuário
-│   │   └── ProfileActions    # Ações do header (notificações, tema…)
-│   │
-│   ├── Accordion.tsx         # Painéis colapsáveis com animação
-│   ├── ActionDialog.tsx      # Dialog de confirmação de ações críticas
-│   ├── Alert.tsx             # Alertas inline e modais
-│   ├── Avatar.tsx            # Avatar com imagem, iniciais e status
-│   ├── Badge.tsx             # Badges com variantes e cores
-│   ├── Button.tsx            # Botão base com variantes e loading
-│   ├── Card.tsx              # Cards com header/body/footer compostos
-│   ├── Carousel.tsx          # Carrossel com navegação e autoplay
-│   ├── ChatComposer.tsx      # Área de composição de mensagens
-│   ├── ChatConversationItem.tsx # Item de lista de conversas
-│   ├── ChatMessage.tsx       # Bolha de mensagem (texto, imagem, áudio…)
-│   ├── ChatWindow.tsx        # Janela de chat completa
-│   ├── CodeBlock.tsx         # Bloco de código com syntax highlight (Shiki)
-│   ├── CommandMenu.tsx       # Paleta de comandos (⌘K / Ctrl+K)
-│   ├── ContextMenu.tsx       # Menu de contexto com sub-menus
-│   ├── DataTable.tsx         # Tabela avançada com todas as features
-│   ├── Header.tsx            # Header genérico reutilizável
-│   ├── Sidebar.tsx           # Sidebar colapsável com navegação aninhada
-│   ├── SiteHeader.tsx        # Header do site com CommandMenu integrado
-│   ├── StatusPage.tsx        # Páginas de status (404, 403, 500…)
-│   ├── Stepper.tsx           # Wizard multi-steps
-│   ├── Table.tsx             # Tabela simples e configurável
-│   ├── TextRotate.tsx        # Texto animado com rotação de itens
-│   ├── ThemeContext.tsx      # Provider de tema dark/light
-│   ├── ThemeToggle.tsx       # Botão de alternância de tema
-│   ├── Timeline.tsx          # Linha do tempo vertical
-│   ├── Toast.tsx             # Sistema de notificações (toast)
-│   └── TreeView.tsx          # Árvore navegável com expand/collapse
-│
-└── hooks/
-    ├── useAsyncButton.ts     # Gerencia estado de loading de botões async
-    └── useBodyScrollLock.ts  # Bloqueia scroll do body (modais)
-```
-
----
-
-## Componentes
-
-### Formulários
-
-#### `TextField`
-
-```tsx
-<TextField
-  label="E-mail"
-  type="email"
-  placeholder="voce@empresa.com"
-  leftIcon={<Mail />}
-  helpText="Usado para notificações"
-  size="md" // xs | sm | md | lg
-  variant="default" // default | filled
-/>
-```
-
-#### `NumberField`
-
-```tsx
-<NumberField label="Preço" prefix="R$" suffix="por kg" min={0} step={0.01} />
-```
-
-#### `DateField`
-
-```tsx
-<DateField label="Data de nascimento" mode="date" /> // date | datetime
-```
-
-#### `CheckboxGroup`
-
-```tsx
-<CheckboxGroup
-  label="Permissões"
-  options={["Ler", "Editar", "Excluir"]}
-  value={selecionados}
-  onChange={setSelecionados}
-  columns={3}
-/>
-```
-
-#### `Switch`
-
-```tsx
-<Switch label="Ativar notificações" checked={on} onChange={setOn} size="md" />
-```
-
-#### `AutocompleteField`
-
-```tsx
-<AutocompleteField
-  label="Departamento"
-  options={["Produto", "Engenharia", "Design"]}
-  onSelect={(opt) => console.log(opt.value)}
-  clearable
-/>
-```
-
-#### `MultiSelectField`
-
-```tsx
-<MultiSelectField
-  label="Tags"
-  options={tags}
-  value={selected}
-  onChange={setSelected}
-  maxItems={5}
-/>
-```
-
-#### `FileField`
-
-```tsx
-<FileField label="Contrato" accept=".pdf,.docx" maxSizeMB={5} multiple />
-```
-
----
-
-### Layout
-
-#### `Sidebar`
-
-```tsx
-<Sidebar
-  title="Minha App"
-  groups={[
-    {
-      label: "Principal",
-      items: [
-        { label: "Dashboard", href: "/", icon: LayoutDashboard },
-        {
-          label: "Relatórios",
-          icon: BarChart2,
-          children: [
-            { label: "Mensal", href: "/reports/monthly" },
-            { label: "Anual", href: "/reports/yearly" },
-          ],
-        },
-      ],
-    },
-  ]}
-  user={{ name: "Cristiano", role: "Admin", initials: "CL", status: "online" }}
-/>
-```
-
-#### `Card`
-
-```tsx
-<Card
-  variant="elevated"
-  shadow="md"
-  color="primary"
-  accent
-  radius="xl"
-  hoverable
->
-  <CardHeader
-    icon={TrendingUp}
-    iconColor="primary"
-    title="Receita"
-    description="vs. mês anterior"
-    action={<Badge variant="success" label="+12%" />}
-  />
-  <CardBody>
-    <p className="text-3xl font-bold">R$ 48.230</p>
-  </CardBody>
-  <CardFooter divider align="between">
-    <span>Atualizado agora</span>
-    <Button size="sm">Ver mais</Button>
-  </CardFooter>
-</Card>
-```
-
-**Variantes:** `default` · `outlined` · `elevated` · `filled` · `ghost`  
-**Cores:** `default` · `primary` · `success` · `warning` · `danger` · `info` · `violet` · `pink` · `teal`
-
----
-
-### Tabelas
-
-#### `Table` — tabela estática configurável
-
-```tsx
-<Table
-  variant="striped" // default | striped | bordered | minimal
-  size="md" // xs | sm | md | lg
-  hoverable
-  stickyHeader
-  columns={[
-    { key: "name", label: "Nome" },
-    {
-      key: "status",
-      label: "Status",
-      align: "center",
-      render: (v) => <Badge variant="success" label={v as string} />,
-    },
-  ]}
-  rows={dados}
-  rowKey={(r) => r.id}
-  onRowClick={(row) => console.log(row)}
-/>
-```
-
-#### `DataTable` — tabela completa com estado interno
-
-```tsx
-<DataTable
-  columns={colunas} // sortable, hidden, required, summary, getValue
-  rows={dados}
-  rowKey={(r) => r.id}
-  actions={acoes} // menu ⋯ por linha, com danger / divider / disabled
-  globalSearch // barra de busca na toolbar
-  filterFields={filtros} // dialog com TextField / NumberField / DateField / Autocomplete
-  columnToggle // painel de visibilidade de colunas
-  showSummary // rodapé com sum | avg | min | max | count
-  pagination
-  defaultPageSize={10}
-  pageSizeOptions={[10, 25, 50]}
-  title="Funcionários"
-  toolbarSlot={<Button size="sm">Exportar</Button>}
-/>
-```
-
-**`summary` por coluna:**
-
-```tsx
-{ key: "salary", summary: "sum"  }   //   48.000
-{ key: "score",  summary: "avg"  }   // x̄ 87,5
-{ key: "id",     summary: "count"}   // # 12
-{ key: "total",  summary: (rows) => `R$ ${somarTudo(rows)}` }  // função customizada
-```
-
----
-
-### Interação
-
-#### `CommandMenu`
-
-Paleta de comandos abrível via **⌘K** / **Ctrl+K** ou clique.
-
-```tsx
-<CommandMenu
-  items={[
-    {
-      group: "Navegação",
-      label: "Dashboard",
-      icon: LayoutDashboard,
-      href: "/",
-    },
-    {
-      group: "Ações",
-      label: "Novo pedido",
-      icon: Plus,
-      onSelect: criarPedido,
-      shortcut: "⌘N",
-    },
-  ]}
-  triggerLabel="Buscar..."
-/>
-```
-
-#### `ContextMenu`
-
-```tsx
-<ContextMenu trigger="contextmenu" items={menuItems} onSelect={handleSelect}>
-  <div>Clique com botão direito aqui</div>
-</ContextMenu>
-```
-
-#### `ActionDialog`
-
-```tsx
-<ActionDialog
-  title="Excluir registro"
-  description="Esta ação não pode ser desfeita."
-  variant="danger"
-  onConfirm={excluir}
-  trigger={<Button variant="destructive">Excluir</Button>}
-/>
-```
-
-#### `Alert`
-
-```tsx
-// Inline
-<Alert variant="warning" title="Atenção" description="Campos obrigatórios não preenchidos." />
-
-// Modal
-<Alert
-  mode="dialog"
-  variant="danger"
-  title="Erro crítico"
-  description="Verifique os logs."
-  open={open}
-  onClose={() => setOpen(false)}
-/>
-```
-
----
-
-### Outros
-
-#### `Avatar` / `AvatarGroup`
-
-```tsx
-<Avatar name="Cristiano Lopes" src="/foto.jpg" status="online" size="md" />
-
-<AvatarGroup
-  users={[{ name: "Ana" }, { name: "Bruno" }, { name: "Carla" }]}
-  max={3}
-/>
-```
-
-#### `Badge`
-
-```tsx
-<Badge variant="success" label="Ativo"   size="sm" />
-<Badge variant="danger"  label="Erro"    dot />
-<Badge variant="primary" label="Beta"    solid />
-<Badge variant="warning" label="Remover" onRemove={() => {}} />
-```
-
-#### `Accordion`
-
-```tsx
-<Accordion
-  items={[
-    { title: "O que é Lopes UI?", content: <p>...</p> },
-    { title: "Como instalar?", content: <p>...</p> },
-  ]}
-  multiple
-  variant="bordered" // default | bordered | separated
-/>
-```
-
-#### `State` (`kind="page"`)
-
-```tsx
-<State kind="page" variant="404" /> // 404 | 403 | 500 | maintenance | empty | success
-```
-
-#### `Toast`
-
-Sistema de notificações próprio, sem dependências externas.
-
-```tsx
-import { toast, Toaster } from "@/components/Toast";
-
-// No layout
-<Toaster position="top-right" />;
-
-// Em qualquer componente
-toast.success("Salvo com sucesso!");
-toast.error("Algo deu errado.");
-toast.warning("Atenção: ação irreversível.");
-toast.info("Nova atualização disponível.", {
-  action: { label: "Atualizar", onClick: () => {} },
-});
-toast.loading("Carregando...");
-toast.promise(minhaPromise, {
-  loading: "Salvando...",
-  success: "Pronto!",
-  error: "Falha ao salvar.",
-});
-```
-
-#### `TextRotate`
-
-Texto animado que alterna entre itens com animações de entrada/saída.
-
-```tsx
-<TextRotate
-  items={["velocidade", "qualidade", "beleza"]}
-  duration={2500}
-  animation="slide" // slide | discrete | fade | rise
-  className="text-indigo-600 font-bold"
-/>
-```
-
-#### `Timeline`
-
-```tsx
-<Timeline
-  items={[
-    {
-      title: "Criação",
-      description: "Projeto iniciado.",
-      date: "Jan 2024",
-      status: "done",
-    },
-    {
-      title: "Beta",
-      description: "Primeira versão.",
-      date: "Mar 2024",
-      status: "current",
-    },
-    {
-      title: "v1.0",
-      description: "Lançamento.",
-      date: "Jun 2024",
-      status: "upcoming",
-    },
-  ]}
-/>
-```
-
-#### `Stepper`
-
-```tsx
-<Stepper
-  steps={["Dados pessoais", "Endereço", "Confirmação"]}
-  currentStep={1}
-  variant="default" // default | compact | dots
-/>
-```
-
-#### `TreeView`
-
-```tsx
-<TreeView
-  nodes={[
-    {
-      id: "docs",
-      label: "Documentos",
-      icon: Folder,
-      children: [
-        { id: "readme", label: "README.md", icon: FileText },
-        { id: "license", label: "LICENSE", icon: FileText },
-      ],
-    },
-  ]}
-  onSelect={(node) => console.log(node.id)}
-/>
-```
-
-#### `ChatWindow`
-
-```tsx
-<ChatWindow
-  conversations={conversas}
-  onSend={(msg) => enviar(msg)}
-  currentUserId="user-1"
-/>
-```
-
----
-
-## Dark Mode
-
-Tema dark/light baseado em classe (`class="dark"` no `<html>`), sem flash no reload: o tema é aplicado via `<script>` inline no `<head>` antes de qualquer renderização React.
-
-```tsx
-import { useTheme } from "@/components/ThemeContext";
-
-const { theme, toggle } = useTheme();
-```
-
----
-
-## Controle de Acesso
-
-Todos os componentes aceitam a prop `componentId` que é emitida como `data-component-id` no DOM, permitindo integração com qualquer sistema de controle de acesso baseado em atributos (ABAC).
-
-```tsx
-<Button componentId="btn-excluir-pedido">Excluir</Button>
-// → <button data-component-id="btn-excluir-pedido">Excluir</button>
-```
-
-Consulte [docs/ACCESS_CONTROL.md](docs/ACCESS_CONTROL.md) para detalhes sobre a implementação.
-
----
+### Documentação Aprofundada (`docs/`)
+- **[Índice da Wiki (`docs/README.md`)](file:///c:/Biglar/lopes-ui/docs/README.md)**
+- **[Arquitetura do Shell (`docs/architecture.md`)](file:///c:/Biglar/lopes-ui/docs/architecture.md)** — `ShellContext`, coordenação `Header` ↔ `Sidebar` e estrutura de páginas
+- **[Sistema de Temas (`docs/theme-system.md`)](file:///c:/Biglar/lopes-ui/docs/theme-system.md)** — Dark/Light mode sem flash (`ThemeScript`), `flushSync` e `no-transition`
+- **[API do Sidebar (`docs/sidebar.md`)](file:///c:/Biglar/lopes-ui/docs/sidebar.md)** — Navegação multinível, itens fixados (pins), tooltips em portal e `UserPopover`
+- **[Controle de Acesso (`docs/ACCESS_CONTROL.md`)](file:///c:/Biglar/lopes-ui/docs/ACCESS_CONTROL.md)** — RBAC declarativo, `componentId` e manifesto de componentes
+- **[Guia de Contribuição (`docs/contributing.md`)](file:///c:/Biglar/lopes-ui/docs/contributing.md)** — Padrões de criação, acessibilidade, tipagem e registro no showcase
