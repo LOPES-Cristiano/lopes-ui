@@ -31,6 +31,7 @@ import { SidebarUserMenu } from './SidebarUserMenu';
 import { useSidebarAutoCollapse } from './hooks/useSidebarAutoCollapse';
 import { useSidebarGroups } from './hooks/useSidebarGroups';
 import { useSidebarPins } from './hooks/useSidebarPins';
+import { useSidebarSubmenus } from './hooks/useSidebarSubmenus';
 
 function normalizeSidebarSearch(text?: string): string {
   if (!text) return '';
@@ -175,6 +176,7 @@ export function Sidebar({
   groups = [],
   groupsCollapsible = false,
   groupsStorageKey = 'sidebar-groups',
+  submenusStorageKey,
   collapsedGroupMode = 'flatten-items',
   onNavigate,
   autoCollapseAfterNavigation = false,
@@ -347,8 +349,9 @@ export function Sidebar({
   const visuallyCollapsed = isMobileDrawer ? false : effectiveCollapsed;
   const mode = isMobileDrawer ? 'expanded' : !effectiveCollapsed ? 'expanded' : 'collapsed';
 
-  // Custom hooks for safe, validated local storage persistence
-  const { pinnedIds, togglePin } = useSidebarPins(pinnable, pinsStorageKey, visibleGroups);
+  // Custom hooks for safe, validated local storage + cookie persistence
+  const resolvedSubmenusStorageKey = submenusStorageKey ?? `${groupsStorageKey}-submenus`;
+  const { pinnedIds, togglePin } = useSidebarPins(!isIsolated && pinnable, pinsStorageKey);
   const {
     collapsedGroupIds,
     toggleGroup,
@@ -356,7 +359,11 @@ export function Sidebar({
     expandAll: expandAllGroups,
     toggleAll: toggleAllGroups,
     allCollapsed: allGroupsCollapsed,
-  } = useSidebarGroups(groupsCollapsible, groupsStorageKey, visibleGroups);
+  } = useSidebarGroups(!isIsolated && groupsCollapsible, groupsStorageKey, visibleGroups);
+  const { openSubmenuIds, setSubmenuOpen, toggleSubmenu } = useSidebarSubmenus(
+    resolvedSubmenusStorageKey,
+    isIsolated,
+  );
 
   const activeAnnouncements = useMemo(() => {
     const dismissedSet = new Set(dismissedAnnouncementIds);
@@ -377,6 +384,9 @@ export function Sidebar({
         collapsedGroupIds,
         collapsedGroupMode,
         allGroupsCollapsed,
+        openSubmenuIds,
+        setSubmenuOpen,
+        toggleSubmenu,
         searchQuery,
         setSearchQuery,
         setCollapsed,
@@ -393,7 +403,7 @@ export function Sidebar({
       {/* Mobile backdrop */}
       <div
         className={[
-          'fixed inset-0 z-[6000] bg-black/50 md:hidden transition-opacity duration-300',
+          'fixed inset-0 z-[6000] bg-black/50 backdrop-blur-[2px] md:hidden transition-opacity duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none',
           isMobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
         ].join(' ')}
         onClick={closeMobile}
@@ -423,7 +433,7 @@ export function Sidebar({
             ? 'w-[var(--sidebar-collapsed-width)]'
             : 'w-[82vw] max-w-[280px] md:w-[var(--sidebar-width)]',
           'fixed inset-y-0 left-0 z-[6010] shadow-none md:shadow-none lg:shadow-[var(--sidebar-shadow)] md:relative md:inset-auto md:z-10 md:translate-x-0 md:h-full',
-          'transition-all duration-300 ease-in-out',
+          'transition-[width,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[width,transform] motion-reduce:transition-none',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
           className,
         ].join(' ')}

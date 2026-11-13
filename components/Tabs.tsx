@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { cn } from "../utils/cn";
 import { useAccessControl } from "./useAccessControl";
 import {
@@ -78,19 +79,19 @@ const LIST_VARIANT_CLS: Record<TabsVariant, string> = {
 
 const TRIGGER_VARIANT_CLS: Record<TabsVariant, string> = {
   pills:
-    "rounded-[var(--radius-control)] data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-[var(--shadow-control)]",
+    "relative rounded-[var(--radius-control)] data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-[var(--shadow-control)]",
   underline:
-    "-mb-px rounded-none border-b-2 border-transparent px-1 pb-2.5 pt-1.5 hover:text-foreground data-[state=active]:border-brand data-[state=active]:bg-transparent data-[state=active]:text-brand data-[state=active]:shadow-none",
+    "relative -mb-px rounded-none border-b-2 border-transparent px-1 pb-2.5 pt-1.5 hover:text-foreground data-[state=active]:border-brand data-[state=active]:bg-transparent data-[state=active]:text-brand data-[state=active]:shadow-none",
   bordered:
-    "-mb-px rounded-none border-b-2 border-transparent px-3 pb-2.5 pt-1.5 hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none",
+    "relative -mb-px rounded-none border-b-2 border-transparent px-3 pb-2.5 pt-1.5 hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none",
   enclosed:
-    "rounded-[var(--radius-control)] border border-transparent data-[state=active]:border-border data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-[var(--shadow-control)]",
+    "relative rounded-[var(--radius-control)] border border-transparent data-[state=active]:border-border data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-[var(--shadow-control)]",
   lifted:
-    "-mb-px rounded-t-[var(--radius-card)] rounded-b-none border border-transparent px-4 py-2 data-[state=active]:border-border data-[state=active]:border-b-card data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-none",
+    "relative -mb-px rounded-t-[var(--radius-card)] rounded-b-none border border-transparent px-4 py-2 data-[state=active]:border-border data-[state=active]:border-b-card data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-none",
   card:
-    "-mb-px rounded-t-[var(--radius-control)] rounded-b-none border border-border bg-surface-muted/80 px-3.5 py-2 hover:text-brand data-[state=active]:border-b-card data-[state=active]:bg-card data-[state=active]:text-brand data-[state=active]:shadow-none",
+    "relative -mb-px rounded-t-[var(--radius-control)] rounded-b-none border border-border bg-surface-muted/80 px-3.5 py-2 hover:text-brand data-[state=active]:border-b-card data-[state=active]:bg-card data-[state=active]:text-brand data-[state=active]:shadow-none",
   "editable-card":
-    "-mb-px rounded-t-[var(--radius-control)] rounded-b-none border border-border bg-surface-muted/80 px-3.5 py-2 hover:text-brand data-[state=active]:border-b-card data-[state=active]:bg-card data-[state=active]:text-brand data-[state=active]:shadow-none",
+    "relative -mb-px rounded-t-[var(--radius-control)] rounded-b-none border border-border bg-surface-muted/80 px-3.5 py-2 hover:text-brand data-[state=active]:border-b-card data-[state=active]:bg-card data-[state=active]:text-brand data-[state=active]:shadow-none",
 };
 
 const SIZE_CLS: Record<TabsSize, string> = {
@@ -122,6 +123,10 @@ export default function Tabs({
   children,
   ...props
 }: TabsProps) {
+  const prefersReducedMotion = useReducedMotion();
+  const tabsMotionId = useId();
+  const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const hasMountedRef = useRef(false);
   const { canAccess } = useAccessControl();
   const hasRootPermission = !componentId || canAccess(componentId);
 
@@ -172,6 +177,21 @@ export default function Tabs({
     }
   }, [controlledValue, isCurrentAccessible, effectiveValue, onValueChange]);
 
+  // Keep active horizontal tab visible inside narrow mobile scroll containers
+  useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
+    if (orientation === "vertical" || !effectiveValue) return;
+    const activeEl = triggerRefs.current[effectiveValue];
+    activeEl?.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "nearest",
+      inline: "nearest",
+    });
+  }, [effectiveValue, orientation, prefersReducedMotion]);
+
   if (!hasRootPermission && hideIfDenied) return null;
 
   const isVertical = orientation === "vertical";
@@ -213,6 +233,7 @@ export default function Tabs({
     <TabsList
       className={cn(
         LIST_VARIANT_CLS[variant],
+        !isVertical && "snap-x snap-proximity",
         tabBarExtraContent && !isVertical && hasBottomBorderBar && "border-b-0 w-auto flex-1",
         isVertical
           ? "flex h-auto w-full sm:w-auto flex-row sm:flex-col items-center sm:items-stretch justify-start shrink-0 overflow-x-auto no-scrollbar"
@@ -225,6 +246,11 @@ export default function Tabs({
       {(visibleItems ?? []).map((item) => {
         const itemAllowed = !item.componentId || canAccess(item.componentId);
         const isDisabled = Boolean(item.disabled || !itemAllowed);
+        const isActive = item.value === effectiveValue;
+        const useMotionPill =
+          !prefersReducedMotion && (variant === "pills" || variant === "enclosed");
+        const useMotionUnderline =
+          !prefersReducedMotion && (variant === "underline" || variant === "bordered");
         const canClose =
           !isDisabled &&
           Boolean(onRemove) &&
@@ -233,6 +259,9 @@ export default function Tabs({
         const triggerNode = (
           <TabsTrigger
             key={canClose ? undefined : item.value}
+            ref={(el) => {
+              triggerRefs.current[item.value] = el;
+            }}
             value={item.value}
             componentId={item.componentId}
             hideIfDenied={item.hideIfDenied}
@@ -240,16 +269,42 @@ export default function Tabs({
             className={cn(
               TRIGGER_VARIANT_CLS[variant],
               SIZE_CLS[size],
+              !isVertical && "snap-start shrink-0 whitespace-nowrap",
+              useMotionPill &&
+                "data-[state=active]:bg-transparent data-[state=active]:border-transparent data-[state=active]:shadow-none",
+              useMotionUnderline && "data-[state=active]:border-transparent",
               canClose && "pr-8",
               fullWidth && !isVertical && (canClose ? "w-full" : "flex-1"),
               isVertical && "justify-start",
               triggerClassName,
             )}
           >
-            {item.icon && <span className="shrink-0">{item.icon}</span>}
-            <span className="lopes-trim-cap">{item.label}</span>
+            {isActive && useMotionPill && (
+              <motion.span
+                layoutId={`${tabsMotionId}-pill`}
+                transition={{ type: "spring", stiffness: 430, damping: 34 }}
+                aria-hidden="true"
+                className={cn(
+                  "pointer-events-none absolute inset-0 z-0 rounded-[var(--radius-control)] bg-card shadow-[var(--shadow-control)]",
+                  variant === "enclosed" && "border border-border",
+                )}
+              />
+            )}
+            {isActive && useMotionUnderline && (
+              <motion.span
+                layoutId={`${tabsMotionId}-underline`}
+                transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                aria-hidden="true"
+                className={cn(
+                  "pointer-events-none absolute inset-x-0 -bottom-[2px] z-10 h-[2px] rounded-full",
+                  variant === "underline" ? "bg-brand" : "bg-primary",
+                )}
+              />
+            )}
+            {item.icon && <span className="relative z-10 shrink-0">{item.icon}</span>}
+            <span className="relative z-10 lopes-trim-cap">{item.label}</span>
             {item.badge !== undefined && item.badge !== null && (
-              <span className="ml-1 inline-flex items-center justify-center rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-secondary-foreground">
+              <span className="relative z-10 ml-1 inline-flex items-center justify-center rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-secondary-foreground">
                 {item.badge}
               </span>
             )}

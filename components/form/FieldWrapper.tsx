@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { HelpCircle, AlertCircle } from "lucide-react";
+import { HelpCircle, AlertCircle, CheckCircle2 } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { cn } from "../../utils/cn";
 import {
   Tooltip,
@@ -26,6 +27,8 @@ export type FieldWrapperProps = {
   labelAction?: React.ReactNode;
   /** Validation error — shown in red, replaces helpText */
   error?: string;
+  /** Optional success feedback — shown in green when there is no error */
+  success?: string;
   /** Subtle helper text below the field */
   helpText?: string;
   /** Alias for helpText */
@@ -128,12 +131,27 @@ export default function FieldWrapper({
   tooltip,
   labelAction,
   error,
+  success,
   helpText,
   hint,
   width,
   children,
   className,
 }: FieldWrapperProps) {
+  const shouldReduceMotion = useReducedMotion();
+  const prevErrorRef = React.useRef<string | undefined>(error);
+  const [shaking, setShaking] = React.useState(false);
+
+  React.useEffect(() => {
+    if (error && error !== prevErrorRef.current && !shouldReduceMotion) {
+      setShaking(true);
+      const timer = setTimeout(() => setShaking(false), 350);
+      prevErrorRef.current = error;
+      return () => clearTimeout(timer);
+    }
+    prevErrorRef.current = error;
+  }, [error, shouldReduceMotion]);
+
   const effectiveOrientation = orientation ?? (labelInline ? "horizontal" : "vertical");
   const isHorizontal = effectiveOrientation === "horizontal";
   const isResponsive = effectiveOrientation === "responsive";
@@ -150,7 +168,7 @@ export default function FieldWrapper({
     <label
       htmlFor={id}
       className={cn(
-        "inline-flex select-none items-center text-sm font-medium leading-none",
+        "inline-flex select-none items-center text-sm font-medium leading-none transition-colors duration-150",
         error ? "text-danger" : "text-foreground/85",
         isHorizontal && cn("shrink-0 pt-[11px]", labelWidth),
         isResponsive && cn("sm:shrink-0 sm:pt-[11px]", `sm:${labelWidth}`),
@@ -170,22 +188,56 @@ export default function FieldWrapper({
     </label>
   ) : null;
 
-  const subline = error ? (
-    <p
-      id={id ? `${id}-error` : undefined}
-      className="flex items-center gap-1 text-xs text-danger"
-    >
-      <AlertCircle size={11} className="shrink-0" />
-      {error}
-    </p>
-  ) : resolvedHelpText ? (
-    <p
-      id={id ? `${id}-help` : undefined}
-      className="text-xs leading-relaxed text-pretty text-muted-foreground"
-    >
-      {resolvedHelpText}
-    </p>
-  ) : null;
+  const sublineKey = error ? `error:${error}` : success ? `success:${success}` : resolvedHelpText ? `help:${resolvedHelpText}` : "none";
+  const sublineTransition = shouldReduceMotion
+    ? { duration: 0.08 }
+    : { duration: 0.16, ease: [0.16, 1, 0.3, 1] as const };
+
+  const subline = (
+    <AnimatePresence mode="wait" initial={false}>
+      {error ? (
+        <motion.p
+          key={sublineKey}
+          id={id ? `${id}-error` : undefined}
+          role="alert"
+          initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+          transition={sublineTransition}
+          className="flex items-center gap-1.5 text-xs font-medium text-danger"
+        >
+          <AlertCircle size={12} className="shrink-0" />
+          <span>{error}</span>
+        </motion.p>
+      ) : success ? (
+        <motion.p
+          key={sublineKey}
+          id={id ? `${id}-success` : undefined}
+          initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+          transition={sublineTransition}
+          className="flex items-center gap-1.5 text-xs font-medium text-success"
+        >
+          <CheckCircle2 size={12} className="shrink-0" />
+          <span>{success}</span>
+        </motion.p>
+      ) : resolvedHelpText ? (
+        <motion.p
+          key={sublineKey}
+          id={id ? `${id}-help` : undefined}
+          initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -2 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={sublineTransition}
+          className="text-xs leading-relaxed text-pretty text-muted-foreground"
+        >
+          {resolvedHelpText}
+        </motion.p>
+      ) : null}
+    </AnimatePresence>
+  );
+  const hasSubline = Boolean(error || success || resolvedHelpText);
 
   if (isHorizontal || isResponsive) {
     return (
@@ -200,7 +252,7 @@ export default function FieldWrapper({
           )}
         >
           {labelNode}
-          <div className="min-w-0 flex-1">
+          <div className={cn("min-w-0 flex-1", shaking && "animate-lopes-shake")}>
             {children}
             {labelAction && (
               <div className="mt-1 flex justify-end text-xs text-muted-foreground">
@@ -209,7 +261,7 @@ export default function FieldWrapper({
             )}
           </div>
         </div>
-        {subline && (
+        {hasSubline && (
           <div className="flex">
             <div
               className={cn(
@@ -237,7 +289,7 @@ export default function FieldWrapper({
           )}
         </div>
       )}
-      {children}
+      <div className={cn(shaking && "animate-lopes-shake")}>{children}</div>
       {subline}
     </div>
   );

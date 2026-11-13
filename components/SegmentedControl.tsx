@@ -11,6 +11,7 @@ import React, {
 } from "react";
 import { twMerge } from "tailwind-merge";
 import { type LucideIcon } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { useAccessControl } from "./useAccessControl";
 
 export type SegmentedControlItem = {
@@ -95,6 +96,7 @@ export default function SegmentedControl({
   componentId,
   hideIfDenied = false,
 }: SegmentedControlProps) {
+  const prefersReducedMotion = useReducedMotion();
   const { canAccess } = useAccessControl();
   const hasPermission = !componentId || canAccess(componentId);
   const effectiveDisabled = disabled || (!hasPermission && !hideIfDenied);
@@ -156,6 +158,13 @@ export default function SegmentedControl({
     if (effectiveDisabled || readOnly || nextVal === activeValue) return;
     if (!isControlled) setUncontrolled(nextVal);
     onChange?.(nextVal);
+    if (orientation === "horizontal") {
+      btnRefs.current[nextVal]?.scrollIntoView({
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, idx: number) => {
@@ -189,8 +198,10 @@ export default function SegmentedControl({
       aria-orientation={orientation}
       data-component-id={componentId}
       className={twMerge(
-        "relative inline-flex select-none",
-        orientation === "vertical" ? "flex-col" : "flex-row items-center",
+        "relative inline-flex select-none max-w-full",
+        orientation === "vertical"
+          ? "flex-col"
+          : "flex-row items-center overflow-x-auto no-scrollbar",
         fullWidth && "flex w-full",
         RADIUS_WRAP[radius],
         s.wrapPad,
@@ -205,15 +216,22 @@ export default function SegmentedControl({
 
       {/* Sliding Floating Indicator Pill */}
       {indicator.ready && (
-        <span
+        <motion.span
           aria-hidden="true"
-          style={{
-            transform: `translate3d(${indicator.x}px, ${indicator.y}px, 0)`,
-            width: `${indicator.width}px`,
-            height: `${indicator.height}px`,
+          initial={false}
+          animate={{
+            x: indicator.x,
+            y: indicator.y,
+            width: indicator.width,
+            height: indicator.height,
           }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0 }
+              : { type: "spring", stiffness: 460, damping: 34 }
+          }
           className={twMerge(
-            "pointer-events-none absolute left-0 top-0 z-0 transition-[transform,width,height] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            "pointer-events-none absolute left-0 top-0 z-0",
             RADIUS_THUMB[radius],
             variant === "primary"
               ? "bg-primary shadow-xs"

@@ -116,28 +116,30 @@ export function ShellProvider({
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-  // Only hydrate from localStorage when SSR did not explicitly pass `defaultCollapsed`
+  // Hydrate from cookie (survives Clear-Site-Data: "storage") or localStorage when SSR did not pass defaultCollapsed
   useEffect(() => {
-    if (defaultCollapsed !== undefined) return;
     const timer = setTimeout(() => {
       try {
-        const hasCookie = document.cookie
+        const cookieEntry = document.cookie
           .split(";")
-          .some((c) => c.trim().startsWith(`${COOKIE_KEY}=`));
-        if (hasCookie) {
-          const cookieVal = document.cookie
-            .split(";")
-            .map((c) => c.trim())
-            .find((c) => c.startsWith(`${COOKIE_KEY}=`))
-            ?.split("=")[1];
-          if (cookieVal !== undefined) {
-            setSidebarCollapsedState(cookieVal === "true");
-            return;
-          }
+          .map((c) => c.trim())
+          .find((c) => c.startsWith(`${COOKIE_KEY}=`));
+        if (cookieEntry !== undefined) {
+          const cookieVal = cookieEntry.slice(COOKIE_KEY.length + 1) === "true";
+          setSidebarCollapsedState(cookieVal);
+          localStorage.setItem(COOKIE_KEY, String(cookieVal));
+          return;
         }
-        const stored = localStorage.getItem(COOKIE_KEY);
-        if (stored !== null) {
-          setSidebarCollapsedState(stored === "true");
+        if (defaultCollapsed === undefined) {
+          const stored = localStorage.getItem(COOKIE_KEY);
+          if (stored !== null) {
+            const val = stored === "true";
+            setSidebarCollapsedState(val);
+            const maxAge = 60 * 60 * 24 * 365;
+            document.cookie = `${COOKIE_KEY}=${val};path=/;max-age=${maxAge};samesite=lax`;
+          }
+        } else {
+          localStorage.setItem(COOKIE_KEY, String(defaultCollapsed));
         }
       } catch {}
     }, 0);

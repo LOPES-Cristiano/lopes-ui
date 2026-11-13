@@ -27,6 +27,9 @@ export * from "./Agenda";
 export { default as Alert } from "./Alert";
 export * from "./Alert";
 
+export { default as AnimatedNumber } from "./AnimatedNumber";
+export * from "./AnimatedNumber";
+
 export { default as AppLauncher } from "./AppLauncher";
 export * from "./AppLauncher";
 
@@ -131,6 +134,9 @@ export * from "./State";
 export { default as ErrorBoundary } from "./ErrorBoundary";
 export * from "./ErrorBoundary";
 
+export { default as ExpandableDataCard } from "./ExpandableDataCard";
+export * from "./ExpandableDataCard";
+
 export { default as FileDropzone } from "./FileDropzone";
 export * from "./FileDropzone";
 
@@ -146,6 +152,7 @@ export * from "./Footer";
 
 export {
   default as FormModal,
+  FormSection,
   FormSectionHeader,
   FormEmptyLine,
   FormModalSkeleton,
@@ -193,6 +200,12 @@ export * from "./KanbanBoard";
 export { default as Kbd } from "./Kbd";
 export * from "./Kbd";
 
+export { default as KpiCarousel } from "./KpiCarousel";
+export * from "./KpiCarousel";
+
+export { default as LeaderboardPodium } from "./LeaderboardPodium";
+export * from "./LeaderboardPodium";
+
 export { default as Loading } from "./Loading";
 export * from "./Loading";
 
@@ -216,6 +229,9 @@ export * from "./Mockup";
 
 export { default as Modal } from "./Modal";
 export * from "./Modal";
+
+export { default as MotionCollapse } from "./MotionCollapse";
+export * from "./MotionCollapse";
 
 export { default as NotificationBell } from "./NotificationBell";
 export * from "./NotificationBell";
@@ -312,6 +328,9 @@ export * from "./Spoiler";
 export { default as Stack } from "./Stack";
 export * from "./Stack";
 
+export { default as StaggerList, StaggerItem } from "./StaggerList";
+export * from "./StaggerList";
+
 export { default as StatCard, StatsSegmentsCard, StatsRingCard } from "./StatCard";
 export * from "./StatCard";
 
@@ -353,6 +372,9 @@ export * from "./ToggleGroup";
 
 export { default as Tour } from "./Tour";
 export * from "./Tour";
+
+export { default as TouchChartCard } from "./TouchChartCard";
+export * from "./TouchChartCard";
 
 export { default as TransferList } from "./TransferList";
 export * from "./TransferList";

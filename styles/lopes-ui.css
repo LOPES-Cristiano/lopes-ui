@@ -689,37 +689,58 @@
 
 @utility animate-in {
   animation-name: lopes-enter;
-  animation-duration: 180ms;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-duration: 240ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: both;
 }
 
 @utility animate-out {
   animation-name: lopes-exit;
-  animation-duration: 150ms;
-  animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
   animation-fill-mode: both;
 }
+
+@utility animate-duration-150 { animation-duration: 150ms; }
+@utility animate-duration-200 { animation-duration: 200ms; }
+@utility animate-duration-250 { animation-duration: 250ms; }
+@utility animate-duration-300 { animation-duration: 300ms; }
+@utility animate-duration-350 { animation-duration: 350ms; }
+@utility animate-duration-400 { animation-duration: 400ms; }
 
 @utility fade-in { --lopes-enter-opacity: 0; }
 @utility fade-in-0 { --lopes-enter-opacity: 0; }
 @utility fade-out { --lopes-exit-opacity: 0; }
 @utility fade-out-0 { --lopes-exit-opacity: 0; }
+@utility zoom-in-92 { --lopes-enter-scale: 0.92; }
 @utility zoom-in-95 { --lopes-enter-scale: 0.95; }
+@utility zoom-in-96 { --lopes-enter-scale: 0.96; }
+@utility zoom-out-92 { --lopes-exit-scale: 0.92; }
 @utility zoom-out-95 { --lopes-exit-scale: 0.95; }
+@utility zoom-out-96 { --lopes-exit-scale: 0.96; }
 @utility slide-in-from-top-1 { --lopes-enter-translate-y: -0.25rem; }
 @utility slide-in-from-top-2 { --lopes-enter-translate-y: -0.5rem; }
+@utility slide-in-from-top-4 { --lopes-enter-translate-y: -1rem; }
 @utility slide-in-from-top { --lopes-enter-translate-y: -100%; }
 @utility slide-in-from-bottom-1 { --lopes-enter-translate-y: 0.25rem; }
 @utility slide-in-from-bottom-2 { --lopes-enter-translate-y: 0.5rem; }
+@utility slide-in-from-bottom-4 { --lopes-enter-translate-y: 1rem; }
+@utility slide-in-from-bottom-6 { --lopes-enter-translate-y: 1.5rem; }
 @utility slide-in-from-bottom { --lopes-enter-translate-y: 100%; }
 @utility slide-in-from-left-2 { --lopes-enter-translate-x: -0.5rem; }
 @utility slide-in-from-left { --lopes-enter-translate-x: -100%; }
 @utility slide-in-from-right-2 { --lopes-enter-translate-x: 0.5rem; }
 @utility slide-in-from-right { --lopes-enter-translate-x: 100%; }
+@utility slide-out-to-top-2 { --lopes-exit-translate-y: -0.5rem; }
+@utility slide-out-to-top-4 { --lopes-exit-translate-y: -1rem; }
 @utility slide-out-to-top { --lopes-exit-translate-y: -100%; }
+@utility slide-out-to-bottom-2 { --lopes-exit-translate-y: 0.5rem; }
+@utility slide-out-to-bottom-4 { --lopes-exit-translate-y: 1rem; }
+@utility slide-out-to-bottom-6 { --lopes-exit-translate-y: 1.5rem; }
 @utility slide-out-to-bottom { --lopes-exit-translate-y: 100%; }
+@utility slide-out-to-left-2 { --lopes-exit-translate-x: -0.5rem; }
 @utility slide-out-to-left { --lopes-exit-translate-x: -100%; }
+@utility slide-out-to-right-2 { --lopes-exit-translate-x: 0.5rem; }
 @utility slide-out-to-right { --lopes-exit-translate-x: 100%; }
 
 .data-table-selection-summary {
@@ -1280,6 +1301,19 @@ input::-webkit-search-results-decoration {
 }
 
 
+/* ── Error Shake Micro-interaction ────────────────────────────────────────── */
+@keyframes lopes-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+.animate-lopes-shake {
+  animation: lopes-shake 320ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
 /* ── Marquee infinite ticker ─────────────────────────────────────────────── */
 @keyframes lopes-marquee-x {
   from { transform: translateX(0); }
@@ -1303,6 +1337,10 @@ input::-webkit-search-results-decoration {
   /* ── Optical Cap-Height Trimming (Progressive Enhancement) ───────────────── */
   .lopes-trim-cap {
     text-box: trim-both cap alphabetic;
+  }
+
+  .lopes-safe-bottom {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   }
 
   /* ── Horizontal Scrollability Affordance Hints (CSS scroll-state) ────────── */
@@ -1400,6 +1438,7 @@ input::-webkit-search-results-decoration {
   .animate-pulse-subtle,
   .animate-lopes-marquee-x,
   .animate-lopes-marquee-y,
+  .animate-lopes-shake,
   .animate-ping {
     animation: none !important;
     transform: none !important;

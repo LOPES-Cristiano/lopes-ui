@@ -4,6 +4,13 @@ export function getItemPinId(item: SidebarNavItem): string {
   return (item.id ?? item.href ?? item.label) as string;
 }
 
+export function getItemSubmenuId(item: SidebarNavItem, scopePrefix?: string): string {
+  if (item.id) return item.id;
+  if (item.componentId) return item.componentId;
+  if (item.href) return item.href;
+  return scopePrefix ? `${scopePrefix}::${item.label}` : item.label;
+}
+
 export function flattenNavItems(groups: SidebarNavGroup[]): SidebarNavItem[] {
   const result: SidebarNavItem[] = [];
   const walk = (items: SidebarNavItem[]) => {

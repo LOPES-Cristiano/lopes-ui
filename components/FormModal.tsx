@@ -1,10 +1,11 @@
 'use client';
 
 import { useAccessControl } from './useAccessControl';
-import { type ReactNode, type CSSProperties, isValidElement, useEffect } from 'react';
+import { type ReactNode, type CSSProperties, isValidElement, useEffect, useId, useRef } from 'react';
 import Button from './Button';
 import Modal from './Modal';
 import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import { twMerge } from 'tailwind-merge';
 
 // ─── TYPES & INTERFACES ───────────────────────────────────────────────────────
@@ -87,6 +88,9 @@ export function FormModal({
   size = 'xlVertical',
   children,
 }: FormModalProps) {
+  const prefersReducedMotion = useReducedMotion();
+  const formModalTabsId = useId();
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const { canAccess } = useAccessControl();
   const domIdPrefix = componentIdPrefix || 'erp.form-modal';
 
@@ -111,6 +115,16 @@ export function FormModal({
     }
   }, [open, hasTabs, activeTab, accessibleTabs, onTabChange]);
 
+  // Mantém a aba ativa visível na barra horizontal mobile ao navegar entre passos
+  useEffect(() => {
+    if (!open || !hasTabs || !activeTab) return;
+    tabRefs.current[activeTab]?.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'nearest',
+      inline: 'nearest',
+    });
+  }, [open, hasTabs, activeTab, prefersReducedMotion]);
+
   // Renderizador de avatar inteligente (iniciais, imagem ou ícone)
   const renderAvatar = () => {
     if (!avatar) return null;
@@ -125,6 +139,7 @@ export function FormModal({
 
     if (av.image) {
       return (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={av.image}
           alt="Avatar"
@@ -163,7 +178,7 @@ export function FormModal({
       footerClassName="p-0 border-t border-border bg-card"
       footer={
         !hideNavigationButtons && (
-          <div className="flex flex-col-reverse sm:flex-row w-full items-stretch sm:items-center justify-between gap-2 px-3 sm:px-6 py-2.5 bg-card shrink-0 select-none">
+          <div className="flex flex-wrap sm:flex-nowrap w-full items-center justify-between gap-2 px-3 sm:px-6 pt-2.5 lopes-safe-bottom bg-card shrink-0 select-none">
             <div className="flex items-center gap-2">
               {hasTabs && onBack && (
                 <Button
@@ -304,10 +319,10 @@ export function FormModal({
             hasTabs ? 'grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]' : 'flex flex-col'
           )}
         >
-          {/* ── SIDEBAR DE NAVEGAÇÃO DAS ABAS (SE HOUVER TABS) ── */}
+          {/* ── SIDEBAR / BARRA MOBILE DE NAVEGAÇÃO DAS ABAS (SE HOUVER TABS) ── */}
           {hasTabs && (
             <nav
-              className="flex gap-1 overflow-x-auto border-b border-border bg-card px-2 py-2 lg:flex-col lg:gap-1.5 lg:overflow-visible lg:border-b-0 lg:border-r lg:px-3 lg:py-3 scrollbar-none select-none shrink-0"
+              className="flex items-center gap-1 overflow-x-auto no-scrollbar snap-x snap-proximity border-b border-border bg-card px-2.5 py-2 lg:flex-col lg:items-stretch lg:gap-1.5 lg:overflow-visible lg:border-b-0 lg:border-r lg:px-3 lg:py-3 select-none shrink-0"
               aria-label="Módulos do formulário"
             >
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2 pt-1 pb-1 hidden lg:block">
@@ -321,33 +336,58 @@ export function FormModal({
                 return (
                   <button
                     key={tab.id}
+                    ref={(el) => {
+                      tabRefs.current[tab.id] = el;
+                    }}
                     type="button"
                     data-component-id={tab.componentId || `${domIdPrefix}.tab.${tab.id}`}
                     onClick={() => onTabChange?.(tab.id)}
                     aria-current={selected ? 'page' : undefined}
-                    className={`flex items-center justify-center lg:justify-start gap-2 px-3 py-2.5 rounded-[var(--radius-control)] text-xs font-medium cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 shrink-0 lg:w-full relative ${
+                    className={twMerge(
+                      'relative flex min-h-9 items-center justify-center lg:justify-start gap-2 px-3 py-2 rounded-[var(--radius-control)] text-xs font-medium cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 shrink-0 snap-start lg:w-full',
                       selected
-                        ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    }`}
+                        ? prefersReducedMotion
+                          ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
+                          : 'text-primary-foreground font-semibold'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    )}
                   >
+                    {selected && !prefersReducedMotion && (
+                      <motion.span
+                        layoutId={`${formModalTabsId}-active-pill`}
+                        transition={{ type: 'spring', stiffness: 430, damping: 34 }}
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 z-0 rounded-[var(--radius-control)] bg-primary shadow-xs"
+                      />
+                    )}
                     {tab.icon && (
-                      <span className={`shrink-0 ${selected ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
+                      <span
+                        className={twMerge(
+                          'relative z-10 shrink-0',
+                          selected ? 'text-primary-foreground' : 'text-muted-foreground',
+                        )}
+                      >
                         {tab.icon}
                       </span>
                     )}
-                    <div className="min-w-0 flex-1 hidden lg:flex lg:items-center lg:justify-between">
-                      <span className="block truncate">{tab.label}</span>
-                      {hasTabError && (
-                        <span className="w-2 h-2 rounded-full bg-danger ring-2 ring-card animate-pulse motion-reduce:animate-none shrink-0 ml-1.5" />
-                      )}
-                    </div>
-                    <span className="text-[9px] font-bold lg:hidden leading-tight text-center max-w-[56px] truncate relative">
-                      {tab.label.split(' ')[0]}
-                      {hasTabError && (
-                        <span className="absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-danger animate-pulse motion-reduce:animate-none" />
-                      )}
+                    <span className="relative z-10 whitespace-nowrap lg:whitespace-normal lg:truncate lg:flex-1 lg:text-left leading-snug">
+                      {tab.label}
                     </span>
+                    {tab.badge !== undefined && tab.badge !== null && (
+                      <span
+                        className={twMerge(
+                          'relative z-10 inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none tabular-nums shrink-0',
+                          selected
+                            ? 'bg-primary-foreground/20 text-primary-foreground'
+                            : 'bg-muted text-muted-foreground',
+                        )}
+                      >
+                        {tab.badge}
+                      </span>
+                    )}
+                    {hasTabError && (
+                      <span className="relative z-10 w-2 h-2 rounded-full bg-danger ring-2 ring-card animate-pulse motion-reduce:animate-none shrink-0" />
+                    )}
                   </button>
                 );
               })}

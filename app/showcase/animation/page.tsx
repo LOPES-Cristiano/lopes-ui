@@ -44,6 +44,16 @@ export default function Page() {
 
         {/* ── Marquee ──────────────────────────────────────────────── */}
         {sections["marquee"]}
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── AnimatedNumber ───────────────────────────────────────── */}
+        {sections["animated-number"]}
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── LeaderboardPodium ────────────────────────────────────── */}
+        {sections["leaderboard-podium"]}
       </div>
     </main>
   );

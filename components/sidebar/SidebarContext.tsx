@@ -15,6 +15,9 @@ export type SidebarContextValue = {
   collapsedGroupIds: Set<string>;
   collapsedGroupMode: SidebarCollapsedGroupMode;
   allGroupsCollapsed: boolean;
+  openSubmenuIds: Set<string>;
+  setSubmenuOpen: (id: string, open: boolean) => void;
+  toggleSubmenu: (id: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   setCollapsed: (value: boolean) => void;
@@ -41,6 +44,9 @@ export const SidebarContext = createContext<SidebarContextValue>({
   collapsedGroupIds: new Set(),
   collapsedGroupMode: 'flatten-items',
   allGroupsCollapsed: false,
+  openSubmenuIds: new Set(),
+  setSubmenuOpen: () => {},
+  toggleSubmenu: () => {},
   searchQuery: '',
   setSearchQuery: () => {},
   setCollapsed: () => {},

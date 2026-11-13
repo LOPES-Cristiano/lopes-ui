@@ -484,6 +484,7 @@ export default function Drawer({
           className={cn(
             "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-card",
             !noPadding && !form && "px-4 sm:px-5 py-4 sm:py-5",
+            side === "bottom" && !footer && "lopes-safe-bottom",
             contentClassName
           )}
         >
@@ -511,6 +512,7 @@ export default function Drawer({
           <div
             className={cn(
               "min-w-0 shrink-0 border-t border-border bg-muted/20 px-4 sm:px-5 py-3.5 sm:py-4",
+              side === "bottom" && "lopes-safe-bottom",
               footerClassName
             )}
           >

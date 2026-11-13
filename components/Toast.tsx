@@ -60,6 +60,7 @@ let toastLimit = 5;
 let activeToastIds: string[] = [];
 const toastTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const interactiveToastIds = new Set<string>();
+const toastMeta = new Map<string, { type: ToastType; duration: number }>();
 
 function clearToastTimer(id?: string) {
   if (id) {
@@ -99,6 +100,15 @@ const infoIcon = (
     <Info size={18} strokeWidth={2.25} />
   </span>
 );
+
+const toastProgressColors: Record<ToastType, string> = {
+  default: "bg-muted-foreground/45",
+  success: "bg-success",
+  error: "bg-danger",
+  loading: "bg-brand",
+  warning: "bg-warning",
+  info: "bg-info",
+};
 
 function normalizeDuration(duration?: number, fallback = DEFAULT_DURATION) {
   if (duration === 0) return Infinity;
@@ -199,6 +209,7 @@ function rememberToast(id: string) {
     if (staleId) {
       clearToastTimer(staleId);
       interactiveToastIds.delete(staleId);
+      toastMeta.delete(staleId);
       hotToast.dismiss(staleId);
     }
   }
@@ -208,9 +219,11 @@ function dismissToast(id?: string) {
   clearToastTimer(id);
   if (id) {
     interactiveToastIds.delete(id);
+    toastMeta.delete(id);
     activeToastIds = activeToastIds.filter((toastId) => toastId !== id);
   } else {
     interactiveToastIds.clear();
+    toastMeta.clear();
     activeToastIds = [];
   }
   hotToast.dismiss(id);
@@ -220,9 +233,11 @@ function removeToast(id?: string) {
   clearToastTimer(id);
   if (id) {
     interactiveToastIds.delete(id);
+    toastMeta.delete(id);
     activeToastIds = activeToastIds.filter((toastId) => toastId !== id);
   } else {
     interactiveToastIds.clear();
+    toastMeta.clear();
     activeToastIds = [];
   }
   hotToast.remove(id);
@@ -242,16 +257,13 @@ function show(
   let toastId: string;
   switch (type) {
     case "success":
-      toastId = hotToast(content, { ...hotOptions, icon: hotOptions.icon ?? successIcon });
+      toastId = hotToast.success(content, hotOptions);
       break;
     case "error":
-      toastId = hotToast(content, { ...hotOptions, icon: hotOptions.icon ?? errorIcon });
+      toastId = hotToast.error(content, hotOptions);
       break;
     case "loading":
-      toastId = hotToast(content, {
-        ...toHotOptions(toastOptions, Infinity),
-        icon: hotOptions.icon ?? loadingIcon,
-      });
+      toastId = hotToast.loading(content, toHotOptions(toastOptions, Infinity));
       break;
     case "warning":
       toastId = hotToast(content, { ...hotOptions, icon: hotOptions.icon ?? warningIcon });
@@ -270,12 +282,17 @@ function show(
     interactiveToastIds.delete(toastId);
   }
 
+  const resolvedDuration =
+    type === "loading" ? Infinity : (hotOptions.duration ?? DEFAULT_DURATION);
+  toastMeta.set(toastId, { type, duration: resolvedDuration });
+
   clearToastTimer(toastId);
 
   if (type !== "loading" && hotOptions.duration && hotOptions.duration !== Infinity) {
     const timer = setTimeout(() => {
       toastTimers.delete(toastId);
       interactiveToastIds.delete(toastId);
+      toastMeta.delete(toastId);
       activeToastIds = activeToastIds.filter((id) => id !== toastId);
       hotToast.dismiss(toastId);
     }, hotOptions.duration);
@@ -373,20 +390,33 @@ export function Toaster({
         duration: DEFAULT_DURATION,
         className: "lopes-ui-toast",
         style: {
-          background: "var(--card)",
-          color: "var(--card-foreground)",
+          background: "var(--surface)",
+          color: "var(--surface-foreground)",
           border: "1px solid var(--border)",
-          borderRadius: "var(--radius-card)",
+          borderRadius: "var(--radius-control)",
           boxShadow: "var(--shadow-floating)",
           fontSize: 13,
           lineHeight: "18px",
           maxWidth: "min(450px, 92vw)",
           padding: "10px 14px",
+          position: "relative",
+          overflow: "hidden",
         },
       }}
     >
       {(t) => {
         const isInteractive = interactiveToastIds.has(t.id);
+        const meta = toastMeta.get(t.id);
+        const type: ToastType =
+          meta?.type ?? (t.type === "success" || t.type === "error" || t.type === "loading" ? t.type : "default");
+        const duration = meta?.duration ?? t.duration ?? DEFAULT_DURATION;
+        const progressColor = toastProgressColors[type];
+        const showProgress =
+          t.visible &&
+          type !== "loading" &&
+          Number.isFinite(duration) &&
+          duration > 0;
+
         return (
           <motion.div
             onClick={isInteractive ? undefined : () => dismissToast(t.id)}
@@ -405,8 +435,7 @@ export function Toaster({
                 ? { opacity: 0 }
                 : {
                     opacity: 0,
-                    y: isTop ? -20 : 20,
-                    scale: 0.95,
+                    y: isTop ? -16 : 16,
                   }
             }
             animate={
@@ -414,8 +443,7 @@ export function Toaster({
                 ? { opacity: t.visible ? 1 : 0 }
                 : {
                     opacity: t.visible ? 1 : 0,
-                    y: t.visible ? 0 : isTop ? -14 : 14,
-                    scale: t.visible ? 1 : 0.96,
+                    y: t.visible ? 0 : isTop ? -12 : 12,
                   }
             }
             transition={
@@ -423,25 +451,21 @@ export function Toaster({
                 ? { duration: 0.15 }
                 : {
                     type: "spring",
-                    stiffness: 400,
-                    damping: 28,
+                    stiffness: 420,
+                    damping: 32,
                     mass: 0.5,
                   }
             }
-            whileTap={isInteractive || shouldReduceMotion ? undefined : { scale: 0.985 }}
             role={isInteractive ? undefined : "button"}
             tabIndex={isInteractive ? undefined : 0}
             aria-label={isInteractive ? undefined : "Fechar notificação"}
             className={twMerge(
-              "rounded-[var(--radius-card)]",
+              "rounded-[var(--radius-control)]",
               !isInteractive &&
                 "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
             )}
             style={{
               pointerEvents: "auto",
-              willChange: "transform, opacity",
-              backfaceVisibility: "hidden",
-              transform: "translateZ(0)",
             }}
           >
             <ToastBar
@@ -453,12 +477,27 @@ export function Toaster({
               }}
             >
               {({ icon, message }) => (
-                <div className="flex w-full items-start gap-2.5">
-                  {icon ? <span className="mt-0.5 shrink-0">{icon}</span> : null}
-                  <div className="min-w-0 flex-1 [&>div]:!m-0 [&>div]:!p-0">
-                    {message}
+                <>
+                  <div className="flex w-full items-start gap-2.5">
+                    {icon ? <span className="mt-0.5 shrink-0">{icon}</span> : null}
+                    <div className="min-w-0 flex-1 [&>div]:!m-0 [&>div]:!p-0">
+                      {message}
+                    </div>
                   </div>
-                </div>
+                  {showProgress && !shouldReduceMotion ? (
+                    <motion.div
+                      key={`${t.id}-${type}`}
+                      initial={{ scaleX: 1 }}
+                      animate={{ scaleX: 0 }}
+                      transition={{ duration: duration / 1000, ease: "linear" }}
+                      style={{ transformOrigin: "left" }}
+                      className={twMerge(
+                        "pointer-events-none absolute inset-x-0 bottom-0 h-[2.5px]",
+                        progressColor,
+                      )}
+                    />
+                  ) : null}
+                </>
               )}
             </ToastBar>
           </motion.div>
@@ -507,11 +546,11 @@ export function ToastPreview({
     <div className={twMerge("w-full max-w-sm", className)}>
       <div
         className={twMerge(
-          "relative flex items-start gap-3 overflow-hidden rounded-[var(--radius-card)] border border-border bg-card px-4 py-3.5 text-card-foreground shadow-[var(--shadow-floating)]",
+          "relative flex items-start gap-3 overflow-hidden rounded-[var(--radius-control)] border border-border bg-surface px-4 py-3.5 text-surface-foreground shadow-[var(--shadow-floating)]",
         )}
       >
         {showBar && (
-          <div className={twMerge("absolute inset-y-0 left-0 w-1", cfg.bar)} />
+          <div className={twMerge("absolute inset-x-0 bottom-0 h-[2.5px]", toastProgressColors[type])} />
         )}
         {iconNode ? <span className="mt-0.5 shrink-0">{iconNode}</span> : null}
         <div className="min-w-0 flex-1">

@@ -5,6 +5,7 @@ import { Minus, MoreVertical, Plus } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import type { DataTableAction, DataTableColumn } from './DataTable.types';
 import ConfirmDialog from '../ConfirmDialog';
+import MotionCollapse from '../MotionCollapse';
 import { useEscKey } from '../Modal';
 
 export type DataTableMobileCardProps<T = Record<string, unknown>> = {
@@ -227,7 +228,7 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                 aria-expanded={menuOpen}
                 aria-haspopup="menu"
                 onClick={() => setMenuOpen((v) => !v)}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
               >
                 <MoreVertical size={16} />
               </button>
@@ -279,7 +280,7 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                             handleActionClick(action, aIdx);
                           }}
                           className={twMerge(
-                            'flex min-h-8 w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+                            'flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                             isDisabled
                               ? 'opacity-40 cursor-not-allowed pointer-events-none'
                               : 'cursor-pointer',
@@ -359,10 +360,12 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
         )}
       </div>
 
-      {hasExpandable && isExpanded && expandedContent && (
-        <div className="border-t border-border/70 p-3 bg-muted/20 border-l-4 border-l-primary/70 animate-in fade-in-50 duration-200">
-          {expandedContent}
-        </div>
+      {hasExpandable && expandedContent && (
+        <MotionCollapse open={isExpanded}>
+          <div className="border-t border-border/70 p-3 bg-muted/20 border-l-4 border-l-primary/70">
+            {expandedContent}
+          </div>
+        </MotionCollapse>
       )}
 
       {confirmAction &&

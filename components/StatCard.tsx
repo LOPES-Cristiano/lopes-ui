@@ -27,7 +27,7 @@ export type SparkPoint = { value: number; label?: string };
 
 export type StatCardProps = {
   title: string;
-  value: string | number;
+  value: React.ReactNode;
   /** Secondary unit or context (e.g. "pedidos", "/ mês") */
   unit?: string;
   /** Previous period value — shown as small secondary text */

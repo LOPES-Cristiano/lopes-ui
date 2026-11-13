@@ -124,6 +124,8 @@ export type SidebarProps = {
   groups?: SidebarNavGroup[];
   groupsCollapsible?: boolean;
   groupsStorageKey?: string;
+  /** localStorage key for persisted open submenus (default: `${groupsStorageKey}-submenus`) */
+  submenusStorageKey?: string;
   /**
    * Comportamento dos grupos quando a sidebar está recolhida:
    * - `'flatten-items'` (default): exibe os ícones individuais dos itens do grupo

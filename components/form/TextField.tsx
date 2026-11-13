@@ -3,6 +3,7 @@
 import React, { useId, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Eye, EyeOff, X } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
 import { useAccessControl } from "../useAccessControl";
 import { maskCnpjAlphanumeric, onlyAlphanumericUpper } from "../../utils/document";
@@ -281,6 +282,7 @@ export default function TextField({
 
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [focused, setFocused] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
   const [uncontrolledText, setUncontrolledText] = useState(() => {
     const initial = defaultValue ?? "";
     return mask && initial ? applyInputMask(initial, mask).formatted : initial;
@@ -502,25 +504,34 @@ export default function TextField({
           {(canClear || canTogglePassword || rightIcon || rightSection || showCount) && (
             <div className="flex shrink-0 items-center gap-1 pr-2.5 text-muted-foreground">
               {countNode}
-              {canClear && (
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  aria-label="Limpar campo"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleClear();
-                  }}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-surface-hover hover:text-foreground transition-colors cursor-pointer"
-                >
-                  <X size={13} />
-                </button>
-              )}
+              <AnimatePresence initial={false}>
+                {canClear && (
+                  <motion.button
+                    key="clear-btn"
+                    type="button"
+                    tabIndex={-1}
+                    aria-label="Limpar campo"
+                    initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.75 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.75 }}
+                    transition={{ duration: 0.12 }}
+                    whileTap={shouldReduceMotion ? undefined : { scale: 0.88 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleClear();
+                    }}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-surface-hover hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    <X size={13} />
+                  </motion.button>
+                )}
+              </AnimatePresence>
               {canTogglePassword && (
-                <button
+                <motion.button
                   type="button"
                   tabIndex={-1}
                   aria-label={passwordVisible ? "Ocultar senha" : "Mostrar senha"}
+                  whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
                   onClick={(e) => {
                     e.stopPropagation();
                     setPasswordVisible((prev) => !prev);
@@ -528,7 +539,7 @@ export default function TextField({
                   className="inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-surface-hover hover:text-foreground transition-colors cursor-pointer"
                 >
                   {passwordVisible ? <EyeOff size={14} /> : <Eye size={14} />}
-                </button>
+                </motion.button>
               )}
               {rightIcon && (
                 <span className="pointer-events-none inline-flex items-center">
@@ -757,27 +768,36 @@ export default function TextField({
                 s.iR
               )}
             >
-              {canClear && (
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  aria-label="Limpar campo"
-                  onClick={handleClear}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
-                >
-                  <X size={s.iconSz - 1} />
-                </button>
-              )}
+              <AnimatePresence initial={false}>
+                {canClear && (
+                  <motion.button
+                    key="clear-btn"
+                    type="button"
+                    tabIndex={-1}
+                    aria-label="Limpar campo"
+                    initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.75 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.75 }}
+                    transition={{ duration: 0.12 }}
+                    whileTap={shouldReduceMotion ? undefined : { scale: 0.88 }}
+                    onClick={handleClear}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
+                  >
+                    <X size={s.iconSz - 1} />
+                  </motion.button>
+                )}
+              </AnimatePresence>
               {canTogglePassword && (
-                <button
+                <motion.button
                   type="button"
                   tabIndex={-1}
                   aria-label={passwordVisible ? "Ocultar senha" : "Mostrar senha"}
+                  whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
                   onClick={() => setPasswordVisible((prev) => !prev)}
                   className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
                 >
                   {passwordVisible ? <EyeOff size={s.iconSz} /> : <Eye size={s.iconSz} />}
-                </button>
+                </motion.button>
               )}
               {rightIcon && (
                 <span className="pointer-events-none inline-flex items-center">

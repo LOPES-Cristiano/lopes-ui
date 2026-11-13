@@ -1,63 +1,41 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { SidebarNavGroup } from '../Sidebar.types';
-import { flattenNavItems, getItemPinId } from '../utils/navigation';
-import { safeParseStringArray } from '../utils/storage';
+import { readPersistedStringArray, writePersistedStringArray } from '../utils/storage';
 
 export function useSidebarPins(
   pinnable: boolean,
   pinsStorageKey: string,
-  groups: SidebarNavGroup[],
 ) {
-  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set());
-  const isHydratedRef = useRef(false);
+  const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => new Set());
+  const pinnedIdsRef = useRef<Set<string>>(new Set());
 
-  // Hydrate safely from localStorage once on mount or key change
+  // Hydrate safely from localStorage / cookie without destructively stripping async items
   useEffect(() => {
     if (!pinnable) return;
     const timer = setTimeout(() => {
-      try {
-        const stored = localStorage.getItem(pinsStorageKey);
-        const validIds = safeParseStringArray(stored);
-        if (validIds.length > 0) {
-          // Intersect with currently available items
-          const allItems = flattenNavItems(groups);
-          const availablePinIds = new Set(allItems.map(getItemPinId));
-          const filtered = validIds.filter((id) => availablePinIds.has(id));
-          if (filtered.length > 0) {
-            setPinnedIds(new Set(filtered));
-          }
-        }
-      } catch {
-        // ignore
-      } finally {
-        isHydratedRef.current = true;
+      const fallbackKeys = pinsStorageKey !== 'sidebar-pins' ? ['sidebar-pins'] : [];
+      const stored = readPersistedStringArray(pinsStorageKey, fallbackKeys);
+      if (stored !== null) {
+        const next = new Set(stored);
+        pinnedIdsRef.current = next;
+        setPinnedIds(next);
       }
     }, 0);
     return () => clearTimeout(timer);
-    // Only run on mount / when key changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pinnable, pinsStorageKey]);
 
-  // Persist changes to localStorage once hydrated
-  useEffect(() => {
-    if (!pinnable || !isHydratedRef.current) return;
-    try {
-      if (pinnedIds.size > 0) {
-        localStorage.setItem(pinsStorageKey, JSON.stringify([...pinnedIds]));
-      } else {
-        localStorage.removeItem(pinsStorageKey);
-      }
-    } catch {}
-  }, [pinnedIds, pinsStorageKey, pinnable]);
-
-  const togglePin = useCallback((id: string) => {
-    setPinnedIds((prev) => {
-      const next = new Set(prev);
+  const togglePin = useCallback(
+    (id: string) => {
+      const next = new Set(pinnedIdsRef.current);
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      return next;
-    });
-  }, []);
+      pinnedIdsRef.current = next;
+      setPinnedIds(next);
+      if (pinnable) {
+        writePersistedStringArray(pinsStorageKey, next);
+      }
+    },
+    [pinnable, pinsStorageKey],
+  );
 
   return { pinnedIds, togglePin };
 }

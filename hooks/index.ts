@@ -23,3 +23,11 @@ export {
   useSoundNotification,
   type UseSoundNotificationOptions,
 } from "./useSoundNotification";
+export {
+  getBigLarMobileBridge,
+  useIsBigLarMobileApp,
+  useIsCompactViewport,
+  useIsMobile,
+  useMediaQuery,
+  type BigLarMobileBridge,
+} from "./useMediaQuery";

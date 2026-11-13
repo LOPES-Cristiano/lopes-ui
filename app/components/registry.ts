@@ -77,6 +77,10 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   e("Tour", "Animação & Código", "animation", "tour", "Tour guiado da interface."),
   e("TextRotate", "Animação & Código", "animation", "text-rotate", "Texto que alterna palavras."),
   e("Marquee", "Animação & Código", "animation", "marquee", "Conteúdo em rolagem contínua."),
+  e("AnimatedNumber", "Animação & Código", "animation", "animated-number", "Contador numérico interpolado por mola (moeda, percentual e inteiro)."),
+  e("LeaderboardPodium", "Animação & Código", "animation", "leaderboard-podium", "Pódio gamificado Top-3 com pedestais e barras animadas."),
+  e("MotionCollapse", "Animação & Código", "animation", null, "Região expansível com transição suave de altura e opacidade (motion/react)."),
+  e("StaggerList", "Animação & Código", "animation", null, "Lista com entrada escalonada no compositor e transições de posição."),
 
   // Comunicação
   e("ChatWindow", "Comunicação", "communication", "chat", "Janela de conversa completa."),
@@ -95,6 +99,9 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   e("Table", "Dados", "data", "tables", "Tabela simples."),
   e("TreeView", "Dados", "data", "treeview", "Árvore hierárquica."),
   e("Chart", "Dados", "data", "charts", "Gráficos (área, barra, rosca, etc.)."),
+  e("TouchChartCard", "Dados", "data", "charts", "Moldura mobile para gráficos com chips de séries e barra fixa de inspeção por toque."),
+  e("ExpandableDataCard", "Dados", "data", "datatable", "Card analítico/operacional expansível substituto de tabelas largas no mobile."),
+  e("KpiCarousel", "Dados", "data", "stat-card", "Carrossel mobile com snap horizontal e indicadores spring para cards de KPI."),
   e("Spreadsheet", "Dados", "data", null, "Planilha editável."),
   e("TransferList", "Dados", "data", null, "Lista de transferência entre dois painéis."),
   e("JsonViewer", "Dados", "data", null, "Visualizador de JSON."),

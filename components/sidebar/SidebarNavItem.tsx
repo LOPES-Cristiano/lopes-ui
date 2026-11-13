@@ -6,7 +6,7 @@ import { ChevronDown, Pin, PinOff } from 'lucide-react';
 import type { SidebarNavItem as SidebarNavItemType } from './Sidebar.types';
 import { useSidebar } from './SidebarContext';
 import { SidebarTooltip } from './SidebarTooltip';
-import { getItemPinId, hasActiveDescendant } from './utils/navigation';
+import { getItemPinId, getItemSubmenuId, hasActiveDescendant } from './utils/navigation';
 
 function SidebarBadge({
   value,
@@ -114,12 +114,14 @@ export function SidebarNavItem({
   depth = 0,
   variant = 'default',
   isTopLevelWithoutGroup = false,
+  scopePrefix,
   onNavigate,
 }: {
   item: SidebarNavItemType;
   depth?: number;
   variant?: 'default' | 'pinned';
   isTopLevelWithoutGroup?: boolean;
+  scopePrefix?: string;
   onNavigate?: (href: string) => void;
 }) {
   const {
@@ -127,6 +129,8 @@ export function SidebarNavItem({
     pinnable,
     pinnedIds,
     togglePin,
+    openSubmenuIds,
+    setSubmenuOpen,
     handleNavigate,
     searchQuery,
     showItemIcons,
@@ -135,18 +139,33 @@ export function SidebarNavItem({
   const hasChildren = Boolean(item.children?.length);
   const hasActiveChild = hasChildren && item.children!.some(hasActiveDescendant);
   const isSearching = Boolean(searchQuery && searchQuery.trim().length > 0);
-  const shouldForceOpen = Boolean(item.active || hasActiveChild || (isSearching && hasChildren));
-  const [subOpen, setSubOpen] = useState(shouldForceOpen);
-  const [prevShouldForceOpen, setPrevShouldForceOpen] = useState(shouldForceOpen);
+  const isActiveBranch = Boolean(item.active || hasActiveChild);
+  const submenuId = getItemSubmenuId(item, scopePrefix);
+  const [closedWhileActive, setClosedWhileActive] = useState(false);
+  const [prevActiveBranch, setPrevActiveBranch] = useState(isActiveBranch);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Sync subOpen when active or descendant active state changes externally or during search
-  if (shouldForceOpen !== prevShouldForceOpen) {
-    setPrevShouldForceOpen(shouldForceOpen);
-    if (shouldForceOpen) {
-      setSubOpen(true);
+  if (isActiveBranch !== prevActiveBranch) {
+    setPrevActiveBranch(isActiveBranch);
+    if (closedWhileActive) {
+      setClosedWhileActive(false);
     }
   }
+
+  const subOpen = hasChildren
+    ? isSearching
+      ? true
+      : isActiveBranch && !closedWhileActive
+        ? true
+        : openSubmenuIds.has(submenuId)
+    : false;
+
+  const setPersistedSubOpen = (nextOpen: boolean) => {
+    setSubmenuOpen(submenuId, nextOpen);
+    if (isActiveBranch) {
+      setClosedWhileActive(!nextOpen);
+    }
+  };
 
   const Icon = item.icon;
   const isPinnedMode = variant === 'pinned';
@@ -159,9 +178,9 @@ export function SidebarNavItem({
     if (hasChildren) {
       if (effectiveCollapsed) {
         setCollapsed(false);
-        setSubOpen(true);
+        setPersistedSubOpen(true);
       } else {
-        setSubOpen((s) => !s);
+        setPersistedSubOpen(!subOpen);
       }
       if (!item.href) return;
     }
@@ -274,7 +293,7 @@ export function SidebarNavItem({
                 ? (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setSubOpen((s) => !s);
+                    setPersistedSubOpen(!subOpen);
                   }
                 : undefined
             }
@@ -284,7 +303,7 @@ export function SidebarNavItem({
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       e.stopPropagation();
-                      setSubOpen((s) => !s);
+                      setPersistedSubOpen(!subOpen);
                     }
                   }
                 : undefined
@@ -422,6 +441,7 @@ export function SidebarNavItem({
                   key={child.id ?? `${child.label}-${ci}`}
                   item={child}
                   depth={depth + 1}
+                  scopePrefix={submenuId}
                   onNavigate={onNavigate}
                 />
               ))}

@@ -9,6 +9,8 @@ import CodeEditor, { type CodeEditorLanguage } from "@/components/CodeEditor";
 import Marquee from "@/components/Marquee";
 import Snippet, { CopyButton } from "@/components/Snippet";
 import Tour from "@/components/Tour";
+import AnimatedNumber from "@/components/AnimatedNumber";
+import LeaderboardPodium from "@/components/LeaderboardPodium";
 import Button from "@/components/Button";
 import toast from "@/components/Toast";
 import { Terminal, CheckCircle2 } from "lucide-react";
@@ -221,7 +223,130 @@ export function useAnimationSections(): Record<string, React.ReactNode> {
           </DemoCard>
         </section>
     ),
+    "animated-number": (
+      <section id="animated-number" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+        <SectionHeader
+          label="KPIs & Transições Numéricas"
+          title="AnimatedNumber"
+          description="Contador numérico interpolado por mola (motion/react) com tabular-nums, formatação nativa pt-BR (moeda, percentual, decimal e inteiro) e respeito automático a prefers-reduced-motion."
+        />
+        <DemoCard id="animated-number-demo" title="Troca de Dezena & Metas (Móveis & Eletro)">
+          <AnimatedNumberShowcaseDemo />
+        </DemoCard>
+      </section>
+    ),
+    "leaderboard-podium": (
+      <section id="leaderboard-podium" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+        <SectionHeader
+          label="Gamificação & Metas"
+          title="LeaderboardPodium"
+          description="Pódio Top-3 com pedestais responsivos (2º | 1º | 3º no mobile e cards no desktop), barras de progresso animadas no compositor e callback de inspeção."
+        />
+        <DemoCard id="leaderboard-podium-demo" title="Ranking de Vendedores — Praças RO & AM">
+          <LeaderboardPodiumShowcaseDemo />
+        </DemoCard>
+      </section>
+    ),
   };
+}
+
+function AnimatedNumberShowcaseDemo() {
+  const [presetIdx, setPresetIdx] = useState(0);
+  const presets = [
+    { label: "1ª Dezena", receita: 84250.4, pct: 94.2, pedidos: 68 },
+    { label: "2ª Dezena", receita: 176900.85, pct: 103.8, pedidos: 142 },
+    { label: "Mês Completo", receita: 289450.0, pct: 112.5, pedidos: 231 },
+  ];
+  const current = presets[presetIdx];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        {presets.map((p, i) => (
+          <Button
+            key={p.label}
+            size="sm"
+            variant={presetIdx === i ? "primary" : "outline"}
+            onClick={() => setPresetIdx(i)}
+          >
+            {p.label}
+          </Button>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+          <span className="block text-xs text-zinc-500">Faturamento Salão</span>
+          <AnimatedNumber
+            value={current.receita}
+            format="currency"
+            className="text-xl font-extrabold font-mono text-zinc-900 dark:text-zinc-100"
+          />
+        </div>
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+          <span className="block text-xs text-zinc-500">Atingimento da Meta</span>
+          <AnimatedNumber
+            value={current.pct}
+            format="percent"
+            className="text-xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400"
+          />
+        </div>
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+          <span className="block text-xs text-zinc-500">Entregas Móveis & Eletro</span>
+          <AnimatedNumber
+            value={current.pedidos}
+            format="integer"
+            className="text-xl font-extrabold font-mono text-zinc-900 dark:text-zinc-100"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LeaderboardPodiumShowcaseDemo() {
+  return (
+    <LeaderboardPodium
+      variant="pedestal"
+      title="Top 3 Vendedores — Salão & Eletro"
+      subtitle="Competência atual · Rondônia & Amazonas"
+      items={[
+        {
+          id: 1,
+          rank: 1,
+          name: "Camila Souza",
+          subtitle: "Porto Velho - RO",
+          value: 6420.5,
+          valueLabel: "Comissão",
+          progressPct: 118.4,
+          badgeText: "Op. 36%",
+          badgeTone: "emerald",
+        },
+        {
+          id: 2,
+          rank: 2,
+          name: "Rafael Nascimento",
+          subtitle: "Manaus - AM",
+          value: 5310.0,
+          valueLabel: "Comissão",
+          progressPct: 106.2,
+          badgeText: "Op. 33%",
+          badgeTone: "emerald",
+        },
+        {
+          id: 3,
+          rank: 3,
+          name: "Juliana Mendes",
+          subtitle: "Ji-Paraná - RO",
+          value: 4490.8,
+          valueLabel: "Comissão",
+          progressPct: 98.7,
+          badgeText: "Op. 31%",
+          badgeTone: "amber",
+        },
+      ]}
+      onItemClick={(it) => toast.success(`Selecionado: ${it.name} (${it.subtitle})`)}
+    />
+  );
 }
 
 
