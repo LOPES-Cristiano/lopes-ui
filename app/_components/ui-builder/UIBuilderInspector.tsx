@@ -168,7 +168,7 @@ export default function UIBuilderInspector({
     const groupCount = new Set(config.elements.map((e) => e.groupId).filter(Boolean)).size;
 
     return (
-      <aside className="w-80 shrink-0 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col h-full select-none">
+      <aside className="w-[88vw] max-w-80 lg:w-80 shrink-0 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col h-full select-none">
         {/* Header */}
         <div className="p-2.5 border-b border-zinc-200 dark:border-zinc-800 space-y-2">
           <div className="flex items-center justify-between">
@@ -816,7 +816,7 @@ export default function UIBuilderInspector({
     };
 
     return (
-      <aside className="w-80 shrink-0 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col h-full select-none">
+      <aside className="w-[88vw] max-w-80 lg:w-80 shrink-0 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col h-full select-none">
         <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 bg-sky-50/60 dark:bg-sky-950/25">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -1142,7 +1142,7 @@ export default function UIBuilderInspector({
   );
 
   return (
-    <aside className="w-80 shrink-0 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col h-full select-none">
+    <aside className="w-[88vw] max-w-80 lg:w-80 shrink-0 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col h-full select-none">
       {/* Element Header */}
       <div className="p-2.5 border-b border-zinc-200 dark:border-zinc-800 space-y-2">
         <div className="flex items-center justify-between gap-2">
@@ -3775,7 +3775,7 @@ export default function UIBuilderInspector({
               <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                 Alinhar às Margens da Prancheta
               </span>
-              <div className="grid grid-cols-6 gap-1">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-1">
                 {(
                   [
                     { mode: "left", icon: AlignStartVertical, title: "Margem Esquerda" },
