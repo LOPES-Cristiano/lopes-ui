@@ -82,7 +82,7 @@ export function RichTextViewer({
         <div
           ref={contentRef}
           className={cn(
-            'rte-viewer text-sm text-foreground leading-relaxed break-words',
+            'rte-viewer text-sm text-foreground leading-relaxed break-words overflow-x-auto',
             className,
           )}
         />
