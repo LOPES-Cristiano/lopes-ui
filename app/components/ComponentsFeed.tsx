@@ -375,7 +375,7 @@ function Feed({ entries }: { entries: ComponentEntry[] }) {
                 className="min-h-[70vh] snap-start border-b border-zinc-200 py-10 dark:border-zinc-800"
                 aria-labelledby={`title-${slug}`}
               >
-                <header className="mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+                <header className="mb-6 flex min-w-0 flex-wrap items-end justify-between gap-x-6 gap-y-2">
                   <div className="min-w-0">
                     <span className="mb-2 inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                       {entry.category}
@@ -385,7 +385,7 @@ function Feed({ entries }: { entries: ComponentEntry[] }) {
                     </h2>
                     <p className="text-zinc-500 dark:text-zinc-400">{entry.description}</p>
                   </div>
-                  <pre className="overflow-x-auto rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-900">
+                  <pre className="max-w-full min-w-0 overflow-x-auto rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-900">
                     <code>{`import { ${entry.name} } from "lopes-ui";`}</code>
                   </pre>
                 </header>
