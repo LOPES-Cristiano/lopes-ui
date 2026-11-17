@@ -191,6 +191,13 @@ function UIBuilderStudioCore() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showLeftCatalog, setShowLeftCatalog] = useState(true);
   const [showRightInspector, setShowRightInspector] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setShowLeftCatalog(false);
+      setShowRightInspector(false);
+    }
+  }, []);
   const [showFloatingLayers, setShowFloatingLayers] = useState(false);
   const [showWireframe, setShowWireframe] = useState(false);
   const [showJsonModal, setShowJsonModal] = useState(false);
@@ -1163,7 +1170,7 @@ function UIBuilderStudioCore() {
       {/* ═════════════════════════════════════════════════════════════════════
           1. TOP STUDIO HEADER (DocumentStudioModal Style)
          ═════════════════════════════════════════════════════════════════════ */}
-      <header className="h-13 shrink-0 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 flex items-center justify-between gap-3 select-none">
+      <header className="min-h-13 h-auto py-1.5 lg:py-0 lg:h-13 shrink-0 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 flex flex-wrap items-center justify-between gap-2 lg:gap-3 select-none">
         {/* Left: Studio Identity + Editable Title + Templates Trigger */}
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-sm shrink-0">
@@ -1247,7 +1254,7 @@ function UIBuilderStudioCore() {
         </div>
 
         {/* Right: AST JSON, Import/Export, Sidebars & Fullscreen */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto max-w-full">
           <Button
             size="sm"
             variant="outline"
@@ -1668,11 +1675,20 @@ function UIBuilderStudioCore() {
         {mode === "canvas" && (
           <>
             {showLeftCatalog && (
-              <UICatalogSidebar
-                onAddComponent={(type) => handleAddComponentAt(type)}
-                onAddCompositeBlock={handleAddCompositeBlock}
-                onClose={() => setShowLeftCatalog(false)}
-              />
+              <>
+                <div
+                  className="fixed inset-0 z-30 bg-black/40 backdrop-blur-[1px] lg:hidden"
+                  onClick={() => setShowLeftCatalog(false)}
+                  aria-hidden="true"
+                />
+                <div className="fixed inset-y-0 left-0 z-40 flex h-full lg:static lg:z-auto">
+                  <UICatalogSidebar
+                    onAddComponent={(type) => handleAddComponentAt(type)}
+                    onAddCompositeBlock={handleAddCompositeBlock}
+                    onClose={() => setShowLeftCatalog(false)}
+                  />
+                </div>
+              </>
             )}
 
             {/* Center 2D Viewport + Pixel Rulers */}
@@ -2591,23 +2607,32 @@ function UIBuilderStudioCore() {
             </div>
 
             {showRightInspector && (
-              <UIBuilderInspector
-                config={config}
-                selectedIds={selectedIds}
-                onUpdateConfig={updateConfig}
-                onSelectIds={setSelectedIds}
-                onAlign={handleAlign}
-                onDistribute={handleDistribute}
-                onMatchSize={handleMatchSize}
-                onAutoArrange={handleAutoArrange}
-                onGroup={handleGroup}
-                onUngroup={handleUngroup}
-                onDuplicateSelected={handleDuplicateSelected}
-                onDeleteSelected={handleDeleteSelected}
-                onMoveLayer={handleMoveLayer}
-                onClearCanvas={() => setShowClearConfirm(true)}
-                onClose={() => setShowRightInspector(false)}
-              />
+              <>
+                <div
+                  className="fixed inset-0 z-30 bg-black/40 backdrop-blur-[1px] lg:hidden"
+                  onClick={() => setShowRightInspector(false)}
+                  aria-hidden="true"
+                />
+                <div className="fixed inset-y-0 right-0 z-40 flex h-full lg:static lg:z-auto">
+                  <UIBuilderInspector
+                    config={config}
+                    selectedIds={selectedIds}
+                    onUpdateConfig={updateConfig}
+                    onSelectIds={setSelectedIds}
+                    onAlign={handleAlign}
+                    onDistribute={handleDistribute}
+                    onMatchSize={handleMatchSize}
+                    onAutoArrange={handleAutoArrange}
+                    onGroup={handleGroup}
+                    onUngroup={handleUngroup}
+                    onDuplicateSelected={handleDuplicateSelected}
+                    onDeleteSelected={handleDeleteSelected}
+                    onMoveLayer={handleMoveLayer}
+                    onClearCanvas={() => setShowClearConfirm(true)}
+                    onClose={() => setShowRightInspector(false)}
+                  />
+                </div>
+              </>
             )}
           </>
         )}
