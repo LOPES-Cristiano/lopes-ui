@@ -101,7 +101,7 @@ export function UICatalogSidebar({
   }, [normalizedQuery]);
 
   return (
-    <aside className="w-72 shrink-0 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col h-full select-none">
+    <aside className="w-[85vw] max-w-72 lg:w-72 shrink-0 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col h-full select-none">
       {/* Header + Switcher */}
       <div className="p-2.5 border-b border-zinc-200 dark:border-zinc-800 space-y-2">
         <div className="flex items-center justify-between">
@@ -366,7 +366,7 @@ export function UILayersPanel({
   return (
     <div
       onMouseDown={(e) => e.stopPropagation()}
-      className="absolute left-8 top-8 z-40 w-80 max-h-[calc(100%-4rem)] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md shadow-2xl flex flex-col overflow-hidden select-none"
+      className="absolute left-4 right-4 sm:right-auto sm:left-8 top-4 sm:top-8 z-40 sm:w-80 max-w-[calc(100vw-2rem)] max-h-[calc(100%-2rem)] sm:max-h-[calc(100%-4rem)] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md shadow-2xl flex flex-col overflow-hidden select-none"
     >
       <div className="px-3.5 py-2.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-950/50">
         <div className="flex items-center gap-2">
