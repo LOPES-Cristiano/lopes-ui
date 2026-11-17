@@ -200,7 +200,7 @@ export default function SplitPane({
       className={twMerge(
         clsx(
           "flex overflow-hidden",
-          isH ? "flex-row" : "flex-col",
+          isH ? "flex-col md:flex-row" : "flex-col",
           className
         )
       )}
@@ -211,6 +211,7 @@ export default function SplitPane({
         aria-hidden={isFirstCollapsed || undefined}
         className={clsx(
           "overflow-hidden min-w-0 min-h-0",
+          isH && "max-md:!w-full max-md:!h-auto",
           !isDragging && "transition-[width,height] duration-150 ease-out"
         )}
       >
@@ -235,7 +236,7 @@ export default function SplitPane({
           "hover:bg-indigo-400 dark:hover:bg-indigo-600",
           "active:bg-indigo-500 dark:active:bg-indigo-500",
           "transition-colors",
-          isH ? "w-1 cursor-col-resize" : "h-1 cursor-row-resize"
+          isH ? "max-md:h-1 max-md:w-full md:w-1 cursor-col-resize" : "h-1 cursor-row-resize"
         )}
       >
         {showCollapseButtons ? (
@@ -307,6 +308,7 @@ export default function SplitPane({
         aria-hidden={isSecondCollapsed || undefined}
         className={clsx(
           "overflow-hidden min-w-0 min-h-0",
+          isH && "max-md:!w-full max-md:!h-auto",
           !isDragging && "transition-[width,height] duration-150 ease-out"
         )}
       >
