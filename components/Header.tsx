@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, PanelLeft, PanelLeftClose, X } from "lucide-react";
+import { ChevronDown, Menu, PanelLeft, PanelLeftClose, X } from "lucide-react";
 import Nav, { type NavItem } from "./header/Nav";
 import { useShell } from "./ShellContext";
 import Button from "./Button";
@@ -68,8 +68,8 @@ export default function Header({
     >
       {hasSidebar ? (
         <>
-          <div className="flex h-16 w-full items-center justify-between gap-2 px-3 sm:px-4 md:hidden">
-            <div className="flex min-w-0 items-center gap-2">
+          <div className="flex h-16 w-full items-center justify-between gap-1.5 sm:gap-2 px-3 sm:px-4 md:hidden">
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               {!hideMobileMenu && (sidebarMounted || (nav && nav.length > 0)) && (
                 <button
                   data-component-id="erp.header.mobile-toggle"
@@ -81,7 +81,7 @@ export default function Header({
                   {isMobileOpen ? <X size={18} /> : <Menu size={18} />}
                 </button>
               )}
-              {brand ?? null}
+              {brand ? <div className="min-w-0 truncate">{brand}</div> : null}
             </div>
             <div className="flex shrink-0 items-center gap-1">
               {search ?? null}
@@ -152,33 +152,90 @@ export default function Header({
         <div
           className={[
             "overflow-hidden border-t border-header-mobile-border bg-header-mobile backdrop-blur-sm transition-[max-height,opacity,transform] duration-300 ease-out motion-reduce:transition-none md:hidden",
-            mobileOpen ? "max-h-[480px] translate-y-0 opacity-100" : "max-h-0 -translate-y-1 opacity-0 pointer-events-none",
+            mobileOpen ? "max-h-[75vh] overflow-y-auto translate-y-0 opacity-100" : "max-h-0 -translate-y-1 opacity-0 pointer-events-none",
           ].join(" ")}
         >
           {search && <div className="px-4 pt-3 pb-1">{search}</div>}
           {nav && nav.length > 0 && (
             <nav className="flex flex-col gap-1 px-4 py-3">
-              {nav.map((n, idx) => (
-                <a
-                  key={`${n.href ?? "#"}-${n.label}-${idx}`}
-                  href={n.href ?? "#"}
-                  onClick={(e) => {
-                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+              {nav.map((n, idx) =>
+                n.children && n.children.length > 0 ? (
+                  <details
+                    key={`${n.href ?? "#"}-${n.label}-${idx}`}
+                    className="group rounded-md"
+                  >
+                    <summary className="flex cursor-pointer list-none items-center justify-between rounded-md px-3 py-2.5 text-sm font-medium text-header-nav-foreground hover:bg-header-mobile-item-hover hover:text-header-nav-hover-foreground [&::-webkit-details-marker]:hidden">
+                      <span>{n.label}</span>
+                      <ChevronDown
+                        size={15}
+                        className="shrink-0 transition-transform duration-150 group-open:rotate-180"
+                        aria-hidden="true"
+                      />
+                    </summary>
+                    <div className="mt-0.5 flex flex-col gap-0.5 pl-4">
+                      {n.href && (
+                        <a
+                          href={n.href}
+                          onClick={(e) => {
+                            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                              setMobileOpen(false);
+                              return;
+                            }
+                            e.preventDefault();
+                            if (onNavigate) onNavigate(n.href!);
+                            else router.push(n.href!);
+                            setMobileOpen(false);
+                          }}
+                          className="block rounded-md px-3 py-2 text-sm font-medium text-header-nav-foreground/90 hover:bg-header-mobile-item-hover hover:text-header-nav-hover-foreground"
+                        >
+                          {n.label}
+                        </a>
+                      )}
+                      {n.children.map((child, cIdx) => (
+                        <a
+                          key={`${child.href ?? "#"}-${child.label}-${cIdx}`}
+                          href={child.href ?? "#"}
+                          onClick={(e) => {
+                            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                              setMobileOpen(false);
+                              return;
+                            }
+                            if (child.href) {
+                              e.preventDefault();
+                              if (onNavigate) onNavigate(child.href);
+                              else router.push(child.href);
+                            }
+                            setMobileOpen(false);
+                          }}
+                          className="block rounded-md px-3 py-2 text-sm text-header-nav-foreground/85 hover:bg-header-mobile-item-hover hover:text-header-nav-hover-foreground"
+                        >
+                          {child.label}
+                        </a>
+                      ))}
+                    </div>
+                  </details>
+                ) : (
+                  <a
+                    key={`${n.href ?? "#"}-${n.label}-${idx}`}
+                    href={n.href ?? "#"}
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                        setMobileOpen(false);
+                        return;
+                      }
+                      if (n.href) {
+                        e.preventDefault();
+                        if (onNavigate) onNavigate(n.href);
+                        else router.push(n.href);
+                      }
                       setMobileOpen(false);
-                      return;
-                    }
-                    if (n.href) {
-                      e.preventDefault();
-                      if (onNavigate) onNavigate(n.href);
-                      else router.push(n.href);
-                    }
-                    setMobileOpen(false);
-                  }}
-                  className="block rounded-md px-3 py-2.5 text-sm font-medium text-header-nav-foreground hover:bg-header-mobile-item-hover hover:text-header-nav-hover-foreground"
-                >
-                  {n.label}
-                </a>
-              ))}
+                    }}
+                    className="block rounded-md px-3 py-2.5 text-sm font-medium text-header-nav-foreground hover:bg-header-mobile-item-hover hover:text-header-nav-hover-foreground"
+                  >
+                    {n.label}
+                  </a>
+                )
+              )}
             </nav>
           )}
         </div>
