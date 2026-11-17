@@ -479,7 +479,7 @@ export default function CascaderField(props: CascaderFieldProps) {
         <PopoverContent
           align="start"
           sideOffset={6}
-          className="w-auto min-w-[260px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-0 shadow-xl"
+          className="w-auto min-w-[200px] sm:min-w-[260px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-0 shadow-xl"
         >
           {searchable && (
             <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 px-3 py-2">
@@ -504,7 +504,7 @@ export default function CascaderField(props: CascaderFieldProps) {
           )}
 
           {query.trim() ? (
-            <div className="max-h-64 min-w-[280px] overflow-y-auto p-1.5">
+            <div className="max-h-64 min-w-[200px] sm:min-w-[280px] overflow-y-auto p-1.5">
               {filteredPaths.length === 0 ? (
                 <div className="px-3 py-6 text-center text-xs text-zinc-400">{emptyMessage}</div>
               ) : (
@@ -550,7 +550,7 @@ export default function CascaderField(props: CascaderFieldProps) {
                 <ul
                   key={col.depth}
                   role="listbox"
-                  className="max-h-64 min-w-[175px] max-w-[230px] overflow-y-auto p-1.5 space-y-0.5"
+                  className="max-h-64 min-w-[140px] sm:min-w-[175px] max-w-[230px] overflow-y-auto p-1.5 space-y-0.5"
                 >
                   {col.items.length === 0 ? (
                     <li className="px-3 py-4 text-center text-xs text-zinc-400">{emptyMessage}</li>
