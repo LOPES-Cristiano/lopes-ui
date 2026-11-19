@@ -36,7 +36,7 @@ export type DataTableColumn<T = any> = {
   mobileRole?: DataTableMobileRole;
 };
 
-export type ActionTone = 'default' | 'info' | 'danger' | 'warning' | 'primary' | 'success';
+export type ActionTone = 'default' | 'info' | 'danger' | 'warning' | 'primary' | 'success' | 'purple';
 export type ActionVariant = 'detail' | 'edit' | 'delete' | 'custom';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,7 +45,7 @@ export type DataTableAction<T = any> = {
   icon?: LucideIcon;
   getIcon?: (row: T) => LucideIcon;
   variant?: ActionVariant;
-  tone?: ActionTone;
+  tone?: ActionTone | ((row: T) => ActionTone);
   danger?: boolean;
   divider?: boolean;
   inline?: boolean;
@@ -180,6 +180,7 @@ export type DataTableProps<T = any> = {
   hiddenColumns?: string[];
   onHiddenColumnsChange?: (keys: string[]) => void;
   globalSearch?: boolean;
+  searchPlaceholder?: string;
   initialSearch?: string;
   searchDebounceMs?: number;
   onSearchChange?: (search: string) => void;
