@@ -41,6 +41,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
   tableActions,
   maxInlineTableActions,
   globalSearch,
+  searchPlaceholder,
   searchQ,
   onSearchChange,
   filterFields,
@@ -90,6 +91,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
   }>;
   maxInlineTableActions?: number;
   globalSearch?: boolean;
+  searchPlaceholder?: string;
   searchQ: string;
   onSearchChange: (q: string) => void;
   filterFields?: FilterField<T>[];
@@ -259,7 +261,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end ml-auto">
             {globalSearch && (
-              <div className="relative min-w-0 flex-1 sm:w-56 md:w-60 sm:flex-initial">
+              <search className="relative min-w-0 flex-1 sm:w-56 md:w-60 sm:flex-initial">
                 <Search
                   size={14}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
@@ -269,7 +271,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                   type="text"
                   value={searchQ}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  placeholder="Buscar..."
+                  placeholder={searchPlaceholder ?? 'Buscar...'}
                   aria-label="Buscar na tabela"
                   autoCorrect="off"
                   autoCapitalize="off"
@@ -287,7 +289,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                     <X size={13} />
                   </button>
                 )}
-              </div>
+              </search>
             )}
             {toolbarLeftSlot}
 
@@ -462,7 +464,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
           >
             <div className="flex flex-wrap items-center gap-2 justify-start md:justify-end flex-1 w-full">
               {globalSearch && (
-                <div className="relative min-w-0 flex-1 sm:w-60 md:w-64 sm:flex-initial">
+                <search className="relative min-w-0 flex-1 sm:w-60 md:w-64 sm:flex-initial">
                   <Search
                     size={14}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
@@ -472,7 +474,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                     type="text"
                     value={searchQ}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    placeholder="Buscar..."
+                    placeholder={searchPlaceholder ?? 'Buscar...'}
                     aria-label="Buscar na tabela"
                     autoCorrect="off"
                     autoCapitalize="off"
@@ -490,7 +492,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                       <X size={13} />
                     </button>
                   )}
-                </div>
+                </search>
               )}
               {toolbarLeftSlot}
 
