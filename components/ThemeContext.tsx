@@ -180,22 +180,30 @@ function initStoreOnClient() {
   el.style.colorScheme = currentResolved;
 }
 
-function notifyListenersSync() {
+function notifyListeners(syncFlush = true) {
+  if (!syncFlush) {
+    queueMicrotask(() => {
+      listeners.forEach((fn) => fn());
+    });
+    return;
+  }
   try {
     flushSync(() => {
       listeners.forEach((fn) => fn());
     });
   } catch {
     // Fallback if called during an active React render/commit
-    listeners.forEach((fn) => fn());
+    queueMicrotask(() => {
+      listeners.forEach((fn) => fn());
+    });
   }
 }
 
 function applyThemeTransitionFree(
   nextMode: ThemeMode,
-  options: { persist?: boolean; notifyUserChange?: boolean } = {},
+  options: { persist?: boolean; notifyUserChange?: boolean; syncFlush?: boolean } = {},
 ) {
-  const { persist = true, notifyUserChange = false } = options;
+  const { persist = true, notifyUserChange = false, syncFlush = true } = options;
   currentMode = nextMode;
   const nextResolved = resolveMode(nextMode);
   currentResolved = nextResolved;
@@ -229,7 +237,7 @@ function applyThemeTransitionFree(
     );
   }
 
-  notifyListenersSync();
+  notifyListeners(syncFlush);
   void el.offsetHeight;
   el.classList.remove('no-transition');
 }
@@ -268,7 +276,11 @@ export function syncThemeFromUser(
     writeSharedCookie(THEME_UID_COOKIE, uid);
     writeSharedCookie(THEME_PENDING_COOKIE, null);
     if (target !== currentMode || resolveMode(target) !== currentResolved) {
-      applyThemeTransitionFree(target, { persist: true, notifyUserChange: false });
+      applyThemeTransitionFree(target, {
+        persist: true,
+        notifyUserChange: false,
+        syncFlush: false,
+      });
     }
     return null;
   }
@@ -288,7 +300,11 @@ export function syncThemeFromUser(
       return cookieMode;
     }
     if (backendMode && backendMode !== currentMode) {
-      applyThemeTransitionFree(backendMode, { persist: true, notifyUserChange: false });
+      applyThemeTransitionFree(backendMode, {
+        persist: true,
+        notifyUserChange: false,
+        syncFlush: false,
+      });
     }
     return null;
   }
@@ -298,7 +314,11 @@ export function syncThemeFromUser(
   }
 
   if (backendMode && backendMode !== currentMode) {
-    applyThemeTransitionFree(backendMode, { persist: true, notifyUserChange: false });
+    applyThemeTransitionFree(backendMode, {
+      persist: true,
+      notifyUserChange: false,
+      syncFlush: false,
+    });
   }
 
   return null;
