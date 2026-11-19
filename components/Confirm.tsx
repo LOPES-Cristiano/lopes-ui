@@ -31,7 +31,7 @@ export type ConfirmPasswordModeProps = Omit<PasswordConfirmDialogProps, "tone"> 
 
 export type ConfirmProps = ConfirmDialogModeProps | ConfirmPopoverModeProps | ConfirmPasswordModeProps;
 
-const DIALOG_TONE = { primary: "info", info: "info", warning: "warning", danger: "danger" } as const;
+const DIALOG_TONE = { primary: "primary", info: "info", warning: "warning", danger: "danger" } as const;
 
 /**
  * Confirmação unificada.
