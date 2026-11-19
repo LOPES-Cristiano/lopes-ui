@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useSyncExternalStore } from 'react';
 import { cn } from '../utils/cn';
 import { hasOpenFloatingOverlay } from '../utils/overlay';
-import { AlertTriangle, Trash2, X, type LucideIcon } from 'lucide-react';
+import { AlertTriangle, Info, Trash2, X, type LucideIcon } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -17,7 +17,7 @@ import {
 import Button from './Button';
 import { useEscKey } from './Modal';
 
-export type ConfirmDialogVariant = 'danger' | 'warning' | 'info';
+export type ConfirmDialogVariant = 'danger' | 'warning' | 'info' | 'primary' | 'default';
 
 export type ConfirmDialogSize =
   | 'xs'
@@ -93,20 +93,32 @@ type VConfig = {
 const VARIANTS: Record<ConfirmDialogVariant, VConfig> = {
   danger: {
     icon: Trash2,
-    iconBg: 'bg-danger-soft text-danger-soft-foreground border border-danger-border/60',
+    iconBg: 'bg-danger-soft text-danger-soft-foreground border border-danger-border/50',
     iconCls: 'text-danger',
     buttonVariant: 'destructive',
   },
   warning: {
     icon: AlertTriangle,
-    iconBg: 'bg-warning-soft text-warning-soft-foreground border border-warning-border/60',
+    iconBg: 'bg-warning-soft text-warning-soft-foreground border border-warning-border/50',
     iconCls: 'text-warning',
     buttonVariant: 'warning',
   },
   info: {
-    icon: AlertTriangle,
-    iconBg: 'bg-info-soft text-info-soft-foreground border border-info-border/60',
+    icon: Info,
+    iconBg: 'bg-info-soft text-info-soft-foreground border border-info-border/50',
     iconCls: 'text-info',
+    buttonVariant: 'primary',
+  },
+  primary: {
+    icon: Info,
+    iconBg: 'bg-primary/10 text-primary border border-primary/20',
+    iconCls: 'text-primary',
+    buttonVariant: 'primary',
+  },
+  default: {
+    icon: Info,
+    iconBg: 'bg-primary/10 text-primary border border-primary/20',
+    iconCls: 'text-primary',
     buttonVariant: 'primary',
   },
 };
@@ -220,7 +232,7 @@ export default function ConfirmDialog({
         }}
         className={cn(
           'fixed left-1/2 top-1/2 z-[7800] -translate-x-1/2 -translate-y-1/2',
-          'w-[calc(100vw-2rem)] sm:w-full max-w-[calc(100vw-2rem)] sm:max-w-none bg-card border border-border text-card-foreground shadow-[var(--shadow-overlay)] rounded-[var(--radius-overlay)] p-4 sm:p-6 overflow-hidden box-border overscroll-contain',
+          'w-[calc(100vw-2rem)] sm:w-full max-w-[calc(100vw-2rem)] sm:max-w-none bg-card border border-border text-card-foreground shadow-[var(--shadow-overlay)] rounded-2xl p-6 overflow-hidden box-border overscroll-contain',
           'flex flex-col duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] motion-reduce:animate-none',
           isFullMobile && [
             'max-sm:!fixed max-sm:!inset-0 max-sm:!top-0 max-sm:!left-0 max-sm:!right-0 max-sm:!bottom-0',
@@ -234,23 +246,23 @@ export default function ConfirmDialog({
         )}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 shrink-0 pb-2 border-b border-border/20">
-          <div className="flex items-start gap-3 min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-3 shrink-0 pb-3">
+          <div className="flex items-start gap-3.5 min-w-0 flex-1">
             <div
               className={cn(
-                'shrink-0 flex items-center justify-center h-10 w-10 rounded-xl',
+                'shrink-0 flex items-center justify-center h-11 w-11 rounded-full',
                 cfg.iconBg
               )}
             >
               <Icon size={20} className={cfg.iconCls} strokeWidth={1.75} />
             </div>
 
-            <AlertDialogHeader className="min-w-0 text-left space-y-1">
-              <AlertDialogTitle className="text-base font-semibold text-foreground leading-tight text-balance">
+            <AlertDialogHeader className="min-w-0 text-left space-y-1.5">
+              <AlertDialogTitle className="text-base font-bold text-foreground leading-snug text-balance">
                 {title ?? 'Confirmar ação'}
               </AlertDialogTitle>
               {description && (
-                <AlertDialogDescription className="text-xs sm:text-sm text-muted-foreground text-pretty">
+                <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed text-pretty">
                   {description}
                 </AlertDialogDescription>
               )}
