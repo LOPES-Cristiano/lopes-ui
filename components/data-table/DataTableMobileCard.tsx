@@ -54,6 +54,7 @@ const TITLE_KEYS = new Set([
 const STATUS_KEYS = new Set([
   'status',
   'situacao',
+  'situacaoId',
   'situacaoDescricao',
   'state',
   'etapa',
@@ -262,6 +263,41 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                       const isDisabled =
                         Boolean(action.disabled?.(row)) || runningActionIndex === aIdx;
 
+                      const resolvedTone =
+                        typeof action.tone === 'function' ? action.tone(row) : action.tone;
+                      const isDanger =
+                        Boolean(action.danger) ||
+                        resolvedTone === 'danger' ||
+                        action.variant === 'delete';
+
+                      const toneBtnCls = isDanger
+                        ? 'text-rose-600 dark:text-rose-400 hover:bg-rose-500/10'
+                        : resolvedTone === 'warning'
+                          ? 'text-amber-600 dark:text-amber-400 hover:bg-amber-500/10'
+                          : resolvedTone === 'success'
+                            ? 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10'
+                            : resolvedTone === 'info' || action.variant === 'detail'
+                              ? 'text-sky-600 dark:text-sky-400 hover:bg-sky-500/10'
+                              : resolvedTone === 'purple'
+                                ? 'text-violet-600 dark:text-violet-400 hover:bg-violet-500/10'
+                                : resolvedTone === 'primary'
+                                  ? 'text-primary hover:bg-primary/10'
+                                  : 'text-foreground hover:bg-muted/60';
+
+                      const toneIconCls = isDanger
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : resolvedTone === 'warning'
+                          ? 'text-amber-600 dark:text-amber-400'
+                          : resolvedTone === 'success'
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : resolvedTone === 'info' || action.variant === 'detail'
+                              ? 'text-sky-600 dark:text-sky-400'
+                              : resolvedTone === 'purple'
+                                ? 'text-violet-600 dark:text-violet-400'
+                                : resolvedTone === 'primary'
+                                  ? 'text-primary'
+                                  : 'text-muted-foreground';
+
                       return (
                         <button
                           data-component-id={
@@ -284,10 +320,7 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                             isDisabled
                               ? 'opacity-40 cursor-not-allowed pointer-events-none'
                               : 'cursor-pointer',
-                            !isDisabled &&
-                              (action.danger
-                                ? 'text-danger hover:bg-danger/10'
-                                : 'text-foreground hover:bg-muted/60'),
+                            !isDisabled && toneBtnCls,
                             customBtnClass,
                           )}
                         >
@@ -296,7 +329,7 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                               size={15}
                               className={twMerge(
                                 'shrink-0',
-                                action.danger ? 'text-danger' : 'text-muted-foreground',
+                                toneIconCls,
                                 customIconClass,
                               )}
                             />
