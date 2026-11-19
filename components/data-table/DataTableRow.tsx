@@ -22,26 +22,37 @@ function resolveActionIcon<T>(action: DataTableAction<T>, row: T) {
   return undefined;
 }
 
+function resolveToneValue<T>(action: DataTableAction<T>, row: T): string | undefined {
+  return typeof action.tone === 'function' ? action.tone(row) : action.tone;
+}
+
 function resolveActionToneClass<T>(action: DataTableAction<T>, row: T): string {
   if (action.buttonClassName) {
     return typeof action.buttonClassName === 'function'
       ? action.buttonClassName(row)
       : action.buttonClassName;
   }
-  if (action.danger || action.tone === 'danger' || action.variant === 'delete') {
-    return 'text-danger hover:bg-danger-soft';
+  const tone = resolveToneValue(action, row);
+  if (action.danger || tone === 'danger' || action.variant === 'delete') {
+    return 'text-rose-600 dark:text-rose-400 hover:bg-rose-500/10';
   }
-  if (action.tone === 'warning') {
-    return 'text-warning hover:bg-warning-soft';
+  if (tone === 'warning') {
+    return 'text-amber-600 dark:text-amber-400 hover:bg-amber-500/10';
   }
-  if (action.tone === 'success') {
-    return 'text-success hover:bg-success-soft';
+  if (tone === 'success') {
+    return 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10';
   }
-  if (action.tone === 'primary' || action.variant === 'edit') {
+  if (tone === 'info' || action.variant === 'detail') {
+    return 'text-sky-600 dark:text-sky-400 hover:bg-sky-500/10';
+  }
+  if (tone === 'purple') {
+    return 'text-violet-600 dark:text-violet-400 hover:bg-violet-500/10';
+  }
+  if (action.variant === 'edit') {
+    return 'text-slate-600 dark:text-slate-300 hover:bg-slate-500/10';
+  }
+  if (tone === 'primary') {
     return 'text-primary hover:bg-primary/10';
-  }
-  if (action.tone === 'info' || action.variant === 'detail') {
-    return 'text-info hover:bg-info-soft';
   }
   return 'text-muted-foreground hover:text-foreground hover:bg-muted';
 }
@@ -52,20 +63,27 @@ function resolveActionIconClass<T>(action: DataTableAction<T>, row: T): string {
       ? action.iconClassName(row)
       : action.iconClassName;
   }
-  if (action.danger || action.tone === 'danger' || action.variant === 'delete') {
-    return 'text-danger';
+  const tone = resolveToneValue(action, row);
+  if (action.danger || tone === 'danger' || action.variant === 'delete') {
+    return 'text-rose-600 dark:text-rose-400';
   }
-  if (action.tone === 'warning') {
-    return 'text-warning';
+  if (tone === 'warning') {
+    return 'text-amber-600 dark:text-amber-400';
   }
-  if (action.tone === 'success') {
-    return 'text-success';
+  if (tone === 'success') {
+    return 'text-emerald-600 dark:text-emerald-400';
   }
-  if (action.tone === 'primary' || action.variant === 'edit') {
+  if (tone === 'info' || action.variant === 'detail') {
+    return 'text-sky-600 dark:text-sky-400';
+  }
+  if (tone === 'purple') {
+    return 'text-violet-600 dark:text-violet-400';
+  }
+  if (action.variant === 'edit') {
+    return 'text-slate-600 dark:text-slate-300';
+  }
+  if (tone === 'primary') {
     return 'text-primary';
-  }
-  if (action.tone === 'info' || action.variant === 'detail') {
-    return 'text-info';
   }
   return '';
 }
