@@ -218,7 +218,9 @@ const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
           className
         )}
         {...props}
-      />
+      >
+        {children}
+      </div>
     );
   }
 );
