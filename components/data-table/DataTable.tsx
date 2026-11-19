@@ -58,6 +58,7 @@ export default function DataTable<T = Record<string, unknown>>({
   hiddenColumns: controlledHiddenColumns,
   onHiddenColumnsChange,
   globalSearch = false,
+  searchPlaceholder,
   initialSearch,
   searchDebounceMs = 300,
   onSearchChange,
@@ -589,6 +590,7 @@ export default function DataTable<T = Record<string, unknown>>({
             tableActions={resolvedTableActions}
             maxInlineTableActions={maxInlineTableActions}
             globalSearch={globalSearch}
+            searchPlaceholder={searchPlaceholder}
             searchQ={searchQ}
             onSearchChange={setSearchQ}
             filterFields={filterFields}
