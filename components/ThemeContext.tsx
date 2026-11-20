@@ -18,13 +18,13 @@ export type ThemeCtx = {
   setTheme: (next: ThemeMode, options?: { syncBackend?: boolean }) => void;
 };
 
-export const THEME_USER_CHANGE_EVENT = 'biglar:theme-user-change';
+export const THEME_USER_CHANGE_EVENT = 'lopes:theme-user-change';
 
 const STORAGE_KEY = 'theme';
-const THEME_COOKIE = 'biglar_theme';
-const THEME_UID_COOKIE = 'biglar_theme_uid';
-const THEME_PENDING_COOKIE = 'biglar_theme_pending_sync';
-const BROADCAST_CHANNEL_NAME = 'biglar_theme_sync_channel';
+const THEME_COOKIE = 'lopes_theme';
+const THEME_UID_COOKIE = 'lopes_theme_uid';
+const THEME_PENDING_COOKIE = 'lopes_theme_pending_sync';
+const BROADCAST_CHANNEL_NAME = 'lopes_theme_sync_channel';
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
 let currentMode: ThemeMode = 'system';
@@ -377,7 +377,7 @@ const ThemeContext = createContext<ThemeCtx | null>(null);
  */
 export function ThemeScript({ storageKey = STORAGE_KEY }: { storageKey?: string }) {
   const keyJson = JSON.stringify(storageKey);
-  const code = `(function(){try{var m=document.cookie.match(/(?:^|;\\s*)biglar_theme=(light|dark|system)(?:;|$)/);var c=m?m[1]:null;var s=c||localStorage.getItem(${keyJson});if(c)try{localStorage.setItem(${keyJson},c);}catch(e){}var d=s==='dark'||((!s||s==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);var el=document.documentElement;el.classList.toggle('dark',d);el.style.colorScheme=d?'dark':'light';}catch(e){}})();`;
+  const code = `(function(){try{var m=document.cookie.match(/(?:^|;\\s*)lopes_theme=(light|dark|system)(?:;|$)/);var c=m?m[1]:null;var s=c||localStorage.getItem(${keyJson});if(c)try{localStorage.setItem(${keyJson},c);}catch(e){}var d=s==='dark'||((!s||s==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);var el=document.documentElement;el.classList.toggle('dark',d);el.style.colorScheme=d?'dark':'light';}catch(e){}})();`;
   return <script dangerouslySetInnerHTML={{ __html: code }} />;
 }
 

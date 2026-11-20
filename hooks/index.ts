@@ -24,10 +24,10 @@ export {
   type UseSoundNotificationOptions,
 } from "./useSoundNotification";
 export {
-  getBigLarMobileBridge,
-  useIsBigLarMobileApp,
+  getLopesMobileBridge,
+  useIsLopesMobileApp,
   useIsCompactViewport,
   useIsMobile,
   useMediaQuery,
-  type BigLarMobileBridge,
+  type LopesMobileBridge,
 } from "./useMediaQuery";

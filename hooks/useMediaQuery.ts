@@ -2,7 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-export interface BigLarMobileBridge {
+export interface LopesMobileBridge {
   isApp?: boolean;
   version?: string;
   platform?: "ios" | "android" | string;
@@ -13,10 +13,10 @@ export interface BigLarMobileBridge {
   openApp?: (targetApp: string, path?: string) => void;
 }
 
-export function getBigLarMobileBridge(): BigLarMobileBridge | null {
+export function getLopesMobileBridge(): LopesMobileBridge | null {
   if (typeof window === "undefined") return null;
-  const win = window as unknown as { BigLarMobile?: BigLarMobileBridge };
-  return win.BigLarMobile ?? null;
+  const win = window as unknown as { LopesMobile?: LopesMobileBridge };
+  return win.LopesMobile ?? null;
 }
 
 /**
@@ -61,15 +61,15 @@ export function useIsCompactViewport(): boolean {
 function subscribeMobileBridge(onStoreChange: () => void): () => void {
   if (typeof window === "undefined") return () => {};
   window.addEventListener("focus", onStoreChange);
-  window.addEventListener("biglar:mobile-ready", onStoreChange);
+  window.addEventListener("lopes:mobile-ready", onStoreChange);
   return () => {
     window.removeEventListener("focus", onStoreChange);
-    window.removeEventListener("biglar:mobile-ready", onStoreChange);
+    window.removeEventListener("lopes:mobile-ready", onStoreChange);
   };
 }
 
 function getMobileAppSnapshot(): string {
-  const bridge = getBigLarMobileBridge();
+  const bridge = getLopesMobileBridge();
   if (!bridge?.isApp) return "web";
   let detectedPlatform = bridge.platform;
   if (!detectedPlatform && typeof navigator !== "undefined") {
@@ -85,12 +85,12 @@ function getServerMobileAppSnapshot(): string {
 }
 
 /**
- * Detects whether the current web session runs inside the native BigLar Mobile Super App WebView.
+ * Detects whether the current web session runs inside the native Lopes Mobile App WebView.
  */
-export function useIsBigLarMobileApp(): {
+export function useIsLopesMobileApp(): {
   isApp: boolean;
   platform: string | null;
-  bridge: BigLarMobileBridge | null;
+  bridge: LopesMobileBridge | null;
 } {
   const raw = useSyncExternalStore(
     subscribeMobileBridge,
@@ -102,6 +102,6 @@ export function useIsBigLarMobileApp(): {
   return {
     isApp,
     platform,
-    bridge: isApp ? getBigLarMobileBridge() : null,
+    bridge: isApp ? getLopesMobileBridge() : null,
   };
 }
