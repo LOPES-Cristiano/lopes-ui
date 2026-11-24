@@ -390,17 +390,18 @@ export function Toaster({
         duration: DEFAULT_DURATION,
         className: "lopes-ui-toast",
         style: {
-          background: "var(--surface)",
-          color: "var(--surface-foreground)",
+          background: "var(--surface, #ffffff)",
+          color: "var(--surface-foreground, #0f172a)",
           border: "1px solid var(--border)",
           borderRadius: "var(--radius-control)",
           boxShadow: "var(--shadow-floating)",
-          fontSize: 13,
-          lineHeight: "18px",
+          fontSize: 14,
+          lineHeight: "20px",
           maxWidth: "min(450px, 92vw)",
-          padding: "10px 14px",
+          padding: "11px 14px",
           position: "relative",
           overflow: "hidden",
+          WebkitFontSmoothing: "antialiased",
         },
       }}
     >
@@ -450,12 +451,15 @@ export function Toaster({
               shouldReduceMotion
                 ? { duration: 0.15 }
                 : {
-                    type: "spring",
-                    stiffness: 420,
-                    damping: 32,
-                    mass: 0.5,
+                    duration: 0.18,
+                    ease: [0.22, 1, 0.36, 1],
                   }
             }
+            transformTemplate={({ y }) => {
+              const num = typeof y === "string" ? parseFloat(y) : Number(y ?? 0);
+              if (!num || Math.abs(num) < 0.05) return "none";
+              return `translate3d(0, ${Math.round(num)}px, 0)`;
+            }}
             role={isInteractive ? undefined : "button"}
             tabIndex={isInteractive ? undefined : 0}
             aria-label={isInteractive ? undefined : "Fechar notificação"}

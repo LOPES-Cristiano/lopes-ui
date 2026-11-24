@@ -4,6 +4,8 @@ import { useAccessControl } from './useAccessControl';
 import { type ReactNode, type CSSProperties, isValidElement, useEffect, useId, useRef } from 'react';
 import Button from './Button';
 import Modal from './Modal';
+import UnsavedChangesDialog from './UnsavedChangesDialog';
+import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { twMerge } from 'tailwind-merge';
@@ -43,7 +45,11 @@ export interface FormModalProps {
   onTabChange?: (tabId: string) => void;
   onBack?: () => void;
   onNext?: () => void;
-  onSave?: () => void;
+  onSave?: () => void | Promise<void>;
+  /** Marks the form as having unsaved changes (activates close confirmation) */
+  isDirty?: boolean;
+  /** Ask before closing when `isDirty` is true. Default: true */
+  confirmOnDirtyClose?: boolean;
   saveLabel?: string;
   backLabel?: string;
   nextLabel?: string;
@@ -76,6 +82,8 @@ export function FormModal({
   onBack,
   onNext,
   onSave,
+  isDirty = false,
+  confirmOnDirtyClose = true,
   saveLabel,
   backLabel = 'Passo Anterior',
   nextLabel = 'Próximo Passo',
@@ -93,6 +101,22 @@ export function FormModal({
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const { canAccess } = useAccessControl();
   const domIdPrefix = componentIdPrefix || 'erp.form-modal';
+
+  const {
+    requestClose,
+    isConfirmOpen,
+    isSavingFromGuard,
+    handleContinueEditing,
+    handleDiscard,
+    handleSaveAndClose,
+  } = useUnsavedChangesGuard({
+    open,
+    isDirty,
+    saving,
+    confirmOnDirtyClose,
+    onClose,
+    onSave,
+  });
 
   const accessibleTabs = (tabs ?? []).filter((t) => {
     const checkId = t.componentId || (componentIdPrefix ? `${componentIdPrefix}.tab.${t.id}` : undefined);
@@ -164,9 +188,10 @@ export function FormModal({
   };
 
   return (
+    <>
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={requestClose}
       size={size}
       maxWidth={maxWidth}
       variant="rounded"
@@ -264,7 +289,7 @@ export function FormModal({
             type="button"
             aria-label="Fechar"
             data-component-id={`${domIdPrefix}.btn.fechar`}
-            onClick={onClose}
+            onClick={requestClose}
             className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer shrink-0"
           >
             <X size={18} />
@@ -401,6 +426,16 @@ export function FormModal({
         </div>
       </form>
     </Modal>
+
+    <UnsavedChangesDialog
+      open={isConfirmOpen}
+      onContinue={handleContinueEditing}
+      onDiscard={handleDiscard}
+      onSave={onSave ? handleSaveAndClose : undefined}
+      saving={saving || isSavingFromGuard}
+      componentId={componentIdPrefix}
+    />
+    </>
   );
 }
 

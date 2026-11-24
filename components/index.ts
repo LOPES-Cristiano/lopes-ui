@@ -525,3 +525,6 @@ export * from "./form/TreeSelectField";
 
 export { default as ZodForm, useFormContext } from "./form/ZodForm";
 export * from "./form/ZodForm";
+
+export { default as UnsavedChangesDialog } from "./UnsavedChangesDialog";
+export * from "./UnsavedChangesDialog";

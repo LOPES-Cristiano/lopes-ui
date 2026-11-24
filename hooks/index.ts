@@ -31,3 +31,9 @@ export {
   useMediaQuery,
   type LopesMobileBridge,
 } from "./useMediaQuery";
+export {
+  useUnsavedChangesGuard,
+  useDirtySnapshot,
+  type UseUnsavedChangesGuardOptions,
+  type UseUnsavedChangesGuardReturn,
+} from "./useUnsavedChangesGuard";

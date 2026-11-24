@@ -6,6 +6,8 @@ import { X } from "lucide-react";
 import { cn } from "../utils/cn";
 import { hasOpenFloatingOverlay, hasOpenHigherModalOverlay } from "../utils/overlay";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
+import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
+import UnsavedChangesDialog from "./UnsavedChangesDialog";
 
 // ── Global Open-Drawer Stack (topmost Escape + stacked z-index) ───────────────
 
@@ -93,8 +95,8 @@ export type DrawerProps = {
   headerExtra?: React.ReactNode;
   /** Main content */
   children?: React.ReactNode;
-  /** Sticky footer slot */
-  footer?: React.ReactNode;
+  /** Sticky footer slot (or render function receiving `{ requestClose }` for guarded Cancel buttons) */
+  footer?: React.ReactNode | ((ctx: { requestClose: () => void }) => React.ReactNode);
   /** Whether clicking the backdrop closes the drawer. Default: true */
   closeOnBackdrop?: boolean;
   /** Keep children mounted while the drawer is closed. Default: false */
@@ -103,6 +105,20 @@ export type DrawerProps = {
   showHandle?: boolean;
   /** Allow resizing horizontal drawers by dragging the edge. Default: false */
   resizable?: boolean;
+  /** Optional localStorage key to persist the user's resized width */
+  storageKey?: string;
+  /** Minimum width in px when resizable. Default: 320 */
+  minWidth?: number;
+  /** Maximum width in px when resizable. Default: viewport width - 24px */
+  maxWidth?: number;
+  /** Marks the drawer form as having unsaved changes */
+  isDirty?: boolean;
+  /** Optional save callback offered in the unsaved-changes confirmation dialog */
+  onSave?: () => void | Promise<void>;
+  /** Saving state while onSave is running */
+  saving?: boolean;
+  /** Ask before closing when `isDirty` is true. Default: true */
+  confirmOnDirtyClose?: boolean;
   /** Remove default padding on the scrollable content container */
   noPadding?: boolean;
   /** Form layout: spaced body with standard padding (replaces the former FormDrawer). Default: false */
@@ -184,6 +200,13 @@ export default function Drawer({
   keepMounted = false,
   showHandle,
   resizable = false,
+  storageKey,
+  minWidth = 320,
+  maxWidth,
+  isDirty = false,
+  onSave,
+  saving = false,
+  confirmOnDirtyClose = true,
   noPadding = false,
   form = false,
   summary,
@@ -238,9 +261,40 @@ export default function Drawer({
 
   useBodyScrollLock(open);
 
-  const onCloseRef = useRef(onClose);
+  const {
+    requestClose,
+    isConfirmOpen,
+    isSavingFromGuard,
+    handleContinueEditing,
+    handleDiscard,
+    handleSaveAndClose,
+  } = useUnsavedChangesGuard({
+    open,
+    isDirty,
+    saving,
+    confirmOnDirtyClose,
+    onClose,
+    onSave,
+  });
+
+  // Restore persisted width from localStorage when storageKey is provided
   useEffect(() => {
-    onCloseRef.current = onClose;
+    if (!resizable || !storageKey || typeof window === "undefined") return;
+    try {
+      const saved = window.localStorage.getItem(storageKey);
+      if (saved !== null) {
+        const parsed = Number(saved);
+        if (!Number.isNaN(parsed) && parsed >= minWidth) {
+          const upper = maxWidth ?? window.innerWidth - 24;
+          setCustomWidth(Math.min(Math.max(minWidth, parsed), upper));
+        }
+      }
+    } catch {}
+  }, [resizable, storageKey, minWidth, maxWidth]);
+
+  const onCloseRef = useRef(requestClose);
+  useEffect(() => {
+    onCloseRef.current = requestClose;
   });
 
   useEffect(() => {
@@ -273,9 +327,9 @@ export default function Drawer({
       if (!panel || panel.contains(document.activeElement)) return;
       const focusables = panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
       if (focusables.length > 0) {
-        focusables[0].focus();
+        focusables[0].focus({ preventScroll: true });
       } else {
-        panel.focus();
+        panel.focus({ preventScroll: true });
       }
     });
 
@@ -328,7 +382,7 @@ export default function Drawer({
     dragStartY.current = null;
     if (Math.abs(dragOffsetY) > 100) {
       setDragOffsetY(0);
-      onClose();
+      requestClose();
     } else {
       setDragOffsetY(0);
     }
@@ -340,20 +394,38 @@ export default function Drawer({
     e.preventDefault();
     const startX = e.clientX;
     const startW = panelRef.current?.getBoundingClientRect().width ?? 440;
+    let latestW = startW;
 
     const onMove = (moveEvent: PointerEvent) => {
       const delta = side === "right" ? startX - moveEvent.clientX : moveEvent.clientX - startX;
-      const nextW = Math.min(Math.max(300, startW + delta), window.innerWidth - 24);
+      const upper = maxWidth ?? window.innerWidth - 24;
+      const nextW = Math.min(Math.max(minWidth, startW + delta), upper);
+      latestW = nextW;
       setCustomWidth(nextW);
     };
 
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      if (storageKey && typeof window !== "undefined") {
+        try {
+          window.localStorage.setItem(storageKey, String(Math.round(latestW)));
+        } catch {}
+      }
     };
 
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+  };
+
+  const handleResizeDoubleClick = () => {
+    if (!isHorizontal || !resizable) return;
+    setCustomWidth(null);
+    if (storageKey && typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem(storageKey);
+      } catch {}
+    }
   };
 
   if (!mounted || (!open && !rendered && !keepMounted)) return null;
@@ -369,7 +441,7 @@ export default function Drawer({
           closeOnBackdrop
             ? () => {
                 if (!hasOpenFloatingOverlay()) {
-                  onClose();
+                  requestClose();
                 }
               }
             : undefined
@@ -413,12 +485,16 @@ export default function Drawer({
         {resizable && isHorizontal && (
           <div
             onPointerDown={handleResizePointerDown}
+            onDoubleClick={handleResizeDoubleClick}
+            title="Arraste para redimensionar (duplo clique para restaurar)"
             className={cn(
-              "hidden sm:block absolute inset-y-0 z-20 w-1.5 cursor-col-resize hover:bg-brand/40 active:bg-brand transition-colors",
+              "group hidden sm:flex absolute inset-y-0 z-20 w-2 cursor-col-resize items-center justify-center hover:bg-brand/25 active:bg-brand/40 transition-colors",
               side === "right" ? "left-0" : "right-0"
             )}
             aria-hidden="true"
-          />
+          >
+            <div className="h-10 w-1 rounded-full bg-border/0 group-hover:bg-brand/80 group-active:bg-brand transition-colors" />
+          </div>
         )}
 
         {/* Drag Handle for Bottom Drawer */}
@@ -468,7 +544,7 @@ export default function Drawer({
                 <button
                   data-component-id={componentId ? `${componentId}.close` : "erp.drawer.close"}
                   type="button"
-                  onClick={onClose}
+                  onClick={requestClose}
                   aria-label="Fechar"
                   className="inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius-control)] text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 active:scale-95 border-none"
                 >
@@ -516,7 +592,7 @@ export default function Drawer({
               footerClassName
             )}
           >
-            {footer}
+            {typeof footer === "function" ? footer({ requestClose }) : footer}
           </div>
         )}
 
@@ -532,6 +608,15 @@ export default function Drawer({
           </div>
         )}
       </div>
+
+      <UnsavedChangesDialog
+        open={isConfirmOpen}
+        onContinue={handleContinueEditing}
+        onDiscard={handleDiscard}
+        onSave={onSave ? handleSaveAndClose : undefined}
+        saving={saving || isSavingFromGuard}
+        componentId={componentId}
+      />
     </>,
     document.body,
   );

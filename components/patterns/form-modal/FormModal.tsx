@@ -12,7 +12,9 @@ import {
 import { X, Check, type LucideIcon } from 'lucide-react';
 import { cn } from '../../../utils/cn';
 import { hasOpenFloatingOverlay, isFloatingOverlayTarget } from '../../../utils/overlay';
+import { useUnsavedChangesGuard } from '../../../hooks/useUnsavedChangesGuard';
 import Button from '../../Button';
+import UnsavedChangesDialog from '../../UnsavedChangesDialog';
 
 // ── Context ───────────────────────────────────────────────────────────────────
 
@@ -50,6 +52,14 @@ export interface FormModalProps {
   maxWidth?: string | number;
   preventCloseOnBackdrop?: boolean;
   loading?: boolean;
+  /** Marks the form as having unsaved changes (activates close confirmation) */
+  isDirty?: boolean;
+  /** Optional save callback offered in the unsaved-changes confirmation dialog */
+  onSave?: () => void | Promise<void>;
+  /** Saving state while onSave is running */
+  saving?: boolean;
+  /** Ask before closing when `isDirty` is true. Default: true */
+  confirmOnDirtyClose?: boolean;
   className?: string;
   children: React.ReactNode;
   componentId?: string;
@@ -109,6 +119,10 @@ export function FormModal({
   maxWidth,
   preventCloseOnBackdrop = false,
   loading = false,
+  isDirty = false,
+  onSave,
+  saving = false,
+  confirmOnDirtyClose = true,
   className,
   children,
   componentId,
@@ -116,12 +130,31 @@ export function FormModal({
   const [hasHeaderTitle, setHasHeaderTitle] = React.useState(false);
   const accessibleTitle = title ?? ariaLabel ?? ariaLabelAttr ?? 'Formulário';
 
+  const {
+    requestClose,
+    isConfirmOpen,
+    isSavingFromGuard,
+    handleContinueEditing,
+    handleDiscard,
+    handleSaveAndClose,
+  } = useUnsavedChangesGuard({
+    open,
+    isDirty,
+    saving: loading || saving,
+    confirmOnDirtyClose,
+    onClose,
+    onSave,
+  });
+
+  const isBusy = loading || saving || isSavingFromGuard;
+
   return (
+    <>
     <Dialog
       open={open}
       onOpenChange={(isOpen) => {
-        if (!isOpen && !loading) {
-          onClose();
+        if (!isOpen && !isBusy) {
+          requestClose();
         }
       }}
     >
@@ -132,24 +165,24 @@ export function FormModal({
         style={maxWidth ? { maxWidth } : undefined}
         onPointerDownOutside={(e) => {
           const rawTarget = e.detail?.originalEvent?.target ?? e.target;
-          if (preventCloseOnBackdrop || loading || isFloatingOverlayTarget(rawTarget)) {
+          if (preventCloseOnBackdrop || isBusy || isConfirmOpen || isFloatingOverlayTarget(rawTarget)) {
             e.preventDefault();
           }
         }}
         onInteractOutside={(e) => {
           const rawTarget = e.detail?.originalEvent?.target ?? e.target;
-          if (preventCloseOnBackdrop || loading || isFloatingOverlayTarget(rawTarget)) {
+          if (preventCloseOnBackdrop || isBusy || isConfirmOpen || isFloatingOverlayTarget(rawTarget)) {
             e.preventDefault();
           }
         }}
         onFocusOutside={(e) => {
           const rawTarget = e.detail?.originalEvent?.target ?? e.target;
-          if (isFloatingOverlayTarget(rawTarget)) {
+          if (isConfirmOpen || isFloatingOverlayTarget(rawTarget)) {
             e.preventDefault();
           }
         }}
         onEscapeKeyDown={(e) => {
-          if (loading || hasOpenFloatingOverlay()) {
+          if (isBusy || isConfirmOpen || hasOpenFloatingOverlay()) {
             e.preventDefault();
           }
         }}
@@ -167,12 +200,22 @@ export function FormModal({
         {!hasHeaderTitle && <DialogTitle className="sr-only">{accessibleTitle}</DialogTitle>}
 
         <FormModalContext.Provider
-          value={{ open, onClose, size, loading, hasHeaderTitle, setHasHeaderTitle, componentId }}
+          value={{ open, onClose: requestClose, size, loading: isBusy, hasHeaderTitle, setHasHeaderTitle, componentId }}
         >
           {children}
         </FormModalContext.Provider>
       </DialogContent>
     </Dialog>
+
+    <UnsavedChangesDialog
+      open={isConfirmOpen}
+      onContinue={handleContinueEditing}
+      onDiscard={handleDiscard}
+      onSave={onSave ? handleSaveAndClose : undefined}
+      saving={saving || isSavingFromGuard}
+      componentId={componentId}
+    />
+    </>
   );
 }
 

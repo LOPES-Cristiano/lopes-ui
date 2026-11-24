@@ -161,6 +161,8 @@ export interface ModalProps {
   animation?: 'slide-right' | 'slide-left' | 'slide-from-right' | 'drawer' | 'zoom' | 'fade';
   componentId?: string;
   zIndex?: number;
+  /** Whether clicking the backdrop closes the modal. Default: true */
+  closeOnBackdrop?: boolean;
 }
 
 const sizeConfig: Record<
@@ -211,6 +213,7 @@ export default function Modal({
   animation,
   componentId,
   zIndex,
+  closeOnBackdrop = true,
 }: ModalProps) {
   const resolvedOpen = Boolean(isOpen !== undefined ? isOpen : (open ?? true));
   const isActuallyOpen = resolvedOpen;
@@ -269,7 +272,7 @@ export default function Modal({
     const raf = requestAnimationFrame(() => {
       const card = cardRef.current;
       if (!card || card.contains(document.activeElement)) return;
-      card.focus();
+      card.focus({ preventScroll: true });
     });
 
     const handleTab = (e: KeyboardEvent) => {
@@ -297,7 +300,7 @@ export default function Modal({
     return () => {
       cancelAnimationFrame(raf);
       document.removeEventListener('keydown', handleTab);
-      prevFocused?.focus?.();
+      prevFocused?.focus?.({ preventScroll: true });
     };
   }, [isActuallyOpen, mounted]);
 
@@ -324,9 +327,16 @@ export default function Modal({
       ? document.getElementById('erp-workspace-container')
       : null;
 
+  const isDrawerAnimation =
+    animation === 'drawer' ||
+    animation === 'slide-from-right' ||
+    (!animation && (isFullscreen || offsetHeader || withinShell));
+
   const animationClass = isClosing
-    ? 'animate-out fade-out-0 zoom-out-95 duration-150 pointer-events-none motion-reduce:animate-none'
-    : animation === 'drawer' || animation === 'slide-from-right' || (!animation && (isFullscreen || offsetHeader || withinShell))
+    ? isDrawerAnimation
+      ? 'animate-out fade-out-0 slide-out-to-right duration-150 pointer-events-none motion-reduce:animate-none'
+      : 'animate-out fade-out-0 zoom-out-95 duration-150 pointer-events-none motion-reduce:animate-none'
+    : isDrawerAnimation
       ? 'animate-drawer-slide-in'
       : animation === 'slide-left'
         ? 'animate-slide-in-left'
@@ -443,11 +453,15 @@ export default function Modal({
             : 'animate-in fade-in-0 duration-200 motion-reduce:animate-none',
           !shellContainer && offsetHeader && 'top-14'
         )}
-        onClick={() => {
-          if (!hasOpenFloatingOverlay()) {
-            onClose();
-          }
-        }}
+        onClick={
+          closeOnBackdrop
+            ? () => {
+                if (!hasOpenFloatingOverlay()) {
+                  onClose();
+                }
+              }
+            : undefined
+        }
         aria-hidden="true"
       />
 

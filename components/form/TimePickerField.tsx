@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, Clock, X } from "lucide-react";
+import { Check, Clock, Moon, RotateCcw, Sun, X, Zap } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import FieldWrapper, { type FieldWrapperProps } from "./FieldWrapper";
 import { useEscKey } from "../Modal";
@@ -23,11 +23,15 @@ export type TimePickerFieldProps = Omit<FieldWrapperProps, "children" | "id"> & 
   stepMinutes?: number;
   /** Quick preset times displayed at the top of the popover (pass `[]` to hide) */
   quickTimes?: readonly string[];
+  /** Optional subtitle displayed in the popover header */
+  subtitle?: string;
+  /** Optional duration or contextual info displayed in the right preview panel (e.g. "1h", "45min") */
+  durationLabel?: React.ReactNode;
   /** If true, hides the component when access is denied instead of disabling it */
   hideIfDenied?: boolean;
 };
 
-const DEFAULT_QUICK_TIMES = ["08:00", "09:00", "12:00", "14:00", "18:00"] as const;
+const DEFAULT_QUICK_TIMES = ["08:00", "09:00", "12:00"] as const;
 
 function normalizeTimeString(raw?: string): string {
   if (!raw) return "";
@@ -36,6 +40,13 @@ function normalizeTimeString(raw?: string): string {
     return `${match[1].padStart(2, "0")}:${match[2]}`;
   }
   return raw;
+}
+
+function parseHourMinute(val: string): [string | null, string | null] {
+  if (!val) return [null, null];
+  const match = val.match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return [null, null];
+  return [match[1].padStart(2, "0"), match[2]];
 }
 
 export default function TimePickerField({
@@ -63,12 +74,16 @@ export default function TimePickerField({
   componentId,
   stepMinutes = 5,
   quickTimes = DEFAULT_QUICK_TIMES,
+  subtitle = "Escolha o horário de forma rápida ou selecione manualmente.",
+  durationLabel,
   hideIfDenied = false,
 }: TimePickerFieldProps) {
   const autoId = useId();
   const id = idProp ?? autoId;
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const hoursListRef = useRef<HTMLDivElement>(null);
+  const minutesListRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const { canAccess } = useAccessControl();
   const hasPermission = !componentId || canAccess(componentId);
@@ -76,6 +91,7 @@ export default function TimePickerField({
 
   const [internalValue, setInternalValue] = useState(() => normalizeTimeString(defaultValue));
   const [editingText, setEditingText] = useState<string | null>(null);
+  const [draftTime, setDraftTime] = useState<string>("");
   const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({
     position: "fixed",
     visibility: "hidden",
@@ -88,11 +104,14 @@ export default function TimePickerField({
   );
   const typedValue = editingText !== null ? editingText : committedTime;
 
-  const commitTime = (next: string) => {
-    setEditingText(null);
-    if (value === undefined) setInternalValue(next);
-    onChange?.(next);
-  };
+  const commitTime = useCallback(
+    (next: string) => {
+      setEditingText(null);
+      if (value === undefined) setInternalValue(next);
+      onChange?.(next);
+    },
+    [onChange, value],
+  );
 
   const closePanel = useCallback(() => {
     setOpen(false);
@@ -106,16 +125,13 @@ export default function TimePickerField({
 
   useEscKey(closePanel, open);
 
-  const [selectedHour, selectedMinute] = useMemo(() => {
-    if (!typedValue) return [null, null];
-    const match = typedValue.match(/^(\d{1,2}):(\d{2})/);
-    if (!match) return [null, null];
-    return [match[1].padStart(2, "0"), match[2]];
-  }, [typedValue]);
+  const activeTime = open ? draftTime : typedValue;
+  const [selectedHour, selectedMinute] = useMemo(() => parseHourMinute(activeTime), [activeTime]);
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value;
     if (raw === "") {
+      setDraftTime("");
       commitTime("");
       return;
     }
@@ -135,6 +151,7 @@ export default function TimePickerField({
       const min = Number(clean.slice(2, 4));
       if (hour >= 0 && hour <= 23 && min >= 0 && min <= 59) {
         const val = `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+        setDraftTime(val);
         commitTime(val);
       }
     }
@@ -144,13 +161,15 @@ export default function TimePickerField({
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    const panelWidth = Math.min(272, window.innerWidth - 24);
+    const panelWidth = Math.min(520, window.innerWidth - 24);
+    const estHeight = quickTimes.length > 0 ? 410 : 340;
     const left = Math.min(Math.max(12, rect.left), window.innerWidth - panelWidth - 12);
-    const estHeight = quickTimes.length > 0 ? 316 : 264;
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
     const openAbove = spaceBelow < estHeight && spaceAbove > spaceBelow;
-    const top = openAbove ? Math.max(12, rect.top - estHeight - 6) : rect.bottom + 6;
+    const top = openAbove
+      ? Math.max(12, rect.top - estHeight - 8)
+      : Math.min(rect.bottom + 8, Math.max(12, window.innerHeight - estHeight - 12));
 
     setPanelStyle({
       position: "fixed",
@@ -165,6 +184,7 @@ export default function TimePickerField({
 
   const handleOpen = () => {
     if (effectiveDisabled || readOnly) return;
+    setDraftTime(committedTime);
     updatePosition();
     setOpen(true);
   };
@@ -172,6 +192,7 @@ export default function TimePickerField({
   const handleToggle = () => {
     if (effectiveDisabled || readOnly) return;
     if (!open) {
+      setDraftTime(committedTime);
       updatePosition();
       setOpen(true);
     } else {
@@ -182,7 +203,13 @@ export default function TimePickerField({
   useEffect(() => {
     if (!open) return;
 
-    const rafId = window.requestAnimationFrame(updatePosition);
+    const rafId = window.requestAnimationFrame(() => {
+      updatePosition();
+      const selH = hoursListRef.current?.querySelector<HTMLElement>('[data-selected="true"]');
+      selH?.scrollIntoView({ block: "center", behavior: "instant" as ScrollBehavior });
+      const selM = minutesListRef.current?.querySelector<HTMLElement>('[data-selected="true"]');
+      selM?.scrollIntoView({ block: "center", behavior: "instant" as ScrollBehavior });
+    });
 
     function handleOutsideClick(event: MouseEvent) {
       const target = event.target as Node;
@@ -203,30 +230,33 @@ export default function TimePickerField({
   }, [open, updatePosition, closePanel]);
 
   function handleSelectHour(h: string) {
-    const min = selectedMinute || "00";
-    commitTime(`${h}:${min}`);
+    const min = selectedMinute ?? "00";
+    setDraftTime(`${h}:${min}`);
   }
 
   function handleSelectMinute(m: string) {
-    const h = selectedHour || "08";
-    commitTime(`${h}:${m}`);
-    closePanel();
+    const h = selectedHour ?? "08";
+    setDraftTime(`${h}:${m}`);
   }
 
   function handleQuickSelect(t: string) {
-    commitTime(t);
-    closePanel();
+    setDraftTime(t);
   }
 
   function handleNow() {
     const now = new Date();
     const h = String(now.getHours()).padStart(2, "0");
     const m = String(now.getMinutes()).padStart(2, "0");
-    commitTime(`${h}:${m}`);
+    setDraftTime(`${h}:${m}`);
+  }
+
+  function handleConfirm() {
+    commitTime(draftTime);
     closePanel();
   }
 
   function handleClear() {
+    setDraftTime("");
     commitTime("");
     closePanel();
   }
@@ -243,7 +273,8 @@ export default function TimePickerField({
 
   if (!hasPermission && hideIfDenied) return null;
 
-  const describedBy = error ? `${id}-error` : (helpText || hint) ? `${id}-help` : undefined;
+  const describedBy = error ? `${id}-error` : helpText || hint ? `${id}-help` : undefined;
+  const visibleQuickTimes = quickTimes.slice(0, 3);
 
   return (
     <FieldWrapper
@@ -282,7 +313,11 @@ export default function TimePickerField({
             onBlur={() => setEditingText(null)}
             className={twMerge(
               "flex w-full items-center gap-2 rounded-[var(--radius-control)] border bg-input pr-9 text-left font-mono tabular-nums text-input-foreground placeholder:text-input-placeholder outline-none transition-[background-color,border-color,box-shadow] duration-150",
-              size === "sm" ? "h-8 text-xs px-2.5" : size === "lg" ? "h-12 text-base px-4" : "h-10 text-sm px-3",
+              size === "sm"
+                ? "h-8 text-xs px-2.5"
+                : size === "lg"
+                  ? "h-12 text-base px-4"
+                  : "h-10 text-sm px-3",
               error
                 ? "border-danger focus:border-danger focus:ring-3 focus:ring-danger/15"
                 : "border-input-border hover:border-border-strong focus:border-ring focus:ring-3 focus:ring-ring/12",
@@ -310,148 +345,233 @@ export default function TimePickerField({
               ref={panelRef}
               data-floating-open="true"
               style={panelStyle}
-              className="pointer-events-auto z-[9200] flex flex-col rounded-[var(--radius-card)] border border-border bg-popover text-popover-foreground p-3 shadow-[var(--shadow-floating)] select-none animate-in fade-in-0 zoom-in-95 duration-150 motion-reduce:animate-none"
+              className="pointer-events-auto z-[9200] flex flex-col rounded-[var(--radius-overlay)] border border-border bg-card text-card-foreground shadow-[var(--shadow-overlay)] overflow-hidden select-none animate-in fade-in-0 zoom-in-95 duration-150 motion-reduce:animate-none"
             >
-              <div className="flex items-center justify-between pb-2 border-b border-border mb-2">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-                  <Clock size={14} className="text-primary" />
-                  <span>Selecionar horário</span>
+              {/* Cabeçalho */}
+              <div className="flex items-start justify-between gap-3 px-5 py-3.5 border-b border-border bg-card">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/25 bg-primary/10 text-primary">
+                    <Clock size={17} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-foreground leading-snug">
+                      Selecionar Horário
+                    </div>
+                    {subtitle && (
+                      <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                        {subtitle}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <button
                   type="button"
                   aria-label="Fechar seletor de horário"
                   onClick={closePanel}
                   data-component-id={componentId ? `${componentId}.close` : "erp.timepicker.close"}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition cursor-pointer"
+                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
                 >
-                  <X size={13} />
+                  <X size={15} />
                 </button>
               </div>
 
-              {quickTimes.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1 mb-2.5 pb-2.5 border-b border-border">
-                  <button
-                    type="button"
-                    onClick={handleNow}
-                    data-component-id={componentId ? `${componentId}.now` : "erp.timepicker.now"}
-                    className="h-6 px-2 rounded-md text-[11px] font-semibold bg-primary-soft text-primary-soft-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition cursor-pointer"
-                  >
-                    Agora
-                  </button>
-                  {quickTimes.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => handleQuickSelect(t)}
-                      data-component-id={
-                        componentId
-                          ? `${componentId}.quick-${t.replace(":", "")}`
-                          : `erp.timepicker.quick-${t.replace(":", "")}`
-                      }
-                      className={twMerge(
-                        "h-6 px-2 rounded-md text-[11px] font-mono tabular-nums transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-                        typedValue === t
-                          ? "bg-primary text-primary-foreground font-bold"
-                          : "bg-surface-muted text-surface-foreground hover:bg-surface-hover",
-                      )}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-2 h-44 max-h-44 min-h-0">
-                <div className="flex flex-col h-full min-h-0 border border-border rounded-[var(--radius-control)] p-1 bg-surface-muted/40">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-center py-0.5 border-b border-border shrink-0">
-                    Hora
-                  </span>
-                  <div className="flex-1 overflow-y-auto overscroll-contain min-h-0 p-0.5 space-y-0.5">
-                    {hours.map((h) => {
-                      const isSelected = selectedHour === h;
-                      return (
+              {/* Corpo: Coluna de Seleção + Painel de Pré-visualização */}
+              <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_168px]">
+                {/* Esquerda: Horários rápidos + Colunas Horas / Minutos */}
+                <div className="p-4 space-y-3.5 min-w-0">
+                  {quickTimes.length > 0 && (
+                    <div className="space-y-1.5">
+                      <span className="block text-[11px] font-medium text-muted-foreground">
+                        Horários rápidos
+                      </span>
+                      <div className="grid grid-cols-4 gap-1.5">
                         <button
-                          data-component-id={
-                            componentId ? `${componentId}.hour-${h}` : `erp.timepicker.hour-${h}`
-                          }
-                          key={h}
                           type="button"
-                          onClick={() => handleSelectHour(h)}
-                          className={twMerge(
-                            "w-full min-h-6 py-1 px-2 rounded-md text-xs font-mono tabular-nums font-medium flex items-center justify-between transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-                            isSelected
-                              ? "bg-primary text-primary-foreground font-bold shadow-xs"
-                              : "hover:bg-surface-hover text-surface-foreground",
-                          )}
+                          onClick={handleNow}
+                          data-component-id={componentId ? `${componentId}.now` : "erp.timepicker.now"}
+                          className="inline-flex h-8 items-center justify-center gap-1 rounded-[var(--radius-control)] border border-primary/35 bg-primary/10 px-2 text-xs font-semibold text-primary hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
                         >
-                          <span>{h}h</span>
-                          {isSelected && <Check size={11} />}
+                          <Zap size={12} className="shrink-0" />
+                          <span>Agora</span>
                         </button>
-                      );
-                    })}
+                        {visibleQuickTimes.map((t) => {
+                          const hourNum = Number(t.slice(0, 2));
+                          const isNight = hourNum >= 18 || hourNum < 6;
+                          const isActive = draftTime === t;
+                          return (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={() => handleQuickSelect(t)}
+                              data-component-id={
+                                componentId
+                                  ? `${componentId}.quick-${t.replace(":", "")}`
+                                  : `erp.timepicker.quick-${t.replace(":", "")}`
+                              }
+                              className={twMerge(
+                                "inline-flex h-8 items-center justify-center gap-1 rounded-[var(--radius-control)] border px-2 text-xs font-mono tabular-nums font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                                isActive
+                                  ? "border-primary bg-primary text-primary-foreground font-semibold shadow-xs"
+                                  : "border-border bg-muted/35 text-foreground hover:bg-muted",
+                              )}
+                            >
+                              {isNight ? (
+                                <Moon size={12} className="shrink-0 opacity-75" />
+                              ) : (
+                                <Sun size={12} className="shrink-0 opacity-75" />
+                              )}
+                              <span>{t}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Colunas Horas & Minutos */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Horas */}
+                    <div className="flex flex-col h-52 rounded-xl border border-border bg-muted/20 overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-2 border-b border-border/80 bg-card/60 shrink-0">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                          <Clock size={12} className="text-muted-foreground" />
+                          <span>Horas</span>
+                        </span>
+                        <span className="text-[11px] font-mono tabular-nums text-muted-foreground">
+                          0 – 23
+                        </span>
+                      </div>
+                      <div
+                        ref={hoursListRef}
+                        className="flex-1 overflow-y-auto overscroll-contain p-1.5 space-y-0.5"
+                      >
+                        {hours.map((h) => {
+                          const isSelected = selectedHour === h;
+                          return (
+                            <button
+                              data-component-id={
+                                componentId ? `${componentId}.hour-${h}` : `erp.timepicker.hour-${h}`
+                              }
+                              data-selected={isSelected ? "true" : undefined}
+                              key={h}
+                              type="button"
+                              onClick={() => handleSelectHour(h)}
+                              className={twMerge(
+                                "w-full h-8 px-3 rounded-lg text-sm font-mono tabular-nums flex items-center justify-between transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                                isSelected
+                                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                                  : "text-foreground/85 hover:bg-muted",
+                              )}
+                            >
+                              <span>{h}</span>
+                              {isSelected && <Check size={14} strokeWidth={2.5} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Minutos */}
+                    <div className="flex flex-col h-52 rounded-xl border border-border bg-muted/20 overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-2 border-b border-border/80 bg-card/60 shrink-0">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                          <Clock size={12} className="text-muted-foreground" />
+                          <span>Minutos</span>
+                        </span>
+                        <span className="text-[11px] font-mono tabular-nums text-muted-foreground">
+                          0 – 59
+                        </span>
+                      </div>
+                      <div
+                        ref={minutesListRef}
+                        className="flex-1 overflow-y-auto overscroll-contain p-1.5 space-y-0.5"
+                      >
+                        {minutes.map((m) => {
+                          const isSelected = selectedMinute === m;
+                          return (
+                            <button
+                              data-component-id={
+                                componentId ? `${componentId}.min-${m}` : `erp.timepicker.min-${m}`
+                              }
+                              data-selected={isSelected ? "true" : undefined}
+                              key={m}
+                              type="button"
+                              onClick={() => handleSelectMinute(m)}
+                              onDoubleClick={() => {
+                                const h = selectedHour ?? "08";
+                                commitTime(`${h}:${m}`);
+                                closePanel();
+                              }}
+                              className={twMerge(
+                                "w-full h-8 px-3 rounded-lg text-sm font-mono tabular-nums flex items-center justify-between transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                                isSelected
+                                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                                  : "text-foreground/85 hover:bg-muted",
+                              )}
+                            >
+                              <span>{m}</span>
+                              {isSelected && <Check size={14} strokeWidth={2.5} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col h-full min-h-0 border border-border rounded-[var(--radius-control)] p-1 bg-surface-muted/40">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-center py-0.5 border-b border-border shrink-0">
-                    Min
-                  </span>
-                  <div className="flex-1 overflow-y-auto overscroll-contain min-h-0 p-0.5 space-y-0.5">
-                    {minutes.map((m) => {
-                      const isSelected = selectedMinute === m;
-                      return (
-                        <button
-                          data-component-id={
-                            componentId ? `${componentId}.min-${m}` : `erp.timepicker.min-${m}`
-                          }
-                          key={m}
-                          type="button"
-                          onClick={() => handleSelectMinute(m)}
-                          className={twMerge(
-                            "w-full min-h-6 py-1 px-2 rounded-md text-xs font-mono tabular-nums font-medium flex items-center justify-between transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-                            isSelected
-                              ? "bg-primary text-primary-foreground font-bold shadow-xs"
-                              : "hover:bg-surface-hover text-surface-foreground",
-                          )}
-                        >
-                          <span>:{m}</span>
-                          {isSelected && <Check size={11} />}
-                        </button>
-                      );
-                    })}
+                {/* Direita: Painel de Resumo / Pré-visualização */}
+                <div className="hidden sm:flex flex-col items-center justify-center gap-3 p-5 border-l border-border bg-muted/15 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-primary/25 bg-primary/10 text-primary shadow-2xs">
+                    <Clock size={26} strokeWidth={1.8} />
                   </div>
+                  <div className="space-y-1">
+                    <span className="block text-xs text-muted-foreground">
+                      Horário selecionado
+                    </span>
+                    <div className="text-3xl font-bold font-mono tabular-nums tracking-tight text-foreground">
+                      {draftTime || "--:--"}
+                    </div>
+                  </div>
+                  {durationLabel && (
+                    <div className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs">
+                      <Clock size={12} className="text-muted-foreground shrink-0" />
+                      <span className="text-muted-foreground">Duração</span>
+                      <span className="font-semibold text-primary">{durationLabel}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="mt-2.5 pt-2 border-t border-border flex items-center justify-between">
+              {/* Rodapé */}
+              <div className="px-5 py-3 border-t border-border bg-muted/20 flex items-center justify-between gap-2">
                 <button
                   data-component-id={componentId ? `${componentId}.clear` : "erp.timepicker.clear"}
                   type="button"
                   onClick={handleClear}
-                  className="min-h-6 px-1.5 rounded text-xs text-muted-foreground hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition cursor-pointer font-medium"
+                  className="inline-flex h-8 items-center gap-1.5 rounded-[var(--radius-control)] px-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
                 >
-                  Limpar
+                  <RotateCcw size={13} />
+                  <span>Limpar</span>
                 </button>
-                <div className="flex items-center gap-1.5">
-                  {quickTimes.length === 0 && (
-                    <button
-                      data-component-id={componentId ? `${componentId}.now` : "erp.timepicker.now"}
-                      type="button"
-                      onClick={handleNow}
-                      className="min-h-6 px-2.5 py-1 rounded-[var(--radius-control)] bg-surface-muted hover:bg-surface-hover text-surface-foreground text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition cursor-pointer"
-                    >
-                      Agora
-                    </button>
-                  )}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    data-component-id={componentId ? `${componentId}.cancel` : "erp.timepicker.cancel"}
+                    type="button"
+                    onClick={closePanel}
+                    className="inline-flex h-8 items-center justify-center rounded-[var(--radius-control)] border border-border bg-card px-3.5 text-xs font-semibold text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
                   <button
                     data-component-id={
                       componentId ? `${componentId}.confirm` : "erp.timepicker.confirm"
                     }
                     type="button"
-                    onClick={closePanel}
-                    className="min-h-6 px-3 py-1 rounded-[var(--radius-control)] bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition cursor-pointer shadow-xs"
+                    onClick={handleConfirm}
+                    className="inline-flex h-8 items-center justify-center rounded-[var(--radius-control)] bg-primary px-4 text-xs font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors cursor-pointer shadow-xs"
                   >
-                    OK
+                    Confirmar
                   </button>
                 </div>
               </div>
