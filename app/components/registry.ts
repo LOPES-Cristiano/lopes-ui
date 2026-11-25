@@ -59,6 +59,7 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   e("Drawer", "Ações", "actions", "drawer", "Painel lateral deslizante (prop `form` para formulários)."),
   e("Modal", "Ações", "actions", "modals", "Janela modal centralizada."),
   e("FormModal", "Ações", "actions", "modals", "Modal para formulários, com abas e seções."),
+  e("UnsavedChangesDialog", "Ações", "actions", "modals", "Diálogo de alterações não salvas (use com `useUnsavedChangesGuard`)."),
   e("State", "Ações", "actions", "empty-state", "Estado unificado: vazio (empty), resultado de ação (result) ou página de status (page)."),
   e("Toast", "Ações", "actions", "toasts", "Notificações temporárias (toast / Toaster)."),
   e("SpeedDial", "Ações", "actions", "speed-dial", "Botão flutuante com ações expansíveis."),

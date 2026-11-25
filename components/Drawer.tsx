@@ -286,6 +286,8 @@ export default function Drawer({
         const parsed = Number(saved);
         if (!Number.isNaN(parsed) && parsed >= minWidth) {
           const upper = maxWidth ?? window.innerWidth - 24;
+          // Hydrating persisted width from localStorage (client-only external source)
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setCustomWidth(Math.min(Math.max(minWidth, parsed), upper));
         }
       }

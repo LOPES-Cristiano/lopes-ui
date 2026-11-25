@@ -201,7 +201,7 @@ export function SidebarUserMenu({
             aria-expanded={open}
             aria-haspopup="menu"
             onClick={toggleOpen}
-            className="flex w-full justify-center py-1 cursor-pointer focus:outline-none"
+            className="flex w-full justify-center py-1 cursor-pointer rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {avatarEl}
           </button>

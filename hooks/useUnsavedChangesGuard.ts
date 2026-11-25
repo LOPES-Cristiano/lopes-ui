@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 export interface UseUnsavedChangesGuardOptions {
   /** Whether the guarded modal/drawer is currently open */
@@ -51,11 +51,10 @@ export function useUnsavedChangesGuard({
   const isBusy = saving || isSavingFromGuard;
 
   // Reset confirmation dialog whenever the parent overlay closes
-  useEffect(() => {
-    if (!open && isConfirmOpen) {
-      setIsConfirmOpen(false);
-    }
-  }, [open, isConfirmOpen]);
+  // (adjusting state during render avoids a cascading effect render)
+  if (!open && isConfirmOpen) {
+    setIsConfirmOpen(false);
+  }
 
   const requestClose = useCallback(() => {
     if (isBusy) return;

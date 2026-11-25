@@ -1,8 +1,8 @@
-# Lopes UI — Design System & Biblioteca de Componentes (`v1.2.0`)
+﻿# Lopes UI — Design System & Biblioteca de Componentes (`v1.2.0`)
 
 > Biblioteca corporativa de componentes React construída com **Next.js 16.4**, **React 19.2**, **Tailwind CSS v4**, **Radix UI Primitives** e **TypeScript** — empacotada via `tsup` (ESM + CJS + `.d.ts`) com CLI de configuração automática, suporte mobile-first / WebView Super App e playground interativo integrado.
 
-Atualizado em `2026-11-13`.
+Atualizado em `2026-11-25`.
 
 ---
 
@@ -28,7 +28,7 @@ Atualizado em `2026-11-13`.
 O repositório **`lopes-ui`** opera simultaneamente em duas frentes complementares dentro do ecossistema **BigLar Móveis & Eletro**:
 
 1. **Biblioteca Empacotada (`dist/`)**: compilada com `tsup` em `ESM` e `CJS` com declarações TypeScript (`.d.ts` / `.d.mts`), diretiva `"use client"` injetada automaticamente para compatibilidade nativa com React Server Components (RSC), folha de tokens `lopes-ui/styles.css` e **8 subpaths modulares** que isolam dependências opcionais pesadas (Tiptap, TanStack Table/Virtual, Shiki e MapLibre GL).
-2. **Showcase Interativo & UI Builder (`app/`)**: aplicação Next.js 16 executada na porta **`3002`** com catálogo vivo de **155 entradas auditadas** em `app/components/registry.ts`, vitrines temáticas (`/showcase/*`), templates corporativos (`/templates`) e construtor visual (`/ui-builder`).
+2. **Showcase Interativo & UI Builder (`app/`)**: aplicação Next.js 16 executada na porta **`3002`** com catálogo vivo de **156 entradas auditadas** em `app/components/registry.ts`, vitrines temáticas (`/showcase/*`), templates corporativos (`/templates`) e construtor visual (`/ui-builder`).
 
 ---
 
@@ -120,7 +120,7 @@ Acesse **`http://localhost:3002`** para explorar o catálogo interativo de compo
 | `npm run start` | Inicia o servidor Next.js compilado |
 | `npm run lint` | Executa análise estática com ESLint 9 |
 | `npm run typecheck` | Validação completa de tipos TypeScript (`tsc --noEmit`) |
-| `npm run check:registry` | Audita integridade entre os componentes exportados e as **155 entradas** de `app/components/registry.ts` |
+| `npm run check:registry` | Audita integridade entre os componentes exportados e as **156 entradas** de `app/components/registry.ts` |
 
 ---
 
@@ -130,7 +130,7 @@ Acesse **`http://localhost:3002`** para explorar o catálogo interativo de compo
 lopes-ui/
 ├── app/                          # Aplicação Next.js 16 (Showcase & Playground na porta 3002)
 │   ├── _components/              # Componentes exclusivos da casca do showcase (AppSidebar, SiteHeader, UIBuilder)
-│   ├── components/               # Catálogo pesquisável (/components), demos isoladas e registry.ts (155 itens)
+│   ├── components/               # Catálogo pesquisável (/components), demos isoladas e registry.ts (156 itens)
 │   ├── showcase/                 # Vitrines por domínio: actions, animation, communication, data,
 │   │                             #   display, enterprise, forms e navigation
 │   ├── templates/                # Layouts corporativos prontos (/templates)

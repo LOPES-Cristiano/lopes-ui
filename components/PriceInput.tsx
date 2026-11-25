@@ -181,7 +181,7 @@ export default function PriceInput({
           setInternalCurrency(e.target.value);
           onCurrencyChange?.(e.target.value);
         }}
-        className="h-full border-l border-border bg-surface-muted/60 px-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground focus:outline-none cursor-pointer rounded-r-md"
+        className="h-full border-l border-border bg-surface-muted/60 px-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring cursor-pointer rounded-r-md"
       >
         {currencies.map((c) => (
           <option key={c.code} value={c.code}>

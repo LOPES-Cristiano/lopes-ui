@@ -194,6 +194,8 @@ function UIBuilderStudioCore() {
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      // Viewport-dependent initial state must be read after mount (SSR-safe)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowLeftCatalog(false);
       setShowRightInspector(false);
     }

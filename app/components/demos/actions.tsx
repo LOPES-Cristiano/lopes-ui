@@ -74,6 +74,8 @@ function ModalAndFormModalDemo() {
   >("compact");
   const [formModalOpen, setFormModalOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState("geral");
+  const initialProductDesc = "Licença Enterprise Multi-Workspace";
+  const [productDesc, setProductDesc] = React.useState(initialProductDesc);
 
   const tabs = [
     {
@@ -154,7 +156,11 @@ function ModalAndFormModalDemo() {
 
       <FormModal
         open={formModalOpen}
-        onClose={() => setFormModalOpen(false)}
+        isDirty={productDesc !== initialProductDesc}
+        onClose={() => {
+          setFormModalOpen(false);
+          setProductDesc(initialProductDesc);
+        }}
         title="Cadastro de Produto"
         subtitle="Configuração padronizada do catálogo de serviços"
         code="PROD-8042"
@@ -168,6 +174,7 @@ function ModalAndFormModalDemo() {
         onNext={() => setActiveTab("estoque")}
         onSave={() => {
           setFormModalOpen(false);
+          setProductDesc(initialProductDesc);
           toast.success("Produto salvo com sucesso!");
         }}
       >
@@ -180,7 +187,8 @@ function ModalAndFormModalDemo() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <TextField
                 label="Descrição Comercial"
-                defaultValue="Licença Enterprise Multi-Workspace"
+                value={productDesc}
+                onChange={(e) => setProductDesc(e.target.value)}
                 required
               />
               <SelectField
@@ -215,6 +223,15 @@ function ModalAndFormModalDemo() {
 function DrawerFormAndCameraDemo() {
   const [drawerFormOpen, setDrawerFormOpen] = React.useState(false);
   const [cameraOpen, setCameraOpen] = React.useState(false);
+  const initialEngineer = "Carlos Eduardo (SRE)";
+  const [engineer, setEngineer] = React.useState(initialEngineer);
+  const [obs, setObs] = React.useState("");
+  const drawerDirty = engineer !== initialEngineer || obs !== "";
+  const closeDrawerForm = () => {
+    setDrawerFormOpen(false);
+    setEngineer(initialEngineer);
+    setObs("");
+  };
 
   return (
     <div className="flex flex-wrap gap-3">
@@ -231,7 +248,8 @@ function DrawerFormAndCameraDemo() {
 
       <Drawer form
         open={drawerFormOpen}
-        onClose={() => setDrawerFormOpen(false)}
+        isDirty={drawerDirty}
+        onClose={closeDrawerForm}
         title="Agendar Manutenção"
         description="Ordem de Serviço #OS-6912 · Ambiente de Produção"
         summary={
@@ -252,7 +270,7 @@ function DrawerFormAndCameraDemo() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setDrawerFormOpen(false)}
+              onClick={closeDrawerForm}
             >
               Cancelar
             </Button>
@@ -260,7 +278,7 @@ function DrawerFormAndCameraDemo() {
               variant="primary"
               size="sm"
               onClick={() => {
-                setDrawerFormOpen(false);
+                closeDrawerForm();
                 toast.success("Manutenção agendada!");
               }}
             >
@@ -271,11 +289,14 @@ function DrawerFormAndCameraDemo() {
       >
         <TextField
           label="Engenheiro Responsável"
-          defaultValue="Carlos Eduardo (SRE)"
+          value={engineer}
+          onChange={(e) => setEngineer(e.target.value)}
         />
         <TextField
           label="Observações de Acesso"
           placeholder="Ponto de referência da residência..."
+          value={obs}
+          onChange={(e) => setObs(e.target.value)}
         />
       </Drawer>
 

@@ -570,6 +570,7 @@ export function Map({
     if (!map) return;
 
     if (!didMountCameraRef.current) {
+      // eslint-disable-next-line react-hooks/immutability -- ref flag, not React state
       didMountCameraRef.current = true;
       return;
     }
@@ -752,10 +753,12 @@ export function MapMarker({
 
   useEffect(() => {
     if (!markerEl) return;
+    /* eslint-disable react-hooks/immutability -- imperatively styling the maplibre marker DOM node */
     markerEl.style.zIndex = zIndex !== undefined ? String(zIndex) : "";
     if (className) {
       markerEl.className = cn("maplibregl-marker", className);
     }
+    /* eslint-enable react-hooks/immutability */
   }, [markerEl, zIndex, className]);
 
   useEffect(() => {

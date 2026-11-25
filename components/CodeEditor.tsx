@@ -1056,7 +1056,7 @@ export default function CodeEditor({
                   onLanguageChange?.(nextLang);
                 }}
                 className={cn(
-                  'h-6 rounded px-1.5 text-[10px] font-mono font-semibold uppercase border focus:outline-none cursor-pointer',
+                  'h-6 rounded px-1.5 text-[10px] font-mono font-semibold uppercase border focus:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer',
                   forceDark
                     ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
                     : 'bg-muted text-muted-foreground border-border/60'
