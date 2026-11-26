@@ -30,6 +30,7 @@ export default defineConfig([
       "rich-text": "components/rich-text/index.ts",
       spreadsheet: "components/spreadsheet/index.ts",
       "code-block": "components/CodeBlock.tsx",
+      isometric: "components/isometric/index.ts",
       hooks: "hooks/index.ts",
       utils: "utils/index.ts",
     },
