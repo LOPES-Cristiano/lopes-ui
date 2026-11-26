@@ -194,7 +194,7 @@ export default function PriceInput({
   const inputElement = isContained ? (
     <div
       className={twMerge(
-        "relative flex w-full items-center rounded-xl border bg-surface transition-all duration-150 overflow-hidden",
+        "relative flex w-full items-center rounded-xl border bg-surface transition-[color,background-color,border-color,box-shadow,opacity] duration-150 overflow-hidden",
         hasError
           ? "border-danger focus-within:ring-2 focus-within:ring-danger/20"
           : "border-input-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15",
@@ -244,7 +244,7 @@ export default function PriceInput({
     <div
       className={twMerge(
         clsx(
-          "relative flex w-full items-center overflow-hidden rounded-md transition-all duration-150",
+          "relative flex w-full items-center overflow-hidden rounded-md transition-[color,background-color,border-color,box-shadow,opacity] duration-150",
           SIZE_CLS[size],
           variant === "filled"
             ? "border border-transparent bg-surface-muted focus-within:bg-surface"
