@@ -219,7 +219,7 @@ function AppCard({
     SIZE_PAD[size],
     "rounded-2xl border border-border",
     "bg-surface text-surface-foreground",
-    "transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    "transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
     app.disabled
       ? "opacity-55 cursor-not-allowed"
       : "cursor-pointer hover:border-border-strong hover:bg-surface-hover hover:shadow-md hover:shadow-zinc-900/5 dark:hover:shadow-black/20 hover:-translate-y-0.5 active:translate-y-0 active:shadow-none",
@@ -304,7 +304,7 @@ function AppCard({
             onToggleFavorite?.(app.id, !app.favorite);
           }}
           className={twMerge(
-            "absolute top-2 left-2 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "absolute top-2 left-2 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full transition-[color,background-color,border-color,box-shadow,opacity] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             app.favorite
               ? "text-amber-500 opacity-100"
               : "text-muted-foreground opacity-0 group-hover/card:opacity-80 focus-visible:opacity-100 hover:text-amber-500",
