@@ -142,7 +142,7 @@ export function TouchChartCard({
                     }
                   : {})}
                 className={cn(
-                  "inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium whitespace-nowrap transition-all",
+                  "inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,transform,opacity]",
                   interactive &&
                     "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 active:scale-95",
                   hidden
