@@ -95,6 +95,11 @@ export default function Page() {
 
         {/* ── Swap ─────────────────────────────────────────────────────── */}
         {sections["swap"]}
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── UnsavedChangesDialog ─────────────────────────────────────── */}
+        {sections["unsaved-changes-dialog"]}
       </div>
     </main>
   );
