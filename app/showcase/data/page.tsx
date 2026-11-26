@@ -11,11 +11,7 @@ export default function Page() {
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
-
         {sections["filter-bar"]}
-
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
@@ -23,11 +19,7 @@ export default function Page() {
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
-
         {sections["inbox-list"]}
-
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
@@ -35,11 +27,7 @@ export default function Page() {
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
-
         {sections["tables"]}
-
-        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
 
@@ -76,6 +64,19 @@ export default function Page() {
         {sections["barcode"]}
 
         <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── ExpandableDataCard ───────────────────────────────────── */}
+        {sections["expandable-data-card"]}
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── KpiCarousel ──────────────────────────────────────────── */}
+        {sections["kpi-carousel"]}
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── TouchChartCard ───────────────────────────────────────── */}
+        {sections["touch-chart-card"]}
       </div>
     </main>
   );
