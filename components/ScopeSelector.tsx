@@ -235,7 +235,7 @@ export function ScopeSelector({
           aria-expanded={isOpen}
           onClick={() => setOpen(!isOpen)}
           className={cn(
-            'flex h-10 items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 text-xs font-semibold text-foreground shadow-xs transition-all duration-150 cursor-pointer',
+            'flex h-10 items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 text-xs font-semibold text-foreground shadow-xs transition-[color,background-color,border-color,box-shadow,opacity] duration-150 cursor-pointer',
             'hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             isOpen && 'border-primary ring-2 ring-primary/15',
             effectiveDisabled && 'opacity-50 pointer-events-none',
