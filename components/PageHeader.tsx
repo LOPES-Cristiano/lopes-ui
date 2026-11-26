@@ -152,7 +152,7 @@ export default function PageHeader({
               type="button"
               onClick={onClose}
               aria-label="Fechar e sair da tela"
-              className="sm:hidden inline-flex min-h-8 min-w-8 items-center justify-center shrink-0 cursor-pointer rounded-xl p-1.5 text-muted-foreground opacity-75 transition-all hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 border-none"
+              className="sm:hidden inline-flex min-h-8 min-w-8 items-center justify-center shrink-0 cursor-pointer rounded-xl p-1.5 text-muted-foreground opacity-75 transition-[color,background-color,border-color,box-shadow,transform,opacity] hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 border-none"
             >
               <X size={18} />
             </button>
@@ -168,7 +168,7 @@ export default function PageHeader({
                 type="button"
                 onClick={onClose}
                 aria-label="Fechar e sair da tela"
-                className="hidden sm:inline-flex min-h-8 min-w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl p-1.5 text-muted-foreground opacity-75 transition-all hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 border-none"
+                className="hidden sm:inline-flex min-h-8 min-w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl p-1.5 text-muted-foreground opacity-75 transition-[color,background-color,border-color,box-shadow,transform,opacity] hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 border-none"
               >
                 <X size={18} />
               </button>
