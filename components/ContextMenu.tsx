@@ -159,7 +159,7 @@ function MenuItem({
   }
 
   const itemCls = twMerge(
-    "group/mi relative flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-sm select-none outline-none transition-colors duration-100",
+    "group/mi relative flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-sm select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/30 transition-colors duration-100",
     item.disabled
       ? "cursor-not-allowed opacity-40 pointer-events-none"
       : item.danger
