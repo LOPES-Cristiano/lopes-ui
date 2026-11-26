@@ -414,7 +414,7 @@ export function NotificationBell({
         onClick={() => (open ? setOpen(false) : openPanel())}
         className={twMerge(
           'group relative inline-flex h-9 w-9 items-center justify-center rounded-xl',
-          'bg-transparent text-muted-foreground hover:text-foreground transition-all duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer',
+          'bg-transparent text-muted-foreground hover:text-foreground transition-[color,background-color,border-color,box-shadow,opacity] duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer',
           open && 'bg-muted text-foreground',
           className
         )}
