@@ -9,6 +9,8 @@
     "node_modules",
     "dist",
     "app",
+    "tests",
+    "vitest.config.mts",
     "next-env.d.ts",
     "**/*.test.ts",
     "**/*.test.tsx",
