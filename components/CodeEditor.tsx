@@ -986,7 +986,7 @@ export default function CodeEditor({
     <div
       data-component-id={componentId}
       className={cn(
-        'flex flex-col transition-all duration-150 select-text relative font-sans overflow-hidden',
+        'flex flex-col transition-[color,background-color,border-color,box-shadow,opacity] duration-150 select-text relative font-sans overflow-hidden',
         forceDark
           ? 'bg-zinc-950 text-zinc-100 border-zinc-800'
           : 'bg-card text-foreground border-border',
