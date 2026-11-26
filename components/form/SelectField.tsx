@@ -912,7 +912,7 @@ export default function SelectField({
           aria-expanded={open}
           aria-controls={open ? listboxId : undefined}
           aria-activedescendant={!isSearchable ? activeDescendantId : undefined}
-          aria-invalid={error ? true : undefined}
+          data-invalid={error ? "true" : undefined}
           aria-describedby={describedBy}
           onClick={() => {
             if (effectiveDisabled) return;
