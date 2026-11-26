@@ -106,7 +106,7 @@ function RotatingWords({ words }: { words: string[] }) {
 
   return (
     <span
-      className="inline-block transition-all duration-300"
+      className="inline-block transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-300"
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(-8px)',
