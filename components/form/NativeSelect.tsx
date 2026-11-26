@@ -33,7 +33,7 @@ export const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
             disabled={effectiveDisabled}
             data-component-id={componentId}
             className={cn(
-              "w-full h-9 rounded-lg border border-border bg-surface pl-9 pr-8 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-2xs cursor-pointer transition-all appearance-none disabled:bg-muted/70 disabled:cursor-not-allowed disabled:opacity-80",
+              "w-full h-9 rounded-lg border border-border bg-surface pl-9 pr-8 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-2xs cursor-pointer transition-[color,background-color,border-color,box-shadow,opacity] appearance-none disabled:bg-muted/70 disabled:cursor-not-allowed disabled:opacity-80",
               className
             )}
             {...rest}
@@ -54,7 +54,7 @@ export const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
           disabled={effectiveDisabled}
           data-component-id={componentId}
           className={cn(
-            "w-full h-9 rounded-lg border border-border bg-surface pl-3 pr-8 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-2xs cursor-pointer transition-all appearance-none disabled:bg-muted/70 disabled:cursor-not-allowed disabled:opacity-80",
+            "w-full h-9 rounded-lg border border-border bg-surface pl-3 pr-8 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-2xs cursor-pointer transition-[color,background-color,border-color,box-shadow,opacity] appearance-none disabled:bg-muted/70 disabled:cursor-not-allowed disabled:opacity-80",
             className
           )}
           {...rest}
