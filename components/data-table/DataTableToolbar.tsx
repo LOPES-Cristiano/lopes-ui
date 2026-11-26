@@ -253,7 +253,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                 type="button"
                 onClick={onClose}
                 aria-label="Fechar e sair da tela"
-                className="md:hidden shrink-0 cursor-pointer rounded-xl p-1.5 text-muted-foreground opacity-70 transition-all hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 active:scale-95 border-none"
+                className="md:hidden shrink-0 cursor-pointer rounded-xl p-1.5 text-muted-foreground opacity-70 transition-[color,background-color,border-color,box-shadow,transform,opacity] hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 active:scale-95 border-none"
               >
                 <X size={18} />
               </button>
@@ -276,7 +276,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                   autoCorrect="off"
                   autoCapitalize="off"
                   spellCheck={false}
-                  className="w-full h-8 pl-8 pr-7 rounded-xl border border-border/80 bg-surface text-xs text-foreground placeholder-muted-foreground shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-all"
+                  className="w-full h-8 pl-8 pr-7 rounded-xl border border-border/80 bg-surface text-xs text-foreground placeholder-muted-foreground shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-[color,background-color,border-color,box-shadow,opacity]"
                 />
                 {searchQ && (
                   <button
@@ -302,7 +302,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                 aria-expanded={filterOpen}
                 aria-haspopup="dialog"
                 className={twMerge(
-                  'shrink-0 flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+                  'shrink-0 flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-xl border text-xs font-semibold transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                   activeFilterCount > 0
                     ? 'border-primary/50 bg-primary/10 text-primary'
                     : 'border-border/80 bg-surface text-foreground hover:bg-muted/30',
@@ -326,7 +326,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                 aria-haspopup="dialog"
                 aria-label={activeSortLabel ? `Ordenado por ${activeSortLabel}` : 'Ordenar'}
                 className={twMerge(
-                  'md:hidden shrink-0 inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+                  'md:hidden shrink-0 inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl border text-xs font-semibold transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                   sortKey
                     ? 'border-primary/50 bg-primary/10 text-primary'
                     : 'border-border/80 bg-surface text-foreground hover:bg-muted/30',
@@ -351,7 +351,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                 onClick={onToggleColPanelOpen}
                 aria-expanded={colPanelOpen}
                 aria-haspopup="dialog"
-                className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-border/80 bg-surface text-xs font-semibold text-foreground hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-all cursor-pointer shadow-2xs"
+                className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-border/80 bg-surface text-xs font-semibold text-foreground hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer shadow-2xs"
               >
                 <SlidersHorizontal size={13} />
                 <span>Colunas</span>
@@ -371,7 +371,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                   <button
                     data-component-id="erp.data-table.more-actions"
                     type="button"
-                    className="hidden md:inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-border/80 bg-surface text-xs font-semibold text-foreground hover:bg-muted/40 transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                    className="hidden md:inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-border/80 bg-surface text-xs font-semibold text-foreground hover:bg-muted/40 transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                   >
                     <ChevronsDown size={13} className="text-primary" />
                     <span>Mais Ações</span>
@@ -479,7 +479,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                     autoCorrect="off"
                     autoCapitalize="off"
                     spellCheck={false}
-                    className="w-full h-8 pl-8 pr-7 rounded-xl border border-border/80 bg-surface text-xs text-foreground placeholder-muted-foreground shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-all"
+                    className="w-full h-8 pl-8 pr-7 rounded-xl border border-border/80 bg-surface text-xs text-foreground placeholder-muted-foreground shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-[color,background-color,border-color,box-shadow,opacity]"
                   />
                   {searchQ && (
                     <button
@@ -550,7 +550,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                                 type="button"
                                 onClick={() => onFilterChange?.(field.key, opt.value)}
                                 className={twMerge(
-                                  'min-h-6 px-2.5 py-0.5 rounded-md transition-all cursor-pointer text-xs shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+                                  'min-h-6 px-2.5 py-0.5 rounded-md transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer text-xs shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                                   isSelected
                                     ? `bg-surface shadow-2xs font-bold ${colorCls}`
                                     : 'text-muted-foreground hover:text-foreground',
@@ -697,7 +697,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                       type="button"
                       onClick={onResetFilters}
                       aria-label="Limpar todos os filtros"
-                      className="inline-flex items-center gap-1 h-7 px-2 rounded-lg border border-border/70 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-all cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-1 h-7 px-2 rounded-lg border border-border/70 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer shadow-2xs"
                     >
                       <X size={12} />
                       <span>Limpar</span>
@@ -715,7 +715,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                   aria-expanded={filterOpen}
                   aria-haspopup="dialog"
                   className={twMerge(
-                    'shrink-0 flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+                    'shrink-0 flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3.5 rounded-xl border text-xs font-semibold transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                     activeFilterCount > 0
                       ? 'border-primary/50 bg-primary/10 text-primary'
                       : 'border-border/80 bg-surface text-foreground hover:bg-muted/30',
@@ -739,7 +739,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                   aria-haspopup="dialog"
                   aria-label={activeSortLabel ? `Ordenado por ${activeSortLabel}` : 'Ordenar'}
                   className={twMerge(
-                    'md:hidden shrink-0 inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+                    'md:hidden shrink-0 inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl border text-xs font-semibold transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                     sortKey
                       ? 'border-primary/50 bg-primary/10 text-primary'
                       : 'border-border/80 bg-surface text-foreground hover:bg-muted/30',
@@ -764,7 +764,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                   onClick={onToggleColPanelOpen}
                   aria-expanded={colPanelOpen}
                   aria-haspopup="dialog"
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/80 bg-surface text-xs font-semibold text-foreground hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-all cursor-pointer shadow-2xs"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/80 bg-surface text-xs font-semibold text-foreground hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer shadow-2xs"
                 >
                   <SlidersHorizontal size={14} />
                   <span>Colunas</span>
@@ -822,7 +822,7 @@ export function DataTableToolbar<T = Record<string, unknown>>({
                     disabled={isDisabled || isRunning}
                     onClick={() => handleBulkClick(action, idx)}
                     className={twMerge(
-                      'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-bold transition-all cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+                      'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-bold transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                       action.danger
                         ? 'border-danger/40 bg-danger/10 text-danger hover:bg-danger/20'
                         : 'border-primary/40 bg-surface text-primary hover:bg-primary/20',
