@@ -292,7 +292,7 @@ function AlertContent({
                   e.stopPropagation();
                   setOpen((v) => !v);
                 }}
-                className="inline-flex h-6 w-6 items-center justify-center rounded-md opacity-70 hover:bg-black/5 dark:hover:bg-white/10 hover:opacity-100 transition-all cursor-pointer"
+                className="inline-flex h-6 w-6 items-center justify-center rounded-md opacity-70 hover:bg-black/5 dark:hover:bg-white/10 hover:opacity-100 transition-[color,background-color,border-color,box-shadow,transform,opacity] cursor-pointer"
               >
                 <ChevronDown size={15} className={twMerge("transition-transform duration-150", open && "rotate-180")} />
               </button>
