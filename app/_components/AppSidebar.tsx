@@ -40,6 +40,8 @@ import {
   PenTool,
   Barcode,
   ShieldCheck,
+  Palette,
+  Layers,
 } from "lucide-react";
 
 export default function AppSidebar() {
@@ -57,6 +59,22 @@ export default function AppSidebar() {
           items: [
             { label: "Visão geral", href: "/#overview", icon: Home },
             { label: "Instalação", href: "/#install", icon: Zap },
+            { label: "Design Tokens", href: "/showcase/tokens", icon: Palette },
+            { label: "Primitives", href: "/showcase/primitives", icon: Layers },
+            {
+              label: "Isometric",
+              href: "/showcase/isometric",
+              icon: Sparkles,
+              badge: "Novo",
+              badgeVariant: "info",
+              children: [
+                { label: "IsometricShowcase", href: "/showcase/isometric#isometric-showcase" },
+                { label: "Objetos Prontos (8)", href: "/showcase/isometric#isometric-presets" },
+                { label: "Simulador ao Vivo", href: "/showcase/isometric#isometric-bench" },
+                { label: "8 Materiais Semânticos", href: "/showcase/isometric#isometric-materials" },
+                { label: "Primitivas & Câmera 3D", href: "/showcase/isometric#isometric-primitives" },
+              ],
+            },
             { label: "Todos os componentes (A–Z)", href: "/components", icon: ListChecks, badge: "Índice", badgeVariant: "success" },
             {
               label: "Páginas Exemplo",
@@ -225,6 +243,7 @@ export default function AppSidebar() {
               icon: PanelRightOpen,
               children: [
                 { label: "Modal, FormModal & Câmera", href: "/showcase/actions#modals" },
+                { label: "UnsavedChangesDialog", href: "/showcase/actions#unsaved-changes-dialog" },
                 { label: "Drawer", href: "/showcase/actions#drawer" },
                 { label: "Confirm · dialog", href: "/showcase/actions#confirm-dialog" },
                 { label: "Confirm · popover", href: "/showcase/actions#popconfirm" },
@@ -336,12 +355,18 @@ export default function AppSidebar() {
                 { label: "Abas & Ações Inline", href: "/showcase/data#datatable-tabs" },
                 { label: "Table Simples", href: "/showcase/data#tables" },
                 { label: "Spreadsheet Virtualizada", href: "/showcase/data#spreadsheet" },
+                { label: "ExpandableDataCard", href: "/showcase/data#expandable-data-card" },
+                { label: "KpiCarousel", href: "/showcase/data#kpi-carousel" },
               ],
             },
             {
-              label: "Chart (Gráficos SVG)",
+              label: "Chart & TouchChartCard",
               href: "/showcase/data#charts",
               icon: BarChart2,
+              children: [
+                { label: "Chart (Gráficos SVG)", href: "/showcase/data#charts" },
+                { label: "TouchChartCard", href: "/showcase/data#touch-chart-card" },
+              ],
             },
             {
               label: "DescriptionList",
@@ -485,6 +510,10 @@ export default function AppSidebar() {
                 { label: "Tour (Onboarding)", href: "/showcase/animation#tour" },
                 { label: "TextRotate", href: "/showcase/animation#text-rotate" },
                 { label: "Marquee", href: "/showcase/animation#marquee" },
+                { label: "AnimatedNumber", href: "/showcase/animation#animated-number" },
+                { label: "LeaderboardPodium", href: "/showcase/animation#leaderboard-podium" },
+                { label: "MotionCollapse", href: "/showcase/animation#motion-collapse" },
+                { label: "StaggerList", href: "/showcase/animation#stagger-list" },
               ],
             },
           ],
