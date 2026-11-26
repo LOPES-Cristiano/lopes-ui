@@ -84,11 +84,11 @@ export type TagsInputProps = Omit<FieldWrapperProps, "children" | "id"> & {
 
 const TAG_PALETTE: Record<TagColor, { pill: string; active: string }> = {
   default: {
-    pill: "border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200",
-    active: "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900",
+    pill: "border-border bg-surface-muted text-surface-foreground",
+    active: "border-primary bg-primary text-primary-foreground",
   },
   primary: {
-    pill: "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800/60 dark:bg-indigo-950/50 dark:text-indigo-300",
+    pill: "border-brand-border bg-brand-soft text-brand-soft-foreground",
     active: "border-primary bg-primary text-primary-foreground",
   },
   success: {
@@ -100,8 +100,8 @@ const TAG_PALETTE: Record<TagColor, { pill: string; active: string }> = {
     active: "border-amber-500 bg-amber-500 text-white",
   },
   danger: {
-    pill: "border-red-200 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-950/50 dark:text-red-300",
-    active: "border-red-600 bg-red-600 text-white",
+    pill: "border-danger-border bg-danger-soft text-danger-soft-foreground",
+    active: "border-danger bg-danger text-danger-foreground",
   },
   info: {
     pill: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800/60 dark:bg-sky-950/50 dark:text-sky-300",
@@ -164,11 +164,11 @@ export function CheckableTag({
         onChange?.(next);
       }}
       className={twMerge(
-        "inline-flex items-center rounded-lg border font-medium transition-all select-none cursor-pointer",
+        "inline-flex items-center rounded-lg border font-medium transition-[color,background-color,border-color,box-shadow,opacity] select-none cursor-pointer",
         szCls,
         isChecked
           ? twMerge(palette.active, "shadow-2xs")
-          : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/60",
+          : "border-border bg-surface text-muted-foreground hover:border-border-strong hover:bg-surface-hover",
         disabled && "opacity-45 cursor-not-allowed pointer-events-none",
         className
       )}
@@ -380,7 +380,7 @@ export default function TagsInput({
               setEditingDraft("");
             }
           }}
-          className="h-6 w-28 rounded-lg border border-primary bg-white dark:bg-zinc-900 px-2 text-xs text-zinc-900 dark:text-zinc-100 outline-none ring-2 ring-primary/20"
+          className="h-6 w-28 rounded-lg border border-ring bg-input px-2 text-xs text-input-foreground outline-none ring-2 ring-ring/20"
         />
       );
     }
@@ -391,7 +391,7 @@ export default function TagsInput({
         onDoubleClick={() => startEditingTag(idx)}
         title={editableTags ? "Duplo-clique para editar" : undefined}
         className={twMerge(
-          "inline-flex max-w-full items-center gap-1 rounded-lg border px-2 py-0.5 text-xs font-medium transition-all select-none",
+          "inline-flex max-w-full items-center gap-1 rounded-lg border px-2 py-0.5 text-xs font-medium transition-colors select-none",
           palette.pill,
           editableTags && !effectiveDisabled && "cursor-text"
         )}
@@ -405,9 +405,9 @@ export default function TagsInput({
               e.stopPropagation();
               removeTagAt(idx);
             }}
-            className="rounded-sm p-0.5 opacity-70 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer"
+            className="rounded-sm p-0.5 opacity-70 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           >
-            <X size={11} />
+            <X aria-hidden="true" size={11} />
           </button>
         )}
       </span>
@@ -467,7 +467,7 @@ export default function TagsInput({
                   }
                 }}
                 placeholder={addButtonLabel}
-                className="h-6.5 w-32 rounded-lg border border-primary bg-white dark:bg-zinc-900 px-2 text-xs text-zinc-900 dark:text-zinc-100 outline-none ring-2 ring-primary/20"
+                className="h-6.5 w-32 rounded-lg border border-ring bg-input px-2 text-xs text-input-foreground outline-none ring-2 ring-ring/20"
               />
             ) : (
               <button
@@ -476,9 +476,9 @@ export default function TagsInput({
                   setInlineAdding(true);
                   requestAnimationFrame(() => inputRef.current?.focus());
                 }}
-                className="inline-flex items-center gap-1 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 bg-transparent px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border-strong bg-transparent px-2.5 py-0.5 text-xs font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               >
-                <Plus size={12} />
+                <Plus aria-hidden="true" size={12} />
                 <span>{addButtonLabel}</span>
               </button>
             )
@@ -489,10 +489,10 @@ export default function TagsInput({
           <div
             onClick={() => !effectiveDisabled && inputRef.current?.focus()}
             className={twMerge(
-              "flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1.5 transition-all cursor-text",
-              focused && "border-primary ring-2 ring-primary/20",
-              activeError && "border-red-500 dark:border-red-500 ring-red-500/20",
-              effectiveDisabled && "opacity-55 cursor-not-allowed bg-zinc-50 dark:bg-zinc-900/50"
+              "flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-xl border border-input-border bg-input px-2.5 py-1.5 transition-[color,background-color,border-color,box-shadow] cursor-text",
+              focused && "border-ring ring-2 ring-ring/20",
+              activeError && "border-danger ring-danger/20",
+              effectiveDisabled && "opacity-55 cursor-not-allowed bg-surface-muted"
             )}
           >
             {tags.map((t, idx) => renderTagPill(t, idx))}
@@ -538,7 +538,7 @@ export default function TagsInput({
                     removeTagAt(tags.length - 1);
                   }
                 }}
-                className="min-w-[110px] flex-1 bg-transparent text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none"
+                className="min-w-[110px] flex-1 bg-transparent text-xs text-input-foreground placeholder:text-input-placeholder outline-none"
               />
             )}
 
@@ -550,16 +550,16 @@ export default function TagsInput({
                   e.stopPropagation();
                   commitTags([]);
                 }}
-                className="ml-auto rounded-md p-0.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 cursor-pointer"
+                className="ml-auto rounded-md p-0.5 text-muted-foreground hover:bg-surface-hover hover:text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               >
-                <X size={14} />
+                <X aria-hidden="true" size={14} />
               </button>
             )}
           </div>
 
           {focused && filteredSuggestions.length > 0 && !atLimit && (
-            <div className="absolute left-0 top-full z-40 mt-1.5 flex w-full flex-wrap items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 shadow-lg">
-              <span className="mr-1 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+            <div className="absolute left-0 top-full z-40 mt-1.5 flex w-full flex-wrap items-center gap-1.5 rounded-xl border border-border bg-popover p-2.5 shadow-lg">
+              <span className="mr-1 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 <TagIcon size={11} /> Sugestões:
               </span>
               {filteredSuggestions.map((sug) => (
@@ -570,7 +570,7 @@ export default function TagsInput({
                     e.preventDefault();
                     if (tryAddTags(sug)) setDraft("");
                   }}
-                  className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-2 py-0.5 text-xs text-zinc-700 dark:text-zinc-200 hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface-muted px-2 py-0.5 text-xs text-surface-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer"
                 >
                   <Plus size={10} />
                   <span>{sug}</span>
