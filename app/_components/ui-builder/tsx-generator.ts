@@ -1,4 +1,5 @@
 import type { UICanvasConfig, UICanvasElement, UICodeExportMode } from "./types";
+import { renderExtendedElementJsx } from "./extended-tsx-generator";
 
 function escJsxText(str: string): string {
   return str
@@ -61,6 +62,7 @@ const SPAN_CLASS_MAP: Record<number, string> = {
 
 interface GenContext {
   lopesImports: Set<string>;
+  subpathImports: Map<string, Set<string>>;
   lucideImports: Set<string>;
   stateVars: { varName: string; setterName: string; comment: string }[];
   overlayModalsJsx: string[];
@@ -243,9 +245,11 @@ function renderElementJsx(el: UICanvasElement, ctx: GenContext, nestedChildrenJs
       ctx.lopesImports.add("Chart");
       const seriesJson = JSON.stringify(Array.isArray(p.series) ? p.series : [], null, 2);
       const dataJson = JSON.stringify(Array.isArray(p.data) ? p.data : [], null, 2);
+      const variantProp = p.variant === "3d" ? `\n  variant="3d"` : "";
+      const barShapeProp = p.variant === "3d" && p.barShape === "cylinder" ? `\n  barShape="cylinder"` : "";
       return [
         `<Chart${cidProp}`,
-        `  type=${q(p.type, "bar")}`,
+        `  type=${q(p.type, "bar")}${variantProp}${barShapeProp}`,
         `  title=${q(p.title)}`,
         `  subtitle=${q(p.subtitle)}`,
         `  height={${Math.max(180, el.height - 108)}}`,
@@ -644,8 +648,10 @@ function renderElementJsx(el: UICanvasElement, ctx: GenContext, nestedChildrenJs
       return `<Button${cidProp} variant="destructive" fullWidth onClick={() => ${setterName}(true)}>${escJsxText(asStr(p.triggerLabel, "Confirmar Ação"))}</Button>`;
     }
 
-    default:
-      return `<div />`;
+    default: {
+      const ext = renderExtendedElementJsx(el, ctx);
+      return ext ?? `<div />`;
+    }
   }
 }
 
@@ -724,6 +730,7 @@ export function generateTsxCode(
 
   const ctx: GenContext = {
     lopesImports: new Set<string>(),
+    subpathImports: new Map<string, Set<string>>(),
     lucideImports: new Set<string>(),
     stateVars: [],
     overlayModalsJsx: [],
@@ -815,6 +822,14 @@ export function generateTsxCode(
         ? `import {\n  ${sortedLopes.join(",\n  ")},\n} from "lopes-ui";`
         : `import { ${sortedLopes.join(", ")} } from "lopes-ui";`,
     );
+  }
+  for (const [pkg, syms] of Array.from(ctx.subpathImports.entries()).sort((a, b) =>
+    a[0].localeCompare(b[0]),
+  )) {
+    const sorted = Array.from(syms).sort();
+    if (sorted.length > 0) {
+      headerLines.push(`import { ${sorted.join(", ")} } from ${JSON.stringify(pkg)};`);
+    }
   }
 
   const stateLines = ctx.stateVars.map(
