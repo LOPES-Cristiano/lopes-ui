@@ -392,6 +392,7 @@ export default function CascaderField(props: CascaderFieldProps) {
             aria-disabled={effectiveDisabled || undefined}
             data-component-id={componentId}
             aria-expanded={open}
+            aria-controls={`${id}-popup`}
             data-invalid={error ? "true" : undefined}
             onKeyDown={(e) => {
               if (effectiveDisabled) return;
@@ -477,6 +478,7 @@ export default function CascaderField(props: CascaderFieldProps) {
         </PopoverTrigger>
 
         <PopoverContent
+          id={`${id}-popup`}
           align="start"
           sideOffset={6}
           className="w-auto min-w-[200px] sm:min-w-[260px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-0 shadow-xl"
