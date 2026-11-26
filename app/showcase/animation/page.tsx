@@ -54,6 +54,16 @@ export default function Page() {
 
         {/* ── LeaderboardPodium ────────────────────────────────────── */}
         {sections["leaderboard-podium"]}
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── MotionCollapse ───────────────────────────────────────── */}
+        {sections["motion-collapse"]}
+
+        <hr className="border-zinc-200 dark:border-zinc-800 my-8 sm:my-12" />
+
+        {/* ── StaggerList ──────────────────────────────────────────── */}
+        {sections["stagger-list"]}
       </div>
     </main>
   );
