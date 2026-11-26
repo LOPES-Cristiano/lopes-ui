@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, useMemo, useSyncExternalStore } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { twMerge } from 'tailwind-merge';
 import { clsx } from 'clsx';
@@ -198,7 +198,7 @@ export default function QuickActions({
         {/* Action items — lista flutuante de ações com animação suave */}
         <div
           className={clsx(
-            'absolute transition-all duration-250 ease-out',
+            'absolute transition-[color,background-color,border-color,box-shadow,opacity] duration-250 ease-out',
             isNearTop ? 'top-full mt-3' : 'bottom-full mb-3',
             isNearLeft ? 'left-0 items-start' : 'right-0 items-end',
             'flex flex-col gap-2.5',
@@ -223,7 +223,7 @@ export default function QuickActions({
                 transitionDelay: open ? `${idx * 40}ms` : '0ms',
               }}
               className={clsx(
-                'group flex items-center gap-2.5 cursor-pointer select-none transition-all duration-200',
+                'group flex items-center gap-2.5 cursor-pointer select-none transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-200',
                 open ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1',
                 isNearLeft ? 'flex-row-reverse' : 'flex-row justify-end'
               )}
@@ -251,7 +251,7 @@ export default function QuickActions({
                   'border border-slate-200 dark:border-zinc-700',
                   'text-slate-700 dark:text-zinc-200',
                   'hover:bg-slate-50 dark:hover:bg-zinc-800',
-                  'transition-all active:scale-95 cursor-pointer',
+                  'transition-[color,background-color,border-color,box-shadow,transform,opacity] active:scale-95 cursor-pointer',
                   action.disabled && 'opacity-50 cursor-not-allowed pointer-events-none'
                 )}
               >
@@ -274,7 +274,7 @@ export default function QuickActions({
           onPointerCancel={handlePointerUp}
           className={twMerge(
             'w-14 h-14 rounded-full shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing select-none touch-none ring-4 ring-white/40 dark:ring-zinc-900/50',
-            'transition-all duration-300 ease-out',
+            'transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-300 ease-out',
             mainButtonClassName ?? 'bg-blue-600 hover:bg-blue-700 text-white',
             open ? 'rotate-45 shadow-blue-500/30' : 'active:scale-95'
           )}
