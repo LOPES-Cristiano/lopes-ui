@@ -87,7 +87,7 @@ export function DataTableColumnPanel<T = Record<string, unknown>>({
                 onClick={() => {
                   if (!isDisabled) onToggle(col.key);
                 }}
-                className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 ${
+                className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-[color,background-color,border-color,box-shadow,opacity] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 ${
                   isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
                 } ${
                   isVisible
