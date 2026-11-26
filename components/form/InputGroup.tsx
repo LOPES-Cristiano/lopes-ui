@@ -51,12 +51,12 @@ export function InputGroup({
       data-slot="input-group"
       data-component-id={componentId}
       className={cn(
-        "relative flex w-full items-stretch overflow-hidden border bg-white dark:bg-zinc-900 transition-all duration-150",
+        "relative flex w-full items-stretch overflow-hidden border bg-input transition-[color,background-color,border-color,box-shadow,opacity] duration-150",
         SIZE_CLS[size],
         error
-          ? "border-rose-500 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20"
-          : "border-zinc-300 dark:border-zinc-700 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20",
-        effectiveDisabled && "opacity-60 pointer-events-none bg-zinc-100 dark:bg-zinc-800/60",
+          ? "border-danger focus-within:border-danger focus-within:ring-2 focus-within:ring-danger/20"
+          : "border-input-border focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20",
+        effectiveDisabled && "opacity-60 pointer-events-none bg-surface-muted",
         className,
       )}
       {...props}
@@ -98,9 +98,9 @@ export function InputGroupAddon({
       data-slot="input-group-addon"
       data-align={align}
       className={cn(
-        "flex shrink-0 items-center gap-1.5 px-3 text-zinc-500 dark:text-zinc-400 select-none",
-        align === "inline-start" && "border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/50 self-stretch",
-        align === "inline-end" && "border-l border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/50 self-stretch",
+        "flex shrink-0 items-center gap-1.5 px-3 text-muted-foreground select-none",
+        align === "inline-start" && "border-r border-border bg-surface-muted/70 self-stretch",
+        align === "inline-end" && "border-l border-border bg-surface-muted/70 self-stretch",
         className,
       )}
       {...props}
@@ -125,7 +125,7 @@ export const InputGroupInput = React.forwardRef<
       data-slot="input-group-input"
       data-component-id={componentId}
       className={cn(
-        "flex-1 min-w-0 bg-transparent px-3 py-1.5 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none border-0 ring-0",
+        "flex-1 min-w-0 bg-transparent px-3 py-1.5 text-input-foreground placeholder:text-input-placeholder outline-none border-0 ring-0",
         className,
       )}
       {...props}
@@ -154,7 +154,7 @@ export function InputGroupButton({
       data-slot="input-group-button"
       data-component-id={componentId}
       className={cn(
-        "inline-flex shrink-0 self-stretch items-center justify-center gap-1.5 border-l border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-800/60 px-3 text-xs font-semibold text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:text-white dark:hover:bg-zinc-800 transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none",
+        "inline-flex shrink-0 self-stretch items-center justify-center gap-1.5 border-l border-border bg-surface-muted/80 px-3 text-xs font-semibold text-surface-foreground hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none",
         className,
       )}
       {...props}
@@ -172,7 +172,7 @@ export function InputGroupText({
   return (
     <span
       data-slot="input-group-text"
-      className={cn("text-xs text-zinc-500 dark:text-zinc-400 select-none", className)}
+      className={cn("text-xs text-muted-foreground select-none", className)}
       {...props}
     >
       {children}
