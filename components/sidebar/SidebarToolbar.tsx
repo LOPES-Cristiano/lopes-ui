@@ -24,7 +24,6 @@ export interface SidebarToolbarProps {
 }
 
 export function SidebarToolbar({
-  onRefresh,
   onHome,
   onAddItem,
   onAddGroup,
@@ -67,7 +66,7 @@ export function SidebarToolbar({
 
   return (
     <div
-      className={`px-2 pt-1 pb-1.5 flex flex-col gap-1.5 transition-all duration-200 ${className}`}
+      className={`px-2 pt-1 pb-1.5 flex flex-col gap-1.5 transition-[color,background-color,border-color,box-shadow,opacity] duration-200 ${className}`}
     >
       {/* Toolbar Top Bar: Explorer Title / Item Count & Action Buttons */}
       <div className="flex items-center justify-between px-1 text-xs text-[var(--sidebar-group-foreground)]">
@@ -185,7 +184,7 @@ export function SidebarToolbar({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={searchPlaceholder}
-            className="w-full h-7 pl-7 pr-7 text-xs rounded-md bg-[var(--sidebar-item-hover-background)] text-[var(--sidebar-foreground)] placeholder:text-[var(--sidebar-group-foreground)] border border-[var(--sidebar-border)] focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+            className="w-full h-7 pl-7 pr-7 text-xs rounded-md bg-[var(--sidebar-item-hover-background)] text-[var(--sidebar-foreground)] placeholder:text-[var(--sidebar-group-foreground)] border border-[var(--sidebar-border)] focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-[color,background-color,border-color,box-shadow,opacity]"
           />
           <Search
             size={12}
