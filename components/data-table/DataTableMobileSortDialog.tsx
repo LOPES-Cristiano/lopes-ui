@@ -131,7 +131,7 @@ export function DataTableMobileSortDialog<T = Record<string, unknown>>({
                 type="button"
                 onClick={() => handleSetDirection('asc')}
                 className={twMerge(
-                  'flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+                  'flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                   sortDir === 'asc'
                     ? 'border-primary bg-primary/10 text-primary shadow-xs'
                     : 'border-border/80 bg-surface text-foreground hover:bg-muted/40',
@@ -149,7 +149,7 @@ export function DataTableMobileSortDialog<T = Record<string, unknown>>({
                 type="button"
                 onClick={() => handleSetDirection('desc')}
                 className={twMerge(
-                  'flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+                  'flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                   sortDir === 'desc'
                     ? 'border-primary bg-primary/10 text-primary shadow-xs'
                     : 'border-border/80 bg-surface text-foreground hover:bg-muted/40',
@@ -180,7 +180,7 @@ export function DataTableMobileSortDialog<T = Record<string, unknown>>({
                     type="button"
                     onClick={() => handleSelectColumn(col.key)}
                     className={twMerge(
-                      'w-full flex items-center justify-between p-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+                      'w-full flex items-center justify-between p-3 rounded-xl border text-xs font-semibold transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                       isSelected
                         ? 'border-primary/60 bg-primary/10 text-primary font-bold shadow-2xs'
                         : 'border-border/80 bg-surface text-foreground hover:bg-muted/30',
