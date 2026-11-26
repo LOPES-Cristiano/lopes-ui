@@ -576,7 +576,7 @@ export default function CommandMenu({
         onClick={() => hasRootPermission && openMenu()}
         className={twMerge(
           'flex items-center gap-2.5 rounded-lg border border-header-command-border bg-header-command px-3 py-1.5 text-xs text-header-command-placeholder shadow-2xs',
-          'hover:bg-header-command-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none',
+          'hover:bg-header-command-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer disabled:opacity-50 disabled:pointer-events-none',
           className,
         )}
         aria-label="Abrir menu de comandos"
