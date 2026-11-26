@@ -473,7 +473,7 @@ export function MinimizavelGroup({
   return (
     <div
       data-component-id={componentId}
-      className={twMerge("group/minimizavel flex flex-col transition-all", !hasPermission && "opacity-50 pointer-events-none", className)}
+      className={twMerge("group/minimizavel flex flex-col transition-[color,background-color,border-color,box-shadow,opacity]", !hasPermission && "opacity-50 pointer-events-none", className)}
     >
       <button
         data-component-id={componentId ? `${componentId}.trigger` : "erp.accordion.minimizavel-trigger"}
