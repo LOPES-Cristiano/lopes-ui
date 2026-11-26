@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Edit3, EllipsisVertical, Eye, Minus, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
+import { Edit3, EllipsisVertical, Eye, Minus, Plus, Trash2 } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import type {
   ActionsDisplay,
