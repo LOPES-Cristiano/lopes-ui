@@ -748,7 +748,6 @@ export default function QRCode({
             className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden rounded-lg bg-white p-1 shadow-xs ring-1 ring-black/5"
           >
             {typeof icon === "string" ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img src={icon} alt="Logo" className="h-full w-full object-contain" />
             ) : (
               icon
