@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   Smile,
   Heart,
   Search,
   Clock,
   Sparkles,
-  Flame,
   ThumbsUp,
   X,
   Coffee,
@@ -351,6 +350,7 @@ export default function EmojiPicker({
   }
   const searchInputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     if (autoFocus) {
@@ -393,17 +393,17 @@ export default function EmojiPicker({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 8, scale: 0.96 }}
-      transition={{ duration: 0.16, ease: 'easeOut' }}
+      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.96 }}
+      animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.96 }}
+      transition={{ duration: prefersReducedMotion ? 0.08 : 0.16, ease: 'easeOut' }}
       className={`w-80 sm:w-96 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-slate-200/90 dark:border-zinc-700/90 bg-white/98 dark:bg-zinc-900/98 backdrop-blur-xl text-slate-900 dark:text-zinc-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.45)] overflow-hidden flex flex-col z-50 select-none ${className}`}
       onClick={(e) => e.stopPropagation()}
       >
       {/* Header com busca e fechar */}
       <div className="p-3 border-b border-slate-200/70 dark:border-zinc-800 flex items-center gap-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm">
         <div className="relative flex-1 flex items-center">
-          <Search size={15} className="absolute left-3 text-slate-400 pointer-events-none" />
+          <Search aria-hidden="true" size={15} className="absolute left-3 text-slate-400 pointer-events-none" />
           <input
             data-component-id={componentId ? `${componentId}.search` : undefined}
             ref={searchInputRef}
@@ -411,16 +411,18 @@ export default function EmojiPicker({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar emoji..."
-            className="w-full h-8 pl-8 pr-7 text-xs rounded-xl bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+            aria-label="Buscar emoji"
+            className="w-full h-8 pl-8 pr-7 text-xs rounded-xl bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:border-primary transition-colors"
           />
           {search && (
             <button
               data-component-id={componentId ? `${componentId}.search-clear` : undefined}
               type="button"
+              aria-label="Limpar busca"
               onClick={() => setSearch('')}
-              className="absolute right-2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+              className="absolute right-2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
             >
-              <X size={13} />
+              <X aria-hidden="true" size={13} />
             </button>
           )}
         </div>
@@ -449,7 +451,7 @@ export default function EmojiPicker({
               key={emoji}
               type="button"
               onClick={() => handleSelect(emoji)}
-              className="h-7 w-7 rounded-lg flex items-center justify-center font-emoji text-base hover:bg-slate-100 dark:hover:bg-zinc-800 hover:scale-125 active:scale-95 transition-all duration-150 cursor-pointer"
+              className="h-7 w-7 rounded-lg flex items-center justify-center font-emoji text-base hover:bg-slate-100 dark:hover:bg-zinc-800 hover:scale-125 active:scale-95 transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 cursor-pointer"
               title={emoji}
             >
               {emoji}
@@ -518,7 +520,7 @@ export default function EmojiPicker({
                     key={`${item.char}-${item.name}`}
                     type="button"
                     onClick={() => handleSelect(item.char)}
-                    className="h-9 w-9 rounded-xl flex items-center justify-center font-emoji text-2xl hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:scale-125 active:scale-95 transition-all duration-150 cursor-pointer"
+                    className="h-9 w-9 rounded-xl flex items-center justify-center font-emoji text-2xl hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:scale-125 active:scale-95 transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 cursor-pointer"
                     title={item.name}
                   >
                     {item.char}
@@ -545,7 +547,7 @@ export default function EmojiPicker({
                       key={char}
                       type="button"
                       onClick={() => handleSelect(char)}
-                      className="h-9 w-9 rounded-xl flex items-center justify-center font-emoji text-2xl hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:scale-125 active:scale-95 transition-all duration-150 cursor-pointer"
+                      className="h-9 w-9 rounded-xl flex items-center justify-center font-emoji text-2xl hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:scale-125 active:scale-95 transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 cursor-pointer"
                     >
                       {char}
                     </button>
@@ -568,7 +570,7 @@ export default function EmojiPicker({
                       key={`${item.char}-${item.name}`}
                       type="button"
                       onClick={() => handleSelect(item.char)}
-                      className="h-9 w-9 rounded-xl flex items-center justify-center font-emoji text-2xl hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:scale-125 active:scale-95 transition-all duration-150 cursor-pointer"
+                      className="h-9 w-9 rounded-xl flex items-center justify-center font-emoji text-2xl hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:scale-125 active:scale-95 transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 cursor-pointer"
                       title={item.name}
                     >
                       {item.char}
