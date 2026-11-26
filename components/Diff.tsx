@@ -35,7 +35,6 @@ export type DiffProps = {
 function renderDiffLayer(content: string | React.ReactNode, alt: string) {
   if (typeof content === "string") {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={content}
         alt={alt}
