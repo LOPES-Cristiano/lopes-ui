@@ -299,7 +299,7 @@ export default function DateRangePickerField({
         data-component-id={componentId ?? "erp.daterangepicker.trigger"}
         disabled={effectiveDisabled || readOnly}
         aria-expanded={open}
-        aria-invalid={error ? true : undefined}
+        data-invalid={error ? "true" : undefined}
         aria-describedby={describedBy}
         onClick={() => {
           if (effectiveDisabled || readOnly) return;
