@@ -401,7 +401,7 @@ export default function EmailComposer({
   const isWindow = mode === "window";
 
   const windowCls = twMerge(
-    "relative flex flex-col bg-surface text-foreground border border-border shadow-2xl shadow-zinc-900/10 dark:shadow-black/40 transition-all duration-150",
+    "relative flex flex-col bg-surface text-foreground border border-border shadow-2xl shadow-zinc-900/10 dark:shadow-black/40 transition-[color,background-color,border-color,box-shadow,opacity] duration-150",
     maximized
       ? "fixed inset-3 sm:inset-6 z-[9500] !w-auto !max-w-none rounded-2xl overscroll-contain"
       : isWindow
@@ -735,7 +735,7 @@ export default function EmailComposer({
                 onClick={handleSend}
                 disabled={sending || to.length === 0}
                 className={twMerge(
-                  "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all cursor-pointer",
+                  "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer",
                   "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
