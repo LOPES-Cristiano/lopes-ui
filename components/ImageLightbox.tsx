@@ -490,7 +490,7 @@ export default function ImageLightbox({
                 aria-current={active ? "true" : undefined}
                 onClick={() => goTo(idx)}
                 className={twMerge(
-                  "relative h-12 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 cursor-pointer",
+                  "relative h-12 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-[color,background-color,border-color,box-shadow,transform,opacity] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 cursor-pointer",
                   active
                     ? "border-primary ring-2 ring-primary/40 opacity-100 scale-105"
                     : "border-white/15 opacity-55 hover:opacity-90",
