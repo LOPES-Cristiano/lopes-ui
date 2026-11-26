@@ -352,7 +352,7 @@ export default function TransferList<T = unknown>({
                   onDoubleClick={() => handleRemoveSingle(item)}
                   title="Duplo-clique para remover"
                   className={cn(
-                    "group flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer select-none",
+                    "group flex items-center justify-between p-2 rounded-xl border transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer select-none",
                     item.disabled && "opacity-45 cursor-not-allowed",
                     isChecked
                       ? "bg-emerald-500/10 border-emerald-500/30 text-foreground"
@@ -523,7 +523,7 @@ export default function TransferList<T = unknown>({
                   onDoubleClick={() => handleAddSingle(item)}
                   title="Duplo-clique para vincular"
                   className={cn(
-                    "group flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer select-none",
+                    "group flex items-center justify-between p-2 rounded-xl border transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer select-none",
                     item.disabled && "opacity-45 cursor-not-allowed",
                     isChecked
                       ? "bg-primary/10 border-primary/30 text-foreground"
