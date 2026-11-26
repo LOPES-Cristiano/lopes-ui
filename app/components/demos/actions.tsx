@@ -8,6 +8,7 @@ import Confirm from "@/components/Confirm";
 import Drawer from "@/components/Drawer";
 import Modal from "@/components/Modal";
 import FormModal, { FormSectionHeader } from "@/components/FormModal";
+import UnsavedChangesDialog from "@/components/UnsavedChangesDialog";
 import { CameraCaptureModal } from "@/components/CameraCaptureModal";
 import PullToRefresh from "@/components/PullToRefresh";
 import ButtonGroup from "@/components/ButtonGroup";
@@ -2130,6 +2131,33 @@ toast.promise(salvarConfiguracoes(), {
           </DemoCard>
         </section>
     ),
+    "unsaved-changes-dialog": (
+      <section id="unsaved-changes-dialog" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+        <SectionHeader
+          label="Proteção de Formulário"
+          title="UnsavedChangesDialog"
+          description="Diálogo de proteção contra perda acidental de alterações em formulários sujos (isDirty). Oferece ações de continuar editando, descartar e opcionalmente salvar e fechar com estado de carregamento."
+        />
+
+        <DemoCard
+          id="unsaved-changes-dialog-demo"
+          title="Simulação de Edição Suja & Tentativa de Saída"
+        >
+          <UnsavedChangesDialogShowcaseDemo />
+        </DemoCard>
+
+        <PropsTable
+          rows={[
+            ["open", "boolean", "—", "Controla a exibição do diálogo"],
+            ["onContinue", "() => void", "—", "Chamado quando o usuário opta por continuar editando ou pressiona ESC"],
+            ["onDiscard", "() => void", "—", "Chamado quando o usuário confirma o descarte das alterações"],
+            ["onSave", "() => void | Promise<void>", "—", "Quando informado, exibe o botão primário 'Salvar e fechar'"],
+            ["saving", "boolean", "false", "Desabilita ações e exibe spinner no botão salvar"],
+            ["title / description", "string", "padrão PT-BR", "Textos customizáveis do diálogo de alerta"],
+          ]}
+        />
+      </section>
+    ),
   };
 }
 
@@ -2756,6 +2784,108 @@ function FloatButtonShowcaseDemo() {
           BackTop c/ Anel Radial de Rolagem (role a página e clique)
         </span>
       </div>
+    </div>
+  );
+}
+
+function UnsavedChangesDialogShowcaseDemo() {
+  const initialTitle = "Sofá Retrátil Imperial 3 Lugares";
+  const initialBranch = "Porto Velho (RO) — (69) 3214-8800";
+
+  const [savedTitle, setSavedTitle] = React.useState(initialTitle);
+  const [savedBranch, setSavedBranch] = React.useState(initialBranch);
+  const [title, setTitle] = React.useState(initialTitle);
+  const [branch, setBranch] = React.useState(initialBranch);
+  const [withSaveOption, setWithSaveOption] = React.useState(true);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+
+  const isDirty = title !== savedTitle || branch !== savedBranch;
+
+  const handleAttemptLeave = () => {
+    if (isDirty) {
+      setDialogOpen(true);
+    } else {
+      toast("Nenhuma alteração pendente — saída liberada imediatamente.");
+    }
+  };
+
+  const handleDiscard = () => {
+    setTitle(savedTitle);
+    setBranch(savedBranch);
+    setDialogOpen(false);
+    toast.warning("Alterações descartadas.");
+  };
+
+  const handleSaveAndClose = async () => {
+    setSaving(true);
+    await new Promise((r) => setTimeout(r, 700));
+    setSavedTitle(title);
+    setSavedBranch(branch);
+    setSaving(false);
+    setDialogOpen(false);
+    toast.success("Alterações salvas com sucesso!");
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Badge
+            dot
+            tone={isDirty ? "warning" : "success"}
+            label={isDirty ? "Alterações não salvas (isDirty)" : "Formulário salvo"}
+          />
+        </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setWithSaveOption((v) => !v)}
+        >
+          Modo: {withSaveOption ? "Com 'Salvar e fechar'" : "Apenas Descartar / Continuar"}
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <TextField
+          label="Descrição do Produto"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <TextField
+          label="Filial de Origem"
+          value={branch}
+          onChange={(e) => setBranch(e.target.value)}
+        />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setTitle("Sofá Retrátil Imperial 3 Lugares — Veludo Cinza");
+            setBranch("Manaus (AM) — (92) 3642-7100");
+          }}
+        >
+          Simular edição
+        </Button>
+        <Button
+          size="sm"
+          variant="primary"
+          onClick={handleAttemptLeave}
+        >
+          Tentar sair do formulário
+        </Button>
+      </div>
+
+      <UnsavedChangesDialog
+        open={dialogOpen}
+        saving={saving}
+        onContinue={() => setDialogOpen(false)}
+        onDiscard={handleDiscard}
+        onSave={withSaveOption ? handleSaveAndClose : undefined}
+      />
     </div>
   );
 }
