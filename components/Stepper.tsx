@@ -141,7 +141,7 @@ function StepCircle({
   const Icon = step.icon;
 
   const circleCls = twMerge(
-    "shrink-0 flex items-center justify-center rounded-full border-2 transition-all duration-300 font-semibold",
+    "shrink-0 flex items-center justify-center rounded-full border-2 transition-[color,background-color,border-color,box-shadow,opacity] duration-300 font-semibold",
     s.circle, s.text, c.circleText,
     variant === "outlined" ? "bg-transparent" : c.circle,
     variant === "outlined" && status === "completed" ? "border-indigo-500 text-indigo-500" : "",
@@ -304,7 +304,7 @@ export default function Stepper({
                 onClick={canClick ? () => onStepClick?.(i) : undefined}
                 onKeyDown={canClick ? (e) => handleStepKeyDown(e, i) : undefined}
                 className={twMerge(
-                  "h-2 flex-1 rounded-full transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "h-2 flex-1 rounded-full transition-[color,background-color,border-color,box-shadow,opacity] duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   canClick ? "cursor-pointer" : "cursor-default",
                   isError
                     ? "bg-danger"
@@ -355,7 +355,7 @@ export default function Stepper({
                 onClick={canClick ? () => onStepClick?.(i) : undefined}
                 onKeyDown={canClick ? (e) => handleStepKeyDown(e, i) : undefined}
                 className={twMerge(
-                  "group relative flex-1 min-w-fit inline-flex items-center justify-between gap-2.5 px-4 py-2.5 text-xs font-semibold transition-all whitespace-nowrap border-b-2 -mb-px outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
+                  "group relative flex-1 min-w-fit inline-flex items-center justify-between gap-2.5 px-4 py-2.5 text-xs font-semibold transition-[color,background-color,border-color,box-shadow,opacity] whitespace-nowrap border-b-2 -mb-px outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
                   canClick ? "cursor-pointer" : "cursor-default",
                   step.disabled && "opacity-40 cursor-not-allowed",
                   isCurrent
@@ -563,7 +563,7 @@ export default function Stepper({
           const canClick = !step.disabled && (clickable || Boolean(onStepClick));
 
           const dotCls = twMerge(
-            "rounded-full shrink-0 transition-all duration-200",
+            "rounded-full shrink-0 transition-[color,background-color,border-color,box-shadow,opacity] duration-200",
             isCurrent
               ? "w-3 h-3 bg-indigo-600 dark:bg-indigo-400 ring-4 ring-indigo-500/20"
               : isError
