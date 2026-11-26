@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Plus, X, type LucideIcon } from "lucide-react";
 import { cn } from "../utils/cn";
 import { useAccessControl } from "./useAccessControl";
@@ -153,10 +153,13 @@ export default function SpeedDial({
   const rootRef = useRef<HTMLDivElement>(null);
 
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
-  const setOpen = (next: boolean) => {
-    if (controlledOpen === undefined) setInternalOpen(next);
-    onOpenChange?.(next);
-  };
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (controlledOpen === undefined) setInternalOpen(next);
+      onOpenChange?.(next);
+    },
+    [controlledOpen, onOpenChange]
+  );
 
   const visibleActions = actions.filter((action) => {
     const allowed = !action.componentId || canAccess(action.componentId);
@@ -180,7 +183,7 @@ export default function SpeedDial({
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("mousedown", handlePointerDown);
     };
-  }, [isOpen]);
+  }, [isOpen, setOpen]);
 
   if (!hasRootPermission && hideIfDenied) {
     return null;
@@ -276,7 +279,7 @@ export default function SpeedDial({
                   setOpen(false);
                 }}
                 className={cn(
-                  "flex items-center justify-center rounded-full shadow-md transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                  "flex items-center justify-center rounded-full shadow-md transition-[color,background-color,border-color,box-shadow,opacity] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
                   ACTION_SIZE_CLS[size],
                   ACTION_TONE_CLS[tone],
                   actionDisabled
@@ -303,7 +306,7 @@ export default function SpeedDial({
           setOpen(!isOpen);
         }}
         className={cn(
-          "inline-flex items-center justify-center rounded-full font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2",
+          "inline-flex items-center justify-center rounded-full font-semibold transition-[color,background-color,border-color,box-shadow,opacity] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2",
           label ? EXTENDED_SIZE_CLS[size] : MAIN_SIZE_CLS[size],
           MAIN_VARIANT_CLS[variant],
           effectiveDisabled
