@@ -59,11 +59,11 @@ export default function DateField({
   if (!hasPermission && hideIfDenied) return null;
 
   const wrapCls = twMerge(
-    "relative flex w-full items-center overflow-hidden rounded-lg border transition-all duration-150",
+    "relative flex w-full items-center overflow-hidden rounded-[var(--radius-control)] border transition-[color,background-color,border-color,box-shadow] duration-150",
     variant === "filled"
-      ? "bg-[var(--surface-muted)] border-transparent hover:bg-[var(--surface-hover)] focus-within:bg-[var(--surface)] focus-within:border-[var(--border-strong)] focus-within:ring-2 focus-within:ring-[var(--ring)]/10"
-      : "bg-[var(--input-background)] border-[var(--input-border)] hover:border-[var(--border-strong)] focus-within:border-[var(--ring)] focus-within:ring-2 focus-within:ring-[var(--ring)]/10",
-    error && "border-red-400 hover:border-red-400 focus-within:border-red-500 focus-within:ring-red-500/10",
+      ? "bg-[var(--surface-muted)] border-transparent hover:bg-[var(--surface-hover)] focus-within:bg-[var(--surface)] focus-within:border-[var(--border-strong)] focus-within:ring-2 focus-within:ring-[var(--ring)]/20"
+      : "bg-[var(--input-background)] border-[var(--input-border)] hover:border-[var(--border-strong)] focus-within:border-[var(--ring)] focus-within:ring-2 focus-within:ring-[var(--ring)]/20",
+    error && "border-danger hover:border-danger focus-within:border-danger focus-within:ring-danger/20",
     (effectiveDisabled || readOnly) && "opacity-60 pointer-events-none bg-[var(--surface-muted)]",
   );
 
@@ -81,7 +81,7 @@ export default function DateField({
       width={width} className={className}
     >
       <div className={twMerge(wrapCls, !effectiveDisabled && !readOnly && "cursor-pointer")} onClick={handleWrapperClick}>
-        <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--surface-muted-foreground)]", s.iL)}>
+        <span aria-hidden="true" className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--surface-muted-foreground)]", s.iL)}>
           <Calendar size={s.iconSz} />
         </span>
         <input
