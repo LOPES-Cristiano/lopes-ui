@@ -95,7 +95,7 @@ export default function HoverGallery({
             <span
               key={idx}
               className={cn(
-                "h-1 flex-1 rounded-full transition-all duration-200 ease-out",
+                "h-1 flex-1 rounded-full transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-200 ease-out",
                 idx === currentIndex
                   ? "bg-white shadow-xs scale-y-125"
                   : "bg-white/35 backdrop-blur-xs"
@@ -109,7 +109,6 @@ export default function HoverGallery({
       {normalized.map((item, idx) => {
         const isCurrent = idx === currentIndex;
         return (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             key={item.src + idx}
             src={item.src}
@@ -127,7 +126,7 @@ export default function HoverGallery({
 
       {/* Optional caption for current image */}
       {currentImg?.label && (
-        <div className="pointer-events-none absolute bottom-2.5 left-2.5 right-2.5 z-20 flex justify-center opacity-0 translate-y-1 transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0">
+        <div className="pointer-events-none absolute bottom-2.5 left-2.5 right-2.5 z-20 flex justify-center opacity-0 translate-y-1 transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0">
           <span className="rounded-lg bg-black/70 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-xs shadow-sm">
             {currentImg.label}
           </span>
