@@ -441,7 +441,7 @@ export function Sidebar({
         {/* Header */}
         <div
           className={[
-            'relative flex shrink-0 border-b border-[var(--sidebar-border)] transition-all duration-200 justify-between items-center h-16 min-h-[64px] px-3.5',
+            'relative flex shrink-0 border-b border-[var(--sidebar-border)] transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-200 justify-between items-center h-16 min-h-[64px] px-3.5',
             effectiveCollapsed ? 'justify-center px-1.5' : '',
           ].join(' ')}
         >
@@ -569,7 +569,7 @@ export function Sidebar({
             {footerExtra && (
               <div
                 className={[
-                  'pt-2 overflow-hidden transition-all duration-[250ms] ease-out',
+                  'pt-2 overflow-hidden transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-[250ms] ease-out',
                   effectiveCollapsed
                     ? 'max-h-0 opacity-0 pointer-events-none'
                     : 'max-h-96 opacity-100',
