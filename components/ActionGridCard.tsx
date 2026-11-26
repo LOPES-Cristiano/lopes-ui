@@ -125,7 +125,7 @@ export default function ActionGridCard({
           const tileInner = (
             <div
               className={twMerge(
-                "group/tile relative flex flex-col items-center justify-center rounded-xl border border-transparent bg-muted/45 text-center transition-all duration-150",
+                "group/tile relative flex flex-col items-center justify-center rounded-xl border border-transparent bg-muted/45 text-center transition-[color,background-color,border-color,box-shadow,opacity] duration-150",
                 size === "sm" ? "gap-1.5 p-3" : "gap-2 p-4",
                 item.disabled
                   ? "opacity-45 cursor-not-allowed"
