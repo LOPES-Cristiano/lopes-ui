@@ -59,16 +59,16 @@ export default function TimeField({
   if (!hasPermission && hideIfDenied) return null;
 
   const wrapCls = twMerge(
-    "relative flex w-full items-center overflow-hidden rounded-lg border transition-all duration-150",
+    "relative flex w-full items-center overflow-hidden rounded-[var(--radius-control)] border transition-[color,background-color,border-color,box-shadow] duration-150",
     variant === "filled"
-      ? "bg-zinc-100 border-transparent hover:bg-zinc-200/70 focus-within:bg-white focus-within:border-zinc-300 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 dark:focus-within:bg-zinc-900 dark:focus-within:border-zinc-600"
-      : "bg-white border-zinc-300 hover:border-zinc-400 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/10 dark:bg-zinc-900 dark:border-zinc-700 dark:hover:border-zinc-600 dark:focus-within:border-zinc-500",
-    error && "border-red-400 hover:border-red-400 focus-within:border-red-500 focus-within:ring-red-500/10",
-    (effectiveDisabled || readOnly) && "opacity-60 pointer-events-none bg-zinc-50 dark:bg-zinc-800/50",
+      ? "bg-[var(--surface-muted)] border-transparent hover:bg-[var(--surface-hover)] focus-within:bg-[var(--surface)] focus-within:border-[var(--border-strong)] focus-within:ring-2 focus-within:ring-[var(--ring)]/20"
+      : "bg-[var(--input-background)] border-[var(--input-border)] hover:border-[var(--border-strong)] focus-within:border-[var(--ring)] focus-within:ring-2 focus-within:ring-[var(--ring)]/20",
+    error && "border-danger hover:border-danger focus-within:border-danger focus-within:ring-danger/20",
+    (effectiveDisabled || readOnly) && "opacity-60 pointer-events-none bg-[var(--surface-muted)]",
   );
 
   const inputCls = twMerge(
-    "flex-1 min-w-0 w-full bg-transparent outline-none border-0 ring-0 text-zinc-900 dark:text-zinc-100 [color-scheme:light] dark:[color-scheme:dark]",
+    "flex-1 min-w-0 w-full bg-transparent outline-none border-0 ring-0 text-[var(--input-foreground)] [color-scheme:light] dark:[color-scheme:dark]",
     s.h, s.text, s.pl, "pr-3",
     (effectiveDisabled || readOnly) && "cursor-not-allowed",
     inputClassName,
@@ -81,7 +81,7 @@ export default function TimeField({
       width={width} className={className}
     >
       <div className={twMerge(wrapCls, !effectiveDisabled && !readOnly && "cursor-pointer")} onClick={handleWrapperClick}>
-        <span className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-zinc-400", s.iL)}>
+        <span aria-hidden="true" className={twMerge("pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--surface-muted-foreground)]", s.iL)}>
           <Clock size={s.iconSz} />
         </span>
         <input
