@@ -645,7 +645,7 @@ export default function Calendar({
                         onClick={() => handleDayClick(date)}
                         disabled={disabled}
                         className={twMerge(
-                          "relative z-10 flex aspect-square items-center justify-center rounded-xl font-bold transition-all tabular-nums",
+                          "relative z-10 flex aspect-square items-center justify-center rounded-xl font-bold transition-[color,background-color,border-color,box-shadow,opacity] tabular-nums",
                           fillWidth ? "w-full h-auto" : eff.cell,
                           disabled ? "opacity-25 cursor-not-allowed" : "cursor-pointer",
                           isHighlighted
