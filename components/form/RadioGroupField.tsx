@@ -54,15 +54,15 @@ function RadioIndicator({ checked }: { checked: boolean }) {
     <span
       aria-hidden="true"
       className={cn(
-        "relative mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-150",
+        "relative mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border-2 transition-[color,background-color,border-color,box-shadow,opacity] duration-150",
         checked
-          ? "border-indigo-600 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-950/60"
-          : "border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-900 group-hover/rg:border-indigo-400"
+          ? "border-brand bg-brand-soft"
+          : "border-input-border bg-input group-hover/rg:border-brand/60"
       )}
     >
       <span
         className={cn(
-          "h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400 transition-all duration-150",
+          "h-2 w-2 rounded-full bg-brand transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150",
           checked ? "scale-100 opacity-100" : "scale-0 opacity-0"
         )}
       />
@@ -146,7 +146,7 @@ export default function RadioGroupField({
         data-component-id={componentId}
         className={cn(
           variant === "buttons" || variant === "buttons-solid"
-            ? "inline-flex max-w-full flex-wrap sm:flex-nowrap items-stretch rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden divide-x divide-zinc-200 dark:divide-zinc-800"
+            ? "inline-flex max-w-full flex-wrap sm:flex-nowrap items-stretch rounded-xl border border-border bg-surface overflow-hidden divide-x divide-border"
             : variant === "cards" && resolvedColumns > 1
               ? cn("grid gap-3.5", CARD_COLS[resolvedColumns])
               : cn(
@@ -175,13 +175,13 @@ export default function RadioGroupField({
                 key={option.value}
                 htmlFor={optId}
                 className={cn(
-                  "relative inline-flex cursor-pointer items-center justify-center font-medium transition-all duration-150 select-none",
+                  "relative inline-flex cursor-pointer items-center justify-center font-medium transition-[color,background-color,border-color,box-shadow,opacity] duration-150 select-none",
                   btnSizeCls,
                   isChecked
                     ? isSolid
                       ? "bg-primary text-primary-foreground font-semibold shadow-2xs"
                       : "bg-primary/10 text-primary font-semibold ring-1 ring-inset ring-primary"
-                    : "bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/70 hover:text-primary",
+                    : "bg-surface text-surface-foreground hover:bg-surface-hover hover:text-primary",
                   isOptionDisabled && "opacity-45 pointer-events-none cursor-not-allowed"
                 )}
               >
@@ -208,10 +208,10 @@ export default function RadioGroupField({
                 key={option.value}
                 htmlFor={optId}
                 className={cn(
-                  "group/rg relative flex cursor-pointer items-start gap-3.5 rounded-xl border-2 p-4 transition-all duration-150 select-none",
+                  "group/rg relative flex cursor-pointer items-start gap-3.5 rounded-xl border-2 p-4 transition-[color,background-color,border-color,box-shadow,opacity] duration-150 select-none",
                   isChecked
-                    ? "border-indigo-600 bg-indigo-50/40 shadow-2xs dark:border-indigo-500 dark:bg-indigo-950/35"
-                    : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50/60 dark:hover:bg-zinc-800/50",
+                    ? "border-brand bg-brand-soft/50 shadow-2xs"
+                    : "border-border bg-surface hover:border-border-strong hover:bg-surface-hover/60",
                   isOptionDisabled && "opacity-50 pointer-events-none cursor-not-allowed",
                 )}
               >
@@ -231,18 +231,18 @@ export default function RadioGroupField({
                   <div className="min-w-0 space-y-1">
                     <div className={cn(
                       "text-sm font-semibold leading-snug",
-                      isChecked ? "text-indigo-950 dark:text-indigo-200" : "text-zinc-900 dark:text-zinc-100"
+                      isChecked ? "text-brand-soft-foreground" : "text-foreground"
                     )}>
                       {option.label}
                     </div>
                     {option.description && (
-                      <div className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                      <div className="text-xs leading-relaxed text-muted-foreground">
                         {option.description}
                       </div>
                     )}
                   </div>
                   {option.icon && (
-                    <span className="shrink-0 text-zinc-400 dark:text-zinc-500">
+                    <span className="shrink-0 text-muted-foreground">
                       {option.icon}
                     </span>
                   )}
@@ -273,11 +273,11 @@ export default function RadioGroupField({
               />
               <RadioIndicator checked={isChecked} />
               <div className="min-w-0">
-                <div className="text-sm font-medium text-zinc-800 dark:text-zinc-200 leading-snug">
+                <div className="text-sm font-medium text-foreground leading-snug">
                   {option.label}
                 </div>
                 {option.description && (
-                  <div className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                  <div className="mt-0.5 text-xs text-muted-foreground">
                     {option.description}
                   </div>
                 )}
