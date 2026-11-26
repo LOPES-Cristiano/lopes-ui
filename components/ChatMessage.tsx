@@ -178,7 +178,6 @@ export default function ChatMessage({
           {/* Image */}
           {type === "image" && imageUrl && (
             <div className={twMerge("overflow-hidden rounded-xl", replyTo ? "mt-1.5 mx-2" : "")}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imageUrl}
                 alt={imageAlt ?? "imagem"}
