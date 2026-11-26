@@ -391,7 +391,7 @@ function KanbanCardItem({
           onDropAtCard(columnId, cardIndex);
         }}
         className={twMerge(
-          "transition-all duration-150 cursor-pointer",
+          "transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 cursor-pointer",
           isDragging && "opacity-40 scale-95 ring-2 ring-primary shadow-xl rounded-lg",
         )}
       >
@@ -449,7 +449,7 @@ function KanbanCardItem({
       className={twMerge(
         "group relative rounded-xl bg-surface",
         "border border-border/80",
-        "p-3.5 shadow-2xs hover:shadow-md hover:border-border transition-all duration-150 ease-out",
+        "p-3.5 shadow-2xs hover:shadow-md hover:border-border transition-[color,background-color,border-color,box-shadow,opacity] duration-150 ease-out",
         isCardDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
         "text-left",
         card.color && `border-l-4 ${colorBorder[card.color]}`,
@@ -820,7 +820,7 @@ export default function KanbanBoard({
                 const el = document.getElementById(`kanban-col-${col.id}`);
                 el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
               }}
-              className="inline-flex min-h-7 items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap bg-surface text-foreground border border-border shadow-2xs hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 shrink-0 cursor-pointer active:scale-95 transition-all"
+              className="inline-flex min-h-7 items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap bg-surface text-foreground border border-border shadow-2xs hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 shrink-0 cursor-pointer active:scale-95 transition-[color,background-color,border-color,box-shadow,transform,opacity]"
             >
               <span>{col.title}</span>
               <span className="text-[10px] font-bold font-mono tabular-nums px-1 rounded bg-muted text-muted-foreground">
@@ -892,7 +892,7 @@ export default function KanbanBoard({
               onDragLeave={() => setDragOverColId(null)}
               onDrop={() => handleDropAt(column.id)}
               className={twMerge(
-                "flex flex-col w-[86vw] sm:w-[300px] lg:w-[320px] 2xl:flex-1 2xl:w-auto 2xl:min-w-[280px] shrink-0 snap-center snap-always md:snap-none rounded-xl bg-muted/35 border border-border/80 p-3 transition-all duration-150 h-full max-h-full min-h-0",
+                "flex flex-col w-[86vw] sm:w-[300px] lg:w-[320px] 2xl:flex-1 2xl:w-auto 2xl:min-w-[280px] shrink-0 snap-center snap-always md:snap-none rounded-xl bg-muted/35 border border-border/80 p-3 transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 h-full max-h-full min-h-0",
                 isTarget && "bg-primary/5 border-primary ring-2 ring-primary/30",
                 wipExceeded && "border-danger/50 bg-danger/5",
               )}
