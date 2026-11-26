@@ -29,22 +29,22 @@ export default function ThemeToggle({ className, size = 19, componentId }: Theme
         <>
           <Sun
             size={size}
-            className="stroke-[1.75] transition-all duration-200 group-hover:scale-0 group-hover:opacity-0 group-hover:rotate-90 text-amber-400"
+            className="stroke-[1.75] transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-200 group-hover:scale-0 group-hover:opacity-0 group-hover:rotate-90 text-amber-400"
           />
           <Moon
             size={size}
-            className="stroke-[1.75] absolute transition-all duration-200 scale-0 opacity-0 -rotate-90 group-hover:scale-100 group-hover:opacity-100 group-hover:rotate-0 text-current"
+            className="stroke-[1.75] absolute transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-200 scale-0 opacity-0 -rotate-90 group-hover:scale-100 group-hover:opacity-100 group-hover:rotate-0 text-current"
           />
         </>
       ) : (
         <>
           <Moon
             size={size}
-            className="stroke-[1.75] transition-all duration-200 group-hover:scale-0 group-hover:opacity-0 group-hover:-rotate-90 text-current"
+            className="stroke-[1.75] transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-200 group-hover:scale-0 group-hover:opacity-0 group-hover:-rotate-90 text-current"
           />
           <Sun
             size={size}
-            className="stroke-[1.75] absolute transition-all duration-200 scale-0 opacity-0 rotate-90 group-hover:scale-100 group-hover:opacity-100 group-hover:rotate-0 text-amber-500"
+            className="stroke-[1.75] absolute transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-200 scale-0 opacity-0 rotate-90 group-hover:scale-100 group-hover:opacity-100 group-hover:rotate-0 text-amber-500"
           />
         </>
       )}
