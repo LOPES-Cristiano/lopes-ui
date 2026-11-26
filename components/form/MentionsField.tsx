@@ -263,7 +263,7 @@ export default function MentionsField({
           : "rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-primary focus:ring-2 focus:ring-primary/20";
 
   const sharedInputClasses = twMerge(
-    "w-full px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none transition-all",
+    "w-full px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none transition-[color,background-color,border-color,box-shadow,opacity]",
     variantClasses,
     error && "border-red-500 dark:border-red-500 focus:ring-red-500/20",
     effectiveDisabled && "opacity-55 cursor-not-allowed bg-zinc-50 dark:bg-zinc-900/50"
@@ -383,7 +383,6 @@ export default function MentionsField({
                       )}
                     >
                       {opt.avatar ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={opt.avatar}
                           alt={opt.label}
