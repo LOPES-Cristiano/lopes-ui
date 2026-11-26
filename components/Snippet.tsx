@@ -85,7 +85,7 @@ export function CopyButton({
       disabled={isDisabled}
       aria-label={tooltipText}
       className={cn(
-        "inline-flex items-center justify-center rounded-md font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none shrink-0 cursor-pointer",
+        "inline-flex items-center justify-center rounded-md font-medium transition-[color,background-color,border-color,box-shadow,opacity] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none shrink-0 cursor-pointer",
         sizeClasses,
         variantClasses,
         copied && "text-success",
