@@ -11,9 +11,11 @@ import Snippet, { CopyButton } from "@/components/Snippet";
 import Tour from "@/components/Tour";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import LeaderboardPodium from "@/components/LeaderboardPodium";
+import MotionCollapse from "@/components/MotionCollapse";
+import StaggerList, { StaggerItem } from "@/components/StaggerList";
 import Button from "@/components/Button";
 import toast from "@/components/Toast";
-import { Terminal, CheckCircle2 } from "lucide-react";
+import { Terminal, CheckCircle2, ChevronDown, Plus, RotateCcw } from "lucide-react";
 import { SectionHeader, DemoCard, PropsTable } from "@/app/showcase/_shared";
 
 /** Seções de demonstração da categoria "animation". Cada chave é o id da seção (âncora usada na showcase e em /components). */
@@ -245,6 +247,46 @@ export function useAnimationSections(): Record<string, React.ReactNode> {
         <DemoCard id="leaderboard-podium-demo" title="Ranking de Vendedores — Praças RO & AM">
           <LeaderboardPodiumShowcaseDemo />
         </DemoCard>
+      </section>
+    ),
+    "motion-collapse": (
+      <section id="motion-collapse" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+        <SectionHeader
+          label="Transição de Altura"
+          title="MotionCollapse"
+          description="Região expansível com animação fluida de altura e opacidade via motion/react, suporte a keepMounted (CSS grid-rows) e respeito automático a prefers-reduced-motion."
+        />
+        <DemoCard id="motion-collapse-demo" title="Expansão Suave & Modo keepMounted">
+          <MotionCollapseShowcaseDemo />
+        </DemoCard>
+        <PropsTable
+          rows={[
+            ["open", "boolean", "—", "Controla se a região está expandida ou recolhida"],
+            ["duration", "number", "0.22", "Duração da transição em segundos"],
+            ["keepMounted", "boolean", "false", "Mantém o conteúdo montado no DOM usando grid-template-rows"],
+            ["innerClassName", "string", "—", "Classes no contêiner interno (local seguro para padding sem salto)"],
+          ]}
+        />
+      </section>
+    ),
+    "stagger-list": (
+      <section id="stagger-list" className="space-y-8 pb-10 sm:pb-14 scroll-mt-20">
+        <SectionHeader
+          label="Entrada Escalonada"
+          title="StaggerList & StaggerItem"
+          description="Lista com entrada escalonada no compositor (opacity + translateY), limite máximo de itens atrasados para evitar lag em listas longas e animações opcionais de posição (animateLayout)."
+        />
+        <DemoCard id="stagger-list-demo" title="Lista Escalonada com Re-execução & Adição Dinâmica">
+          <StaggerListShowcaseDemo />
+        </DemoCard>
+        <PropsTable
+          rows={[
+            ["staggerDelay", "number", "0.032", "Atraso em segundos entre a entrada de cada StaggerItem"],
+            ["maxStaggerItems", "number", "12", "Limite de itens com delay incremental para listas longas"],
+            ["offsetY", "number", "8", "Deslocamento vertical inicial em pixels"],
+            ["animateLayout", "boolean", "false", "Prop de StaggerItem para animar mudanças de posição com mola"],
+          ]}
+        />
       </section>
     ),
   };
@@ -550,6 +592,149 @@ function CodeEditorDemo() {
         }}
         height={290}
       />
+    </div>
+  );
+}
+
+function MotionCollapseShowcaseDemo() {
+  const [openSpecs, setOpenSpecs] = useState(true);
+  const [openDelivery, setOpenDelivery] = useState(false);
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setOpenSpecs((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer"
+        >
+          <span>Especificações — Sofá Retrátil Imperial 3 Lugares</span>
+          <ChevronDown
+            size={16}
+            className={`text-zinc-500 transition-transform duration-200 ${openSpecs ? "rotate-180" : ""}`}
+          />
+        </button>
+        <MotionCollapse open={openSpecs} innerClassName="px-4 pb-4 pt-1 border-t border-zinc-100 dark:border-zinc-800">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-zinc-600 dark:text-zinc-400 pt-2">
+            <div>
+              <span className="block font-semibold text-zinc-800 dark:text-zinc-200">Dimensões</span>
+              2,30m × 1,15m (aberto 1,75m)
+            </div>
+            <div>
+              <span className="block font-semibold text-zinc-800 dark:text-zinc-200">Revestimento</span>
+              Veludo Suede Cinza Chumbo · Molas Ensacadas
+            </div>
+            <div>
+              <span className="block font-semibold text-zinc-800 dark:text-zinc-200">Disponibilidade</span>
+              CD Porto Velho (RO) e CD Manaus (AM)
+            </div>
+          </div>
+        </MotionCollapse>
+      </div>
+
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setOpenDelivery((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer"
+        >
+          <span>Política de Entrega & Montagem (keepMounted)</span>
+          <ChevronDown
+            size={16}
+            className={`text-zinc-500 transition-transform duration-200 ${openDelivery ? "rotate-180" : ""}`}
+          />
+        </button>
+        <MotionCollapse
+          open={openDelivery}
+          keepMounted
+          duration={0.28}
+          innerClassName="px-4 pb-4 pt-2 border-t border-zinc-100 dark:border-zinc-800"
+        >
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+            Entrega própria com caminhão baú e montagem especializada inclusa nas praças de{" "}
+            <strong>Rondônia — DDD (69)</strong> e <strong>Amazonas — DDD (92)</strong>. O modo{" "}
+            <code className="font-mono bg-zinc-100 dark:bg-zinc-800 px-1 rounded">keepMounted</code>{" "}
+            mantém o DOM montado para preservar foco e estado de formulários internos.
+          </p>
+        </MotionCollapse>
+      </div>
+    </div>
+  );
+}
+
+const EXTRA_CATALOG_ITEMS = [
+  { sku: "ELE-9104", name: "Lava e Seca 11kg Inverter Inox", branch: "Manaus (AM)" },
+  { sku: "DOR-4412", name: "Guarda-Roupa Casal 6 Portas c/ Espelho", branch: "Ji-Paraná (RO)" },
+  { sku: "COZ-2280", name: "Cozinha Compacta 7 Peças Freijó/Off-White", branch: "Ariquemes (RO)" },
+  { sku: "EST-5190", name: "Poltrona Reclinável do Papai Couro Sintético", branch: "Porto Velho (RO)" },
+];
+
+function StaggerListShowcaseDemo() {
+  const [runKey, setRunKey] = useState(0);
+  const [extraIdx, setExtraIdx] = useState(0);
+  const [items, setItems] = useState([
+    { sku: "EST-3091", name: "Sofá Retrátil Imperial 3 Lugares", branch: "Porto Velho (RO)" },
+    { sku: "ELE-8820", name: "Geladeira Frost Free Inverter 450L", branch: "Manaus (AM)" },
+    { sku: "COL-7740", name: "Colchão King Molas Ensacadas + Box", branch: "Porto Velho (RO)" },
+    { sku: "ELE-6102", name: "Smart TV 55\" 4K UHD QLED", branch: "Manaus (AM)" },
+  ]);
+
+  const handleAdd = () => {
+    const next = EXTRA_CATALOG_ITEMS[extraIdx % EXTRA_CATALOG_ITEMS.length];
+    setItems((prev) => [{ ...next, sku: `${next.sku}-${extraIdx + 1}` }, ...prev]);
+    setExtraIdx((i) => i + 1);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          size="sm"
+          variant="primary"
+          leftIcon={<RotateCcw size={14} />}
+          onClick={() => setRunKey((k) => k + 1)}
+        >
+          Re-executar entrada
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          leftIcon={<Plus size={14} />}
+          onClick={handleAdd}
+        >
+          Adicionar item ao topo
+        </Button>
+      </div>
+
+      <StaggerList
+        key={runKey}
+        as="ul"
+        staggerDelay={0.05}
+        offsetY={10}
+        className="space-y-2"
+        ariaLabel="Itens em separação"
+      >
+        {items.map((item) => (
+          <StaggerItem
+            key={item.sku}
+            as="li"
+            animateLayout
+            className="flex items-center justify-between gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3"
+          >
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                {item.name}
+              </p>
+              <p className="text-xs text-zinc-500">
+                SKU <span className="font-mono">{item.sku}</span> · {item.branch}
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+              Em estoque
+            </span>
+          </StaggerItem>
+        ))}
+      </StaggerList>
     </div>
   );
 }
