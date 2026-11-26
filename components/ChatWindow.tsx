@@ -134,7 +134,7 @@ export default function ChatWindow({
         className={twMerge(
           "relative flex items-center justify-center w-14 h-14 rounded-full",
           "bg-indigo-600 hover:bg-indigo-500 text-white",
-          "shadow-xl shadow-indigo-200 transition-all active:scale-95",
+          "shadow-xl shadow-indigo-200 transition-[color,background-color,border-color,box-shadow,transform,opacity] active:scale-95",
           className
         )}
         aria-label="Abrir chat"
@@ -156,7 +156,7 @@ export default function ChatWindow({
       className={twMerge(
         "flex flex-col bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden",
         "shadow-2xl shadow-zinc-900/10",
-        "w-80 max-w-full transition-all duration-200",
+        "w-80 max-w-full transition-[color,background-color,border-color,box-shadow,opacity] duration-200",
         minimized
           ? "h-auto"
           : windowState === "chat"
@@ -246,11 +246,12 @@ export default function ChatWindow({
           {windowState === "list" && (
             <div className="flex flex-col flex-1 overflow-hidden">
               <div className="px-3 py-2 shrink-0">
-                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800">
-                  <Search size={13} className="text-zinc-400 shrink-0" />
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-transparent focus-within:border-ring/40 focus-within:ring-2 focus-within:ring-ring/20 transition-[border-color,box-shadow]">
+                  <Search aria-hidden="true" size={13} className="text-zinc-400 shrink-0" />
                   <input
                     type="text"
                     placeholder="Buscar conversa…"
+                    aria-label="Buscar conversa"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="flex-1 bg-transparent text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 outline-none"
