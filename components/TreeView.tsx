@@ -352,7 +352,7 @@ function TreeItem({ node }: { node: TreeNode }) {
         {selectionMode === "multiple" && (
           <span
             className={[
-              "shrink-0 flex items-center justify-center rounded border transition-all",
+              "shrink-0 flex items-center justify-center rounded border transition-[color,background-color,border-color,box-shadow,opacity]",
               checkCls,
               isSelected || isIndeterminate
                 ? "bg-primary-foreground border-primary-foreground text-primary"
