@@ -90,7 +90,7 @@ export default function Swap({
         <span
           aria-hidden={!indeterminate}
           className={cn(
-            "col-start-1 row-start-1 inline-flex items-center justify-center transition-all duration-300 ease-out",
+            "col-start-1 row-start-1 inline-flex items-center justify-center transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-300 ease-out",
             indeterminate
               ? "opacity-100 scale-100 rotate-0"
               : "pointer-events-none opacity-0 scale-75"
@@ -112,7 +112,7 @@ export default function Swap({
             : undefined
         }
         className={cn(
-          "col-start-1 row-start-1 inline-flex items-center justify-center transition-all duration-300 ease-out",
+          "col-start-1 row-start-1 inline-flex items-center justify-center transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-300 ease-out",
           !indeterminate && isActive
             ? "opacity-100 scale-100 rotate-0"
             : cn(
@@ -137,7 +137,7 @@ export default function Swap({
             : undefined
         }
         className={cn(
-          "col-start-1 row-start-1 inline-flex items-center justify-center transition-all duration-300 ease-out",
+          "col-start-1 row-start-1 inline-flex items-center justify-center transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-300 ease-out",
           !indeterminate && !isActive
             ? "opacity-100 scale-100 rotate-0"
             : cn(
