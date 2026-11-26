@@ -77,7 +77,7 @@ export function Toggle({
       disabled={effectiveDisabled}
       onClick={handleClick}
       className={cn(
-        "inline-flex items-center justify-center font-medium transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none",
+        "inline-flex items-center justify-center font-medium transition-[color,background-color,border-color,box-shadow,opacity] outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none",
         SIZE_CLS[size],
         VARIANT_CLS[variant].base,
         isPressed && VARIANT_CLS[variant].active,
