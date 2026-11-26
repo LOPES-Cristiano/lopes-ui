@@ -304,7 +304,6 @@ export function CardImage({
   height?: string;
 }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
       alt={alt}
@@ -373,7 +372,6 @@ export default function Card({
     >
       {isImageFull && imageSrc && (
         <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageSrc}
             alt={imageAlt}
