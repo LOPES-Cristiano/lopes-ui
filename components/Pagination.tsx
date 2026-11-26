@@ -118,7 +118,7 @@ export default function Pagination({
               value={pageSize}
               disabled={disabled}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 text-xs font-medium text-zinc-800 dark:text-zinc-200 outline-none focus:border-primary"
+              className="h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 text-xs font-medium text-zinc-800 dark:text-zinc-200 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/30 transition-[border-color,box-shadow]"
             >
               {pageSizeOptions.map((opt) => (
                 <option key={opt} value={opt}>
