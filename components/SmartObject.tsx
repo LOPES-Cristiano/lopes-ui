@@ -211,7 +211,7 @@ export function SmartObjectChip({
       className={twMerge(
         clsx(
           "inline-flex min-h-6 items-center gap-1.5 rounded-lg px-2.5 py-0.5 text-xs font-semibold align-baseline mx-0.5",
-          "border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "border transition-[color,background-color,border-color,box-shadow,transform,opacity] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           "hover:brightness-95 active:scale-95 cursor-pointer select-none",
           "disabled:opacity-50 disabled:pointer-events-none",
           sc.chip,
@@ -395,7 +395,7 @@ export default function SmartObject({
                   onClick={() => handleAction(action)}
                   className={clsx(
                     "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium cursor-pointer",
-                    "shadow-sm transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "shadow-sm transition-[color,background-color,border-color,box-shadow,transform,opacity] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     "disabled:opacity-60 disabled:cursor-not-allowed",
                     variantBtn[action.variant],
                   )}
