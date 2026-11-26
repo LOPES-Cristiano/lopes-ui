@@ -60,6 +60,7 @@ import type {
   UICanvasElement,
   UIElementStyle,
 } from "./types";
+import GenericPropsInspector from "./GenericPropsInspector";
 
 function asStr(v: unknown, fallback = ""): string {
   if (typeof v === "string") return v;
@@ -1925,12 +1926,42 @@ export default function UIBuilderInspector({
                   value={asStr(p.type, "bar")}
                   options={[
                     { value: "bar", label: "Barras (Bar)" },
+                    { value: "horizontal-bar", label: "Barras Horizontais" },
                     { value: "area", label: "Área Suave (Area)" },
                     { value: "line", label: "Linhas (Line)" },
+                    { value: "composed", label: "Composto (Barra + Linha)" },
                     { value: "donut", label: "Rosca (Donut)" },
+                    { value: "pie", label: "Pizza (Pie)" },
+                    { value: "radial", label: "Radial / Gauge" },
+                    { value: "radar", label: "Radar (Aranha)" },
+                    { value: "funnel", label: "Funil (Funnel)" },
                   ]}
                   onChange={(v) => updateSingleProp("type", v)}
                 />
+                <div className="grid grid-cols-2 gap-2">
+                  <SelectField
+                    size="sm"
+                    label="Dimensão"
+                    value={asStr(p.variant, "2d")}
+                    options={[
+                      { value: "2d", label: "2D Vetorial" },
+                      { value: "3d", label: "3D Isométrico" },
+                    ]}
+                    onChange={(v) => updateSingleProp("variant", v)}
+                  />
+                  {asStr(p.variant, "2d") === "3d" && (
+                    <SelectField
+                      size="sm"
+                      label="Formato 3D"
+                      value={asStr(p.barShape, "prism")}
+                      options={[
+                        { value: "prism", label: "Prisma" },
+                        { value: "cylinder", label: "Cilindro" },
+                      ]}
+                      onChange={(v) => updateSingleProp("barShape", v)}
+                    />
+                  )}
+                </div>
                 <TextField
                   size="sm"
                   label="Título do Gráfico"
@@ -3626,6 +3657,15 @@ export default function UIBuilderInspector({
                   />
                 )}
               </div>
+            )}
+
+            {/* Schema-driven Inspector for extended Lopes UI components */}
+            {meta?.inspectorFields && meta.inspectorFields.length > 0 && (
+              <GenericPropsInspector
+                props={p}
+                fields={meta.inspectorFields}
+                onChangeProp={updateSingleProp}
+              />
             )}
 
             {/* Collapsible Power-User Raw Props JSON Editor (great for Kanban, TreeView, Table rows, etc.) */}
