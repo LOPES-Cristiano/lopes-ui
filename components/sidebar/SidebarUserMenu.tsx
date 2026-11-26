@@ -81,7 +81,6 @@ export function SidebarUserMenu({
     <div className="relative shrink-0">
       <div className="h-8 w-8 rounded-full overflow-hidden flex items-center justify-center bg-[var(--sidebar-avatar-background)] text-[var(--sidebar-avatar-foreground)] text-xs font-semibold ring-2 ring-[var(--sidebar-avatar-ring)]">
         {user.avatar ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
         ) : (
           <span>{user.initials ?? user.name.slice(0, 2).toUpperCase()}</span>
@@ -103,7 +102,7 @@ export function SidebarUserMenu({
         'rounded-xl bg-[var(--sidebar-popover-background)] text-[var(--sidebar-popover-foreground)] shadow-xl ring-1 ring-[var(--sidebar-popover-border)] overflow-hidden z-[120]',
         effectiveCollapsed
           ? 'fixed min-w-56 animate-in fade-in zoom-in-95 duration-150'
-          : 'absolute bottom-full left-0 right-0 mb-2 transition-all duration-150 ease-out origin-bottom z-[90]',
+          : 'absolute bottom-full left-0 right-0 mb-2 transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 ease-out origin-bottom z-[90]',
         open ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none hidden',
       ].join(' ')}
       style={
