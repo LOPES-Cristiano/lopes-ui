@@ -9,7 +9,7 @@ export function SidebarFooterItem({ item }: { item: SidebarFooterItemType }) {
   const Icon = item.icon;
 
   const itemClass = [
-    'group/fi flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 transition-all duration-150 text-left',
+    'group/fi flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 transition-[color,background-color,border-color,box-shadow,opacity] duration-150 text-left',
     item.danger
       ? 'text-[var(--sidebar-danger-foreground)] hover:bg-[var(--sidebar-danger-hover-background)] hover:text-[var(--sidebar-danger-hover-foreground)] cursor-pointer'
       : 'text-[var(--sidebar-item-foreground)] hover:bg-[var(--sidebar-item-hover-background)] hover:text-[var(--sidebar-item-hover-foreground)] cursor-pointer',
