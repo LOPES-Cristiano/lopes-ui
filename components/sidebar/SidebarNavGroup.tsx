@@ -64,7 +64,7 @@ export function SidebarNavGroup({
               }
               setCollapsed(false);
             }}
-            className={`relative w-9 h-9 mx-auto flex items-center justify-center rounded-lg cursor-pointer select-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+            className={`relative w-9 h-9 mx-auto flex items-center justify-center rounded-lg cursor-pointer select-none transition-[color,background-color,border-color,box-shadow,opacity] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
               isGroupActive
                 ? 'bg-[var(--sidebar-item-active-background)] text-[var(--sidebar-item-active-foreground)] shadow-xs'
                 : 'text-[var(--sidebar-icon-foreground)] hover:bg-[var(--sidebar-item-hover-background)] hover:text-[var(--sidebar-item-hover-foreground)]'
@@ -86,14 +86,14 @@ export function SidebarNavGroup({
               aria-expanded={open}
               aria-controls={groupContentId}
               onClick={() => toggleGroup(groupId)}
-              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer select-none group/grp text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-[var(--sidebar-item-hover-background)] transition-all duration-150"
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer select-none group/grp text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-[var(--sidebar-item-hover-background)] transition-[color,background-color,border-color,box-shadow,opacity] duration-150"
             >
               <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[var(--sidebar-group-foreground)] group-hover/grp:text-[var(--sidebar-group-hover-foreground)] transition-colors">
                 {GroupIcon && (
                   <GroupIcon
                     size={13.5}
                     strokeWidth={2}
-                    className="shrink-0 text-[var(--sidebar-group-foreground)] opacity-80 group-hover/grp:opacity-100 group-hover/grp:text-[var(--sidebar-group-hover-foreground)] transition-all"
+                    className="shrink-0 text-[var(--sidebar-group-foreground)] opacity-80 group-hover/grp:opacity-100 group-hover/grp:text-[var(--sidebar-group-hover-foreground)] transition-[color,background-color,border-color,box-shadow,opacity]"
                   />
                 )}
                 {group.label}
