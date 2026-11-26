@@ -265,7 +265,7 @@ export default function MonthPickerField({
           onClick={handleToggle}
           disabled={effectiveDisabled || readOnly}
           aria-expanded={open}
-          aria-invalid={error ? true : undefined}
+          data-invalid={error ? "true" : undefined}
           aria-describedby={describedBy}
           className={twMerge(
             "flex w-full items-center justify-between gap-2 rounded-[var(--radius-control)] border bg-input text-input-foreground transition-[background-color,border-color,box-shadow] duration-150 text-left outline-none cursor-pointer",
