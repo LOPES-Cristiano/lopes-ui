@@ -88,7 +88,7 @@ export default function Tour({
       role="dialog"
       aria-label={step.title}
       className={cn(
-        "relative w-full max-w-md rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-lg transition-all",
+        "relative w-full max-w-md rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-lg transition-[color,background-color,border-color,box-shadow,opacity]",
         className
       )}
     >
@@ -141,7 +141,7 @@ export default function Tour({
               onClick={() => goTo(i)}
               aria-label={`Ir para passo ${i + 1}`}
               className={cn(
-                "h-1.5 rounded-full transition-all",
+                "h-1.5 rounded-full transition-[color,background-color,border-color,box-shadow,opacity]",
                 i === activeIdx
                   ? "w-5 bg-indigo-600 dark:bg-indigo-400"
                   : "w-1.5 bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600"
