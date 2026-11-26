@@ -54,7 +54,7 @@ function Dot({ active, onClick }: { active: boolean; onClick: () => void }) {
       onClick={onClick}
       aria-label={active ? "Slide atual" : "Ir para slide"}
       className={twMerge(
-        "rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 cursor-pointer",
+        "rounded-full transition-[color,background-color,border-color,box-shadow,opacity] duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 cursor-pointer",
         active
           ? "w-5 h-2 bg-indigo-500"
           : "w-2 h-2 bg-zinc-300 dark:bg-zinc-700 hover:bg-zinc-400",
@@ -87,7 +87,7 @@ function Arrow({
       className={twMerge(
         "absolute z-10 flex h-9 w-9 items-center justify-center rounded-full cursor-pointer",
         "bg-white/90 dark:bg-zinc-800/90 shadow-md border border-zinc-200 dark:border-zinc-700",
-        "text-zinc-600 dark:text-zinc-300 transition-all duration-150",
+        "text-zinc-600 dark:text-zinc-300 transition-[color,background-color,border-color,box-shadow,opacity] duration-150",
         "hover:bg-white dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 hover:shadow-lg",
         "disabled:opacity-30 disabled:cursor-not-allowed",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
@@ -284,7 +284,7 @@ export default function Carousel({
       {showProgress && total > 1 && (
         <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
           <div
-            className="h-full rounded-full bg-indigo-500 transition-all duration-300"
+            className="h-full rounded-full bg-indigo-500 transition-[width,height,transform,opacity,background-color,border-color,color,box-shadow] duration-300"
             style={{ width: `${progressPct}%` }}
           />
         </div>
@@ -299,7 +299,7 @@ export default function Carousel({
               type="button"
               onClick={() => go(i)}
               className={twMerge(
-                "shrink-0 overflow-hidden rounded-lg border-2 transition-all cursor-pointer",
+                "shrink-0 overflow-hidden rounded-lg border-2 transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer",
                 i === current
                   ? "border-indigo-500 ring-2 ring-indigo-500/20 opacity-100"
                   : "border-transparent opacity-60 hover:opacity-90",
