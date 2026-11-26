@@ -180,7 +180,7 @@ export function DataTableMobileCard<T = Record<string, unknown>>({
                   type="button"
                   onClick={() => onToggleExpand?.(row)}
                   className={twMerge(
-                    'inline-flex items-center justify-center h-6 w-6 rounded-md border transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+                    'inline-flex items-center justify-center h-6 w-6 rounded-md border transition-[color,background-color,border-color,box-shadow,opacity] duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                     isExpanded
                       ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                       : 'bg-muted/30 border-border/80 text-muted-foreground hover:bg-muted/80 hover:text-foreground',
