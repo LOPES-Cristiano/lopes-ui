@@ -668,7 +668,6 @@ function ResizableImageView({
           cursor: isResizing ? "ew-resize" : "default",
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={node.attrs.src}
           alt={node.attrs.alt ?? caption ?? "Imagem"}
