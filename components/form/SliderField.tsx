@@ -85,7 +85,7 @@ export default function SliderField<V extends number | [number, number] = number
     : formatValue(current as number);
 
   const valueBadge = showValue ? (
-    <span className="font-semibold tabular-nums text-xs text-zinc-700 dark:text-zinc-300">
+    <span className="font-semibold tabular-nums text-xs text-surface-foreground">
       {valueDisplay}
     </span>
   ) : null;
@@ -119,13 +119,13 @@ export default function SliderField<V extends number | [number, number] = number
       >
         <div className="relative flex h-5 items-center">
           {/* Track */}
-          <div className="h-2 w-full rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+          <div className="h-2 w-full rounded-full bg-surface-muted overflow-hidden">
             <div
               style={{
                 marginLeft: `${Math.max(0, Math.min(100, leftPct))}%`,
                 width: `${Math.max(0, Math.min(100, rightPct - leftPct))}%`,
               }}
-              className="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full"
+              className="h-full bg-brand rounded-full"
             />
           </div>
 
@@ -181,25 +181,25 @@ export default function SliderField<V extends number | [number, number] = number
               <span
                 aria-hidden="true"
                 style={{ left: `calc(${Math.max(0, Math.min(100, leftPct))}% - 9px)` }}
-                className="pointer-events-none absolute h-4.5 w-4.5 rounded-full border-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-zinc-900 shadow-sm"
+                className="pointer-events-none absolute h-4.5 w-4.5 rounded-full border-2 border-brand bg-surface shadow-sm"
               />
               <span
                 aria-hidden="true"
                 style={{ left: `calc(${Math.max(0, Math.min(100, rightPct))}% - 9px)` }}
-                className="pointer-events-none absolute h-4.5 w-4.5 rounded-full border-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-zinc-900 shadow-sm"
+                className="pointer-events-none absolute h-4.5 w-4.5 rounded-full border-2 border-brand bg-surface shadow-sm"
               />
             </>
           ) : (
             <span
               aria-hidden="true"
               style={{ left: `calc(${Math.max(0, Math.min(100, rightPct))}% - 9px)` }}
-              className="pointer-events-none absolute h-4.5 w-4.5 rounded-full border-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-zinc-900 shadow-sm"
+              className="pointer-events-none absolute h-4.5 w-4.5 rounded-full border-2 border-brand bg-surface shadow-sm"
             />
           )}
         </div>
 
         {marks && marks.length > 0 && (
-          <div className="relative h-5 w-full text-[11px] text-zinc-400 dark:text-zinc-500">
+          <div className="relative h-5 w-full text-[11px] text-muted-foreground">
             {marks.map((mark) => {
               const pct = Math.max(0, Math.min(100, ((mark.value - min) / safeSpan) * 100));
               const alignCls =
@@ -216,7 +216,7 @@ export default function SliderField<V extends number | [number, number] = number
                   onClick={() => !isRange && updateValue(mark.value)}
                   style={{ left: `${pct}%` }}
                   className={cn(
-                    "absolute top-0 whitespace-nowrap hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer transition-colors",
+                    "absolute top-0 whitespace-nowrap hover:text-foreground cursor-pointer transition-colors",
                     alignCls
                   )}
                 >
