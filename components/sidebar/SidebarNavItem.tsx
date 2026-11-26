@@ -223,7 +223,7 @@ export function SidebarNavItem({
   const showIcon = isTopItem ? Boolean(Icon) : (showItemIcons && Boolean(Icon));
   const iconEl = showIcon && Icon ? (
     <span
-      className={`shrink-0 transition-all duration-150 flex items-center justify-center ${
+      className={`shrink-0 transition-[color,background-color,border-color,box-shadow,opacity] duration-150 flex items-center justify-center ${
         item.active
           ? 'text-[var(--sidebar-item-active-foreground)]'
           : hasActiveChild
@@ -246,7 +246,7 @@ export function SidebarNavItem({
     </span>
   ) : depth > 0 ? (
     <span
-      className={`shrink-0 h-1.5 w-1.5 rounded-full transition-all ${
+      className={`shrink-0 h-1.5 w-1.5 rounded-full transition-[color,background-color,border-color,box-shadow,opacity] ${
         item.active
           ? 'bg-[var(--sidebar-item-active-foreground)]'
           : 'bg-[var(--sidebar-dot-background)] group-hover/nav:bg-[var(--sidebar-dot-hover-background)]'
