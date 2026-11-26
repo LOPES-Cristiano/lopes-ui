@@ -208,7 +208,6 @@ export default function ActivityFeed({
               {event.actor && (
                 <div className="mt-1.5 flex items-center gap-1.5">
                   {event.actor.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={event.actor.avatarUrl}
                       alt={event.actor.name}
