@@ -235,7 +235,7 @@ export default function FileField({
           <div
             onPaste={handlePaste}
             className={twMerge(
-              "flex w-full items-center overflow-hidden rounded-lg border bg-surface transition-all duration-150",
+              "flex w-full items-center overflow-hidden rounded-lg border bg-surface transition-[color,background-color,border-color,box-shadow,opacity] duration-150",
               error ? "border-danger" : "border-input-border hover:border-border-strong",
               effectiveDisabled && "opacity-60 pointer-events-none"
             )}
@@ -255,7 +255,6 @@ export default function FileField({
             </button>
 
             {firstImagePreview && (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={firstImagePreview}
                 alt={files[0]?.name ?? "Preview"}
@@ -330,7 +329,7 @@ export default function FileField({
           onDrop={handleDrop}
           onPaste={handlePaste}
           className={twMerge(
-            "flex w-full cursor-pointer select-none flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-7 text-center transition-all duration-150",
+            "flex w-full cursor-pointer select-none flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-7 text-center transition-[color,background-color,border-color,box-shadow,opacity] duration-150",
             dragOver
               ? "border-primary bg-primary/8"
               : error
@@ -348,7 +347,6 @@ export default function FileField({
                     className="group/file relative flex items-center gap-2 rounded-lg border border-border bg-surface px-2.5 py-1.5 shadow-2xs"
                   >
                     {p.url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={p.url}
                         alt={p.file.name}
