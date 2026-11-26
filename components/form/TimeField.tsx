@@ -68,7 +68,7 @@ export default function TimeField({
   );
 
   const inputCls = twMerge(
-    "flex-1 min-w-0 w-full bg-transparent outline-none border-0 ring-0 text-[var(--input-foreground)] [color-scheme:light] dark:[color-scheme:dark]",
+    "flex-1 min-w-0 w-full bg-transparent outline-none border-0 ring-0 text-[var(--input-foreground)] [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none",
     s.h, s.text, s.pl, "pr-3",
     (effectiveDisabled || readOnly) && "cursor-not-allowed",
     inputClassName,

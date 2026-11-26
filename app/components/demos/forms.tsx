@@ -778,27 +778,35 @@ import NumberField from "@/components/form/NumberField";
             </ZodForm>
           </DemoCard>
 
-          <DemoCard id="datetime-fields" title="DateField e TimeField">
+          <DemoCard id="datetime-fields" title="DatePickerField, TimePickerField e DateRangePickerField">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <DateField label="Data" mode="date" />
-              <TimeField label="Hora" />
-              <DateField label="Data e hora" mode="datetime" />
-              <TimeField
-                label="Com segundos"
-                precision="seconds"
-                tooltip="Inclui campo de segundos"
-              />
-            </div>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <DateField
-                label="Range de datas"
+              <DatePickerField label="Data" size="md" />
+              <TimePickerField label="Hora" size="md" />
+              <DatePickerField
+                label="Data com intervalo limitado"
+                size="md"
                 min="2026-01-01"
                 max="2026-12-31"
                 helpText="Apenas datas de 2026"
               />
-              <DateField
-                variant="filled"
-                label="Filled"
+              <TimePickerField
+                label="Horário (passos de 15 min)"
+                size="md"
+                stepMinutes={15}
+                tooltip="Seletor com presets e passos configuráveis"
+              />
+            </div>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <DateRangePickerField
+                label="Range de datas"
+                size="md"
+                min="2026-01-01"
+                max="2026-12-31"
+                helpText="Apenas datas de 2026"
+              />
+              <DatePickerField
+                label="Data obrigatória"
+                size="md"
                 required
                 error="Data é obrigatória"
               />
