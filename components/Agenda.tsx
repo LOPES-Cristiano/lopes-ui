@@ -153,7 +153,6 @@ function AttendeeAvatar({ att }: { att: AgendaAttendee }) {
       )}
     >
       {att.avatarSrc ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img src={att.avatarSrc} alt={att.name} className="w-full h-full object-cover rounded-full" />
       ) : (
         (att.initials ?? att.name.slice(0, 2).toUpperCase())
