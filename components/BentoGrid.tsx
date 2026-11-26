@@ -105,7 +105,7 @@ export function BentoCard({
   return (
     <div
       className={cn(
-        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border p-4 sm:p-6 transition-all duration-300",
+        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border p-4 sm:p-6 transition-[color,background-color,border-color,box-shadow,opacity] duration-300",
         featured
           ? "border-indigo-500/40 bg-gradient-to-br from-indigo-50/60 via-white to-white dark:from-indigo-950/30 dark:via-zinc-900 dark:to-zinc-900 shadow-sm hover:shadow-md hover:border-indigo-500/70"
           : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-sm",
