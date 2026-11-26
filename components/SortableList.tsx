@@ -154,7 +154,7 @@ export default function SortableList<T>({
                 : "Arraste para reordenar ou use Alt+Seta Acima/Abaixo"
             }
             className={twMerge(
-              "group/sortable relative flex items-center gap-3 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "group/sortable relative flex items-center gap-3 transition-[color,background-color,border-color,box-shadow,opacity] duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               variant === "cards" &&
                 "rounded-xl border border-border bg-surface px-3.5 py-3 shadow-2xs hover:border-border-strong",
               variant === "compact" &&
