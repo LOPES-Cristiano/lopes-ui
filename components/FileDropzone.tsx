@@ -440,7 +440,7 @@ export default function FileDropzone({
           ingestFiles(extracted);
         }}
         className={twMerge(
-          "group relative flex w-full select-none flex-col items-center justify-center rounded-2xl border-2 border-dashed text-center transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "group relative flex w-full select-none flex-col items-center justify-center rounded-2xl border-2 border-dashed text-center transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring",
           compact ? "px-4 py-5 gap-2" : "px-6 py-9 gap-3",
           effectiveDisabled ? "opacity-55 cursor-not-allowed" : "cursor-pointer",
           dragState === "accept" && "border-primary bg-primary/8 scale-[0.995]",
@@ -537,7 +537,6 @@ export default function FileDropzone({
               return (
                 <div key={item.id} className="flex items-center gap-3 px-3.5 py-2.5">
                   {item.previewUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={item.previewUrl}
                       alt={item.file.name}
@@ -563,7 +562,7 @@ export default function FileDropzone({
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-muted">
                           <div
-                            className="h-full rounded-full bg-primary transition-all duration-150"
+                            className="h-full rounded-full bg-primary transition-[width,height,transform,opacity,background-color,border-color,color,box-shadow] duration-150"
                             style={{ width: `${item.progress}%` }}
                           />
                         </div>
