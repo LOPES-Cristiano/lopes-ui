@@ -161,11 +161,11 @@ export default function FilterChips({
           disabled={effectiveDisabled}
           onClick={handleReset}
           className={cn(
-            "inline-flex items-center justify-center rounded-full border font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+            "inline-flex items-center justify-center rounded-full border font-medium transition-[color,background-color,border-color,box-shadow,opacity] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             SIZE_CLS[size],
             !hasSelection
               ? "border-primary bg-primary text-primary-foreground shadow-xs"
-              : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800",
+              : "border-border bg-surface text-muted-foreground hover:bg-surface-hover",
             effectiveDisabled && "opacity-50 cursor-not-allowed"
           )}
         >
@@ -181,7 +181,7 @@ export default function FilterChips({
           disabled={effectiveDisabled}
           onClick={handleReset}
           className={cn(
-            "inline-flex items-center justify-center rounded-full border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors",
+            "inline-flex items-center justify-center rounded-full border border-border bg-surface-muted text-muted-foreground hover:bg-surface-hover transition-colors",
             size === "xs" ? "h-7 w-7" : size === "sm" ? "h-8 w-8" : "h-9 w-9",
             effectiveDisabled && "opacity-50 cursor-not-allowed"
           )}
@@ -204,11 +204,11 @@ export default function FilterChips({
             {...(opt.componentId ? { "data-component-id": opt.componentId } : {})}
             onClick={() => !optDisabled && toggleOption(opt.value)}
             className={cn(
-              "inline-flex items-center justify-center rounded-full border font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+              "inline-flex items-center justify-center rounded-full border font-medium transition-[color,background-color,border-color,box-shadow,opacity] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
               SIZE_CLS[size],
               isSelected
                 ? "border-primary bg-primary text-primary-foreground shadow-xs"
-                : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/80",
+                : "border-border bg-surface text-surface-foreground hover:bg-surface-hover",
               optDisabled && "opacity-50 cursor-not-allowed"
             )}
           >
@@ -220,7 +220,7 @@ export default function FilterChips({
                   "ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] leading-none font-semibold tabular-nums",
                   isSelected
                     ? "bg-primary-foreground/20 text-primary-foreground"
-                    : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
+                    : "bg-surface-muted text-muted-foreground"
                 )}
               >
                 {opt.count}
@@ -237,7 +237,7 @@ export default function FilterChips({
           disabled={effectiveDisabled}
           onClick={handleReset}
           className={cn(
-            "inline-flex items-center rounded-full px-2.5 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors",
+            "inline-flex items-center rounded-full px-2.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors",
             size === "xs" ? "h-7" : size === "sm" ? "h-8" : "h-9"
           )}
         >
