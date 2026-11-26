@@ -124,7 +124,7 @@ export default function Progress({
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
-            className={cn("transition-all duration-300 ease-out", TONE_STROKE_CLS[tone])}
+            className={cn("transition-[color,background-color,border-color,box-shadow,opacity] duration-300 ease-out", TONE_STROKE_CLS[tone])}
           />
         </svg>
         {(showValue || label) && (
@@ -170,7 +170,7 @@ export default function Progress({
         <div
           style={{ width: indeterminate ? "40%" : `${percentage}%` }}
           className={cn(
-            "h-full rounded-full transition-all duration-300 ease-out",
+            "h-full rounded-full transition-[width,height,transform,opacity,background-color,border-color,color,box-shadow] duration-300 ease-out",
             TONE_BAR_CLS[tone],
             indeterminate && "animate-pulse",
             striped &&
