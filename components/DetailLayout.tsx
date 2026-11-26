@@ -215,7 +215,7 @@ export function DetailTabs({ tabs, activeTab, onChange }: DetailTabsProps) {
             aria-selected={active}
             onClick={() => onChange(tab.id)}
             className={twMerge(
-              'group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 rounded-t-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-semibold transition-[color,background-color,border-color,box-shadow,opacity] cursor-pointer whitespace-nowrap shrink-0 rounded-t-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               active
                 ? '-mb-[1px] bg-primary text-primary-foreground border-t-2 border-t-primary border-x border-primary font-bold shadow-xs z-10'
                 : 'bg-surface-muted/80 hover:bg-surface-hover text-muted-foreground hover:text-foreground border border-border/80 border-b-transparent',
