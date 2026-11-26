@@ -33,6 +33,7 @@ const P = {
   display: "/showcase/display",
   enterprise: "/showcase/enterprise",
   forms: "/showcase/forms",
+  isometric: "/showcase/isometric",
   navigation: "/showcase/navigation",
 } as const;
 
@@ -59,7 +60,7 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   e("Drawer", "Ações", "actions", "drawer", "Painel lateral deslizante (prop `form` para formulários)."),
   e("Modal", "Ações", "actions", "modals", "Janela modal centralizada."),
   e("FormModal", "Ações", "actions", "modals", "Modal para formulários, com abas e seções."),
-  e("UnsavedChangesDialog", "Ações", "actions", "modals", "Diálogo de alterações não salvas (use com `useUnsavedChangesGuard`)."),
+  e("UnsavedChangesDialog", "Ações", "actions", "unsaved-changes-dialog", "Diálogo de alterações não salvas (use com `useUnsavedChangesGuard`)."),
   e("State", "Ações", "actions", "empty-state", "Estado unificado: vazio (empty), resultado de ação (result) ou página de status (page)."),
   e("Toast", "Ações", "actions", "toasts", "Notificações temporárias (toast / Toaster)."),
   e("SpeedDial", "Ações", "actions", "speed-dial", "Botão flutuante com ações expansíveis."),
@@ -80,8 +81,10 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   e("Marquee", "Animação & Código", "animation", "marquee", "Conteúdo em rolagem contínua."),
   e("AnimatedNumber", "Animação & Código", "animation", "animated-number", "Contador numérico interpolado por mola (moeda, percentual e inteiro)."),
   e("LeaderboardPodium", "Animação & Código", "animation", "leaderboard-podium", "Pódio gamificado Top-3 com pedestais e barras animadas."),
-  e("MotionCollapse", "Animação & Código", "animation", null, "Região expansível com transição suave de altura e opacidade (motion/react)."),
-  e("StaggerList", "Animação & Código", "animation", null, "Lista com entrada escalonada no compositor e transições de posição."),
+  e("MotionCollapse", "Animação & Código", "animation", "motion-collapse", "Região expansível com transição suave de altura e opacidade (motion/react)."),
+  e("StaggerList", "Animação & Código", "animation", "stagger-list", "Lista com entrada escalonada no compositor e transições de posição."),
+  e("IsometricShowcase", "Animação & Código", "isometric", "isometric-showcase", "Palco isométrico completo com etapas, barra de progresso, teclado e peças 3D clicáveis (lopes-ui/isometric)."),
+  e("IsometricBench", "Animação & Código", "isometric", "isometric-bench", "Renderizador SVG isométrico com física de molas a 240Hz e 8 materiais semânticos (lopes-ui/isometric)."),
 
   // Comunicação
   e("ChatWindow", "Comunicação", "communication", "chat", "Janela de conversa completa."),
@@ -99,13 +102,13 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   e("KanbanBoard", "Dados", "data", "kanban-board", "Quadro kanban."),
   e("Table", "Dados", "data", "tables", "Tabela simples."),
   e("TreeView", "Dados", "data", "treeview", "Árvore hierárquica."),
-  e("Chart", "Dados", "data", "charts", "Gráficos (área, barra, rosca, etc.)."),
-  e("TouchChartCard", "Dados", "data", "charts", "Moldura mobile para gráficos com chips de séries e barra fixa de inspeção por toque."),
-  e("ExpandableDataCard", "Dados", "data", "datatable", "Card analítico/operacional expansível substituto de tabelas largas no mobile."),
-  e("KpiCarousel", "Dados", "data", "stat-card", "Carrossel mobile com snap horizontal e indicadores spring para cards de KPI."),
-  e("Spreadsheet", "Dados", "data", null, "Planilha editável."),
-  e("TransferList", "Dados", "data", null, "Lista de transferência entre dois painéis."),
-  e("JsonViewer", "Dados", "data", null, "Visualizador de JSON."),
+  e("Chart", "Dados", "data", "charts", "Gráficos analíticos 2D e 3D Isométricos (barras, horizontal, área, linha, composto, rosca, pizza, radial, radar e funil)."),
+  e("TouchChartCard", "Dados", "data", "touch-chart-card", "Moldura mobile para gráficos com chips de séries e barra fixa de inspeção por toque."),
+  e("ExpandableDataCard", "Dados", "data", "expandable-data-card", "Card analítico/operacional expansível substituto de tabelas largas no mobile."),
+  e("KpiCarousel", "Dados", "data", "kpi-carousel", "Carrossel mobile com snap horizontal e indicadores spring para cards de KPI."),
+  e("Spreadsheet", "Dados", "data", "spreadsheet", "Planilha editável."),
+  e("TransferList", "Dados", "data", "transfer-list", "Lista de transferência entre dois painéis."),
+  e("JsonViewer", "Dados", "data", "json-viewer", "Visualizador de JSON."),
 
   // Exibição
   e("Avatar", "Exibição", "display", "avatars", "Avatar com iniciais, imagem e grupo."),
