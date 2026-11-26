@@ -127,7 +127,7 @@ function FloatButtonBase({
   const effectiveDisabled = disabled || !hasPermission;
 
   const baseCls = twMerge(
-    "relative inline-flex flex-col items-center justify-center select-none transition-all duration-150 shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer",
+    "relative inline-flex flex-col items-center justify-center select-none transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer",
     shape === "circle" ? "h-11 w-11 rounded-full" : "min-h-11 min-w-11 rounded-2xl px-2.5 py-1.5",
     type === "primary"
       ? "bg-primary text-primary-foreground hover:bg-primary-hover active:scale-95"
@@ -242,7 +242,7 @@ export function FloatButtonGroup({
     >
       <div
         className={twMerge(
-          "flex items-center gap-2.5 transition-all duration-200",
+          "flex items-center gap-2.5 transition-[color,background-color,border-color,box-shadow,opacity] duration-200",
           direction === "up" ? "flex-col" : "flex-row",
           trigger
             ? isOpen
@@ -344,7 +344,7 @@ export function BackTop({
     <div
       style={floating ? { right, bottom } : undefined}
       className={twMerge(
-        "inline-flex items-center justify-center transition-all duration-200",
+        "inline-flex items-center justify-center transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-200",
         floating && "fixed z-40",
         visible
           ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
@@ -381,7 +381,7 @@ export function BackTop({
               strokeDasharray={circumference}
               strokeDashoffset={dashOffset}
               strokeLinecap="round"
-              className="text-primary transition-all duration-150"
+              className="text-primary transition-[color,background-color,border-color,box-shadow,opacity] duration-150"
             />
           </svg>
         )}
