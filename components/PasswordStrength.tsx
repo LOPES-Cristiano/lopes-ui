@@ -105,7 +105,7 @@ export default function PasswordStrength({
           <div
             key={i}
             className={twMerge(
-              "h-1.5 flex-1 rounded-full transition-all duration-300",
+              "h-1.5 flex-1 rounded-full transition-[color,background-color,border-color,box-shadow,opacity] duration-300",
               i < filledCount
                 ? filledCount >= 5
                   ? "bg-emerald-500"
