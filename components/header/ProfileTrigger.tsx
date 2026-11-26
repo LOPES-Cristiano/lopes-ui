@@ -135,7 +135,6 @@ export function ProfileTrigger({
         }`}
       >
         {showImg && imgSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imgSrc}
             alt={name ?? 'avatar'}
@@ -208,7 +207,7 @@ export function ProfileTrigger({
           'translate-x-[var(--header-profile-menu-offset-x)]',
           menuWidth,
           align === 'right' ? 'right-0' : 'left-0',
-          'transition-all duration-150 ease-out origin-top-right',
+          'transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-150 ease-out origin-top-right',
           open
             ? 'visible opacity-100 scale-100 pointer-events-auto'
             : 'invisible opacity-0 scale-95 pointer-events-none',
