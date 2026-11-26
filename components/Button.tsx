@@ -299,19 +299,19 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
         children
       ) : loading ? (
         <span className="inline-flex items-center justify-center gap-2 flex-1">
-          <Loader className={cn('animate-spin shrink-0', loaderSizeClasses[size])} />
+          <Loader aria-hidden="true" className={cn('animate-spin shrink-0', loaderSizeClasses[size])} />
           {loadingText && <span className="leading-none lopes-trim-cap">{loadingText}</span>}
         </span>
       ) : (
         <>
           {iconLeft && (
-            <span className={cn('flex shrink-0 items-center justify-center', iconSizeClasses[size])}>
+            <span aria-hidden="true" className={cn('flex shrink-0 items-center justify-center', iconSizeClasses[size])}>
               {iconLeft}
             </span>
           )}
           {children && <span className="leading-none lopes-trim-cap">{children}</span>}
           {iconRight && (
-            <span className={cn('flex shrink-0 items-center justify-center', iconSizeClasses[size])}>
+            <span aria-hidden="true" className={cn('flex shrink-0 items-center justify-center', iconSizeClasses[size])}>
               {iconRight}
             </span>
           )}
