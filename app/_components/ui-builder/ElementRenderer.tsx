@@ -76,7 +76,9 @@ import toast from "@/components/Toast";
 import TransferList, { type TransferListItem } from "@/components/TransferList";
 import TreeView, { type TreeNode } from "@/components/TreeView";
 import { cn } from "@/utils/cn";
-import { resolveIcon } from "./catalog-and-defaults";
+import { CATALOG_BY_TYPE, resolveIcon } from "./catalog-and-defaults";
+import ExtendedRendererCore from "./ExtendedRendererCore";
+import ExtendedRendererFormsEnterprise from "./ExtendedRendererFormsEnterprise";
 import type { UICanvasElement, UIElementStyle } from "./types";
 
 function asStr(val: unknown, fallback = ""): string {
@@ -157,7 +159,7 @@ export function getEditablePrimaryPropKey(type: UICanvasElement["type"]): string
     case "confirm_dialog_trigger":
       return "triggerLabel";
     default:
-      return null;
+      return CATALOG_BY_TYPE[type]?.primaryTextProp ?? null;
   }
 }
 
@@ -629,7 +631,21 @@ export default function ElementRenderer({
         return (
           <Chart
             componentId={element.componentId}
-            type={asStr(p.type, "bar") as "bar" | "area" | "line" | "donut"}
+            type={
+              asStr(p.type, "bar") as
+                | "bar"
+                | "horizontal-bar"
+                | "area"
+                | "line"
+                | "composed"
+                | "donut"
+                | "pie"
+                | "radial"
+                | "radar"
+                | "funnel"
+            }
+            variant={asStr(p.variant, "2d") as "2d" | "3d"}
+            barShape={asStr(p.barShape, "prism") as "prism" | "cylinder"}
             title={asStr(p.title) || undefined}
             subtitle={asStr(p.subtitle) || undefined}
             series={series}
@@ -1659,9 +1675,10 @@ export default function ElementRenderer({
 
       default:
         return (
-          <div className="h-full w-full rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs text-zinc-400">
-            {element.name}
-          </div>
+          <>
+            <ExtendedRendererCore element={element} interactive={interactive} />
+            <ExtendedRendererFormsEnterprise element={element} interactive={interactive} />
+          </>
         );
     }
   };
