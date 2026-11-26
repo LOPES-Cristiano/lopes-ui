@@ -96,6 +96,8 @@ import type {
   UIStudioPreset,
 } from "./types";
 import { deepClone, newElementId, newGroupId } from "./canvas-actions";
+import { EXTENDED_CATALOG_CORE } from "./extended-catalog-core";
+import { EXTENDED_CATALOG_FORMS_ENTERPRISE } from "./extended-catalog-forms-enterprise";
 
 export const ICON_REGISTRY: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -264,6 +266,9 @@ export const COMPONENT_CATEGORIES: UIComponentCategory[] = [
   "Formulários & Inputs",
   "Ações & Identidade",
   "Feedback & Overlays",
+  "Comunicação",
+  "Corporativo & RBAC",
+  "Animação & Código",
 ];
 
 export const COMPONENT_CATALOG: UICatalogEntry[] = [
@@ -1717,6 +1722,8 @@ export const COMPONENT_CATALOG: UICatalogEntry[] = [
       cancelLabel: "Manter reserva",
     },
   },
+  ...EXTENDED_CATALOG_CORE,
+  ...EXTENDED_CATALOG_FORMS_ENTERPRISE,
 ];
 
 export const CATALOG_BY_TYPE: Record<UIComponentType, UICatalogEntry> = COMPONENT_CATALOG.reduce(
