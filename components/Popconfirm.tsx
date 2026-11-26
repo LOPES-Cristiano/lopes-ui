@@ -212,7 +212,7 @@ export default function Popconfirm({
             disabled={loading}
             onClick={handleConfirm}
             className={twMerge(
-              "inline-flex h-7 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-all outline-none focus-visible:ring-2 disabled:opacity-60 cursor-pointer",
+              "inline-flex h-7 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-[color,background-color,border-color,box-shadow,opacity] outline-none focus-visible:ring-2 disabled:opacity-60 cursor-pointer",
               cfg.confirmCls
             )}
           >
