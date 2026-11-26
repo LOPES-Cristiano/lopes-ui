@@ -21,6 +21,12 @@ import Chart from "@/components/Chart";
 import DescriptionList from "@/components/DescriptionList";
 import JsonViewer from "@/components/JsonViewer";
 import Barcode from "@/components/Barcode";
+import ExpandableDataCard from "@/components/ExpandableDataCard";
+import KpiCarousel, { type KpiCarouselItem } from "@/components/KpiCarousel";
+import TouchChartCard, {
+  type TouchChartSeries,
+  type TouchChartReadout,
+} from "@/components/TouchChartCard";
 
 import Button from "@/components/Button";
 import toast from "@/components/Toast";
@@ -37,6 +43,11 @@ import {
   MessageSquare,
   GitCommit,
   FileSearch,
+  TrendingUp,
+  Package,
+  Truck,
+  DollarSign,
+  BarChart2,
 } from "lucide-react";
 import { SectionHeader, DemoCard, PropsTable } from "@/app/showcase/_shared";
 
@@ -1723,98 +1734,261 @@ export function useDataSections(): Record<string, React.ReactNode> {
     "charts": (
 <section id="charts" className="space-y-10 pb-10 sm:pb-14 scroll-mt-20">
           <SectionHeader
-            label="Visualização Analítica"
-            title="Chart (Bar, Area, Line & Donut)"
-            description="Gráficos vetoriais responsivos sem dependências externas pesadas, com suporte a múltiplas séries, barras empilhadas (stacked), tooltips interativos no hover, legendas e formatadores customizados."
+            label="Visualização Analítica 2D & 3D"
+            title="Chart (10 Formatos · 2D Vetorial & 3D Isométrico)"
+            description="Engine própria de gráficos responsivos com escala numérica automática, curvas suaves monotônicas, legenda interativa, fallback acessível em tabela e modo 3D isométrico nativo alimentado pelo kit isométrico da Lopes UI."
           />
 
           <DemoCard
             id="chart-area-bar"
-            title="Gráfico de Área (Multi-série) e Gráfico de Barras Empilhadas"
+            title="Barras Empilhadas & Área Suave — Com Seletor 2D / 3D Integrado"
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Chart
                 type="area"
-                title="Receita Mensal vs. Meta (R$ mil)"
-                subtitle="Comparativo do primeiro semestre"
-                height={230}
+                allowVariantToggle
+                title="Faturamento Mensal vs. Meta (R$ mil)"
+                subtitle="Rede BigLar Móveis & Eletro — RO (69) e AM (92)"
+                height={250}
                 data={[
                   { label: "Jan", receita: 420, meta: 380 },
-                  { label: "Fev", receita: 480, meta: 420 },
-                  { label: "Mar", receita: 510, meta: 460 },
-                  { label: "Abr", receita: 590, meta: 500 },
-                  { label: "Mai", receita: 640, meta: 550 },
-                  { label: "Jun", receita: 720, meta: 600 },
+                  { label: "Fev", receita: 485, meta: 420 },
+                  { label: "Mar", receita: 530, meta: 460 },
+                  { label: "Abr", receita: 610, meta: 510 },
+                  { label: "Mai", receita: 665, meta: 560 },
+                  { label: "Jun", receita: 740, meta: 620 },
                 ]}
                 series={[
-                  {
-                    key: "receita",
-                    label: "Receita Realizada",
-                    color: "indigo",
-                  },
-                  { key: "meta", label: "Meta", color: "emerald" },
+                  { key: "receita", label: "Receita Realizada", color: "indigo" },
+                  { key: "meta", label: "Meta Mensal", color: "emerald", dashed: true },
                 ]}
                 valueFormatter={(v) => `R$ ${v}k`}
               />
 
               <Chart
                 type="bar"
+                variant="3d"
+                allowVariantToggle
                 stacked
-                title="Demandas por Squad (Sprint)"
-                subtitle="Entregas concluídas vs. em revisão"
-                height={230}
+                title="Vendas por Filial e Linha (3D Isométrico)"
+                subtitle="Móveis, Estofados e Eletrodomésticos — clique na legenda para filtrar"
+                height={250}
                 data={[
-                  { label: "Core", concluidas: 28, revisao: 6 },
-                  { label: "Pagamentos", concluidas: 34, revisao: 8 },
-                  { label: "Mobile", concluidas: 22, revisao: 5 },
-                  { label: "Cloud", concluidas: 41, revisao: 4 },
-                  { label: "Analytics", concluidas: 30, revisao: 7 },
+                  { label: "Porto Velho", moveis: 210, eletro: 165, colchoes: 95 },
+                  { label: "Manaus", moveis: 260, eletro: 190, colchoes: 110 },
+                  { label: "Ji-Paraná", moveis: 145, eletro: 115, colchoes: 70 },
+                  { label: "Ariquemes", moveis: 120, eletro: 98, colchoes: 55 },
+                  { label: "Vilhena", moveis: 135, eletro: 108, colchoes: 64 },
                 ]}
                 series={[
-                  { key: "concluidas", label: "Concluídas", color: "indigo" },
-                  { key: "revisao", label: "Em Revisão", color: "amber" },
+                  { key: "moveis", label: "Móveis & Salas", color: "indigo" },
+                  { key: "eletro", label: "Eletrodomésticos", color: "sky" },
+                  { key: "colchoes", label: "Colchões & Estofados", color: "amber" },
                 ]}
+                valueFormatter={(v) => `R$ ${v}k`}
+              />
+            </div>
+          </DemoCard>
+
+          <DemoCard
+            id="chart-3d-cylinders-composed"
+            title="Colunas 3D Cilíndricas & Gráfico Composto (Barras + Linha de Meta)"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Chart
+                type="bar"
+                variant="3d"
+                barShape="cylinder"
+                allowVariantToggle
+                showValues
+                title="Entregas Montadas por CD (Cilindros 3D)"
+                subtitle="Unidades expedidas e montadas no mês"
+                height={250}
+                data={[
+                  { label: "CD PVH", entregas: 480, color: "indigo" },
+                  { label: "CD Manaus", entregas: 620, color: "emerald" },
+                  { label: "CD Ji-Paraná", entregas: 340, color: "sky" },
+                  { label: "CD Cacoal", entregas: 290, color: "amber" },
+                  { label: "CD Vilhena", entregas: 375, color: "violet" },
+                ]}
+                series={[{ key: "entregas", label: "Entregas", color: "indigo" }]}
+                valueFormatter={(v) => `${v} un.`}
+              />
+
+              <Chart
+                type="composed"
+                allowVariantToggle
+                title="Ticket Médio Realizado vs. Meta (Composto)"
+                subtitle="Barras de faturamento combinadas com linha de objetivo"
+                height={250}
+                data={[
+                  { label: "Salas", realizado: 3250, meta: 2900 },
+                  { label: "Quartos", realizado: 2840, meta: 2700 },
+                  { label: "Cozinhas", realizado: 2490, meta: 2550 },
+                  { label: "Lavanderia", realizado: 2180, meta: 2100 },
+                  { label: "Eletrônicos", realizado: 3620, meta: 3200 },
+                ]}
+                series={[
+                  { key: "realizado", label: "Ticket Realizado", color: "indigo", renderAs: "bar" },
+                  { key: "meta", label: "Meta", color: "rose", renderAs: "line", dashed: true },
+                ]}
+                valueFormatter={(v) => `R$ ${v.toLocaleString("pt-BR")}`}
               />
             </div>
           </DemoCard>
 
           <DemoCard
             id="chart-donut"
-            title="Gráfico Donut Interativo com Rótulo Central"
+            title="Rosca (Donut 3D Isométrico) & Pizza (Pie) com Explode Interativo"
           >
-            <Chart
-              type="donut"
-              bordered={false}
-              title="Distribuição de Tráfego por Plataforma"
-              subtitle="Passe o mouse sobre os segmentos ou itens da legenda para inspecionar"
-              height={200}
-              data={[
-                { label: "Aplicação Web Desktop", value: 540, color: "indigo" },
-                {
-                  label: "App Mobile iOS / Android",
-                  value: 320,
-                  color: "emerald",
-                },
-                {
-                  label: "Integrações via API Pública",
-                  value: 180,
-                  color: "amber",
-                },
-                { label: "Webhooks & Parceiros", value: 90, color: "sky" },
-              ]}
-              centerLabel="1.130 req/s"
-              centerSublabel="Throughput Total"
-              valueFormatter={(v) => `${v} req/s`}
-            />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Chart
+                type="donut"
+                variant="3d"
+                allowVariantToggle
+                title="Participação por Categoria (Donut 3D)"
+                subtitle="Passe o mouse para destacar e explodir a fatia 3D"
+                height={220}
+                data={[
+                  { label: "Estofados & Salas", value: 420, color: "indigo" },
+                  { label: "Refrigeração & Fogões", value: 315, color: "emerald" },
+                  { label: "Colchões & Camas Box", value: 225, color: "amber" },
+                  { label: "Smart TVs & Áudio", value: 145, color: "sky" },
+                ]}
+                centerLabel="R$ 1,10 mi"
+                centerSublabel="Faturamento Total"
+                valueFormatter={(v) => `R$ ${v}k`}
+              />
+
+              <Chart
+                type="pie"
+                allowVariantToggle
+                title="Mix de Pagamento no Crediário & PDV"
+                subtitle="Distribuição percentual dos pedidos aprovados"
+                height={220}
+                data={[
+                  { label: "Crediário Próprio BigLar", value: 48, color: "indigo" },
+                  { label: "Cartão de Crédito", value: 29, color: "sky" },
+                  { label: "Pix à Vista", value: 16, color: "emerald" },
+                  { label: "Boleto / Convênio", value: 7, color: "amber" },
+                ]}
+                valueFormatter={(v) => `${v}%`}
+              />
+            </div>
+          </DemoCard>
+
+          <DemoCard
+            id="chart-advanced-forms"
+            title="Barras Horizontais, Radial / Gauge, Radar & Funil Comercial (2D / 3D)"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Chart
+                type="horizontal-bar"
+                allowVariantToggle
+                title="Ranking de Produtos Mais Vendidos"
+                subtitle="Unidades vendidas nos últimos 30 dias (RO + AM)"
+                height={240}
+                data={[
+                  { label: "Sofá Retrátil 4 Lugares", value: 312, color: "indigo" },
+                  { label: "Geladeira Frost Free 450L", value: 268, color: "emerald" },
+                  { label: "Cama Box Queen Molas", value: 224, color: "sky" },
+                  { label: "Guarda-Roupa 6 Portas", value: 189, color: "amber" },
+                  { label: "Smart TV 55\" 4K", value: 164, color: "violet" },
+                ]}
+                series={[{ key: "value", label: "Unidades", color: "indigo" }]}
+                valueFormatter={(v) => `${v} un.`}
+              />
+
+              <Chart
+                type="radial"
+                variant="3d"
+                allowVariantToggle
+                title="Atingimento de Metas Operacionais"
+                subtitle="Anéis concêntricos 3D (escala 0–100%)"
+                height={220}
+                maxReference={100}
+                data={[
+                  { label: "SLA de Entrega (48h)", value: 94, color: "emerald" },
+                  { label: "Meta de Vendas RO/AM", value: 86, color: "indigo" },
+                  { label: "Montagem no Prazo", value: 79, color: "sky" },
+                  { label: "NPS Pós-Venda", value: 91, color: "amber" },
+                ]}
+                centerLabel="88%"
+                centerSublabel="Índice Geral"
+                valueFormatter={(v) => `${v}%`}
+              />
+
+              <Chart
+                type="radar"
+                allowVariantToggle
+                title="Comparativo de Performance: Porto Velho vs. Manaus"
+                subtitle="Avaliação multidimensional das praças (0–100)"
+                height={260}
+                data={[
+                  { label: "Conversão", pvh: 88, mao: 82 },
+                  { label: "Ticket Médio", pvh: 84, mao: 93 },
+                  { label: "Entrega", pvh: 92, mao: 78 },
+                  { label: "Montagem", pvh: 90, mao: 86 },
+                  { label: "NPS", pvh: 95, mao: 89 },
+                  { label: "Estoque", pvh: 81, mao: 91 },
+                ]}
+                series={[
+                  { key: "pvh", label: "Porto Velho (RO)", color: "indigo" },
+                  { key: "mao", label: "Manaus (AM)", color: "emerald" },
+                ]}
+                valueFormatter={(v) => `${v} pts`}
+              />
+
+              <Chart
+                type="funnel"
+                variant="3d"
+                allowVariantToggle
+                title="Funil Comercial — Orçamento até Entrega (3D)"
+                subtitle="Taxa de conversão entre etapas da jornada de compra"
+                height={260}
+                data={[
+                  { label: "Orçamentos", value: 2450, color: "indigo" },
+                  { label: "Análise Crédito", value: 1780, color: "sky" },
+                  { label: "Pedidos Fechados", value: 1290, color: "emerald" },
+                  { label: "Faturados", value: 1180, color: "amber" },
+                  { label: "Entregues & Montados", value: 1120, color: "violet" },
+                ]}
+                valueFormatter={(v) => v.toLocaleString("pt-BR")}
+              />
+            </div>
           </DemoCard>
 
           <PropsTable
             rows={[
               [
                 "type",
-                "'bar' | 'area' | 'line' | 'donut'",
+                "'bar' | 'horizontal-bar' | 'area' | 'line' | 'composed' | 'donut' | 'pie' | 'radial' | 'radar' | 'funnel'",
                 "'bar'",
-                "Tipo de visualização do gráfico",
+                "Formato visual do gráfico (10 tipos nativos)",
+              ],
+              [
+                "variant",
+                "'2d' | '3d'",
+                "'2d'",
+                "Alterna entre 2D vetorial 1:1 e 3D isométrico (iso-kit)",
+              ],
+              [
+                "allowVariantToggle",
+                "boolean",
+                "false",
+                "Exibe o seletor rápido 2D / 3D no cabeçalho do gráfico",
+              ],
+              [
+                "barShape",
+                "'prism' | 'cylinder'",
+                "'prism'",
+                "Geometria das colunas no modo 3D isométrico",
+              ],
+              [
+                "curve",
+                "'smooth' | 'linear' | 'step'",
+                "'smooth'",
+                "Interpolação monotônica de curvas em área, linha e composto",
               ],
               [
                 "data",
@@ -1826,25 +2000,31 @@ export function useDataSections(): Record<string, React.ReactNode> {
                 "series",
                 "ChartSeries[]",
                 "auto",
-                "Definição das séries (key, label, color)",
+                "Definição das séries (key, label, color, renderAs, dashed)",
               ],
               [
                 "stacked",
                 "boolean",
                 "false",
-                "Empilha barras quando type='bar'",
+                "Empilha barras em 'bar' e 'horizontal-bar' (2D e 3D)",
+              ],
+              [
+                "showBench",
+                "boolean",
+                "true",
+                "Exibe a bancada/base isométrica nos gráficos 3D",
+              ],
+              [
+                "interactiveLegend",
+                "boolean",
+                "true",
+                "Permite clicar na legenda para filtrar séries",
               ],
               [
                 "valueFormatter",
                 "(v: number) => string",
                 "toLocaleString",
-                "Formata os valores nos eixos e tooltips",
-              ],
-              [
-                "centerLabel",
-                "string",
-                "total",
-                "Texto principal no centro do gráfico Donut",
+                "Formata os valores nos tooltips, legendas e rótulos",
               ],
             ]}
           />
@@ -2055,6 +2235,95 @@ export function useDataSections(): Record<string, React.ReactNode> {
           </DemoCard>
         </section>
     ),
+    "expandable-data-card": (
+      <section
+        id="expandable-data-card"
+        className="space-y-10 pb-10 sm:pb-14 scroll-mt-20"
+      >
+        <SectionHeader
+          label="Cards Analíticos Mobile-First"
+          title="ExpandableDataCard"
+          description="Card analítico e operacional expansível desenhado para substituir tabelas largas em telas compactas, com métrica principal animada, barra de progresso, destaques inline e detalhes recolhíveis via MotionCollapse."
+        />
+
+        <DemoCard
+          id="expandable-data-card-demo"
+          title="Desempenho por Filial & Categoria — Móveis & Eletro (RO / AM)"
+        >
+          <ExpandableDataCardShowcaseDemo />
+        </DemoCard>
+
+        <PropsTable
+          rows={[
+            ["code", "ReactNode", "—", "Selo de código ou ranking no topo esquerdo (ex.: FIL-RO01, #1)"],
+            ["tone", "'default' | 'brand' | 'success' | 'warning' | 'danger' | 'info'", "'default'", "Tom visual aplicado ao selo e à barra de progresso"],
+            ["primaryValue", "ReactNode | ExpandableDataAnimatedValue", "—", "Métrica principal à direita (aceita configuração de AnimatedNumber)"],
+            ["progress", "number", "—", "Percentual (0–100) exibido como barra animada na GPU"],
+            ["highlights", "ExpandableDataMetric[]", "—", "Métricas compactas sempre visíveis na face do card"],
+            ["details", "ExpandableDataMetric[]", "—", "Pares chave/valor revelados suavemente ao expandir"],
+            ["actions", "ReactNode", "—", "Botões de ação touch-friendly no rodapé do card"],
+          ]}
+        />
+      </section>
+    ),
+    "kpi-carousel": (
+      <section
+        id="kpi-carousel"
+        className="space-y-10 pb-10 sm:pb-14 scroll-mt-20"
+      >
+        <SectionHeader
+          label="KPIs Responsivos"
+          title="KpiCarousel"
+          description="Grade de KPIs no desktop que se transforma automaticamente em carrossel horizontal com scroll-snap e indicadores animados (spring) no mobile, com suporte integrado a AnimatedNumber."
+        />
+
+        <DemoCard
+          id="kpi-carousel-demo"
+          title="Indicadores de Vendas por Praça (Troque o filtro para animar os valores)"
+        >
+          <KpiCarouselShowcaseDemo />
+        </DemoCard>
+
+        <PropsTable
+          rows={[
+            ["items", "KpiCarouselItem[]", "—", "Lista declarativa de cards KPI (suporta numericValue + numberFormat)"],
+            ["desktopColumns", "2 | 3 | 4 | 5 | 6", "auto", "Número de colunas em telas >= md"],
+            ["mobileCardWidth", "'peek' | 'compact' | 'half'", "'peek'", "Largura dos slides no mobile ('peek' revela o próximo card)"],
+            ["showDots", "boolean", "true", "Exibe indicadores de paginação interativos no mobile"],
+          ]}
+        />
+      </section>
+    ),
+    "touch-chart-card": (
+      <section
+        id="touch-chart-card"
+        className="space-y-10 pb-10 sm:pb-14 scroll-mt-20"
+      >
+        <SectionHeader
+          label="Gráficos Touch-Friendly"
+          title="TouchChartCard"
+          description="Moldura responsiva para gráficos com chips interativos de séries (mostrar/ocultar) e barra fixa de leitura (activeReadout) acima do gráfico para que o dedo nunca cubra os valores no mobile."
+        />
+
+        <DemoCard
+          id="touch-chart-card-demo"
+          title="Faturamento por Linha de Produto — Porto Velho (RO) & Manaus (AM)"
+        >
+          <TouchChartCardShowcaseDemo />
+        </DemoCard>
+
+        <PropsTable
+          rows={[
+            ["series", "TouchChartSeries[]", "—", "Séries exibidas como chips interativos de filtro"],
+            ["hiddenSeriesKeys", "ReadonlySet<string> | string[]", "—", "Chaves das séries atualmente ocultas"],
+            ["onToggleSeries", "(key: string) => void", "—", "Callback ao clicar em um chip de série"],
+            ["activeReadout", "TouchChartReadout | null", "—", "Barra fixa de inspeção exibida acima da área do gráfico"],
+            ["onClearReadout", "() => void", "—", "Callback para limpar a inspeção ativa"],
+            ["chartHeightClassName", "string", "'h-[230px] sm:h-[300px]'", "Altura responsiva do contêiner do gráfico"],
+          ]}
+        />
+      </section>
+    ),
   };
 }
 
@@ -2126,5 +2395,323 @@ function TransferListDemo() {
         setTarget(nextTarget);
       }}
     />
+  );
+}
+
+function ExpandableDataCardShowcaseDemo() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <ExpandableDataCard
+        code="FIL-RO01"
+        tone="brand"
+        title="Filial Porto Velho — Salão & Estofados"
+        subtitle="Av. Jatuarana · Porto Velho (RO) · (69) 3214-8800"
+        primaryLabel="Faturamento"
+        primaryValue={{ value: 482900.5, format: "currency" }}
+        status={<Badge variant="success" size="xs" label="Acima da meta" />}
+        progress={86.4}
+        progressLabel="86,4% meta"
+        defaultExpanded
+        highlights={[
+          { label: "Ticket Médio", value: "R$ 2.840", mono: true },
+          { label: "Entregas RO", value: "170 pedidos", tone: "success" },
+        ]}
+        details={[
+          { label: "Sofás & Estofados", value: "R$ 198.400,00", mono: true, tone: "brand" },
+          { label: "Geladeiras & Linha Branca", value: "R$ 154.200,50", mono: true },
+          { label: "Colchões Molas Ensacadas", value: "R$ 89.300,00", mono: true },
+          { label: "Montagens Agendadas", value: "42 equipes em rota", tone: "info" },
+        ]}
+        actions={
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => toast.success("Relatório da Filial Porto Velho (RO) aberto!")}
+          >
+            Ver detalhamento
+          </Button>
+        }
+      />
+
+      <ExpandableDataCard
+        code="FIL-AM02"
+        tone="success"
+        title="Filial Manaus — Dormitórios & Eletrodomésticos"
+        subtitle="Cidade Nova · Manaus (AM) · (92) 3642-7100"
+        primaryLabel="Faturamento"
+        primaryValue={{ value: 394200.0, format: "currency" }}
+        status={<Badge variant="info" size="xs" label="Em ritmo" />}
+        progress={78.8}
+        progressLabel="78,8% meta"
+        highlights={[
+          { label: "Ticket Médio", value: "R$ 3.120", mono: true },
+          { label: "Entregas AM", value: "126 pedidos", tone: "info" },
+        ]}
+        details={[
+          { label: "Guarda-Roupas & Quartos", value: "R$ 146.800,00", mono: true },
+          { label: "Climatização & Lavadoras", value: "R$ 138.900,00", mono: true },
+          { label: "Colchões King & Queen", value: "R$ 108.500,00", mono: true },
+          { label: "Prazo Médio Entrega", value: "48h (frota própria)", tone: "success" },
+        ]}
+        actions={
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => toast.success("Relatório da Filial Manaus (AM) aberto!")}
+          >
+            Ver detalhamento
+          </Button>
+        }
+      />
+    </div>
+  );
+}
+
+function KpiCarouselShowcaseDemo() {
+  const [region, setRegion] = React.useState<"all" | "ro" | "am">("all");
+
+  const dataByRegion: Record<"all" | "ro" | "am", KpiCarouselItem[]> = {
+    all: [
+      {
+        id: "faturamento",
+        title: "Faturamento Móveis & Eletro",
+        numericValue: 877100.5,
+        numberFormat: "currency",
+        trend: { value: 14.2, label: "vs. mês anterior" },
+        icon: DollarSign,
+        color: "emerald",
+        progress: 88,
+        progressLabel: "88% da meta",
+      },
+      {
+        id: "pedidos",
+        title: "Pedidos Entregues",
+        numericValue: 296,
+        numberFormat: "integer",
+        unit: "entregas",
+        trend: { value: 9.6, label: "RO + AM" },
+        icon: Truck,
+        color: "indigo",
+      },
+      {
+        id: "margem",
+        title: "Margem Operacional",
+        numericValue: 34.8,
+        numberFormat: "percent",
+        trend: { value: 2.1, label: "estofados e colchões" },
+        icon: TrendingUp,
+        color: "blue",
+      },
+      {
+        id: "montagens",
+        title: "Montagens no Prazo",
+        numericValue: 96.4,
+        numberFormat: "percent",
+        trend: { value: 1.8, label: "SLA 48h" },
+        icon: Package,
+        color: "amber",
+      },
+    ],
+    ro: [
+      {
+        id: "faturamento",
+        title: "Faturamento — Rondônia (69)",
+        numericValue: 482900.5,
+        numberFormat: "currency",
+        trend: { value: 16.4, label: "Porto Velho & Ji-Paraná" },
+        icon: DollarSign,
+        color: "emerald",
+        progress: 92,
+        progressLabel: "92% da meta",
+      },
+      {
+        id: "pedidos",
+        title: "Pedidos Entregues (RO)",
+        numericValue: 170,
+        numberFormat: "integer",
+        unit: "entregas",
+        trend: { value: 11.2, label: "frota própria" },
+        icon: Truck,
+        color: "indigo",
+      },
+      {
+        id: "margem",
+        title: "Margem Operacional (RO)",
+        numericValue: 35.4,
+        numberFormat: "percent",
+        trend: { value: 2.6, label: "salas e dormitórios" },
+        icon: TrendingUp,
+        color: "blue",
+      },
+      {
+        id: "montagens",
+        title: "Montagens no Prazo (RO)",
+        numericValue: 97.1,
+        numberFormat: "percent",
+        trend: { value: 2.0, label: "SLA 48h" },
+        icon: Package,
+        color: "amber",
+      },
+    ],
+    am: [
+      {
+        id: "faturamento",
+        title: "Faturamento — Amazonas (92)",
+        numericValue: 394200.0,
+        numberFormat: "currency",
+        trend: { value: 11.8, label: "Manaus & Itacoatiara" },
+        icon: DollarSign,
+        color: "emerald",
+        progress: 83,
+        progressLabel: "83% da meta",
+      },
+      {
+        id: "pedidos",
+        title: "Pedidos Entregues (AM)",
+        numericValue: 126,
+        numberFormat: "integer",
+        unit: "entregas",
+        trend: { value: 7.4, label: "CD Manaus" },
+        icon: Truck,
+        color: "indigo",
+      },
+      {
+        id: "margem",
+        title: "Margem Operacional (AM)",
+        numericValue: 34.0,
+        numberFormat: "percent",
+        trend: { value: 1.5, label: "linha branca" },
+        icon: TrendingUp,
+        color: "blue",
+      },
+      {
+        id: "montagens",
+        title: "Montagens no Prazo (AM)",
+        numericValue: 95.5,
+        numberFormat: "percent",
+        trend: { value: 1.4, label: "SLA 48h" },
+        icon: Package,
+        color: "amber",
+      },
+    ],
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        {(
+          [
+            { id: "all", label: "Consolidado RO + AM" },
+            { id: "ro", label: "Rondônia (69)" },
+            { id: "am", label: "Amazonas (92)" },
+          ] as const
+        ).map((tab) => (
+          <Button
+            key={tab.id}
+            size="sm"
+            variant={region === tab.id ? "primary" : "outline"}
+            onClick={() => setRegion(tab.id)}
+          >
+            {tab.label}
+          </Button>
+        ))}
+      </div>
+
+      <KpiCarousel
+        items={dataByRegion[region]}
+        desktopColumns={4}
+        mobileCardWidth="peek"
+        ariaLabel="Indicadores comerciais de Móveis e Eletrodomésticos"
+      />
+    </div>
+  );
+}
+
+const TOUCH_CHART_SERIES: TouchChartSeries[] = [
+  { key: "sofas", label: "Sofás & Estofados", color: "#4f46e5" },
+  { key: "geladeiras", label: "Geladeiras & Eletro", color: "#10b981" },
+  { key: "colchoes", label: "Colchões & Quartos", color: "#f59e0b" },
+];
+
+const TOUCH_CHART_DATA = [
+  { label: "Jan", sofas: 142, geladeiras: 118, colchoes: 86 },
+  { label: "Fev", sofas: 158, geladeiras: 132, colchoes: 94 },
+  { label: "Mar", sofas: 174, geladeiras: 145, colchoes: 102 },
+  { label: "Abr", sofas: 196, geladeiras: 162, colchoes: 115 },
+];
+
+function TouchChartCardShowcaseDemo() {
+  const [hiddenKeys, setHiddenKeys] = React.useState<string[]>([]);
+  const [inspectedMonth, setInspectedMonth] = React.useState<string | null>("Abr");
+
+  const toggleSeries = (key: string) => {
+    setHiddenKeys((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  };
+
+  const visibleSeries = TOUCH_CHART_SERIES.filter((s) => !hiddenKeys.includes(s.key));
+  const inspectedRow = TOUCH_CHART_DATA.find((d) => d.label === inspectedMonth);
+
+  const activeReadout: TouchChartReadout | null = inspectedRow
+    ? {
+        label: `Inspeção · ${inspectedRow.label} / 2026 (em R$ mil)`,
+        items: visibleSeries.map((s) => ({
+          key: s.key,
+          label: s.label,
+          color: s.color,
+          value: `R$ ${inspectedRow[s.key as "sofas" | "geladeiras" | "colchoes"]}k`,
+        })),
+      }
+    : null;
+
+  return (
+    <TouchChartCard
+      title="Vendas por Departamento (R$ mil)"
+      subtitle="Lojas Porto Velho (RO) e Manaus (AM) · Clique nos chips para filtrar séries"
+      icon={<BarChart2 size={16} />}
+      series={TOUCH_CHART_SERIES}
+      hiddenSeriesKeys={hiddenKeys}
+      onToggleSeries={toggleSeries}
+      activeReadout={activeReadout}
+      onClearReadout={() => setInspectedMonth(null)}
+      showIdleHintOnMobile
+      chartHeightClassName="h-[250px] sm:h-[280px]"
+      headerExtra={
+        <div className="flex items-center gap-1">
+          {TOUCH_CHART_DATA.map((row) => (
+            <Button
+              key={row.label}
+              size="sm"
+              variant={inspectedMonth === row.label ? "primary" : "ghost"}
+              onClick={() => setInspectedMonth(row.label)}
+            >
+              {row.label}
+            </Button>
+          ))}
+        </div>
+      }
+      footer={
+        <div className="flex flex-wrap items-center justify-between gap-2 text-zinc-500">
+          <span>Base consolidada: Móveis, Estofados, Colchões e Eletrodomésticos</span>
+          <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-300">
+            RO (69) · AM (92)
+          </span>
+        </div>
+      }
+    >
+      <Chart
+        type="bar"
+        bordered={false}
+        height={220}
+        data={TOUCH_CHART_DATA}
+        series={visibleSeries.map((s) => ({
+          key: s.key,
+          label: s.label,
+          color: s.key === "sofas" ? "indigo" : s.key === "geladeiras" ? "emerald" : "amber",
+        }))}
+        valueFormatter={(v) => `R$ ${v}k`}
+      />
+    </TouchChartCard>
   );
 }
