@@ -2,6 +2,7 @@
 
 import React, { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 import { twMerge } from "tailwind-merge";
 import { X, CheckCircle2, AlertTriangle, Info, XCircle, Lightbulb, ChevronDown, type LucideIcon } from "lucide-react";
@@ -159,6 +160,7 @@ function AlertContent({
   dialog, s, className, componentId, titleId, descriptionId,
 }: AlertProps & { s: S; titleId?: string; descriptionId?: string }) {
   const [open, setOpen] = useState(defaultOpen);
+  const reducedMotion = useReducedMotion();
   const actionList = Array.isArray(actions) ? (actions as AlertAction[]) : null;
   const actionNode = actions && !Array.isArray(actions) ? (actions as React.ReactNode) : null;
   const hideIcon = icon === null || icon === false;
@@ -175,6 +177,7 @@ function AlertContent({
   const iconNode = !hideIcon && icon !== undefined && !isIconComponent ? (icon as React.ReactNode) : null;
   const showDismiss = Boolean(dismissible || closeText);
   const bodyVisible = !collapsible || open;
+  const hasBody = Boolean(description || children || actionNode || (actionList && actionList.length > 0));
 
   if (dialog) {
     return (
@@ -184,7 +187,7 @@ function AlertContent({
       >
         <div className="flex gap-4 items-start pr-8">
           {IconComponent && (
-            <span className={twMerge("shrink-0 flex h-10 w-10 items-center justify-center rounded-xl", s.iconBg)}>
+            <span className={twMerge("shrink-0 flex h-10 w-10 items-center justify-center rounded-xl lopes-pop-in", s.iconBg)}>
               <IconComponent size={20} strokeWidth={2} className={s.icon} />
             </span>
           )}
@@ -292,36 +295,55 @@ function AlertContent({
                   e.stopPropagation();
                   setOpen((v) => !v);
                 }}
-                className="inline-flex h-6 w-6 items-center justify-center rounded-md opacity-70 hover:bg-black/5 dark:hover:bg-white/10 hover:opacity-100 transition-[color,background-color,border-color,box-shadow,transform,opacity] cursor-pointer"
+                className="inline-flex h-6 w-6 items-center justify-center rounded-md opacity-70 hover:bg-black/5 dark:hover:bg-white/10 hover:opacity-100 transition-[color,background-color,opacity] cursor-pointer"
               >
-                <ChevronDown size={15} className={twMerge("transition-transform duration-150", open && "rotate-180")} />
+                <motion.span
+                  initial={false}
+                  animate={{ rotate: open ? 180 : 0 }}
+                  transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 360, damping: 28 }}
+                  className="inline-flex items-center justify-center"
+                >
+                  <ChevronDown size={15} />
+                </motion.span>
               </button>
             )}
           </div>
         )}
-        {bodyVisible && description && (
-          <div className={twMerge("text-sm leading-relaxed mt-0.5 text-pretty", s.body, !title && "mt-0")}>
-            {description}
-          </div>
-        )}
-        {bodyVisible && children}
-        {bodyVisible && actionNode && <div className="mt-3 flex flex-wrap items-center gap-2">{actionNode}</div>}
-        {bodyVisible && actionList && actionList.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3">
-            {actionList.map((a, i) => (
-              <button
-                data-component-id={`erp.alert.banner-action-${i}`}
-                key={i}
-                type="button"
-                onClick={a.onClick}
-                className={twMerge(
-                  "rounded-[var(--radius-control)] px-3 py-1.5 text-xs font-semibold transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-                  a.variant === "ghost" ? s.actionGhost : s.actionSolid,
-                )}
-              >
-                {a.label}
-              </button>
-            ))}
+        {hasBody && (
+          <div
+            aria-hidden={!bodyVisible}
+            className={twMerge(
+              "grid transition-[grid-template-rows,opacity] duration-250 ease-out motion-reduce:transition-none",
+              bodyVisible ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none",
+            )}
+          >
+            <div className="overflow-hidden">
+              {description && (
+                <div className={twMerge("text-sm leading-relaxed mt-0.5 text-pretty", s.body, !title && "mt-0")}>
+                  {description}
+                </div>
+              )}
+              {children}
+              {actionNode && <div className="mt-3 flex flex-wrap items-center gap-2">{actionNode}</div>}
+              {actionList && actionList.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {actionList.map((a, i) => (
+                    <button
+                      data-component-id={`erp.alert.banner-action-${i}`}
+                      key={i}
+                      type="button"
+                      onClick={a.onClick}
+                      className={twMerge(
+                        "rounded-[var(--radius-control)] px-3 py-1.5 text-xs font-semibold transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                        a.variant === "ghost" ? s.actionGhost : s.actionSolid,
+                      )}
+                    >
+                      {a.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -333,7 +355,7 @@ function AlertContent({
           aria-label={typeof closeText === "string" ? closeText : "Fechar"}
           onClick={onDismiss}
           className={twMerge(
-            "shrink-0 rounded-[var(--radius-control)] transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+            "shrink-0 rounded-[var(--radius-control)] transition-[color,background-color,transform] duration-150 active:scale-90 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
             closeText ? "px-2 py-1 text-xs font-semibold" : "p-1",
             s.dismiss,
           )}
@@ -362,6 +384,7 @@ export default function Alert({
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const descriptionId = useId();
+  const reducedMotion = useReducedMotion();
 
   useBodyScrollLock(!!dialog && !!open);
 
@@ -427,49 +450,75 @@ export default function Alert({
     return <AlertContent {...rest} banner={banner} onDismiss={onDismiss} variant={resolvedVariant} s={s} dialog={false} />;
   }
 
-  if (!open || typeof document === "undefined") return null;
+  if (typeof document === "undefined") return null;
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      role="presentation"
-    >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/55 backdrop-blur-xs animate-in fade-in-0 duration-200"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+    <AnimatePresence>
+      {open && (
+        <div
+          key="alert-dialog-root"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          role="presentation"
+        >
+          {/* Backdrop */}
+          <motion.div
+            initial={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0 : 0.18, ease: "easeOut" }}
+            className="absolute inset-0 bg-black/55 backdrop-blur-xs"
+            onClick={onClose}
+            aria-hidden="true"
+          />
 
-      {/* Dialog panel */}
-      <div
-        ref={dialogRef}
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby={rest.title ? titleId : undefined}
-        aria-describedby={rest.description ? descriptionId : undefined}
-        tabIndex={-1}
-        className={twMerge(
-          "relative z-10 w-full sm:min-w-[480px] max-w-lg rounded-[var(--radius-overlay)] bg-card border border-border p-6 shadow-[var(--shadow-overlay)] outline-none animate-in fade-in-0 zoom-in-95 duration-200",
-          resolvedVariant === "info" && "border-l-4 border-l-info",
-          resolvedVariant === "success" && "border-l-4 border-l-success",
-          resolvedVariant === "warning" && "border-l-4 border-l-warning",
-          resolvedVariant === "danger" && "border-l-4 border-l-danger",
-          resolvedVariant === "neutral" && "border-l-4 border-l-border",
-        )}
-      >
-        <AlertContent
-          {...rest}
-          variant={resolvedVariant}
-          s={s}
-          dialog
-          dismissible={rest.dismissible}
-          onDismiss={onClose}
-          titleId={titleId}
-          descriptionId={descriptionId}
-        />
-      </div>
-    </div>,
+          {/* Dialog panel */}
+          <motion.div
+            ref={dialogRef}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby={rest.title ? titleId : undefined}
+            aria-describedby={rest.description ? descriptionId : undefined}
+            tabIndex={-1}
+            initial={reducedMotion ? { opacity: 1 } : { opacity: 0, scale: 0.96, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 6 }}
+            transition={
+              reducedMotion
+                ? { duration: 0 }
+                : { type: "spring", stiffness: 420, damping: 32, mass: 0.85 }
+            }
+            transformTemplate={({ x, y, scale }, generated) => {
+              const tx = Number(String(x ?? 0).replace("px", "")) || 0;
+              const ty = Number(String(y ?? 0).replace("px", "")) || 0;
+              const sc = scale === undefined ? 1 : Number(scale);
+              if (Math.abs(tx) < 0.01 && Math.abs(ty) < 0.01 && Math.abs(sc - 1) < 0.001) {
+                return "none";
+              }
+              return generated;
+            }}
+            className={twMerge(
+              "relative z-10 w-full sm:min-w-[440px] max-w-md rounded-[var(--radius-overlay)] bg-card border border-border p-6 shadow-[var(--shadow-overlay)] outline-none",
+              resolvedVariant === "info" && "border-l-4 border-l-info",
+              resolvedVariant === "success" && "border-l-4 border-l-success",
+              resolvedVariant === "warning" && "border-l-4 border-l-warning",
+              resolvedVariant === "danger" && "border-l-4 border-l-danger",
+              resolvedVariant === "neutral" && "border-l-4 border-l-border",
+            )}
+          >
+            <AlertContent
+              {...rest}
+              variant={resolvedVariant}
+              s={s}
+              dialog
+              dismissible={rest.dismissible}
+              onDismiss={onClose}
+              titleId={titleId}
+              descriptionId={descriptionId}
+            />
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>,
     document.body,
   );
 }
