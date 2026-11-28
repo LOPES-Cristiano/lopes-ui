@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useId, useCallback } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { twMerge } from "tailwind-merge";
 import { useAccessControl } from "./useAccessControl";
 
@@ -60,6 +61,7 @@ export default function OTPInput({
   hideIfDenied = false,
 }: OTPInputProps) {
   const uid = useId();
+  const reducedMotion = useReducedMotion();
   const [internal, setInternal] = useState<string[]>(Array(length).fill(""));
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
   const { canAccess } = useAccessControl();
@@ -153,20 +155,24 @@ export default function OTPInput({
   if (!hasPermission && hideIfDenied) return null;
 
   return (
-    <div
+    <motion.div
       role="group"
       aria-label={ariaLabel}
+      initial={false}
+      animate={error && !reducedMotion ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }}
+      transition={{ duration: 0.36, ease: "easeInOut" }}
       className={twMerge("flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-full", className)}
       data-component-id={componentId}
     >
       {Array.from({ length }).map((_, idx) => {
         const showSeparator =
           Boolean(groupSize && groupSize > 0 && idx > 0 && idx % groupSize === 0);
+        const filled = Boolean(digits[idx]);
 
         return (
           <React.Fragment key={`${uid}-${idx}`}>
             {showSeparator && <InputOTPSeparator />}
-            <input
+            <motion.input
               data-component-id={componentId ? `${componentId}.slot-${idx}` : `erp.otp.slot-${idx}`}
               ref={(el) => { inputsRef.current[idx] = el; }}
               id={idx === 0 ? `${uid}-0` : undefined}
@@ -182,6 +188,9 @@ export default function OTPInput({
               onKeyDown={(e) => handleKeyDown(idx, e)}
               onPaste={handlePaste}
               onFocus={handleFocus}
+              initial={false}
+              animate={filled && !reducedMotion ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
               className={twMerge(
                 "w-9 h-10 sm:w-11 sm:h-12 text-center text-base sm:text-lg font-semibold rounded-[var(--radius-control)] border focus-visible:outline-none transition-[color,background-color,border-color,box-shadow]",
                 "bg-[var(--input-background)] text-[var(--input-foreground)]",
@@ -192,7 +201,7 @@ export default function OTPInput({
                   : [
                       "border-[var(--input-border)]",
                       "focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/35 focus-visible:ring-offset-0",
-                      digits[idx]
+                      filled
                         ? "border-brand/70"
                         : "",
                     ].join(" ")
@@ -201,6 +210,6 @@ export default function OTPInput({
           </React.Fragment>
         );
       })}
-    </div>
+    </motion.div>
   );
 }
