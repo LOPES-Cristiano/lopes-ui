@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Skeleton } from '../primitives/skeleton';
 import type { DataTableColumn, DataTableSize } from './DataTable.types';
@@ -11,6 +13,7 @@ interface DataTableRowsSkeletonProps {
   hasExpandable?: boolean;
   hasActions?: boolean;
   striped?: boolean;
+  animated?: boolean;
 }
 
 const sizePaddingMap: Record<DataTableSize, string> = {
@@ -25,6 +28,21 @@ function getShimmerWidth(colIndex: number, rowIndex: number): string {
   return widths[index];
 }
 
+function ShimmerCell({
+  className,
+  delayMs,
+}: {
+  className?: string;
+  delayMs: number;
+}) {
+  return (
+    <div
+      className={twMerge('lopes-shimmer-bone rounded-md', className)}
+      style={{ ['--shimmer-delay' as string]: `${delayMs}ms` }}
+    />
+  );
+}
+
 export function DataTableRowsSkeleton({
   columns,
   rowCount = 5,
@@ -33,8 +51,80 @@ export function DataTableRowsSkeleton({
   hasExpandable = false,
   hasActions = false,
   striped = false,
+  animated = false,
 }: DataTableRowsSkeletonProps) {
   const padding = sizePaddingMap[size];
+
+  if (animated) {
+    return (
+      <>
+        {Array.from({ length: rowCount }).map((_, rIdx) => (
+          <tr
+            key={`skeleton-row-animated-${rIdx}`}
+            style={{ ['--row-enter-delay' as string]: `${Math.min(rIdx * 32, 320)}ms` }}
+            className={twMerge(
+              'lopes-skeleton-row-in border-b border-border/50 transition-colors',
+              striped && rIdx % 2 === 1 ? 'bg-muted/20' : 'bg-surface',
+            )}
+          >
+            {hasExpandable && (
+              <td className={twMerge(padding, 'w-10 text-center')}>
+                <ShimmerCell className="h-5 w-5 rounded-md mx-auto" delayMs={rIdx * 55} />
+              </td>
+            )}
+
+            {selectable && (
+              <td className={twMerge(padding, 'w-10 text-center')}>
+                <ShimmerCell className="h-4 w-4 rounded-md mx-auto" delayMs={rIdx * 55 + 20} />
+              </td>
+            )}
+
+            {columns.map((col, cIdx) => {
+              const isRight = col.align === 'right';
+              const isCenter = col.align === 'center';
+              const widthClass = getShimmerWidth(cIdx, rIdx);
+              const delayMs = rIdx * 55 + cIdx * 40;
+
+              return (
+                <td
+                  key={`skeleton-col-${col.key || cIdx}`}
+                  className={twMerge(padding, col.className)}
+                  style={col.width ? { width: col.width } : undefined}
+                >
+                  <div
+                    className={twMerge(
+                      'flex items-center',
+                      isRight ? 'justify-end' : isCenter ? 'justify-center' : 'justify-start',
+                    )}
+                  >
+                    <ShimmerCell
+                      delayMs={delayMs}
+                      className={twMerge(
+                        'h-3.5 rounded-full',
+                        isCenter ? 'w-1/2' : isRight ? 'w-2/3' : widthClass,
+                      )}
+                    />
+                  </div>
+                </td>
+              );
+            })}
+
+            {hasActions && (
+              <td className={twMerge(padding, 'w-20 text-right')}>
+                <div className="flex items-center justify-end gap-1.5">
+                  <ShimmerCell className="h-6 w-6 rounded-lg" delayMs={rIdx * 55 + columns.length * 40} />
+                  <ShimmerCell
+                    className="h-6 w-6 rounded-lg hidden sm:inline-block"
+                    delayMs={rIdx * 55 + columns.length * 40 + 35}
+                  />
+                </div>
+              </td>
+            )}
+          </tr>
+        ))}
+      </>
+    );
+  }
 
   return (
     <>
@@ -102,9 +192,36 @@ export function DataTableRowsSkeleton({
 
 interface DataTableMobileCardsSkeletonProps {
   cardCount?: number;
+  animated?: boolean;
 }
 
-export function DataTableMobileCardsSkeleton({ cardCount = 4 }: DataTableMobileCardsSkeletonProps) {
+export function DataTableMobileCardsSkeleton({
+  cardCount = 4,
+  animated = false,
+}: DataTableMobileCardsSkeletonProps) {
+  if (animated) {
+    return (
+      <div className="divide-y divide-border/80 border-y border-border/80 bg-surface">
+        {Array.from({ length: cardCount }).map((_, idx) => (
+          <div
+            key={`mobile-skeleton-card-animated-${idx}`}
+            style={{ ['--row-enter-delay' as string]: `${idx * 45}ms` }}
+            className="lopes-skeleton-row-in p-4 space-y-2.5"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <ShimmerCell className="h-4 w-1/2 rounded-full" delayMs={idx * 70} />
+              <ShimmerCell className="h-5 w-16 rounded-full" delayMs={idx * 70 + 40} />
+            </div>
+            <div className="flex items-center gap-3">
+              <ShimmerCell className="h-3 w-1/3 rounded-full" delayMs={idx * 70 + 80} />
+              <ShimmerCell className="h-3 w-1/4 rounded-full" delayMs={idx * 70 + 120} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="-mx-4 sm:mx-0 divide-y divide-border/80 border-y border-border/80 bg-surface">
       {Array.from({ length: cardCount }).map((_, idx) => (
