@@ -168,10 +168,89 @@ export default function Result({
       return <div className="flex items-center justify-center">{icon}</div>;
     }
 
+    const renderAnimatedStatusSvg = () => {
+      if (status === "success") {
+        return (
+          <svg width={sz.iconPx} height={sz.iconPx} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M5 12.8L9.8 17.5L19.2 7.5"
+              stroke="currentColor"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              pathLength={1}
+              className="lopes-draw-stroke"
+            />
+          </svg>
+        );
+      }
+      if (status === "error") {
+        return (
+          <svg width={sz.iconPx} height={sz.iconPx} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M6.5 6.5L17.5 17.5"
+              stroke="currentColor"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              pathLength={1}
+              className="lopes-draw-stroke"
+            />
+            <path
+              d="M17.5 6.5L6.5 17.5"
+              stroke="currentColor"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              pathLength={1}
+              style={{ animationDelay: "0.18s" }}
+              className="lopes-draw-stroke"
+            />
+          </svg>
+        );
+      }
+      if (status === "warning") {
+        return (
+          <svg width={sz.iconPx} height={sz.iconPx} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M12 6.5V13.5"
+              stroke="currentColor"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              pathLength={1}
+              className="lopes-draw-stroke"
+            />
+            <circle cx="12" cy="17.5" r="1.5" fill="currentColor" className="lopes-pop-in" />
+          </svg>
+        );
+      }
+      if (status === "info") {
+        return (
+          <svg width={sz.iconPx} height={sz.iconPx} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="7.2" r="1.5" fill="currentColor" className="lopes-pop-in" />
+            <path
+              d="M12 11V17.5"
+              stroke="currentColor"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              pathLength={1}
+              className="lopes-draw-stroke"
+            />
+          </svg>
+        );
+      }
+      return <DefaultIcon size={sz.iconPx} strokeWidth={2.2} className={meta.iconCls} />;
+    };
+
     return (
-      <div className={twMerge("relative flex items-center justify-center rounded-full", sz.halo, meta.outerRing)}>
+      <div
+        key={`result-graphic-${status}`}
+        className={twMerge(
+          "lopes-pop-in relative flex items-center justify-center rounded-full",
+          sz.halo,
+          meta.outerRing,
+        )}
+      >
         <div className={twMerge("flex items-center justify-center rounded-full shadow-lg", sz.core, meta.innerBg)}>
-          <DefaultIcon size={sz.iconPx} strokeWidth={2.2} className={meta.iconCls} />
+          {renderAnimatedStatusSvg()}
         </div>
         {meta.badgeCode && (
           <span className="absolute -bottom-1.5 rounded-full border border-white dark:border-zinc-900 bg-zinc-900 dark:bg-zinc-100 px-2 py-0.5 font-mono text-[10px] font-bold text-white dark:text-zinc-900 shadow-xs">
@@ -194,22 +273,36 @@ export default function Result({
     >
       {renderGraphic()}
 
-      <h3 className={twMerge("mt-4 font-bold tracking-tight text-zinc-900 dark:text-zinc-100", sz.title)}>
+      <h3
+        style={{ ["--row-enter-delay" as string]: "60ms" }}
+        className={twMerge("lopes-skeleton-row-in mt-4 font-bold tracking-tight text-zinc-900 dark:text-zinc-100", sz.title)}
+      >
         {title}
       </h3>
 
       {subTitle && (
-        <p className={twMerge("mt-1.5 max-w-lg leading-relaxed text-zinc-500 dark:text-zinc-400", sz.sub)}>
+        <p
+          style={{ ["--row-enter-delay" as string]: "110ms" }}
+          className={twMerge("lopes-skeleton-row-in mt-1.5 max-w-lg leading-relaxed text-zinc-500 dark:text-zinc-400", sz.sub)}
+        >
           {subTitle}
         </p>
       )}
 
       {extra && (
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">{extra}</div>
+        <div
+          style={{ ["--row-enter-delay" as string]: "160ms" }}
+          className="lopes-skeleton-row-in mt-6 flex flex-wrap items-center justify-center gap-2.5"
+        >
+          {extra}
+        </div>
       )}
 
       {children && (
-        <div className="mt-6 w-full max-w-2xl rounded-xl border border-zinc-200/70 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-800/40 p-4 sm:p-5 text-left text-xs sm:text-sm text-zinc-700 dark:text-zinc-300">
+        <div
+          style={{ ["--row-enter-delay" as string]: "200ms" }}
+          className="lopes-skeleton-row-in mt-6 w-full max-w-2xl rounded-xl border border-zinc-200/70 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-800/40 p-4 sm:p-5 text-left text-xs sm:text-sm text-zinc-700 dark:text-zinc-300"
+        >
           {children}
         </div>
       )}
