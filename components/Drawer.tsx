@@ -3,6 +3,7 @@
 import React, { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { cn } from "../utils/cn";
 import { hasOpenFloatingOverlay, hasOpenHigherModalOverlay } from "../utils/overlay";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
@@ -77,10 +78,13 @@ function unregisterDrawerEntry(id: string) {
 
 export type DrawerSide = "left" | "right" | "top" | "bottom";
 export type DrawerSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "full";
+export type DrawerVariant = "default" | "animated";
 
 export type DrawerProps = {
   open: boolean;
   onClose: () => void;
+  /** Visual and motion preset ("animated" uses spring physics and staggered content entrance) */
+  variant?: DrawerVariant;
   /** Which edge the drawer slides in from. Default: "right" */
   side?: DrawerSide;
   /** Width (left/right) or height (top/bottom). Default: "md" */
@@ -188,6 +192,7 @@ const FOCUSABLE_SELECTOR =
 export default function Drawer({
   open,
   onClose,
+  variant = "animated",
   side = "right",
   size = "md",
   title,
@@ -220,6 +225,8 @@ export default function Drawer({
   const drawerId = useId();
   const titleId = `${drawerId}-title`;
   const descriptionId = `${drawerId}-description`;
+  const prefersReducedMotion = useReducedMotion();
+  const isAnimated = variant === "animated";
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const panelRef = useRef<HTMLDivElement>(null);
   const [dragOffsetY, setDragOffsetY] = useState(0);
@@ -434,141 +441,126 @@ export default function Drawer({
 
   const isShown = open && visible;
 
-  return createPortal(
+  const animatedClosedOffset =
+    side === "right"
+      ? { x: "100%", y: 0, opacity: 0.7 }
+      : side === "left"
+        ? { x: "-100%", y: 0, opacity: 0.7 }
+        : side === "top"
+          ? { x: 0, y: "-100%", opacity: 0.7 }
+          : { x: 0, y: "100%", opacity: 0.7 };
+
+  const drawerInnerContent = (
     <>
-      {/* Backdrop */}
-      <div
-        aria-hidden="true"
-        onClick={
-          closeOnBackdrop
-            ? () => {
-                if (!hasOpenFloatingOverlay()) {
-                  requestClose();
-                }
-              }
-            : undefined
-        }
-        style={{ zIndex: backdropZ }}
-        className={cn(
-          "fixed inset-0 bg-black/55 backdrop-blur-xs transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
-          isShown ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
-        )}
-      />
+      {/* Optional Resize Edge for Horizontal Drawers */}
+      {resizable && isHorizontal && (
+        <div
+          onPointerDown={handleResizePointerDown}
+          onDoubleClick={handleResizeDoubleClick}
+          title="Arraste para redimensionar (duplo clique para restaurar)"
+          className={cn(
+            "group hidden sm:flex absolute inset-y-0 z-20 w-2 cursor-col-resize items-center justify-center hover:bg-brand/25 active:bg-brand/40 transition-colors",
+            side === "right" ? "left-0" : "right-0"
+          )}
+          aria-hidden="true"
+        >
+          <div className="h-10 w-1 rounded-full bg-border/0 group-hover:bg-brand/80 group-active:bg-brand transition-colors" />
+        </div>
+      )}
 
-      {/* Panel */}
-      <div
-        ref={panelRef}
-        {...(componentId ? { "data-component-id": componentId } : {})}
-        data-drawer-panel="true"
-        data-state={open ? "open" : "closed"}
-        tabIndex={-1}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={title ? titleId : undefined}
-        aria-describedby={description ? descriptionId : undefined}
-        style={{
-          zIndex: panelZ,
-          ...(customWidth && isHorizontal ? { width: `${customWidth}px` } : {}),
-          ...(dragOffsetY !== 0 ? { transform: `translate3d(0, ${dragOffsetY}px, 0)` } : {}),
-        }}
-        className={cn(
-          "fixed flex flex-col min-h-0 overflow-hidden bg-card text-card-foreground outline-none will-change-transform",
-          "shadow-[var(--shadow-overlay)]",
-          isShown ? "" : "pointer-events-none opacity-0",
-          isHorizontal ? "h-dvh max-h-dvh" : "w-dvw max-w-dvw",
-          panelPosition[side],
-          !customWidth && sizeClass,
-          dragOffsetY === 0 && "transition-[transform,opacity,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
-          isShown ? "translate-x-0 translate-y-0 opacity-100 pointer-events-auto" : translateClosed[side],
-          className,
-        )}
-      >
-        {/* Optional Resize Edge for Horizontal Drawers */}
-        {resizable && isHorizontal && (
-          <div
-            onPointerDown={handleResizePointerDown}
-            onDoubleClick={handleResizeDoubleClick}
-            title="Arraste para redimensionar (duplo clique para restaurar)"
-            className={cn(
-              "group hidden sm:flex absolute inset-y-0 z-20 w-2 cursor-col-resize items-center justify-center hover:bg-brand/25 active:bg-brand/40 transition-colors",
-              side === "right" ? "left-0" : "right-0"
-            )}
-            aria-hidden="true"
-          >
-            <div className="h-10 w-1 rounded-full bg-border/0 group-hover:bg-brand/80 group-active:bg-brand transition-colors" />
-          </div>
-        )}
+      {/* Drag Handle for Bottom Drawer */}
+      {displayHandle && side === "bottom" && (
+        <div
+          onPointerDown={handleHandlePointerDown}
+          onPointerMove={handleHandlePointerMove}
+          onPointerUp={handleHandlePointerUp}
+          className="flex w-full shrink-0 cursor-grab active:cursor-grabbing items-center justify-center pt-3 pb-1 bg-card touch-none"
+        >
+          <div className="h-1.5 w-12 rounded-full bg-border" />
+        </div>
+      )}
 
-        {/* Drag Handle for Bottom Drawer */}
-        {displayHandle && side === "bottom" && (
-          <div
-            onPointerDown={handleHandlePointerDown}
-            onPointerMove={handleHandlePointerMove}
-            onPointerUp={handleHandlePointerUp}
-            className="flex w-full shrink-0 cursor-grab active:cursor-grabbing items-center justify-center pt-3 pb-1 bg-card touch-none"
-          >
-            <div className="h-1.5 w-12 rounded-full bg-border" />
-          </div>
-        )}
-
-        {/* Header */}
-        {(title || description || headerExtra || headerIcon) && (
-          <div className="shrink-0 border-b border-border bg-card/95 px-4 sm:px-5 py-3.5 sm:py-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3 min-w-0">
-                {headerIcon && (
+      {/* Header */}
+      {(title || description || headerExtra || headerIcon) && (
+        <div className="shrink-0 border-b border-border bg-card/95 px-4 sm:px-5 py-3.5 sm:py-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              {headerIcon &&
+                (isAnimated && !prefersReducedMotion ? (
+                  <motion.div
+                    initial={{ scale: 0.65, rotate: -10, opacity: 0 }}
+                    animate={open ? { scale: 1, rotate: 0, opacity: 1 } : { scale: 0.85, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 460, damping: 24, delay: 0.06 }}
+                    className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-brand-border/60 bg-brand-soft text-brand"
+                  >
+                    {headerIcon}
+                  </motion.div>
+                ) : (
                   <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-brand-border/60 bg-brand-soft text-brand">
                     {headerIcon}
                   </div>
+                ))}
+              <div className="min-w-0">
+                {title && (
+                  <h2
+                    id={titleId}
+                    className="truncate text-base font-semibold text-balance text-foreground leading-snug"
+                  >
+                    {title}
+                  </h2>
                 )}
-                <div className="min-w-0">
-                  {title && (
-                    <h2
-                      id={titleId}
-                      className="truncate text-base font-semibold text-balance text-foreground leading-snug"
-                    >
-                      {title}
-                    </h2>
-                  )}
-                  {description && (
-                    <div
-                      id={descriptionId}
-                      className="mt-0.5 text-xs sm:text-sm leading-relaxed text-pretty text-muted-foreground"
-                    >
-                      {description}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1.5 shrink-0">
-                {headerExtra}
-                <button
-                  data-component-id={componentId ? `${componentId}.close` : "erp.drawer.close"}
-                  type="button"
-                  onClick={requestClose}
-                  aria-label="Fechar"
-                  className="inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius-control)] text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 active:scale-95 border-none"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                {description && (
+                  <div
+                    id={descriptionId}
+                    className="mt-0.5 text-xs sm:text-sm leading-relaxed text-pretty text-muted-foreground"
+                  >
+                    {description}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Content */}
-        <div
-          className={cn(
-            "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-card",
-            !noPadding && !form && "px-4 sm:px-5 py-4 sm:py-5",
-            side === "bottom" && !footer && "lopes-safe-bottom",
-            contentClassName
-          )}
-        >
-          {form ? (
-            <div className={cn("space-y-5", !noPadding && "p-5 md:p-6")}>
-              {summary && (
+            <div className="flex items-center gap-1.5 shrink-0">
+              {headerExtra}
+              <button
+                data-component-id={componentId ? `${componentId}.close` : "erp.drawer.close"}
+                type="button"
+                onClick={requestClose}
+                aria-label="Fechar"
+                className="inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius-control)] text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 active:scale-95 border-none"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Content */}
+      <div
+        className={cn(
+          "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-card",
+          !noPadding && !form && "px-4 sm:px-5 py-4 sm:py-5",
+          side === "bottom" && !footer && "lopes-safe-bottom",
+          contentClassName
+        )}
+      >
+        {form ? (
+          <div className={cn("space-y-5", !noPadding && "p-5 md:p-6")}>
+            {summary &&
+              (isAnimated && !prefersReducedMotion ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={open ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+                  transition={{ duration: 0.24, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+                  className={cn(
+                    "rounded-[var(--radius-card)] border border-border bg-muted/40 p-4 shadow-[var(--shadow-card)]",
+                    summaryClassName
+                  )}
+                >
+                  {summary}
+                </motion.div>
+              ) : (
                 <div
                   className={cn(
                     "rounded-[var(--radius-card)] border border-border bg-muted/40 p-4 shadow-[var(--shadow-card)]",
@@ -577,16 +569,49 @@ export default function Drawer({
                 >
                   {summary}
                 </div>
-              )}
+              ))}
+            {isAnimated && !prefersReducedMotion ? (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={open ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+                transition={{ duration: 0.28, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+                className={cn("space-y-5", bodyClassName)}
+              >
+                {children}
+              </motion.div>
+            ) : (
               <div className={cn("space-y-5", bodyClassName)}>{children}</div>
-            </div>
-          ) : (
-            children
-          )}
-        </div>
+            )}
+          </div>
+        ) : isAnimated && !prefersReducedMotion ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={open ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+            transition={{ duration: 0.26, delay: 0.09, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {children}
+          </motion.div>
+        ) : (
+          children
+        )}
+      </div>
 
-        {/* Footer */}
-        {footer && (
+      {/* Footer */}
+      {footer &&
+        (isAnimated && !prefersReducedMotion ? (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={open ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+            transition={{ duration: 0.24, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+            className={cn(
+              "min-w-0 shrink-0 border-t border-border bg-muted/20 px-4 sm:px-5 py-3.5 sm:py-4",
+              side === "bottom" && "lopes-safe-bottom",
+              footerClassName
+            )}
+          >
+            {typeof footer === "function" ? footer({ requestClose }) : footer}
+          </motion.div>
+        ) : (
           <div
             className={cn(
               "min-w-0 shrink-0 border-t border-border bg-muted/20 px-4 sm:px-5 py-3.5 sm:py-4",
@@ -596,20 +621,149 @@ export default function Drawer({
           >
             {typeof footer === "function" ? footer({ requestClose }) : footer}
           </div>
-        )}
+        ))}
 
-        {/* Drag Handle for Top Drawer */}
-        {displayHandle && side === "top" && (
+      {/* Drag Handle for Top Drawer */}
+      {displayHandle && side === "top" && (
+        <div
+          onPointerDown={handleHandlePointerDown}
+          onPointerMove={handleHandlePointerMove}
+          onPointerUp={handleHandlePointerUp}
+          className="flex w-full shrink-0 cursor-grab active:cursor-grabbing items-center justify-center pt-1 pb-3 bg-card touch-none"
+        >
+          <div className="h-1.5 w-12 rounded-full bg-border" />
+        </div>
+      )}
+    </>
+  );
+
+  return createPortal(
+    <>
+      {isAnimated ? (
+        <AnimatePresence>
+          {(open || rendered || keepMounted) && (
+            <>
+              <motion.div
+                key={`${drawerId}-backdrop`}
+                aria-hidden="true"
+                onClick={
+                  closeOnBackdrop
+                    ? () => {
+                        if (!hasOpenFloatingOverlay()) {
+                          requestClose();
+                        }
+                      }
+                    : undefined
+                }
+                initial={{ opacity: 0 }}
+                animate={{ opacity: open ? 1 : 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: prefersReducedMotion ? 0.01 : 0.22 }}
+                style={{ zIndex: backdropZ }}
+                className={cn(
+                  "fixed inset-0 bg-black/55 backdrop-blur-sm",
+                  open ? "pointer-events-auto" : "pointer-events-none",
+                )}
+              />
+
+              <motion.div
+                key={`${drawerId}-panel`}
+                ref={panelRef}
+                {...(componentId ? { "data-component-id": componentId } : {})}
+                data-drawer-panel="true"
+                data-state={open ? "open" : "closed"}
+                tabIndex={-1}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={title ? titleId : undefined}
+                aria-describedby={description ? descriptionId : undefined}
+                initial={prefersReducedMotion ? { opacity: 0 } : animatedClosedOffset}
+                animate={
+                  prefersReducedMotion
+                    ? { opacity: open ? 1 : 0 }
+                    : open
+                      ? { x: 0, y: dragOffsetY, opacity: 1 }
+                      : animatedClosedOffset
+                }
+                transition={
+                  prefersReducedMotion || dragOffsetY !== 0
+                    ? { duration: 0 }
+                    : open
+                      ? { type: "spring", stiffness: 360, damping: 32, mass: 0.85 }
+                      : { duration: 0.22, ease: [0.32, 0.72, 0, 1] }
+                }
+                style={{
+                  zIndex: panelZ,
+                  ...(customWidth && isHorizontal ? { width: `${customWidth}px` } : {}),
+                }}
+                className={cn(
+                  "fixed flex flex-col min-h-0 overflow-hidden bg-card text-card-foreground outline-none will-change-transform",
+                  "shadow-[var(--shadow-overlay)]",
+                  open ? "pointer-events-auto" : "pointer-events-none",
+                  isHorizontal ? "h-dvh max-h-dvh" : "w-dvw max-w-dvw",
+                  panelPosition[side],
+                  !customWidth && sizeClass,
+                  className,
+                )}
+              >
+                {drawerInnerContent}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      ) : (
+        <>
+          {/* Backdrop */}
           <div
-            onPointerDown={handleHandlePointerDown}
-            onPointerMove={handleHandlePointerMove}
-            onPointerUp={handleHandlePointerUp}
-            className="flex w-full shrink-0 cursor-grab active:cursor-grabbing items-center justify-center pt-1 pb-3 bg-card touch-none"
+            aria-hidden="true"
+            onClick={
+              closeOnBackdrop
+                ? () => {
+                    if (!hasOpenFloatingOverlay()) {
+                      requestClose();
+                    }
+                  }
+                : undefined
+            }
+            style={{ zIndex: backdropZ }}
+            className={cn(
+              "fixed inset-0 bg-black/55 backdrop-blur-xs transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+              isShown ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+            )}
+          />
+
+          {/* Panel */}
+          <div
+            ref={panelRef}
+            {...(componentId ? { "data-component-id": componentId } : {})}
+            data-drawer-panel="true"
+            data-state={open ? "open" : "closed"}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? titleId : undefined}
+            aria-describedby={description ? descriptionId : undefined}
+            style={{
+              zIndex: panelZ,
+              ...(customWidth && isHorizontal ? { width: `${customWidth}px` } : {}),
+              ...(dragOffsetY !== 0 ? { transform: `translate3d(0, ${dragOffsetY}px, 0)` } : {}),
+            }}
+            className={cn(
+              "fixed flex flex-col min-h-0 overflow-hidden bg-card text-card-foreground outline-none will-change-transform",
+              "shadow-[var(--shadow-overlay)]",
+              isShown ? "" : "pointer-events-none opacity-0",
+              isHorizontal ? "h-dvh max-h-dvh" : "w-dvw max-w-dvw",
+              panelPosition[side],
+              !customWidth && sizeClass,
+              dragOffsetY === 0 && "transition-[transform,opacity,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+              isShown ? "translate-x-0 translate-y-0 opacity-100 pointer-events-auto" : translateClosed[side],
+              className,
+            )}
           >
-            <div className="h-1.5 w-12 rounded-full bg-border" />
+            {drawerInnerContent}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       <UnsavedChangesDialog
         open={isConfirmOpen}
