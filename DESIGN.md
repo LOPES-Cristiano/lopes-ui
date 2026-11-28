@@ -2,13 +2,13 @@
 
 > **Biblioteca:** `lopes-ui` (v1.3.0)  
 > **Stack:** React 19 · Next.js 16 · Tailwind CSS v4 (`@theme inline`) · Radix UI · CVA · `motion/react`  
-> **Fonte da Verdade de Tokens:** [styles/lopes-ui.css](file:///c:/Biglar/lopes-ui/styles/lopes-ui.css)
+> **Fonte da Verdade de Tokens:** [styles/lopes-ui.css](styles/lopes-ui.css)
 
 ---
 
 ## 1. Identidade e Princípios de Design
 
-O **Lopes UI** é um Design System corporativo de alta densidade projetado para ERPs, portais internos, vitrines comerciais e ferramentas administrativas do ecossistema BigLar / Lopes.
+O **Lopes UI** é um Design System corporativo de alta densidade projetado para ERPs, portais internos, vitrines comerciais e ferramentas administrativas do ecossistema Lopes.
 
 1. **Neutro Corporativo + Destaque Controlado:** A interface baseia-se em superfícies neutras de alto contraste (`#ffffff` / `#09090b` no light mode; `#09090b` / `#fafafa` no dark mode) com `--primary` em preto/zinc corporativo e `--brand` em índigo (`#4f46e5` / `#6366f1`) reservado para destaques de marca, abas ativas e CTAs estratégicos.
 2. **Densidade sem Poluição:** Espaçamento compacto e previsível, bordas sutis (`--border`), elevação realista em camadas (`--shadow-*`) e alinhamento óptico de texto com ícones (`.lopes-trim-cap`).
@@ -20,7 +20,7 @@ O **Lopes UI** é um Design System corporativo de alta densidade projetado para 
 
 ## 2. Hierarquia de Tokens (Tailwind CSS v4)
 
-Os tokens são declarados em `:root` (light), sobrescritos em `.dark` e expostos ao Tailwind v4 via `@theme inline` em [styles/lopes-ui.css](file:///c:/Biglar/lopes-ui/styles/lopes-ui.css).
+Os tokens são declarados em `:root` (light), sobrescritos em `.dark` e expostos ao Tailwind v4 via `@theme inline` em [styles/lopes-ui.css](styles/lopes-ui.css).
 
 ### 2.1 Superfícies & Ações
 
