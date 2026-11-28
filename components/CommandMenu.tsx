@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, useMemo, useSyncExternalStore } from 'react';
+import React, { useState, useEffect, useId, useRef, useCallback, useMemo, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Search, ChevronRight, ArrowLeft, Clock } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { twMerge } from 'tailwind-merge';
 import { useAccessControl } from './useAccessControl';
@@ -374,6 +375,8 @@ export default function CommandMenu({
     () => false,
   );
 
+  const menuMotionId = useId();
+  const prefersReducedMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
@@ -594,24 +597,39 @@ export default function CommandMenu({
 
       {/* ── Dialog portal ──────────────────────────────────────────────────── */}
       {mounted &&
-        open &&
         createPortal(
-          <div
-            data-floating-open="true"
-            className="fixed inset-0 z-[7500] flex items-start justify-center px-3 sm:px-4 pt-[6vh] sm:pt-[14vh]"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menu de comandos"
-          >
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-              aria-hidden="true"
-              onClick={close}
-            />
+          <AnimatePresence>
+            {open && (
+              <div
+                data-floating-open="true"
+                className="fixed inset-0 z-[7500] flex items-start justify-center px-3 sm:px-4 pt-[6vh] sm:pt-[14vh]"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Menu de comandos"
+              >
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: prefersReducedMotion ? 0.01 : 0.16 }}
+                  className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                  aria-hidden="true"
+                  onClick={close}
+                />
 
-            {/* Panel */}
-            <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-xl border border-header-command-panel-border bg-header-command-panel text-header-command-panel-foreground shadow-2xl">
+                {/* Panel */}
+                <motion.div
+                  initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: -12 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: -8 }}
+                  transition={
+                    prefersReducedMotion
+                      ? { duration: 0.01 }
+                      : { type: 'spring', stiffness: 460, damping: 32, mass: 0.75 }
+                  }
+                  className="relative z-10 w-full max-w-lg overflow-hidden rounded-xl border border-header-command-panel-border bg-header-command-panel text-header-command-panel-foreground shadow-2xl"
+                >
               {/* ── Breadcrumb for nested sub-pages ────────────────────────── */}
               {pageStack.length > 0 && (
                 <div className="flex items-center gap-1.5 border-b border-header-command-panel-border px-4 py-2 text-xs text-header-command-panel-muted">
@@ -704,16 +722,28 @@ export default function CommandMenu({
                             onClick={() => select(item)}
                             onMouseEnter={() => setActiveIndex(idx)}
                             className={twMerge(
-                              'mx-2 flex w-[calc(100%-1rem)] items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors cursor-pointer',
+                              'relative mx-2 flex w-[calc(100%-1rem)] items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors cursor-pointer',
                               active
-                                ? 'bg-header-command-panel-active text-header-command-panel-active-foreground'
+                                ? 'text-header-command-panel-active-foreground'
                                 : 'text-header-command-panel-foreground hover:bg-header-command-panel-hover',
                             )}
                           >
+                            {active && (
+                              <motion.span
+                                layoutId={`${menuMotionId}-active-row`}
+                                transition={
+                                  prefersReducedMotion
+                                    ? { duration: 0.01 }
+                                    : { type: 'spring', stiffness: 500, damping: 36 }
+                                }
+                                aria-hidden="true"
+                                className="pointer-events-none absolute inset-0 z-0 rounded-lg bg-header-command-panel-active"
+                              />
+                            )}
                             {Icon && (
                               <span
                                 className={twMerge(
-                                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-md border',
+                                  'relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border',
                                   active
                                     ? 'border-header-command-panel-active-foreground bg-header-command-panel-active text-header-command-panel-active-foreground'
                                     : 'border-header-command-panel-border bg-header-command-panel-hover text-header-command-panel-muted',
@@ -723,7 +753,7 @@ export default function CommandMenu({
                               </span>
                             )}
 
-                            <span className="flex min-w-0 flex-1 flex-col">
+                            <span className="relative z-10 flex min-w-0 flex-1 flex-col">
                               <span className="truncate font-medium">{item.label}</span>
                               {item.description && (
                                 <span className="truncate text-xs text-header-command-panel-muted">
@@ -733,11 +763,11 @@ export default function CommandMenu({
                             </span>
 
                             {hasSub ? (
-                              <ChevronRight size={15} className="ml-auto shrink-0 opacity-60" />
+                              <ChevronRight size={15} className="relative z-10 ml-auto shrink-0 opacity-60" />
                             ) : item.shortcut ? (
                               <kbd
                                 className={twMerge(
-                                  'ml-auto flex-shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium leading-none',
+                                  'relative z-10 ml-auto flex-shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium leading-none',
                                   active
                                     ? 'border-header-command-panel-active-foreground bg-header-command-panel text-header-command-panel-active-foreground'
                                     : 'border-header-command-panel-border bg-header-command-panel text-header-command-panel-muted',
@@ -783,8 +813,10 @@ export default function CommandMenu({
                   fechar
                 </span>
               </div>
-            </div>
-          </div>,
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>,
           document.body,
         )}
     </>
