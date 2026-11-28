@@ -101,6 +101,7 @@ export default function DataTable<T = Record<string, unknown>>({
   screenDefinition,
   screenActionHandlers,
   loading = false,
+  animatedLoading = true,
   loadingLabel = 'Carregando registros...',
   showLoadingLabel = true,
   emptySlot,
@@ -110,6 +111,7 @@ export default function DataTable<T = Record<string, unknown>>({
   onClose,
 }: DataTableProps<T>) {
   const { canAccess } = useAccessControl();
+  const isAnimatedVariant = variant === 'animated' || animatedLoading;
   const isForbidden = Boolean(componentId && !canAccess(componentId));
 
   const resolvedDefaultPageSize = defaultPageSize ?? 10;
@@ -629,10 +631,10 @@ export default function DataTable<T = Record<string, unknown>>({
 
       <div
         className={twMerge(
-          'w-full min-w-0 transition-colors',
+          'relative w-full min-w-0 transition-colors',
           variant === 'minimal'
             ? 'border-0 bg-transparent shadow-none'
-            : 'rounded-none sm:rounded-[var(--radius-card)] bg-surface border-0 sm:border border-border shadow-none sm:shadow-[var(--shadow-card)]',
+            : 'overflow-hidden rounded-none sm:rounded-[var(--radius-card)] bg-surface border-0 sm:border border-border shadow-none sm:shadow-[var(--shadow-card)]',
         )}
       >
         {tabs && tabs.length > 0 && (
@@ -754,18 +756,24 @@ export default function DataTable<T = Record<string, unknown>>({
               stickyHeader={stickyHeader}
               expandColumnWidth={expandColumnWidth}
               checkboxClassName={checkboxClassName}
+              showLoadingBar={isAnimatedVariant && loading}
             />
 
             <tbody className="divide-y divide-border/60 bg-surface">
               {loading ? (
                 <DataTableRowsSkeleton
                   columns={visibleCols}
-                  rowCount={Math.max(14, Math.min(pageSize ?? 14, 20))}
+                  rowCount={
+                    isAnimatedVariant
+                      ? Math.min(Math.max(pageSize ?? 8, 6), 10)
+                      : Math.max(14, Math.min(pageSize ?? 14, 20))
+                  }
                   size={size}
                   selectable={selectable}
                   hasExpandable={hasExpandable}
                   hasActions={hasActions}
                   striped={striped}
+                  animated={isAnimatedVariant}
                 />
               ) : pageRows.length === 0 ? (
                 <tr>
@@ -842,9 +850,20 @@ export default function DataTable<T = Record<string, unknown>>({
         </div>
 
         {/* Visualização Mobile */}
-        <div className="block md:hidden w-full">
+        <div className="relative block md:hidden w-full">
+          {isAnimatedVariant && loading && (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 top-0 z-20 h-[2.5px] overflow-hidden bg-zinc-900/10 dark:bg-zinc-100/10"
+            >
+              <div className="lopes-indeterminate-bar h-full w-1/2 rounded-full bg-gradient-to-r from-transparent via-zinc-700 to-transparent dark:via-zinc-300" />
+            </div>
+          )}
           {loading ? (
-            <DataTableMobileCardsSkeleton cardCount={Math.min(pageSize ?? 6, 8)} />
+            <DataTableMobileCardsSkeleton
+              cardCount={Math.min(pageSize ?? 6, 8)}
+              animated={isAnimatedVariant}
+            />
           ) : pageRows.length === 0 ? (
             <div className="py-12 text-center text-xs text-muted-foreground bg-surface border-y border-border/80">
               {emptySlot ?? 'Nenhum registro encontrado.'}
