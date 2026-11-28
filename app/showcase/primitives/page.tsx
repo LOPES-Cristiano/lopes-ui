@@ -250,7 +250,7 @@ export default function PrimitivesPage() {
               <label htmlFor="sw-montagem" className="text-sm font-medium text-foreground cursor-pointer">
                 Montagem inclusa
               </label>
-              <p className="text-xs text-muted-foreground">Agendar equipe técnica BigLar para móveis planejados e quartos.</p>
+              <p className="text-xs text-muted-foreground">Agendar equipe técnica para móveis planejados e quartos.</p>
             </div>
             <Switch
               id="sw-montagem"
@@ -430,7 +430,7 @@ export default function PrimitivesPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Separator</p>
             <div className="rounded-[var(--radius-control)] border border-border p-4 space-y-3">
               <div>
-                <p className="text-sm font-semibold text-foreground">BigLar Móveis &amp; Eletro</p>
+                <p className="text-sm font-semibold text-foreground">Lopes ERP</p>
                 <p className="text-xs text-muted-foreground">Linha de Salas, Quartos, Cozinhas e Eletrodomésticos</p>
               </div>
               <Separator />
