@@ -3,6 +3,7 @@
 import React, { useId, useMemo, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { ChevronDown, type LucideIcon } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { useAccessControl } from "./useAccessControl";
 
 export type AccordionItem = {
@@ -127,21 +128,27 @@ function Panel({
   panelId: string;
 }) {
   const s = SIZE[size ?? "md"];
+  const prefersReducedMotion = useReducedMotion();
   const Icon = item.icon;
   const isLeftChevron = chevronPosition === "left" || !!item.actions;
   const shouldMountContent = open || (item.keepMounted ?? keepMounted);
 
   const chevronEl = (
-    <ChevronDown
-      size={s.chevron}
-      className={twMerge(
-        "shrink-0 text-zinc-400 transition-transform duration-200",
-        isLeftChevron
-          ? open ? "rotate-0" : "-rotate-90"
-          : open ? "rotate-180" : "rotate-0",
-      )}
+    <motion.span
+      initial={false}
+      animate={{
+        rotate: isLeftChevron ? (open ? 0 : -90) : open ? 180 : 0,
+      }}
+      transition={
+        prefersReducedMotion
+          ? { duration: 0.01 }
+          : { type: "spring", stiffness: 420, damping: 28 }
+      }
+      className="inline-flex shrink-0 text-zinc-400"
       aria-hidden="true"
-    />
+    >
+      <ChevronDown size={s.chevron} />
+    </motion.span>
   );
 
   return (
@@ -257,20 +264,27 @@ function Panel({
             </span>
           )}
           {!isLeftChevron && (
-            <ChevronDown
-              size={s.chevron}
+            <motion.span
+              initial={false}
+              animate={{ rotate: open ? 180 : 0 }}
+              transition={
+                prefersReducedMotion
+                  ? { duration: 0.01 }
+                  : { type: "spring", stiffness: 420, damping: 28 }
+              }
               className={twMerge(
-                "shrink-0 text-zinc-400 transition-transform duration-200",
+                "inline-flex shrink-0 text-zinc-400",
                 item.badge !== undefined ? "ml-2" : "ml-auto",
-                open && "rotate-180",
               )}
               aria-hidden="true"
-            />
+            >
+              <ChevronDown size={s.chevron} />
+            </motion.span>
           )}
         </button>
       )}
 
-      {/* Content (CSS grid animation) */}
+      {/* Content (CSS grid animation + subtle vertical glide) */}
       <div
         id={panelId}
         role="region"
@@ -278,7 +292,7 @@ function Panel({
         aria-hidden={!open}
         hidden={!open && !shouldMountContent}
         className={twMerge(
-          "grid transition-[grid-template-rows,opacity] duration-280 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          "grid transition-[grid-template-rows,opacity] duration-280 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
@@ -287,7 +301,8 @@ function Panel({
           {shouldMountContent && (
             <div
               className={twMerge(
-                "text-zinc-600 dark:text-zinc-400 leading-relaxed",
+                "text-zinc-600 dark:text-zinc-400 leading-relaxed transition-transform duration-280 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+                open ? "translate-y-0" : "-translate-y-1.5",
                 item.contentClassName ?? s.content,
               )}
             >
