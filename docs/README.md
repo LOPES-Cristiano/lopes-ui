@@ -25,7 +25,7 @@ Documentação arquitetural e guias internos do Design System **Lopes UI**. Para
 | `lopes-ui/rich-text` | `components/rich-text/index.ts` | `RichTextEditor`, `RichTextField`, `RichTextViewer` e `EmailComposer` (requer `--tiptap`) |
 | `lopes-ui/spreadsheet` | `components/spreadsheet/index.ts` | Planilha interativa virtualizada `Spreadsheet` (requer `--spreadsheet`) |
 | `lopes-ui/code-block` | `components/CodeBlock.tsx` | Bloco de código com syntax highlight Shiki v4 (requer `--code`) |
-| `lopes-ui/hooks` | `hooks/index.ts` | `useAsyncButton`, `useAsyncAutocomplete`, `useMediaQuery`, `useIsMobile`, `useIsCompactViewport`, `useIsBigLarMobileApp`, `useModal`, `useToast`, `useGlobalKeyShortcuts`, `useBodyScrollLock`, `useSmartPosition`, `useSoundNotification` |
+| `lopes-ui/hooks` | `hooks/index.ts` | `useAsyncButton`, `useAsyncAutocomplete`, `useMediaQuery`, `useIsMobile`, `useIsCompactViewport`, `useIsLopesMobileApp`, `useModal`, `useToast`, `useGlobalKeyShortcuts`, `useBodyScrollLock`, `useSmartPosition`, `useSoundNotification` |
 | `lopes-ui/utils` | `utils/index.ts` | `cn`, `currency`, `date`, `document` (CPF/CNPJ alfanumérico), `extenso`, `exporters`, `crossTabSync`, `filterNavItems`, `file`, `overlay`, `sanitize`, `string` |
 | `lopes-ui/styles.css` | `styles/lopes-ui.css` | Folha de estilos e tokens CSS para importação no `globals.css` |
 
