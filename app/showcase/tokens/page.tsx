@@ -356,7 +356,7 @@ export default function TokensPage() {
                 Conforto e qualidade para o seu lar
               </p>
               <p className="font-sans text-sm text-muted-foreground">
-                BigLar Móveis &amp; Eletro — gestão integrada de lojas em Rondônia (RO) e Amazonas (AM).
+                Lopes ERP — gestão integrada de lojas em Rondônia (RO) e Amazonas (AM).
               </p>
             </div>
 
