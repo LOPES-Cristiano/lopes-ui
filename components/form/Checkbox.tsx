@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Check, Minus } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import { twMerge } from 'tailwind-merge';
 import { useAccessControl } from '../useAccessControl';
 
@@ -48,6 +48,7 @@ export default function Checkbox({
   hideIfDenied = false,
 }: CheckboxProps) {
   const { canAccess } = useAccessControl();
+  const prefersReducedMotion = useReducedMotion();
   const hasPermission = !componentId || canAccess(componentId);
   const effectiveDisabled = disabled || !hasPermission;
   const [internalChecked, setInternalChecked] = React.useState(defaultChecked);
@@ -61,8 +62,12 @@ export default function Checkbox({
   }
 
   const dimensions =
-    size === 'lg' ? 'h-7 w-7' : size === 'md' ? 'h-6 w-6' : 'h-4.5 w-4.5 min-h-[18px] min-w-[18px]';
-  const iconSize = size === 'lg' ? 17 : size === 'md' ? 15 : 12;
+    size === 'lg'
+      ? 'h-7 w-7 min-h-[28px] min-w-[28px]'
+      : size === 'md'
+        ? 'h-6 w-6 min-h-[24px] min-w-[24px]'
+        : 'h-[18px] w-[18px] min-h-[18px] min-w-[18px]';
+  const iconSize = size === 'lg' ? 16 : size === 'md' ? 14 : 12;
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (effectiveDisabled) return;
@@ -104,7 +109,7 @@ export default function Checkbox({
       disabled={effectiveDisabled}
       onClick={handleClick}
       className={twMerge(
-        'inline-flex items-center justify-center rounded-md border transition-[background-color,border-color,color,box-shadow,transform] duration-150 cursor-pointer shrink-0 select-none active:scale-95 motion-reduce:transform-none',
+        'inline-flex items-center justify-center p-0 box-border rounded-md border transition-[background-color,border-color,color,box-shadow,transform] duration-150 cursor-pointer shrink-0 select-none active:scale-95 motion-reduce:transform-none',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         dimensions,
         selected
@@ -114,11 +119,39 @@ export default function Checkbox({
         !labelText && className
       )}
     >
-      {indeterminate ? (
-        <Minus size={iconSize} strokeWidth={3} />
-      ) : isChecked ? (
-        <Check size={iconSize} strokeWidth={3} />
-      ) : null}
+      <svg
+        width={iconSize}
+        height={iconSize}
+        viewBox="0 0 16 16"
+        fill="none"
+        aria-hidden="true"
+        className="block shrink-0"
+      >
+        {indeterminate ? (
+          <motion.path
+            key="checkbox-indeterminate"
+            d="M3.5 8H12.5"
+            stroke="currentColor"
+            strokeWidth="2.6"
+            strokeLinecap="round"
+            initial={prefersReducedMotion ? false : { pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+          />
+        ) : isChecked ? (
+          <motion.path
+            key="checkbox-check"
+            d="M3.2 8.4L6.4 11.6L12.8 4.8"
+            stroke="currentColor"
+            strokeWidth="2.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            initial={prefersReducedMotion ? false : { pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          />
+        ) : null}
+      </svg>
     </button>
   );
 
