@@ -458,7 +458,7 @@ const PRESET_CATALOG: ReadonlyArray<{ id: PresetId; name: string; fn: string; sn
     id: "truck",
     name: "Caminhão Logística",
     fn: "createTruckPreset",
-    snippet: `const rota = createTruckPreset({ id: "rota", x: 80, y: 78, label: "BIGLAR" });`,
+    snippet: `const rota = createTruckPreset({ id: "rota", x: 80, y: 78, label: "LOPES" });`,
   },
 ];
 
@@ -470,7 +470,7 @@ function createPresetsGalleryScene() {
   const coins = createCoinStackPreset({ id: "p-cx", x: 126, y: 80, count: 5, label: "R$" });
   const cert = createCertificatePreset({ id: "p-dre", x: 100, y: 86 });
   const reader = createCardReaderPreset({ id: "p-pix", x: 120, y: 58, label: "PIX" });
-  const truck = createTruckPreset({ id: "p-trk", x: 80, y: 78, label: "BIGLAR" });
+  const truck = createTruckPreset({ id: "p-trk", x: 80, y: 78, label: "LOPES" });
 
   return makeScene({
     parts: combinePresets(terminal, server, pallet, db, coins, cert, reader, truck),
