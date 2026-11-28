@@ -65,7 +65,7 @@ export function renderExtendedElementJsx(
 
     case "aspect_ratio":
       ctx.lopesImports.add("AspectRatio");
-      return `<AspectRatio ratio={${asNum(p.ratio, 16 / 9)}}>\n  <div className="h-full w-full rounded-xl bg-indigo-50 flex items-center justify-center p-4">${esc(asStr(p.caption, "Ambiente BigLar"))}</div>\n</AspectRatio>`;
+      return `<AspectRatio ratio={${asNum(p.ratio, 16 / 9)}}>\n  <div className="h-full w-full rounded-xl bg-indigo-50 flex items-center justify-center p-4">${esc(asStr(p.caption, "Ambiente Lopes"))}</div>\n</AspectRatio>`;
 
     case "bento_grid":
       ctx.lopesImports.add("BentoGrid");
@@ -108,16 +108,16 @@ export function renderExtendedElementJsx(
         return `<CodeMockup>\n  <pre data-prefix="$"><code>npm run sync:cds -- --region=RO,AM</code></pre>\n</CodeMockup>`;
       }
       ctx.lopesImports.add("BrowserMockup");
-      return `<BrowserMockup url=${q(p.url, "https://erp.biglar.com.br")}>\n  <div className="p-4">${esc(asStr(p.body))}</div>\n</BrowserMockup>`;
+      return `<BrowserMockup url=${q(p.url, "https://erp.lopes.app")}>\n  <div className="p-4">${esc(asStr(p.body))}</div>\n</BrowserMockup>`;
     }
 
     case "watermark":
       ctx.lopesImports.add("Watermark");
-      return `<Watermark content=${q(p.content, "BIGLAR INTERNO")} rotate={${asNum(p.rotate, -22)}} opacity={${asNum(p.opacity, 0.14)}}>\n  <div className="p-4">${esc(asStr(p.bodyTitle, "Documento Protegido"))}</div>\n</Watermark>`;
+      return `<Watermark content=${q(p.content, "USO INTERNO")} rotate={${asNum(p.rotate, -22)}} opacity={${asNum(p.opacity, 0.14)}}>\n  <div className="p-4">${esc(asStr(p.bodyTitle, "Documento Protegido"))}</div>\n</Watermark>`;
 
     case "mask":
       ctx.lopesImports.add("Mask");
-      return `<Mask shape=${q(p.shape, "squircle")} className="h-40 w-40 bg-indigo-600 text-white flex items-center justify-center">${esc(asStr(p.label, "BigLar"))}</Mask>`;
+      return `<Mask shape=${q(p.shape, "squircle")} className="h-40 w-40 bg-indigo-600 text-white flex items-center justify-center">${esc(asStr(p.label, "Lopes"))}</Mask>`;
 
     case "carousel":
       ctx.lopesImports.add("Carousel");
@@ -191,7 +191,7 @@ export function renderExtendedElementJsx(
     case "map":
       ctx.lopesImports.add("Map");
       ctx.lopesImports.add("MapMarker");
-      return `<Map${cid} center={[${asNum(p.longitude, -63.9039)}, ${asNum(p.latitude, -8.7619)}]} zoom={${asNum(p.zoom, 11)}} theme=${q(p.theme, "liberty")} className="h-80 w-full rounded-xl">\n  <MapMarker longitude={${asNum(p.longitude, -63.9039)}} latitude={${asNum(p.latitude, -8.7619)}}>\n    <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-xs text-white">${esc(asStr(p.markerLabel, "BigLar RO"))}</span>\n  </MapMarker>\n</Map>`;
+      return `<Map${cid} center={[${asNum(p.longitude, -63.9039)}, ${asNum(p.latitude, -8.7619)}]} zoom={${asNum(p.zoom, 11)}} theme=${q(p.theme, "liberty")} className="h-80 w-full rounded-xl">\n  <MapMarker longitude={${asNum(p.longitude, -63.9039)}} latitude={${asNum(p.latitude, -8.7619)}}>\n    <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-xs text-white">${esc(asStr(p.markerLabel, "Filial RO"))}</span>\n  </MapMarker>\n</Map>`;
 
     case "cookie_banner":
       ctx.lopesImports.add("CookieBanner");
@@ -204,7 +204,7 @@ export function renderExtendedElementJsx(
     // ── Navegação ───────────────────────────────────────────────────────────
     case "header":
       ctx.lopesImports.add("Header");
-      return `<Header${cid} brand={<span className="font-bold">${esc(asStr(p.brandName, "BigLar Móveis & Eletro"))}</span>} nav={[{ label: "Dashboard", href: "/" }, { label: "Pedidos RO/AM", href: "/pedidos" }]} />`;
+      return `<Header${cid} brand={<span className="font-bold">${esc(asStr(p.brandName, "Lopes ERP"))}</span>} nav={[{ label: "Dashboard", href: "/" }, { label: "Pedidos RO/AM", href: "/pedidos" }]} />`;
 
     case "sidebar":
       ctx.lopesImports.add("Sidebar");
@@ -224,7 +224,7 @@ export function renderExtendedElementJsx(
       ctx.lopesImports.add("AppLauncher");
       ctx.lucideImports.add("ShoppingBag");
       ctx.lucideImports.add("Boxes");
-      return `<AppLauncher${cid} title=${q(p.title, "Módulos BigLar")} searchable={${asBool(p.searchable, true)}} columns={${asNum(p.columns, 3)}} apps={[{ id: "vendas", label: "Vendas", icon: ShoppingBag }, { id: "estoque", label: "Estoque CDs", icon: Boxes }]} />`;
+      return `<AppLauncher${cid} title=${q(p.title, "Módulos Lopes")} searchable={${asBool(p.searchable, true)}} columns={${asNum(p.columns, 3)}} apps={[{ id: "vendas", label: "Vendas", icon: ShoppingBag }, { id: "estoque", label: "Estoque CDs", icon: Boxes }]} />`;
 
     case "command_menu":
       ctx.lopesImports.add("CommandMenu");
@@ -538,9 +538,9 @@ export function renderExtendedElementJsx(
       const s = `setTenantOpen${idx}`;
       ctx.stateVars.push({ varName: v, setterName: s, comment: el.name });
       ctx.overlayModalsJsx.push(
-        `<TenantSwitcherModal open={${v}} onClose={() => ${s}(false)} title=${q(p.title)} tenants={[{ id: "ro-pvh", name: "BigLar Porto Velho (RO)" }]} onSelect={() => ${s}(false)} />`,
+        `<TenantSwitcherModal open={${v}} onClose={() => ${s}(false)} title=${q(p.title)} tenants={[{ id: "ro-pvh", name: "Filial Porto Velho (RO)" }]} onSelect={() => ${s}(false)} />`,
       );
-      return `<TenantSwitcherTrigger${cid} currentTenant={{ id: "ro-pvh", name: "BigLar Porto Velho (RO)" }} onClick={() => ${s}(true)} />`;
+      return `<TenantSwitcherTrigger${cid} currentTenant={{ id: "ro-pvh", name: "Filial Porto Velho (RO)" }} onClick={() => ${s}(true)} />`;
     }
 
     case "cnpj_lookup_modal": {
@@ -551,7 +551,7 @@ export function renderExtendedElementJsx(
       const s = `setCnpjOpen${idx}`;
       ctx.stateVars.push({ varName: v, setterName: s, comment: el.name });
       ctx.overlayModalsJsx.push(
-        `<CnpjLookupModal open={${v}} onClose={() => ${s}(false)} title=${q(p.title)} onLookupCnpj={async (cnpj) => ({ cnpj, legalName: "BigLar Móveis e Eletrodomésticos Ltda." })} onConfirm={() => ${s}(false)} />`,
+        `<CnpjLookupModal open={${v}} onClose={() => ${s}(false)} title=${q(p.title)} onLookupCnpj={async (cnpj) => ({ cnpj, legalName: "Lopes Sistemas Corporativos Ltda." })} onConfirm={() => ${s}(false)} />`,
       );
       return `<Button${cid} variant="outline" onClick={() => ${s}(true)}>${esc(asStr(p.triggerLabel, "Consultar CNPJ"))}</Button>`;
     }
