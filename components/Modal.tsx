@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import { cn } from '../utils/cn';
 import { hasOpenFloatingOverlay } from '../utils/overlay';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
@@ -145,7 +146,7 @@ export interface ModalProps {
     | 'compact'
     | 'xlVertical'
     | 'mdVertical';
-  variant?: 'square' | 'rounded';
+  variant?: 'square' | 'rounded' | 'animated';
   footer?: React.ReactNode;
   footerClassName?: string;
   headerClassName?: string;
@@ -159,6 +160,8 @@ export interface ModalProps {
   offsetHeader?: boolean;
   withinShell?: boolean;
   animation?: 'slide-right' | 'slide-left' | 'slide-from-right' | 'drawer' | 'zoom' | 'fade';
+  /** Enables spring motion entrance/exit regardless of `variant`. Default: true (unless a custom `animation` is passed) */
+  animated?: boolean;
   componentId?: string;
   zIndex?: number;
   /** Whether clicking the backdrop closes the modal. Default: true */
@@ -197,7 +200,7 @@ export default function Modal({
   maxHeight,
   compact = false,
   size,
-  variant = 'square',
+  variant = 'animated',
   footer,
   footerClassName,
   headerClassName,
@@ -211,12 +214,18 @@ export default function Modal({
   offsetHeader = false,
   withinShell = false,
   animation,
+  animated,
   componentId,
   zIndex,
   closeOnBackdrop = true,
 }: ModalProps) {
   const resolvedOpen = Boolean(isOpen !== undefined ? isOpen : (open ?? true));
   const isActuallyOpen = resolvedOpen;
+  const prefersReducedMotion = useReducedMotion();
+  const isAnimatedVariant =
+    animated !== undefined
+      ? animated
+      : variant === 'animated' || (!animation && !offsetHeader && !withinShell && size !== 'fullscreen');
   const titleId = React.useId();
   const descriptionId = React.useId();
   const cardRef = React.useRef<HTMLDivElement>(null);
@@ -422,6 +431,130 @@ export default function Modal({
   const modalRoot = shellContainer || (typeof document !== 'undefined' ? document.body : null);
   if (!modalRoot) return null;
 
+  const modalCardInner = (
+    <>
+      {/* Header */}
+      {(title || description) && (
+        <div
+          className={cn(
+            'flex items-center justify-between border-b border-border px-4 py-3 sm:px-6 sm:py-3.5 shrink-0',
+            headerClassName
+          )}
+        >
+          <div className="min-w-0 pr-4">
+            {title && (
+              <div
+                id={titleId}
+                className={cn(
+                  'text-base sm:text-lg font-semibold text-foreground leading-tight break-words text-balance',
+                  headerClassName && 'text-inherit'
+                )}
+              >
+                {title}
+              </div>
+            )}
+            {description && (
+              <p
+                id={descriptionId}
+                className={cn(
+                  'text-xs text-muted-foreground mt-0.5 text-pretty',
+                  headerClassName && 'text-inherit opacity-80'
+                )}
+              >
+                {description}
+              </p>
+            )}
+          </div>
+          <button
+            data-component-id={componentId ? `${componentId}.close` : 'erp.modal.close'}
+            type="button"
+            onClick={onClose}
+            className={cn(
+              'inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none cursor-pointer shrink-0',
+              headerClassName && 'text-inherit opacity-85 hover:opacity-100 hover:bg-white/20 dark:hover:bg-white/20 focus-visible:ring-white/40',
+              closeButtonClassName
+            )}
+            aria-label="Fechar"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Sem header explícito mas ainda precisa de botão fechar se não houver footer ou cabeçalho */}
+      {!title && !description && !hideCloseButton && (
+        <button
+          data-component-id={componentId ? `${componentId}.close-icon` : 'erp.modal.close-icon'}
+          type="button"
+          onClick={onClose}
+          className="absolute top-3.5 right-3.5 z-20 inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
+          aria-label="Fechar"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
+
+      {/* Body */}
+      <div
+        style={{
+          ...(!noPadding && padding !== undefined
+            ? { padding: typeof padding === 'number' ? `${padding}px` : padding }
+            : {}),
+        }}
+        className={cn('flex-1 overflow-y-auto overscroll-contain min-h-0', paddingClass, bodyClassName)}
+      >
+        {children}
+      </div>
+
+      {/* Footer */}
+      {footer && (
+        <div
+          className={cn(
+            'border-t border-border bg-card shrink-0',
+            noPadding ? 'p-0' : 'px-4 py-3 sm:px-6 sm:py-3.5',
+            isFullscreen
+              ? 'rounded-none'
+              : isFullscreenMobile
+                ? 'rounded-none sm:rounded-b-2xl'
+                : variant === 'square'
+                  ? 'rounded-none'
+                  : 'rounded-b-2xl',
+            footerClassName
+          )}
+        >
+          {footer}
+        </div>
+      )}
+    </>
+  );
+
+  const modalCardClassName = cn(
+    'relative z-10 flex flex-col bg-card border border-border text-card-foreground shadow-[var(--shadow-overlay)] overflow-hidden outline-none antialiased',
+    !isAnimatedVariant && animationClass,
+    isFullscreen
+      ? 'rounded-none border-0 h-full w-full'
+      : isFullscreenMobile
+        ? variant === 'square'
+          ? 'rounded-none sm:rounded-[var(--radius-card)] border-0 sm:border h-full sm:h-auto'
+          : 'rounded-none sm:rounded-[var(--radius-overlay)] border-0 sm:border h-full sm:h-auto'
+        : variant === 'rounded' || variant === 'animated'
+          ? 'rounded-[var(--radius-overlay)]'
+          : variant === 'square'
+            ? 'rounded-[var(--radius-card)]'
+            : shellContainer
+              ? 'rounded-[var(--radius-overlay)]'
+              : 'rounded-[var(--radius-card)]',
+    className
+  );
+
+  const modalCardStyle: React.CSSProperties = {
+    width: '100%',
+    maxWidth: finalMaxWidth,
+    height: finalHeight,
+    minHeight: finalMinHeight,
+    maxHeight: finalMaxHeight,
+  };
+
   return createPortal(
     <div
       role="dialog"
@@ -443,151 +576,88 @@ export default function Modal({
       )}
     >
       {/* Overlay Backdrop com Blur */}
-      <div
-        className={cn(
-          shellContainer
-            ? 'absolute inset-0 bg-black/55 backdrop-blur-xs transition-opacity'
-            : 'fixed inset-0 bg-black/55 backdrop-blur-xs transition-opacity',
-          isClosing
-            ? 'animate-out fade-out-0 duration-150 pointer-events-none motion-reduce:animate-none'
-            : 'animate-in fade-in-0 duration-200 motion-reduce:animate-none',
-          !shellContainer && offsetHeader && 'top-14'
-        )}
-        onClick={
-          closeOnBackdrop
-            ? () => {
-                if (!hasOpenFloatingOverlay()) {
-                  onClose();
+      {isAnimatedVariant ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isClosing ? 0 : 1 }}
+          transition={{ duration: prefersReducedMotion ? 0.01 : isClosing ? 0.16 : 0.22 }}
+          className={cn(
+            shellContainer
+              ? 'absolute inset-0 bg-black/55 backdrop-blur-sm'
+              : 'fixed inset-0 bg-black/55 backdrop-blur-sm',
+            isClosing && 'pointer-events-none',
+            !shellContainer && offsetHeader && 'top-14'
+          )}
+          onClick={
+            closeOnBackdrop
+              ? () => {
+                  if (!hasOpenFloatingOverlay()) {
+                    onClose();
+                  }
                 }
-              }
-            : undefined
-        }
-        aria-hidden="true"
-      />
+              : undefined
+          }
+          aria-hidden="true"
+        />
+      ) : (
+        <div
+          className={cn(
+            shellContainer
+              ? 'absolute inset-0 bg-black/55 backdrop-blur-xs transition-opacity'
+              : 'fixed inset-0 bg-black/55 backdrop-blur-xs transition-opacity',
+            isClosing
+              ? 'animate-out fade-out-0 duration-150 pointer-events-none motion-reduce:animate-none'
+              : 'animate-in fade-in-0 duration-200 motion-reduce:animate-none',
+            !shellContainer && offsetHeader && 'top-14'
+          )}
+          onClick={
+            closeOnBackdrop
+              ? () => {
+                  if (!hasOpenFloatingOverlay()) {
+                    onClose();
+                  }
+                }
+              : undefined
+          }
+          aria-hidden="true"
+        />
+      )}
 
       {/* Modal Card */}
-      <div
-        ref={cardRef}
-        tabIndex={-1}
-        style={{
-          width: '100%',
-          maxWidth: finalMaxWidth,
-          height: finalHeight,
-          minHeight: finalMinHeight,
-          maxHeight: finalMaxHeight,
-        }}
-        className={cn(
-          'relative z-10 flex flex-col bg-card border border-border text-card-foreground shadow-[var(--shadow-overlay)] overflow-hidden outline-none antialiased',
-          animationClass,
-          isFullscreen
-            ? 'rounded-none border-0 h-full w-full'
-            : isFullscreenMobile
-              ? variant === 'square'
-                ? 'rounded-none sm:rounded-[var(--radius-card)] border-0 sm:border h-full sm:h-auto'
-                : 'rounded-none sm:rounded-[var(--radius-overlay)] border-0 sm:border h-full sm:h-auto'
-              : variant === 'rounded'
-                ? 'rounded-[var(--radius-overlay)]'
-                : variant === 'square'
-                  ? 'rounded-[var(--radius-card)]'
-                  : shellContainer
-                    ? 'rounded-[var(--radius-overlay)]'
-                    : 'rounded-[var(--radius-card)]',
-          className
-        )}
-      >
-        {/* Header */}
-        {(title || description) && (
-          <div
-            className={cn(
-              'flex items-center justify-between border-b border-border px-4 py-3 sm:px-6 sm:py-3.5 shrink-0',
-              headerClassName
-            )}
-          >
-            <div className="min-w-0 pr-4">
-              {title && (
-                <div
-                  id={titleId}
-                  className={cn(
-                    'text-base sm:text-lg font-semibold text-foreground leading-tight break-words text-balance',
-                    headerClassName && 'text-inherit'
-                  )}
-                >
-                  {title}
-                </div>
-              )}
-              {description && (
-                <p
-                  id={descriptionId}
-                  className={cn(
-                    'text-xs text-muted-foreground mt-0.5 text-pretty',
-                    headerClassName && 'text-inherit opacity-80'
-                  )}
-                >
-                  {description}
-                </p>
-              )}
-            </div>
-            <button
-              data-component-id={componentId ? `${componentId}.close` : 'erp.modal.close'}
-              type="button"
-              onClick={onClose}
-              className={cn(
-                'inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none cursor-pointer shrink-0',
-                headerClassName && 'text-inherit opacity-85 hover:opacity-100 hover:bg-white/20 dark:hover:bg-white/20 focus-visible:ring-white/40',
-                closeButtonClassName
-              )}
-              aria-label="Fechar"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-
-        {/* Sem header explícito mas ainda precisa de botão fechar se não houver footer ou cabeçalho */}
-        {!title && !description && !hideCloseButton && (
-          <button
-            data-component-id={componentId ? `${componentId}.close-icon` : 'erp.modal.close-icon'}
-            type="button"
-            onClick={onClose}
-            className="absolute top-3.5 right-3.5 z-20 inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground opacity-75 transition-colors hover:opacity-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
-            aria-label="Fechar"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-
-        {/* Body */}
-        <div
-          style={{
-            ...(!noPadding && padding !== undefined
-              ? { padding: typeof padding === 'number' ? `${padding}px` : padding }
-              : {}),
-          }}
-          className={cn('flex-1 overflow-y-auto overscroll-contain min-h-0', paddingClass, bodyClassName)}
+      {isAnimatedVariant ? (
+        <motion.div
+          ref={cardRef}
+          tabIndex={-1}
+          style={modalCardStyle}
+          initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.93, y: 18 }}
+          animate={
+            prefersReducedMotion
+              ? { opacity: isClosing ? 0 : 1 }
+              : isClosing
+                ? { opacity: 0, scale: 0.96, y: 10 }
+                : { opacity: 1, scale: 1, y: 0 }
+          }
+          transition={
+            prefersReducedMotion
+              ? { duration: 0.01 }
+              : isClosing
+                ? { duration: 0.15, ease: [0.4, 0, 1, 1] }
+                : { type: 'spring', stiffness: 420, damping: 30, mass: 0.8 }
+          }
+          className={cn(modalCardClassName, isClosing && 'pointer-events-none')}
         >
-          {children}
+          {modalCardInner}
+        </motion.div>
+      ) : (
+        <div
+          ref={cardRef}
+          tabIndex={-1}
+          style={modalCardStyle}
+          className={modalCardClassName}
+        >
+          {modalCardInner}
         </div>
-
-        {/* Footer */}
-        {footer && (
-          <div
-            className={cn(
-              'border-t border-border bg-card shrink-0',
-              noPadding ? 'p-0' : 'px-4 py-3 sm:px-6 sm:py-3.5',
-              isFullscreen
-                ? 'rounded-none'
-                : isFullscreenMobile
-                  ? 'rounded-none sm:rounded-b-2xl'
-                  : variant === 'square'
-                    ? 'rounded-none'
-                    : 'rounded-b-2xl',
-              footerClassName
-            )}
-          >
-            {footer}
-          </div>
-        )}
-      </div>
+      )}
     </div>,
     modalRoot
   );
