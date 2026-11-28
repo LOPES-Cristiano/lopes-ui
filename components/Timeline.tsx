@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { twMerge } from "tailwind-merge";
 import { ChevronDown, Loader2, type LucideIcon } from "lucide-react";
 
@@ -159,6 +160,8 @@ function EventCard({
   const color = item.color ?? "default";
   const c = COLOR_MAP[color];
   const [expanded, setExpanded] = useState(item.defaultExpanded ?? true);
+  const reducedMotion = useReducedMotion();
+  const showDescription = !item.collapsible || expanded;
 
   return (
     <div
@@ -167,7 +170,7 @@ function EventCard({
         align === "right" ? "items-end text-right" : "items-start text-left",
       )}
     >
-      <div className="flex flex-col gap-0.5 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-sm px-4 py-3 max-w-sm w-full">
+      <div className="flex flex-col gap-0.5 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 hover:border-zinc-200 dark:hover:border-zinc-700 rounded-xl shadow-sm hover:shadow-md transition-[border-color,box-shadow] duration-200 px-4 py-3 max-w-sm w-full">
         <div
           onClick={item.collapsible ? () => setExpanded((v) => !v) : undefined}
           className={twMerge(
@@ -185,15 +188,29 @@ function EventCard({
             </span>
           )}
           {item.collapsible && (
-            <ChevronDown
-              size={14}
-              className={twMerge("text-zinc-400 transition-transform", !expanded && "-rotate-90")}
-            />
+            <motion.span
+              initial={false}
+              animate={{ rotate: expanded ? 0 : -90 }}
+              transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 28 }}
+              className="inline-flex text-zinc-400"
+            >
+              <ChevronDown size={14} />
+            </motion.span>
           )}
         </div>
-        {item.description && (!item.collapsible || expanded) && (
-          <div className={twMerge("text-zinc-500 dark:text-zinc-400 mt-0.5", s.body)}>
-            {item.description}
+        {item.description && (
+          <div
+            aria-hidden={!showDescription}
+            className={twMerge(
+              "grid transition-[grid-template-rows,opacity] duration-250 ease-out motion-reduce:transition-none",
+              showDescription ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+            )}
+          >
+            <div className="overflow-hidden">
+              <div className={twMerge("text-zinc-500 dark:text-zinc-400 mt-0.5", s.body)}>
+                {item.description}
+              </div>
+            </div>
           </div>
         )}
         {item.date && (
@@ -213,6 +230,8 @@ function SimpleCard({ item, size }: { item: TimelineItem; size: TimelineSize }) 
   const color = item.color ?? "default";
   const c = COLOR_MAP[color];
   const [expanded, setExpanded] = useState(item.defaultExpanded ?? true);
+  const reducedMotion = useReducedMotion();
+  const showDescription = !item.collapsible || expanded;
 
   return (
     <div className="flex flex-col gap-0.5">
@@ -232,14 +251,28 @@ function SimpleCard({ item, size }: { item: TimelineItem; size: TimelineSize }) 
           </span>
         )}
         {item.collapsible && (
-          <ChevronDown
-            size={14}
-            className={twMerge("text-zinc-400 transition-transform", !expanded && "-rotate-90")}
-          />
+          <motion.span
+            initial={false}
+            animate={{ rotate: expanded ? 0 : -90 }}
+            transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 28 }}
+            className="inline-flex text-zinc-400"
+          >
+            <ChevronDown size={14} />
+          </motion.span>
         )}
       </div>
-      {item.description && (!item.collapsible || expanded) && (
-        <div className={twMerge("text-zinc-500 dark:text-zinc-400", s.body)}>{item.description}</div>
+      {item.description && (
+        <div
+          aria-hidden={!showDescription}
+          className={twMerge(
+            "grid transition-[grid-template-rows,opacity] duration-250 ease-out motion-reduce:transition-none",
+            showDescription ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+          )}
+        >
+          <div className="overflow-hidden">
+            <div className={twMerge("text-zinc-500 dark:text-zinc-400", s.body)}>{item.description}</div>
+          </div>
+        </div>
       )}
       {item.date && (
         <p className={twMerge("text-zinc-400 mt-0.5", s.date)}>{item.date}</p>
