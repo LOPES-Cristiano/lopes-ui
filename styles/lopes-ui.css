@@ -242,7 +242,7 @@
 .dark {
   color-scheme: dark;
 
-  /* Paleta grafite (alinhada ao padrão biglar-erp) */
+  /* Paleta grafite (alinhada ao padrão corporativo) */
   --background: #1e1e1e;
   --foreground: #d4d4d4;
 
@@ -1812,5 +1812,127 @@ input::-webkit-search-results-decoration {
   .lopes-chart svg rect,
   .lopes-chart svg path {
     stroke: CanvasText;
+  }
+}
+
+/* ── Variante `animated` (shimmer wave & barra indeterminada) ────────────── */
+@keyframes lopes-shimmer-wave {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes lopes-indeterminate-sweep {
+  0% {
+    transform: translateX(-100%) scaleX(0.35);
+  }
+  50% {
+    transform: translateX(30%) scaleX(0.65);
+  }
+  100% {
+    transform: translateX(130%) scaleX(0.35);
+  }
+}
+
+.lopes-shimmer-bone {
+  position: relative;
+  overflow: hidden;
+  background-color: color-mix(in srgb, var(--surface-muted) 88%, var(--border) 12%);
+}
+
+.lopes-shimmer-bone::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--surface) 75%, transparent) 46%,
+    color-mix(in srgb, var(--surface) 92%, var(--foreground) 4%) 52%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: lopes-shimmer-wave 1.55s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-delay: var(--shimmer-delay, 0ms);
+  will-change: transform;
+}
+
+.lopes-indeterminate-bar {
+  animation: lopes-indeterminate-sweep 1.45s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  transform-origin: left center;
+  will-change: transform;
+}
+
+@keyframes lopes-skeleton-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lopes-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes lopes-draw-stroke {
+  from {
+    stroke-dashoffset: 1;
+    opacity: 0.2;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.lopes-skeleton-row-in {
+  animation: lopes-skeleton-row-in 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--row-enter-delay, 0ms);
+}
+
+.lopes-pop-in {
+  animation: lopes-pop-in 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.lopes-draw-stroke {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: lopes-draw-stroke 0.32s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+}
+
+/* Preserva `position: sticky` (header/sidebar) quando Radix `react-remove-scroll` trava o scroll */
+html:has(body[data-scroll-locked]) {
+  overflow: hidden !important;
+}
+html body[data-scroll-locked] {
+  overflow: visible !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lopes-shimmer-bone::after,
+  .lopes-indeterminate-bar,
+  .lopes-skeleton-row-in,
+  .lopes-pop-in,
+  .lopes-draw-stroke {
+    animation: none;
+    stroke-dashoffset: 0;
   }
 }
