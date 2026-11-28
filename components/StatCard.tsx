@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { twMerge } from "tailwind-merge";
 import { TrendingUp, TrendingDown, Minus, type LucideIcon } from "lucide-react";
 import { useAccessControl } from "./useAccessControl";
@@ -45,6 +46,10 @@ export type StatCardProps = {
   color?: StatCardColor;
   /** Loading skeleton */
   loading?: boolean;
+  /** Subtle radial spotlight that follows the pointer on hover (zero React re-renders) */
+  spotlight?: boolean;
+  /** Custom CSS color for the spotlight glow */
+  spotlightColor?: string;
   onClick?: () => void;
   className?: string;
   componentId?: string;
@@ -191,11 +196,31 @@ function TrendBadge({ trend }: { trend: StatCardTrend }) {
   );
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
+// ── Skeleton & Spotlight helpers ──────────────────────────────────────────────
 
 function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={twMerge("animate-pulse motion-reduce:animate-none rounded bg-muted", className)} />
+    <div className={twMerge("lopes-shimmer-bone rounded", className)} />
+  );
+}
+
+function handleSpotlightMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+  const rect = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty("--spot-x", `${e.clientX - rect.left}px`);
+  e.currentTarget.style.setProperty("--spot-y", `${e.clientY - rect.top}px`);
+}
+
+function SpotlightOverlay({ color }: { color?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 transition-opacity duration-300 group-hover/stat:opacity-100 motion-reduce:hidden"
+      style={{
+        background: `radial-gradient(280px circle at var(--spot-x, 50%) var(--spot-y, 50%), ${
+          color ?? "color-mix(in oklab, var(--brand, #6366f1) 12%, transparent)"
+        }, transparent 75%)`,
+      }}
+    />
   );
 }
 
@@ -214,12 +239,15 @@ export default function StatCard({
   icon: Icon,
   color = "default",
   loading = false,
+  spotlight = false,
+  spotlightColor,
   onClick,
   className,
   componentId,
   hideIfDenied = false,
 }: StatCardProps) {
   const { canAccess } = useAccessControl();
+  const reducedMotion = useReducedMotion();
   const hasPermission = !componentId || canAccess(componentId);
   if (!hasPermission && hideIfDenied) return null;
 
@@ -233,6 +261,7 @@ export default function StatCard({
       role={onClick && hasPermission ? "button" : undefined}
       tabIndex={onClick && hasPermission ? 0 : undefined}
       onClick={hasPermission ? onClick : undefined}
+      onMouseMove={spotlight ? handleSpotlightMouseMove : undefined}
       onKeyDown={
         onClick && hasPermission
           ? (e) => {
@@ -245,7 +274,7 @@ export default function StatCard({
           : undefined
       }
       className={twMerge(
-        "@container/stat group/stat relative flex flex-col gap-1.5 sm:gap-3 rounded-[var(--radius-card)] border border-border",
+        "@container/stat group/stat relative overflow-hidden flex flex-col gap-1.5 sm:gap-3 rounded-[var(--radius-card)] border border-border",
         "bg-card p-2.5 sm:p-5 text-left text-card-foreground shadow-[var(--shadow-card)] w-full",
         !hasPermission && "opacity-60 pointer-events-none",
         onClick &&
@@ -254,6 +283,7 @@ export default function StatCard({
         className,
       )}
     >
+      {spotlight && <SpotlightOverlay color={spotlightColor} />}
       {/* Top row: icon + sparkline */}
       <div className="flex items-start justify-between gap-2 sm:gap-3">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -333,9 +363,16 @@ export default function StatCard({
       {!loading && clampedProgress !== undefined && (
         <div className="mt-1 flex flex-col gap-1">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none"
-              style={{ width: `${clampedProgress}%`, backgroundColor: sparkColor }}
+            <motion.div
+              initial={false}
+              animate={{ width: `${clampedProgress}%` }}
+              transition={
+                reducedMotion
+                  ? { duration: 0 }
+                  : { type: "spring", stiffness: 180, damping: 26, mass: 0.9 }
+              }
+              className="h-full rounded-full"
+              style={{ backgroundColor: sparkColor }}
             />
           </div>
           {progressLabel && (
@@ -404,6 +441,9 @@ export type StatsSegmentsCardProps = {
   icon?: LucideIcon;
   segments: StatSegment[];
   loading?: boolean;
+  /** Subtle radial spotlight on hover */
+  spotlight?: boolean;
+  spotlightColor?: string;
   className?: string;
   componentId?: string;
   hideIfDenied?: boolean;
@@ -417,11 +457,14 @@ export function StatsSegmentsCard({
   icon: Icon,
   segments,
   loading = false,
+  spotlight = false,
+  spotlightColor,
   className,
   componentId,
   hideIfDenied = false,
 }: StatsSegmentsCardProps) {
   const { canAccess } = useAccessControl();
+  const reducedMotion = useReducedMotion();
   const hasPermission = !componentId || canAccess(componentId);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
@@ -432,12 +475,14 @@ export function StatsSegmentsCard({
   return (
     <div
       {...(componentId ? { "data-component-id": componentId } : {})}
+      onMouseMove={spotlight ? handleSpotlightMouseMove : undefined}
       className={twMerge(
-        "flex flex-col gap-4 rounded-[var(--radius-card)] border border-border bg-card p-5 text-card-foreground shadow-[var(--shadow-card)]",
+        "group/stat relative overflow-hidden flex flex-col gap-4 rounded-[var(--radius-card)] border border-border bg-card p-5 text-card-foreground shadow-[var(--shadow-card)]",
         !hasPermission && "opacity-60 pointer-events-none",
         className,
       )}
     >
+      {spotlight && <SpotlightOverlay color={spotlightColor} />}
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -478,11 +523,18 @@ export function StatsSegmentsCard({
             const hex = resolveStatHexColor(seg.color, i);
             const dimmed = hoveredIdx !== null && hoveredIdx !== i;
             return (
-              <div
+              <motion.div
                 key={`${seg.label}-${i}`}
+                initial={false}
+                animate={{ width: `${widthPct}%` }}
+                transition={
+                  reducedMotion
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 200, damping: 26, mass: 0.9 }
+                }
                 onMouseEnter={() => setHoveredIdx(i)}
                 onMouseLeave={() => setHoveredIdx(null)}
-                style={{ width: `${widthPct}%`, backgroundColor: hex }}
+                style={{ backgroundColor: hex }}
                 title={`${seg.label}: ${seg.value} (${seg.share}%)`}
                 className={twMerge(
                   "flex items-center justify-center rounded-[5px] text-[10px] font-bold text-white transition-opacity duration-150 select-none overflow-hidden",
@@ -490,7 +542,7 @@ export function StatsSegmentsCard({
                 )}
               >
                 {widthPct >= 14 ? `${Math.round(seg.share)}%` : null}
-              </div>
+              </motion.div>
             );
           })}
         </div>
@@ -559,6 +611,9 @@ export type StatsRingCardProps = {
   /** Optional secondary metrics row */
   stats?: StatsRingMetric[];
   loading?: boolean;
+  /** Subtle radial spotlight on hover */
+  spotlight?: boolean;
+  spotlightColor?: string;
   className?: string;
   componentId?: string;
   hideIfDenied?: boolean;
@@ -575,11 +630,14 @@ export function StatsRingCard({
   color = "indigo",
   stats,
   loading = false,
+  spotlight = false,
+  spotlightColor,
   className,
   componentId,
   hideIfDenied = false,
 }: StatsRingCardProps) {
   const { canAccess } = useAccessControl();
+  const reducedMotion = useReducedMotion();
   const hasPermission = !componentId || canAccess(componentId);
   if (!hasPermission && hideIfDenied) return null;
 
@@ -592,12 +650,14 @@ export function StatsRingCard({
   return (
     <div
       {...(componentId ? { "data-component-id": componentId } : {})}
+      onMouseMove={spotlight ? handleSpotlightMouseMove : undefined}
       className={twMerge(
-        "flex items-center justify-between gap-4 rounded-[var(--radius-card)] border border-border bg-card p-5 text-card-foreground shadow-[var(--shadow-card)]",
+        "group/stat relative overflow-hidden flex items-center justify-between gap-4 rounded-[var(--radius-card)] border border-border bg-card p-5 text-card-foreground shadow-[var(--shadow-card)]",
         !hasPermission && "opacity-60 pointer-events-none",
         className,
       )}
     >
+      {spotlight && <SpotlightOverlay color={spotlightColor} />}
       {/* Left metrics */}
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div>
@@ -654,7 +714,7 @@ export function StatsRingCard({
             className="text-muted"
           />
           {!loading && (
-            <circle
+            <motion.circle
               cx={ringSize / 2}
               cy={ringSize / 2}
               r={radius}
@@ -662,9 +722,14 @@ export function StatsRingCard({
               stroke={strokeColor}
               strokeWidth={thickness}
               strokeDasharray={circumference}
-              strokeDashoffset={dashOffset}
+              initial={false}
+              animate={{ strokeDashoffset: dashOffset }}
+              transition={
+                reducedMotion
+                  ? { duration: 0 }
+                  : { type: "spring", stiffness: 140, damping: 22, mass: 0.9 }
+              }
               strokeLinecap="round"
-              className="transition-[stroke-dashoffset] duration-500 ease-out motion-reduce:transition-none"
             />
           )}
         </svg>
