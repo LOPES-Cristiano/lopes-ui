@@ -3,7 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 
 export type SortDir = 'asc' | 'desc' | null;
 
-export type DataTableVariant = 'minimal' | 'bordered' | 'striped' | 'default';
+export type DataTableVariant = 'minimal' | 'bordered' | 'striped' | 'default' | 'animated';
 export type DataTableSize = 'sm' | 'md' | 'lg';
 export type ActionsDisplay = 'menu' | 'inline' | 'auto' | 'icons';
 export type DataTableMobileRole = 'code' | 'title' | 'status';
@@ -261,6 +261,8 @@ export type DataTableProps<T = any> = {
   };
   screenActionHandlers?: Record<string, () => void | Promise<void>>;
   loading?: boolean;
+  /** Usa o skeleton em onda shimmer + barra indeterminada no topo (Default: true) */
+  animatedLoading?: boolean;
   loadingLabel?: React.ReactNode;
   showLoadingLabel?: boolean;
   emptySlot?: React.ReactNode;
