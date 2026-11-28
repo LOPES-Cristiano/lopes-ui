@@ -25,7 +25,6 @@ export function useBodyScrollLock(active: boolean) {
 
       const scrollbarWidth = window.innerWidth - docEl.clientWidth;
       docEl.style.overflow = "hidden";
-      body.style.overflow = "hidden";
       if (scrollbarWidth > 0) {
         const computedPadding = parseFloat(window.getComputedStyle(body).paddingRight) || 0;
         body.style.paddingRight = `${computedPadding + scrollbarWidth}px`;
