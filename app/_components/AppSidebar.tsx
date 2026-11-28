@@ -107,6 +107,37 @@ export default function AppSidebar() {
           ],
         },
         {
+          id: "animations-lab",
+          label: "Animações",
+          items: [
+            {
+              label: "Variante Animated",
+              href: "/showcase/animations",
+              icon: Sparkles,
+              badge: "Novo",
+              badgeVariant: "info",
+              children: [
+                { label: "Toasts · animated", href: "/showcase/animations#toast-animated" },
+                { label: "Loading & DataTable", href: "/showcase/animations#datatable-loading-animated" },
+                { label: "FormDrawer · animated", href: "/showcase/animations#form-drawer-animated" },
+                { label: "FormModal · animated", href: "/showcase/animations#form-modal-animated" },
+                { label: "Button · loading spring", href: "/showcase/animations#button-animated" },
+                { label: "Switch & Checkbox", href: "/showcase/animations#switch-checkbox-animated" },
+                { label: "Tabs & Segmented", href: "/showcase/animations#tabs-segmented-animated" },
+                { label: "Progress & Card Spotlight", href: "/showcase/animations#progress-card-animated" },
+                { label: "Accordion · spring", href: "/showcase/animations#accordion-animated" },
+                { label: "Confirm & CommandMenu", href: "/showcase/animations#confirm-command-animated" },
+                { label: "Alert & Badge", href: "/showcase/animations#alert-badge-animated" },
+                { label: "Stepper · progressivo", href: "/showcase/animations#stepper-animated" },
+                { label: "StatCard · spotlight & ring", href: "/showcase/animations#statcard-animated" },
+                { label: "Pagination & Timeline", href: "/showcase/animations#pagination-timeline-animated" },
+                { label: "Rating, OTP & Senha", href: "/showcase/animations#rating-otp-password-animated" },
+                { label: "Resumo de Props", href: "/showcase/animations#animated-props" },
+              ],
+            },
+          ],
+        },
+        {
           id: "forms",
           label: "Formulários & Editores",
           items: [
