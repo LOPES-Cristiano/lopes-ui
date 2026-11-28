@@ -298,7 +298,7 @@ export default function EmptyState({
       {illustration ?? (
         <div
           className={twMerge(
-            "flex items-center justify-center rounded-2xl shrink-0",
+            "lopes-pop-in flex items-center justify-center rounded-2xl shrink-0",
             WRAP_SIZE[size],
             iconBg,
           )}
@@ -308,7 +308,10 @@ export default function EmptyState({
       )}
 
       {/* Copy */}
-      <div className="space-y-1.5">
+      <div
+        style={{ ["--row-enter-delay" as string]: "60ms" }}
+        className="lopes-skeleton-row-in space-y-1.5"
+      >
         <p className={twMerge(TITLE_CLS[size], "text-zinc-800 dark:text-zinc-200")}>
           {resolvedTitle}
         </p>
@@ -321,7 +324,10 @@ export default function EmptyState({
 
       {/* Actions */}
       {actions && actions.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap justify-center">
+        <div
+          style={{ ["--row-enter-delay" as string]: "120ms" }}
+          className="lopes-skeleton-row-in flex items-center gap-2 flex-wrap justify-center"
+        >
           {actions.map((a, i) => (
             <ActionBtn key={i} action={a} size={size} />
           ))}
