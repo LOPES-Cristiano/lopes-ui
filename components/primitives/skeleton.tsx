@@ -7,7 +7,7 @@ export function Skeleton({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('animate-pulse motion-reduce:animate-none rounded-[var(--radius-control)] bg-muted', className)}
+      className={cn('lopes-shimmer-bone rounded-[var(--radius-control)]', className)}
       {...props}
     />
   );
