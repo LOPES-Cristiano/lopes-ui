@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { cn } from "../utils/cn";
 
 export type LoadingVariant =
@@ -9,7 +10,8 @@ export type LoadingVariant =
   | "ring"
   | "ball"
   | "bars"
-  | "infinity";
+  | "infinity"
+  | "animated";
 
 export type LoadingSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type LoadingTone =
@@ -40,8 +42,8 @@ const SIZE_PX: Record<LoadingSize, number> = {
 };
 
 const TONE_CLS: Record<LoadingTone, string> = {
-  default: "text-zinc-600 dark:text-zinc-300",
-  primary: "text-indigo-600 dark:text-indigo-400",
+  default: "text-zinc-700 dark:text-zinc-300",
+  primary: "text-zinc-800 dark:text-zinc-200",
   success: "text-emerald-500",
   warning: "text-amber-500",
   danger: "text-rose-500",
@@ -49,7 +51,7 @@ const TONE_CLS: Record<LoadingTone, string> = {
 };
 
 export default function Loading({
-  variant = "spinner",
+  variant = "animated",
   size = "md",
   tone = "primary",
   label,
@@ -60,9 +62,106 @@ export default function Loading({
 }: LoadingProps) {
   const px = SIZE_PX[size];
   const colorCls = TONE_CLS[tone];
+  const prefersReducedMotion = useReducedMotion();
 
   const renderGraphic = () => {
     switch (variant) {
+      case "animated": {
+        return (
+          <span
+            className={cn("relative inline-flex items-center justify-center", colorCls)}
+            style={{ width: px, height: px }}
+          >
+            <svg
+              width={px}
+              height={px}
+              viewBox="0 0 40 40"
+              fill="none"
+              aria-hidden="true"
+              className="overflow-visible"
+            >
+              {/* Subtle outer track */}
+              <circle
+                cx="20"
+                cy="20"
+                r="16"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeOpacity="0.16"
+              />
+              {/* Primary sweeping arc */}
+              <motion.circle
+                cx="20"
+                cy="20"
+                r="16"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeDasharray="34 68"
+                animate={
+                  prefersReducedMotion
+                    ? undefined
+                    : {
+                        rotate: [0, 360],
+                      }
+                }
+                transition={{
+                  repeat: Infinity,
+                  duration: 1.05,
+                  ease: [0.45, 0.05, 0.55, 0.95],
+                }}
+                style={{ transformOrigin: "20px 20px" }}
+              />
+              {/* Counter-rotating inner orbital arc */}
+              <motion.circle
+                cx="20"
+                cy="20"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="2.25"
+                strokeLinecap="round"
+                strokeOpacity="0.55"
+                strokeDasharray="18 46"
+                animate={
+                  prefersReducedMotion
+                    ? undefined
+                    : {
+                        rotate: [360, 0],
+                      }
+                }
+                transition={{
+                  repeat: Infinity,
+                  duration: 1.5,
+                  ease: "linear",
+                }}
+                style={{ transformOrigin: "20px 20px" }}
+              />
+              {/* Breathing center nucleus */}
+              <motion.circle
+                cx="20"
+                cy="20"
+                r="3.2"
+                fill="currentColor"
+                animate={
+                  prefersReducedMotion
+                    ? undefined
+                    : {
+                        scale: [0.75, 1.18, 0.75],
+                        opacity: [0.5, 1, 0.5],
+                      }
+                }
+                transition={{
+                  repeat: Infinity,
+                  duration: 1.25,
+                  ease: "easeInOut",
+                }}
+                style={{ transformOrigin: "20px 20px" }}
+              />
+            </svg>
+          </span>
+        );
+      }
+
       case "dots": {
         const dotSize = Math.max(4, Math.round(px * 0.28));
         return (
@@ -269,7 +368,7 @@ export function Spin({
   spinning = true,
   tip,
   delay = 0,
-  variant = "spinner",
+  variant = "animated",
   size = "md",
   tone = "primary",
   blur = true,
@@ -332,6 +431,9 @@ export function Spin({
     );
   }
 
+  const prefersReducedMotion = useReducedMotion();
+  const isAnimatedSpin = variant === "animated";
+
   return (
     <div className={cn("relative", wrapperClassName)} aria-busy={showSpinner || undefined}>
       <div
@@ -343,22 +445,56 @@ export function Spin({
         {children}
       </div>
 
-      {showSpinner && (
-        <div
-          className={cn(
-            "absolute inset-0 z-20 flex items-center justify-center rounded-[inherit] bg-white/55 dark:bg-zinc-950/55",
-            blur && "backdrop-blur-[1.5px]",
-            className,
+      {isAnimatedSpin ? (
+        <AnimatePresence initial={false}>
+          {showSpinner && (
+            <motion.div
+              initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className={cn(
+                "absolute inset-0 z-20 flex items-center justify-center rounded-[inherit] bg-surface/60",
+                blur && "backdrop-blur-[2px]",
+                className,
+              )}
+            >
+              <motion.div
+                initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.92, y: 6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 4 }}
+                transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                className="rounded-xl border border-border/80 bg-surface/95 px-4 py-3 shadow-[var(--shadow-floating)]"
+              >
+                <Loading
+                  variant={variant}
+                  size={size}
+                  tone={tone}
+                  label={tip}
+                  labelPosition="bottom"
+                />
+              </motion.div>
+            </motion.div>
           )}
-        >
-          <Loading
-            variant={variant}
-            size={size}
-            tone={tone}
-            label={tip}
-            labelPosition="bottom"
-          />
-        </div>
+        </AnimatePresence>
+      ) : (
+        showSpinner && (
+          <div
+            className={cn(
+              "absolute inset-0 z-20 flex items-center justify-center rounded-[inherit] bg-white/55 dark:bg-zinc-950/55",
+              blur && "backdrop-blur-[1.5px]",
+              className,
+            )}
+          >
+            <Loading
+              variant={variant}
+              size={size}
+              tone={tone}
+              label={tip}
+              labelPosition="bottom"
+            />
+          </div>
+        )
       )}
     </div>
   );
