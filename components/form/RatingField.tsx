@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useId, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Heart, Smile, Star, type LucideIcon } from "lucide-react";
 import { cn } from "../../utils/cn";
 import FieldWrapper from "./FieldWrapper";
@@ -84,10 +85,12 @@ export function Rating({
   className,
 }: RatingProps) {
   const { canAccess } = useAccessControl();
+  const reducedMotion = useReducedMotion();
   const hasPermission = !componentId || canAccess(componentId);
 
   const [internalValue, setInternalValue] = useState<number>(defaultValue);
   const [hoverValue, setHoverValue] = useState<number | null>(null);
+  const [popStar, setPopStar] = useState<number | null>(null);
 
   if (!hasPermission && hideIfDenied) {
     return null;
@@ -108,6 +111,10 @@ export function Rating({
     const finalVal = clearable && nextVal === currentValue ? 0 : nextVal;
     if (controlledValue === undefined) {
       setInternalValue(finalVal);
+    }
+    if (finalVal > 0) {
+      setPopStar(Math.ceil(finalVal));
+      window.setTimeout(() => setPopStar(null), 220);
     }
     onChange?.(finalVal);
   };
@@ -160,14 +167,25 @@ export function Rating({
           const halfNumber = idx + 0.5;
           const isFull = displayValue >= starNumber;
           const isHalf = !isFull && allowHalf && displayValue >= halfNumber;
+          const isActive = isFull || isHalf;
+          const isPopping = popStar === starNumber;
 
           return (
-            <div
+            <motion.div
               key={starNumber}
               title={tooltips?.[idx]}
+              initial={false}
+              animate={
+                isPopping && !reducedMotion
+                  ? { scale: [1, 1.22, 1] }
+                  : { scale: 1 }
+              }
+              whileHover={isInteractive && !reducedMotion ? { scale: 1.1 } : undefined}
+              whileTap={isInteractive && !reducedMotion ? { scale: 0.92 } : undefined}
+              transition={{ duration: 0.16, ease: "easeOut" }}
               className={cn(
-                "relative inline-flex items-center justify-center transition-transform duration-150",
-                isInteractive && "cursor-pointer hover:scale-110 active:scale-95"
+                "relative inline-flex items-center justify-center",
+                isInteractive && "cursor-pointer"
               )}
               style={{ width: iconPx, height: iconPx }}
               onMouseMove={(e) => {
@@ -189,23 +207,25 @@ export function Rating({
               <IconComponent
                 size={iconPx}
                 strokeWidth={1.75}
-                className="text-zinc-300 dark:text-zinc-700 transition-colors"
+                className="text-zinc-300 dark:text-zinc-700 transition-colors duration-150"
               />
 
-              {/* Full or Half Active Overlay */}
-              {(isFull || isHalf) && (
-                <span
-                  className="pointer-events-none absolute inset-0 overflow-hidden"
-                  style={{ width: isHalf ? "50%" : "100%" }}
-                >
-                  <IconComponent
-                    size={iconPx}
-                    strokeWidth={1.75}
-                    className={cn(" transition-colors", TONE_ACTIVE_CLS[tone])}
-                  />
-                </span>
-              )}
-            </div>
+              {/* Full or Half Active Overlay — clipPath prevents any distortion on half icons */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 inline-flex items-center justify-center transition-[opacity,clip-path] duration-150 ease-out motion-reduce:transition-none"
+                style={{
+                  opacity: isActive ? 1 : 0,
+                  clipPath: isHalf ? "inset(0 50% 0 0)" : "inset(0 0 0 0)",
+                }}
+              >
+                <IconComponent
+                  size={iconPx}
+                  strokeWidth={1.75}
+                  className={cn("transition-colors duration-150", TONE_ACTIVE_CLS[tone])}
+                />
+              </span>
+            </motion.div>
           );
         })}
       </div>
@@ -216,9 +236,21 @@ export function Rating({
         </span>
       )}
 
-      {activeTip && (
-        <span className="ml-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-          {activeTip}
+      {tooltips && tooltips.length > 0 && (
+        <span className="ml-1.5 inline-grid items-center text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          {/* Reserve width of longest tooltip label so stars never shift horizontally */}
+          {tooltips.map((tip, i) => (
+            <span
+              key={i}
+              aria-hidden="true"
+              className="col-start-1 row-start-1 invisible select-none whitespace-nowrap"
+            >
+              {tip}
+            </span>
+          ))}
+          <span className="col-start-1 row-start-1 whitespace-nowrap">
+            {activeTip ?? ""}
+          </span>
         </span>
       )}
     </div>
