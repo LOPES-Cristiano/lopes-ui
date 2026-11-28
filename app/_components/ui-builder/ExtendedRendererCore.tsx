@@ -113,13 +113,13 @@ function asBool(val: unknown, fallback = false): boolean {
 const DEMO_SVG_IMG_1 =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="0 0 480 300"><rect width="480" height="300" fill="#eef2ff"/><rect x="40" y="130" width="400" height="110" rx="18" fill="#4f46e5" opacity="0.18"/><text x="240" y="145" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="bold" fill="#312e81">Sofá Retrátil Bari 2,90m</text><text x="240" y="175" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#4338ca">BigLar Móveis &amp; Eletro · RO &amp; AM</text></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="0 0 480 300"><rect width="480" height="300" fill="#eef2ff"/><rect x="40" y="130" width="400" height="110" rx="18" fill="#4f46e5" opacity="0.18"/><text x="240" y="145" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="bold" fill="#312e81">Sofá Retrátil Bari 2,90m</text><text x="240" y="175" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#4338ca">Lopes ERP · RO &amp; AM</text></svg>`,
   );
 
 const DEMO_SVG_IMG_2 =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="0 0 480 300"><rect width="480" height="300" fill="#ecfdf5"/><rect x="40" y="130" width="400" height="110" rx="18" fill="#059669" opacity="0.18"/><text x="240" y="145" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="bold" fill="#065f46">Ambiente Completo BigLar</text><text x="240" y="175" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#047857">Conforto e qualidade para o seu lar</text></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="0 0 480 300"><rect width="480" height="300" fill="#ecfdf5"/><rect x="40" y="130" width="400" height="110" rx="18" fill="#059669" opacity="0.18"/><text x="240" y="145" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="bold" fill="#065f46">Ambiente Completo Lopes</text><text x="240" y="175" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#047857">Conforto e qualidade para o seu lar</text></svg>`,
   );
 
 type DemoProductRow = {
@@ -221,7 +221,7 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
         : [
             { title: "Sofá Retrátil Bari 2,90m", subtitle: "CD Porto Velho (RO)" },
             { title: "Geladeira Frost Free 474L", subtitle: "CD Manaus (AM)" },
-            { title: "Colchão Queen Molas Ensacadas", subtitle: "BigLar Móveis & Eletro" },
+            { title: "Colchão Queen Molas Ensacadas", subtitle: "Lopes ERP" },
           ];
       return (
         <div className="h-full w-full flex items-center justify-center p-3">
@@ -243,7 +243,7 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
                     {asStr(obj.title, `Item ${idx + 1}`)}
                   </p>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                    {asStr(obj.subtitle, "BigLar RO & AM")}
+                    {asStr(obj.subtitle, "Filiais RO & AM")}
                   </p>
                 </div>
               );
@@ -260,7 +260,7 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
             <div className="h-full w-full rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50 to-sky-50 dark:from-indigo-950/40 dark:to-zinc-900 flex flex-col items-center justify-center p-4 text-center">
               <Badge label={asStr(p.badgeText, "16:9")} variant="primary" size="xs" />
               <p className="mt-2 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-100">
-                {asStr(p.caption, "Ambiente BigLar Móveis & Eletro")}
+                {asStr(p.caption, "Ambiente Lopes ERP")}
               </p>
             </div>
           </AspectRatio>
@@ -356,7 +356,7 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
       const kind = asStr(p.kind, "browser");
       const body = (
         <div className="p-4 text-xs text-zinc-600 dark:text-zinc-300 space-y-1.5">
-          <p className="font-semibold text-zinc-900 dark:text-zinc-100">{asStr(p.title, "BigLar ERP")}</p>
+          <p className="font-semibold text-zinc-900 dark:text-zinc-100">{asStr(p.title, "Lopes ERP")}</p>
           <p>{asStr(p.body)}</p>
         </div>
       );
@@ -375,7 +375,7 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
         );
       }
       return (
-        <BrowserMockup url={asStr(p.url, "https://erp.biglar.com.br")} className="h-full w-full">
+        <BrowserMockup url={asStr(p.url, "https://erp.lopes.app")} className="h-full w-full">
           {body}
         </BrowserMockup>
       );
@@ -384,7 +384,7 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
     case "watermark":
       return (
         <Watermark
-          content={asStr(p.content, "BIGLAR INTERNO")}
+          content={asStr(p.content, "USO INTERNO")}
           rotate={asNum(p.rotate, -22)}
           opacity={asNum(p.opacity, 0.14)}
           fontSize={asNum(p.fontSize, 14)}
@@ -406,7 +406,7 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
             shape={asStr(p.shape, "squircle") as MaskShape}
             className="h-full w-full max-w-[180px] max-h-[180px] bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold text-center p-3"
           >
-            {asStr(p.label, "BigLar RO/AM")}
+            {asStr(p.label, "Filiais RO/AM")}
           </Mask>
         </div>
       );
@@ -507,8 +507,8 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
         <div className="h-full w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2.5 flex items-center">
           <HighlightText
             componentId={element.componentId}
-            text={asStr(p.text, "BigLar Móveis & Eletro — RO e AM")}
-            highlight={terms.length > 0 ? terms : "BigLar"}
+            text={asStr(p.text, "Lopes ERP — RO e AM")}
+            highlight={terms.length > 0 ? terms : "Lopes"}
             tone={asStr(p.tone, "amber") as "amber" | "primary" | "emerald" | "rose" | "sky"}
             ignoreAccents={asBool(p.ignoreAccents, true)}
             className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-200"
@@ -738,7 +738,7 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
               latitude={asNum(p.latitude, -8.7619)}
             >
               <div className="rounded-full bg-indigo-600 text-white px-2.5 py-1 text-[10px] font-bold shadow-md">
-                {asStr(p.markerLabel, "BigLar RO")}
+                {asStr(p.markerLabel, "Filial RO")}
               </div>
             </MapMarker>
           </MapView>
@@ -794,7 +794,7 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
             brand={
               <span className="inline-flex items-center gap-2 text-sm font-bold text-zinc-900 dark:text-zinc-100">
                 <Store size={16} className="text-indigo-500" />
-                {asStr(p.brandName, "BigLar Móveis & Eletro")}
+                {asStr(p.brandName, "Lopes ERP")}
               </span>
             }
             nav={rawNav.map((n, i) => {
@@ -835,7 +835,7 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
       return (
         <div className="h-full w-full overflow-hidden rounded-xl">
           <Footer
-            brand={asStr(p.brand, "BigLar Móveis & Eletro")}
+            brand={asStr(p.brand, "Lopes ERP")}
             tagline={asStr(p.tagline)}
             copyright={asStr(p.copyright)}
             variant={asStr(p.variant, "bordered") as "default" | "minimal" | "bordered"}
@@ -880,7 +880,7 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
         <div className="h-full w-full overflow-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3">
           <AppLauncher
             componentId={element.componentId}
-            title={asStr(p.title, "Módulos BigLar")}
+            title={asStr(p.title, "Módulos Lopes")}
             searchable={asBool(p.searchable, true)}
             columns={Math.min(5, Math.max(2, asNum(p.columns, 3))) as 2 | 3 | 4 | 5}
             size={asStr(p.size, "sm") as "sm" | "md" | "lg"}
@@ -1220,7 +1220,7 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
             maxHeight={Math.max(120, element.height - 56)}
             data={{
               numero: "PED-9041",
-              empresa: "BigLar Móveis e Eletrodomésticos Ltda.",
+              empresa: "Lopes Sistemas Corporativos Ltda.",
               praca: "Porto Velho - RO (69)",
               itens: ["Sofá Retrátil Bari 2,90m", "Painel Ripado 2,20m"],
               totalBrl: 4890.0,
@@ -1448,7 +1448,7 @@ export default function ExtendedRendererCore({ element, interactive }: ExtendedR
                 toast.success("Cadastro salvo!");
               }}
             >
-              <FormSectionHeader title="Identificação" description="Móveis & Eletrodomésticos BigLar" />
+              <FormSectionHeader title="Identificação" description="Cadastro Corporativo Lopes" />
               <TextField label="Descrição do Produto" defaultValue="Sofá Retrátil Bari 2,90m" />
             </FormModal>
           )}
