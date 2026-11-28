@@ -31,7 +31,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full w-full flex flex-col bg-background text-foreground">
         <ThemeProvider>
-          <Toaster position="top-right" />
+          <Toaster position="top-right" maxToasts={6} />
           <ShellProvider defaultCollapsed={sidebarCollapsed} defaultHasSidebar>
             <SiteHeader />
             <div className="flex flex-1 min-h-0 min-w-0">
