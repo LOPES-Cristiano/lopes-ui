@@ -7,7 +7,7 @@ import Modal from './Modal';
 import UnsavedChangesDialog from './UnsavedChangesDialog';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
-import { motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { twMerge } from 'tailwind-merge';
 
 // ─── TYPES & INTERFACES ───────────────────────────────────────────────────────
@@ -60,6 +60,8 @@ export interface FormModalProps {
   componentIdPrefix?: string;
   maxWidth?: string;
   size?: 'xlVertical' | 'xl' | 'lg' | 'md' | 'full';
+  /** Visual and motion preset ("animated" adds spring modal entrance, animated tab transitions and wave skeleton) */
+  variant?: 'default' | 'animated';
   children: ReactNode;
 }
 
@@ -94,9 +96,11 @@ export function FormModal({
   componentIdPrefix,
   maxWidth,
   size = 'xlVertical',
+  variant = 'animated',
   children,
 }: FormModalProps) {
   const prefersReducedMotion = useReducedMotion();
+  const isAnimated = variant === 'animated';
   const formModalTabsId = useId();
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const { canAccess } = useAccessControl();
@@ -193,7 +197,7 @@ export function FormModal({
       onClose={requestClose}
       size={size}
       maxWidth={maxWidth}
-      variant="rounded"
+      variant={isAnimated ? 'animated' : 'rounded'}
       noPadding
       hideCloseButton
       componentId={componentIdPrefix}
@@ -420,7 +424,23 @@ export function FormModal({
 
           {/* ── ÁREA CENTRAL DE CONTEÚDO ── */}
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 bg-background">
-            {loading ? <FormModalSkeleton /> : children}
+            {isAnimated && !prefersReducedMotion ? (
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={loading ? 'form-modal-skeleton' : (activeTab ?? 'form-modal-body')}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {loading ? <FormModalSkeleton animated /> : children}
+                </motion.div>
+              </AnimatePresence>
+            ) : loading ? (
+              <FormModalSkeleton animated={isAnimated} />
+            ) : (
+              children
+            )}
           </div>
         </div>
       </form>
@@ -510,48 +530,66 @@ export function FormEmptyLine({ children }: { children: ReactNode }) {
 
 // ─── FORM SKELETON (BONE) ────────────────────────────────────────────────────
 
-function Bone({ className, style }: { className?: string; style?: CSSProperties }) {
+function Bone({
+  className,
+  style,
+  animated = false,
+  delayMs = 0,
+}: {
+  className?: string;
+  style?: CSSProperties;
+  animated?: boolean;
+  delayMs?: number;
+}) {
   return (
     <div
-      className={twMerge('rounded-md bg-muted animate-pulse motion-reduce:animate-none', className)}
-      style={style}
+      className={twMerge(
+        'rounded-md',
+        animated ? 'lopes-shimmer-bone' : 'bg-muted animate-pulse motion-reduce:animate-none',
+        className,
+      )}
+      style={
+        animated
+          ? { ...style, ['--shimmer-delay' as string]: `${delayMs}ms` }
+          : style
+      }
     />
   );
 }
 
-export function FormModalSkeleton() {
+export function FormModalSkeleton({ animated = true }: { animated?: boolean }) {
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6 text-left">
       {/* Seção 1 Skeleton */}
       <div className="space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-border/70">
           <div className="space-y-1">
-            <Bone className="h-4 w-52" />
-            <Bone className="h-3 w-80" />
+            <Bone animated={animated} delayMs={0} className="h-4 w-52" />
+            <Bone animated={animated} delayMs={40} className="h-3 w-80" />
           </div>
-          <Bone className="h-7 w-24 rounded-lg" />
+          <Bone animated={animated} delayMs={80} className="h-7 w-24 rounded-lg" />
         </div>
 
         <div className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Bone className="h-3.5 w-28" />
-              <Bone className="h-9 w-full rounded-lg" />
+              <Bone animated={animated} delayMs={110} className="h-3.5 w-28" />
+              <Bone animated={animated} delayMs={140} className="h-9 w-full rounded-lg" />
             </div>
             <div className="space-y-1.5">
-              <Bone className="h-3.5 w-24" />
-              <Bone className="h-9 w-full rounded-lg" />
+              <Bone animated={animated} delayMs={150} className="h-3.5 w-24" />
+              <Bone animated={animated} delayMs={180} className="h-9 w-full rounded-lg" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Bone className="h-3.5 w-32" />
-              <Bone className="h-9 w-full rounded-lg" />
+              <Bone animated={animated} delayMs={200} className="h-3.5 w-32" />
+              <Bone animated={animated} delayMs={230} className="h-9 w-full rounded-lg" />
             </div>
             <div className="space-y-1.5">
-              <Bone className="h-3.5 w-20" />
-              <Bone className="h-9 w-full rounded-lg" />
+              <Bone animated={animated} delayMs={240} className="h-3.5 w-20" />
+              <Bone animated={animated} delayMs={270} className="h-9 w-full rounded-lg" />
             </div>
           </div>
         </div>
@@ -561,16 +599,16 @@ export function FormModalSkeleton() {
       <div className="pt-5 border-t border-border/70 space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-border/70">
           <div className="space-y-1">
-            <Bone className="h-4 w-48" />
-            <Bone className="h-3 w-64" />
+            <Bone animated={animated} delayMs={300} className="h-4 w-48" />
+            <Bone animated={animated} delayMs={340} className="h-3 w-64" />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="space-y-1.5">
-              <Bone className="h-3.5 w-20" />
-              <Bone className="h-9 w-full rounded-lg" />
+              <Bone animated={animated} delayMs={370 + i * 45} className="h-3.5 w-20" />
+              <Bone animated={animated} delayMs={400 + i * 45} className="h-9 w-full rounded-lg" />
             </div>
           ))}
         </div>
