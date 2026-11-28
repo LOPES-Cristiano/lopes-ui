@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useId, useMemo } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal } from "lucide-react";
 import { cn } from "../utils/cn";
 
@@ -74,6 +75,9 @@ export default function Pagination({
   disabled = false,
   className,
 }: PaginationProps) {
+  const pillLayoutId = `pagination-pill-${useId()}`;
+  const reducedMotion = useReducedMotion();
+
   const totalPages = useMemo(() => {
     if (totalPagesProp !== undefined) return Math.max(1, totalPagesProp);
     if (totalItems !== undefined && pageSize > 0) {
@@ -181,14 +185,26 @@ export default function Pagination({
               disabled={disabled}
               onClick={() => onPageChange(item)}
               className={cn(
-                "hidden sm:inline-flex items-center justify-center rounded-lg font-medium tabular-nums transition-colors cursor-pointer",
+                "relative hidden sm:inline-flex items-center justify-center rounded-lg font-medium tabular-nums transition-[color,background-color,border-color,transform] duration-150 active:scale-95 cursor-pointer",
                 btnSizeCls,
                 item === safePage
-                  ? "bg-primary text-primary-foreground shadow-xs"
+                  ? "text-primary-foreground"
                   : "border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
               )}
             >
-              {item}
+              {item === safePage && (
+                <motion.span
+                  layoutId={reducedMotion ? undefined : pillLayoutId}
+                  transition={
+                    reducedMotion
+                      ? { duration: 0 }
+                      : { type: "spring", stiffness: 460, damping: 32, mass: 0.7 }
+                  }
+                  className="absolute inset-0 rounded-lg bg-primary shadow-xs"
+                  aria-hidden="true"
+                />
+              )}
+              <span className="relative z-10">{item}</span>
             </button>
           ),
         )}
