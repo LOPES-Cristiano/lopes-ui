@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useId, useMemo } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { twMerge } from "tailwind-merge";
-import { Check, ChevronRight, Loader2, X, type LucideIcon } from "lucide-react";
+import { ChevronRight, Loader2, X, type LucideIcon } from "lucide-react";
 import { useAccessControl } from "./useAccessControl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -121,6 +122,26 @@ function resolveStatus(step: StepItem, index: number, activeStep: number): StepS
   return "upcoming";
 }
 
+// ── Animated Checkmark ────────────────────────────────────────────────────────
+
+function AnimatedCheck({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M5 13l4 4L19 7" className="lopes-draw-stroke" />
+    </svg>
+  );
+}
+
 // ── Step circle ───────────────────────────────────────────────────────────────
 
 function StepCircle({
@@ -129,12 +150,14 @@ function StepCircle({
   status,
   size,
   variant,
+  reducedMotion,
 }: {
   step: StepItem;
   index: number;
   status: StepStatus;
   size: StepperSize;
   variant: StepperVariant;
+  reducedMotion: boolean;
 }) {
   const s  = SIZE_MAP[size];
   const c  = STATUS_COLORS[status];
@@ -151,19 +174,25 @@ function StepCircle({
   );
 
   return (
-    <div className={circleCls} aria-hidden="true">
+    <motion.div
+      initial={false}
+      animate={{ scale: status === "current" ? 1.06 : 1 }}
+      transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 24 }}
+      className={circleCls}
+      aria-hidden="true"
+    >
       {status === "loading" ? (
         <Loader2 size={s.icon} className="animate-spin" />
       ) : Icon ? (
         <Icon size={s.icon} />
       ) : status === "completed" ? (
-        <Check size={s.icon} strokeWidth={2.5} />
+        <AnimatedCheck size={s.icon} />
       ) : status === "error" ? (
         <X size={s.icon} strokeWidth={2.5} />
       ) : (
         <span>{index + 1}</span>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -173,22 +202,38 @@ function Connector({
   orientation,
   status,
   size,
+  reducedMotion,
 }: {
   orientation: StepperOrientation;
   status: StepStatus;
   size: StepperSize;
+  reducedMotion: boolean;
 }) {
   const s = SIZE_MAP[size];
-  const c = STATUS_COLORS[status];
+  const isCompleted = status === "completed";
 
   if (orientation === "horizontal") {
     return (
-      <div className={twMerge("flex-1 mx-1 transition-colors duration-300", s.connH, c.connector)} />
+      <div className={twMerge("relative flex-1 mx-1 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-700", s.connH)}>
+        <motion.div
+          initial={false}
+          animate={{ scaleX: isCompleted ? 1 : 0 }}
+          transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 280, damping: 30, mass: 0.85 }}
+          className="absolute inset-0 origin-left bg-indigo-400 dark:bg-indigo-600"
+        />
+      </div>
     );
   }
 
   return (
-    <div className={twMerge("ml-4 my-1 flex-1 transition-colors duration-300 min-h-[20px]", s.connW, c.connector)} />
+    <div className={twMerge("relative my-1 flex-1 min-h-[20px] rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-700", s.connW)}>
+      <motion.div
+        initial={false}
+        animate={{ scaleY: isCompleted ? 1 : 0 }}
+        transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 280, damping: 30, mass: 0.85 }}
+        className="absolute inset-0 origin-top bg-indigo-400 dark:bg-indigo-600"
+      />
+    </div>
   );
 }
 
@@ -209,6 +254,8 @@ export default function Stepper({
 }: StepperProps) {
   const s = SIZE_MAP[size];
   const isHorizontal = orientation === "horizontal";
+  const reducedMotion = Boolean(useReducedMotion());
+  const indicatorLayoutId = `stepper-indicator-${useId()}`;
   const { canAccess } = useAccessControl();
   const hasRootPermission = !componentId || canAccess(componentId);
 
@@ -385,7 +432,7 @@ export default function Stepper({
                     ) : Icon ? (
                       <Icon size={12} />
                     ) : isCompleted ? (
-                      <Check size={12} strokeWidth={2.5} />
+                      <AnimatedCheck size={12} />
                     ) : (
                       <span>{i + 1}</span>
                     )}
@@ -469,10 +516,16 @@ export default function Stepper({
                   "group relative flex-1 min-w-fit inline-flex items-center justify-center gap-3 px-4 py-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
                   canClick ? "cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/40" : "cursor-default",
                   step.disabled && "opacity-40 cursor-not-allowed",
-                  isCurrent &&
-                    "after:content-[''] after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-t-full after:bg-indigo-600 dark:after:bg-indigo-400"
                 )}
               >
+                {isCurrent && (
+                  <motion.span
+                    layoutId={reducedMotion ? undefined : indicatorLayoutId}
+                    transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 32 }}
+                    className="pointer-events-none absolute inset-x-3 bottom-0 h-0.5 rounded-t-full bg-indigo-600 dark:bg-indigo-400"
+                    aria-hidden="true"
+                  />
+                )}
                 <span
                   className={twMerge(
                     "inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 border transition-colors",
@@ -490,7 +543,7 @@ export default function Stepper({
                   ) : Icon ? (
                     <Icon size={13} />
                   ) : isCompleted ? (
-                    <Check size={13} strokeWidth={2.5} />
+                    <AnimatedCheck size={13} />
                   ) : isError ? (
                     <X size={13} strokeWidth={2.5} />
                   ) : (
@@ -707,7 +760,7 @@ export default function Stepper({
                 onClick={isClick ? () => onStepClick?.(i) : undefined}
                 onKeyDown={isClick ? (e) => handleStepKeyDown(e, i) : undefined}
               >
-                <StepCircle step={step} index={i} status={status} size={size} variant={variant} />
+                <StepCircle step={step} index={i} status={status} size={size} variant={variant} reducedMotion={reducedMotion} />
                 <div className="text-center w-full min-w-0 px-0.5">
                   <p className={twMerge(s.text, "leading-tight sm:leading-snug transition-colors duration-200 whitespace-normal break-words line-clamp-2 text-[10.5px] sm:text-xs md:text-sm font-semibold", colors.title)}>
                     {step.title}
@@ -722,7 +775,7 @@ export default function Stepper({
 
               {!isLast && connector && (
                 <div className="flex-1 min-w-[6px] max-w-[28px] sm:max-w-none flex items-center mt-3.5 sm:mt-4 mx-0.5 sm:mx-1.5">
-                  <Connector orientation="horizontal" status={status} size={size} />
+                  <Connector orientation="horizontal" status={status} size={size} reducedMotion={reducedMotion} />
                 </div>
               )}
             </React.Fragment>
@@ -750,10 +803,10 @@ export default function Stepper({
                 onClick={isClick ? () => onStepClick?.(i) : undefined}
                 onKeyDown={isClick ? (e) => handleStepKeyDown(e, i) : undefined}
               >
-                <StepCircle step={step} index={i} status={status} size={size} variant={variant} />
+                <StepCircle step={step} index={i} status={status} size={size} variant={variant} reducedMotion={reducedMotion} />
               </div>
               {!isLast && connector && (
-                <Connector orientation="vertical" status={status} size={size} />
+                <Connector orientation="vertical" status={status} size={size} reducedMotion={reducedMotion} />
               )}
             </div>
 
