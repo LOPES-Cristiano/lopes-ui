@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useSyncExternalStore } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import { cn } from '../utils/cn';
 import { hasOpenFloatingOverlay } from '../utils/overlay';
 import { AlertTriangle, Info, Trash2, X, type LucideIcon } from 'lucide-react';
@@ -36,14 +37,14 @@ const confirmSizeConfig: Record<
   ConfirmDialogSize,
   { maxWidth: string; height: string; maxHeight: string }
 > = {
-  xs: { maxWidth: '400px', height: 'auto', maxHeight: '80dvh' },
-  compact: { maxWidth: '480px', height: 'auto', maxHeight: '85dvh' },
-  sm: { maxWidth: '520px', height: 'auto', maxHeight: '88dvh' },
-  md: { maxWidth: '640px', height: 'auto', maxHeight: '90dvh' },
+  xs: { maxWidth: '380px', height: 'auto', maxHeight: '80dvh' },
+  compact: { maxWidth: '420px', height: 'auto', maxHeight: '85dvh' },
+  sm: { maxWidth: '440px', height: 'auto', maxHeight: '88dvh' },
+  md: { maxWidth: '500px', height: 'auto', maxHeight: '90dvh' },
   mdVertical: { maxWidth: '720px', height: '80dvh', maxHeight: '98dvh' },
-  lg: { maxWidth: '800px', height: 'auto', maxHeight: '92dvh' },
-  xl: { maxWidth: '1100px', height: 'auto', maxHeight: '94dvh' },
-  '2xl': { maxWidth: '1280px', height: 'auto', maxHeight: '95dvh' },
+  lg: { maxWidth: '760px', height: 'auto', maxHeight: '92dvh' },
+  xl: { maxWidth: '1040px', height: 'auto', maxHeight: '94dvh' },
+  '2xl': { maxWidth: '1240px', height: 'auto', maxHeight: '95dvh' },
   full: { maxWidth: '96vw', height: '92dvh', maxHeight: '96dvh' },
   fullscreen: { maxWidth: '100vw', height: '100dvh', maxHeight: '100dvh' },
   xlVertical: { maxWidth: '1380px', height: '97dvh', maxHeight: '98dvh' },
@@ -129,7 +130,7 @@ export default function ConfirmDialog({
   description,
   children,
   variant = 'danger',
-  size = 'md',
+  size = 'sm',
   maxWidth,
   maxHeight,
   height,
@@ -146,6 +147,7 @@ export default function ConfirmDialog({
   showCloseButton,
 }: ConfirmDialogProps) {
   const [busy, setBusy] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
   const isMobile = useSyncExternalStore(
     subscribeMobileViewport,
     getMobileViewportSnapshot,
@@ -232,13 +234,13 @@ export default function ConfirmDialog({
         }}
         className={cn(
           'fixed left-1/2 top-1/2 z-[7800] -translate-x-1/2 -translate-y-1/2',
-          'w-[calc(100vw-2rem)] sm:w-full max-w-[calc(100vw-2rem)] sm:max-w-none bg-card border border-border text-card-foreground shadow-[var(--shadow-overlay)] rounded-2xl p-6 overflow-hidden box-border overscroll-contain',
+          'w-[calc(100vw-2rem)] sm:w-full max-w-[calc(100vw-2rem)] sm:max-w-none bg-card border border-border text-card-foreground shadow-[var(--shadow-overlay)] rounded-2xl p-0 sm:p-0 gap-0 overflow-hidden box-border overscroll-contain',
           'flex flex-col duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] motion-reduce:animate-none',
           isFullMobile && [
             'max-sm:!fixed max-sm:!inset-0 max-sm:!top-0 max-sm:!left-0 max-sm:!right-0 max-sm:!bottom-0',
             'max-sm:!translate-x-0 max-sm:!translate-y-0',
             'max-sm:!w-full max-sm:!h-[100dvh] max-sm:!max-w-none max-sm:!max-h-[100dvh]',
-            'max-sm:!rounded-none max-sm:!border-none max-sm:p-4 max-sm:pt-[max(1rem,env(safe-area-inset-top))]',
+            'max-sm:!rounded-none max-sm:!border-none max-sm:pt-[max(1rem,env(safe-area-inset-top))]',
             'max-sm:data-[state=closed]:!slide-out-to-left-0 max-sm:data-[state=closed]:!slide-out-to-top-0',
             'max-sm:data-[state=open]:!slide-in-from-left-0 max-sm:data-[state=open]:!slide-in-from-top-0',
           ],
@@ -246,23 +248,26 @@ export default function ConfirmDialog({
         )}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 shrink-0 pb-3">
+        <div className="flex items-start justify-between gap-3 shrink-0 px-5 pt-5 pb-4">
           <div className="flex items-start gap-3.5 min-w-0 flex-1">
-            <div
+            <motion.div
+              initial={prefersReducedMotion ? false : { scale: 0.65, rotate: -10, opacity: 0 }}
+              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 460, damping: 24, delay: 0.04 }}
               className={cn(
-                'shrink-0 flex items-center justify-center h-11 w-11 rounded-full',
+                'shrink-0 flex items-center justify-center h-10 w-10 rounded-full',
                 cfg.iconBg
               )}
             >
-              <Icon size={20} className={cfg.iconCls} strokeWidth={1.75} />
-            </div>
+              <Icon size={18} className={cfg.iconCls} strokeWidth={1.9} />
+            </motion.div>
 
-            <AlertDialogHeader className="min-w-0 text-left space-y-1.5">
-              <AlertDialogTitle className="text-base font-bold text-foreground leading-snug text-balance">
+            <AlertDialogHeader className="min-w-0 text-left space-y-1">
+              <AlertDialogTitle className="text-[15px] font-bold text-foreground leading-snug text-balance">
                 {title ?? 'Confirmar ação'}
               </AlertDialogTitle>
               {description && (
-                <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed text-pretty">
+                <AlertDialogDescription className="text-xs sm:text-[13px] text-muted-foreground leading-relaxed text-pretty">
                   {description}
                 </AlertDialogDescription>
               )}
@@ -277,23 +282,23 @@ export default function ConfirmDialog({
               className="inline-flex h-7 w-7 items-center justify-center -mr-1 -mt-1 rounded-[var(--radius-control)] text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer shrink-0 disabled:opacity-50"
               aria-label="Fechar"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           )}
         </div>
 
         {/* Body com Scroll Interno */}
         {children && (
-          <div className="flex-1 overflow-y-auto overscroll-contain min-h-0 text-sm text-muted-foreground w-full py-2 px-1 -mx-1 flex flex-col">
+          <div className="flex-1 overflow-y-auto overscroll-contain min-h-0 text-sm text-muted-foreground w-full px-5 pb-4 flex flex-col">
             {children}
           </div>
         )}
 
-        {/* Footer */}
+        {/* Footer compacto */}
         <AlertDialogFooter
           className={cn(
-            'flex items-center justify-end gap-2.5 pt-3 shrink-0 border-t border-border/40',
-            isFullMobile && 'max-sm:flex-col-reverse max-sm:items-stretch max-sm:gap-2 max-sm:pb-[max(0.5rem,env(safe-area-inset-bottom))]'
+            'flex items-center justify-end gap-2 sm:gap-2 px-5 py-3 shrink-0 border-t border-border/60 bg-muted/30 sm:space-x-0',
+            isFullMobile && 'max-sm:flex-col-reverse max-sm:items-stretch max-sm:gap-2 max-sm:pb-[max(0.75rem,env(safe-area-inset-bottom))]'
           )}
         >
           <AlertDialogCancel asChild>
@@ -303,7 +308,7 @@ export default function ConfirmDialog({
               data-component-id={componentId ? `${componentId}.cancel` : 'erp.components.confirm-dialog.btn.cancellabel'}
               type="button"
               variant="outline"
-              size="md"
+              size="sm"
               disabled={isLoading}
               className={isFullMobile ? 'w-full sm:w-auto' : undefined}
             >
@@ -318,7 +323,7 @@ export default function ConfirmDialog({
               data-component-id={componentId ? `${componentId}.confirm` : 'erp.components.confirm-dialog.btn.confirmlabel'}
               type="button"
               variant={cfg.buttonVariant}
-              size="md"
+              size="sm"
               loading={isLoading}
               disabled={isLoading}
               onClick={handleConfirm}
