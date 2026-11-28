@@ -85,10 +85,10 @@ export type SkeletonProps = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function animCls(active = true, animation: SkeletonAnimation = "pulse"): string {
+function animCls(active = true, animation: SkeletonAnimation = "wave"): string {
   if (!active || animation === "none") return "";
   if (animation === "wave") {
-    return "relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.6s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/50 dark:before:via-white/10 before:to-transparent animate-pulse";
+    return "lopes-shimmer-bone";
   }
   return "animate-pulse";
 }
@@ -101,7 +101,7 @@ export function SkeletonAvatar({
   size = "md",
   shape = "circle",
   active = true,
-  animation = "pulse",
+  animation = "wave",
   className,
 }: SkeletonAvatarProps) {
   const sizePx =
@@ -129,7 +129,7 @@ export function SkeletonButton({
   shape = "default",
   block = false,
   active = true,
-  animation = "pulse",
+  animation = "wave",
   className,
 }: SkeletonButtonProps) {
   const dimCls =
@@ -168,7 +168,7 @@ export function SkeletonInput({
   size = "md",
   block = true,
   active = true,
-  animation = "pulse",
+  animation = "wave",
   className,
 }: SkeletonInputProps) {
   const hCls = size === "sm" ? "h-8" : size === "lg" ? "h-12" : "h-10";
@@ -191,7 +191,7 @@ export function SkeletonImage({
   width = "100%",
   height = 160,
   active = true,
-  animation = "pulse",
+  animation = "wave",
   className,
 }: SkeletonImageProps) {
   return (
@@ -216,7 +216,7 @@ export function SkeletonCard({
   lines = 3,
   hasFooter = false,
   active = true,
-  animation = "pulse",
+  animation = "wave",
   className,
 }: SkeletonCardProps) {
   return (
@@ -248,7 +248,7 @@ export function SkeletonTable({
   rows = 5,
   columns = 4,
   active = true,
-  animation = "pulse",
+  animation = "wave",
   className,
 }: SkeletonTableProps) {
   return (
@@ -296,7 +296,7 @@ export function SkeletonTable({
 function SkeletonBase({
   loading = true,
   active = true,
-  animation = "pulse",
+  animation = "wave",
   avatar = false,
   title = true,
   paragraph = true,
