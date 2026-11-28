@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Slot } from '@radix-ui/react-slot';
-import { Loader } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import { cn } from '../utils/cn';
 import ConfirmDialog, { type ConfirmDialogVariant } from './ConfirmDialog';
 import { useAccessControl } from './useAccessControl';
@@ -210,6 +210,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   ref
 ) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
   const { canAccess } = useAccessControl();
 
   const hasPermission = !componentId || canAccess(componentId);
@@ -297,25 +298,91 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     >
       {asChild ? (
         children
-      ) : loading ? (
-        <span className="inline-flex items-center justify-center gap-2 flex-1">
-          <Loader aria-hidden="true" className={cn('animate-spin shrink-0', loaderSizeClasses[size])} />
-          {loadingText && <span className="leading-none lopes-trim-cap">{loadingText}</span>}
-        </span>
       ) : (
-        <>
-          {iconLeft && (
-            <span aria-hidden="true" className={cn('flex shrink-0 items-center justify-center', iconSizeClasses[size])}>
-              {iconLeft}
-            </span>
-          )}
-          {children && <span className="leading-none lopes-trim-cap">{children}</span>}
-          {iconRight && (
-            <span aria-hidden="true" className={cn('flex shrink-0 items-center justify-center', iconSizeClasses[size])}>
-              {iconRight}
-            </span>
-          )}
-        </>
+        <span className="grid place-items-center gap-[inherit]">
+          {/* Camada idle: permanece no fluxo para travar a largura/altura do botão */}
+          <motion.span
+            initial={false}
+            animate={
+              loading
+                ? prefersReducedMotion
+                  ? { opacity: 0 }
+                  : { opacity: 0, y: -4 }
+                : { opacity: 1, y: 0 }
+            }
+            transition={{ duration: 0.14, ease: [0.22, 1, 0.36, 1] }}
+            aria-hidden={loading || undefined}
+            className={cn(
+              'col-start-1 row-start-1 inline-flex items-center justify-center gap-[inherit]',
+              loading && 'pointer-events-none select-none',
+            )}
+          >
+            {iconLeft && (
+              <span aria-hidden="true" className={cn('flex shrink-0 items-center justify-center', iconSizeClasses[size])}>
+                {iconLeft}
+              </span>
+            )}
+            {children && (
+              <span className="inline-flex items-center justify-center gap-[inherit] leading-none lopes-trim-cap">
+                {children}
+              </span>
+            )}
+            {iconRight && (
+              <span aria-hidden="true" className={cn('flex shrink-0 items-center justify-center', iconSizeClasses[size])}>
+                {iconRight}
+              </span>
+            )}
+          </motion.span>
+
+          {/* Camada loading: ocupa a mesma célula do grid para nunca mudar o tamanho do botão */}
+          <motion.span
+            initial={false}
+            animate={
+              loading
+                ? { opacity: 1, y: 0, scale: 1 }
+                : prefersReducedMotion
+                  ? { opacity: 0 }
+                  : { opacity: 0, y: 4, scale: 0.96 }
+            }
+            transition={{ duration: 0.14, ease: [0.22, 1, 0.36, 1] }}
+            aria-hidden={!loading || undefined}
+            className={cn(
+              'col-start-1 row-start-1 inline-flex items-center justify-center gap-2',
+              !loading && 'pointer-events-none select-none',
+            )}
+          >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              className={cn('shrink-0', loaderSizeClasses[size])}
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="9.5"
+                stroke="currentColor"
+                strokeWidth="2.6"
+                strokeOpacity="0.22"
+              />
+              {loading && (
+                <motion.circle
+                  cx="12"
+                  cy="12"
+                  r="9.5"
+                  stroke="currentColor"
+                  strokeWidth="2.6"
+                  strokeLinecap="round"
+                  strokeDasharray="20 42"
+                  animate={prefersReducedMotion ? undefined : { rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 0.85, ease: 'linear' }}
+                  style={{ transformOrigin: '12px 12px' }}
+                />
+              )}
+            </svg>
+            {loadingText && <span className="leading-none lopes-trim-cap">{loadingText}</span>}
+          </motion.span>
+        </span>
       )}
     </Comp>
   );
