@@ -19,6 +19,7 @@ export function DataTableHeader<T = Record<string, unknown>>({
   hasExpandable = false,
   expandColumnWidth,
   checkboxClassName,
+  showLoadingBar = false,
 }: {
   columns: DataTableColumn<T>[];
   selectionEnabled: boolean;
@@ -34,7 +35,10 @@ export function DataTableHeader<T = Record<string, unknown>>({
   hasExpandable?: boolean;
   expandColumnWidth?: string | number;
   checkboxClassName?: string;
+  showLoadingBar?: boolean;
 }) {
+  const totalCols =
+    columns.length + (selectionEnabled ? 1 : 0) + (hasExpandable ? 1 : 0) + (hasActions ? 1 : 0);
   const headerPaddingCls =
     size === 'sm' ? 'py-2 px-3 text-xs uppercase tracking-wider' : size === 'lg' ? 'py-3.5 px-4 text-sm uppercase tracking-wider' : 'py-3 px-3 text-xs uppercase tracking-wider';
 
@@ -122,6 +126,15 @@ export function DataTableHeader<T = Record<string, unknown>>({
           </th>
         )}
       </tr>
+      {showLoadingBar && (
+        <tr aria-hidden="true" className="border-0">
+          <th colSpan={totalCols} className="relative h-0 border-0 p-0">
+            <div className="pointer-events-none absolute inset-x-0 -top-[2px] z-20 h-[2.5px] overflow-hidden bg-zinc-900/10 dark:bg-zinc-100/10">
+              <div className="lopes-indeterminate-bar h-full w-1/2 rounded-full bg-gradient-to-r from-transparent via-zinc-700 to-transparent dark:via-zinc-300" />
+            </div>
+          </th>
+        </tr>
+      )}
     </thead>
   );
 }
