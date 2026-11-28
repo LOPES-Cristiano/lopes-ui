@@ -1,4 +1,4 @@
-﻿# Lopes UI — Design System & Biblioteca de Componentes (`v1.2.0`)
+# Lopes UI — Design System & Biblioteca de Componentes (`v1.2.0`)
 
 > Biblioteca corporativa de componentes React construída com **Next.js 16.4**, **React 19.2**, **Tailwind CSS v4**, **Radix UI Primitives** e **TypeScript** — empacotada via `tsup` (ESM + CJS + `.d.ts`) com CLI de configuração automática, suporte mobile-first / WebView Super App e playground interativo integrado.
 
@@ -25,7 +25,7 @@ Atualizado em `2026-11-25`.
 
 ## 1. Visão Geral e Arquitetura Dual
 
-O repositório **`lopes-ui`** opera simultaneamente em duas frentes complementares dentro do ecossistema **BigLar Móveis & Eletro**:
+O repositório **`lopes-ui`** opera simultaneamente em duas frentes complementares dentro do ecossistema **Lopes**:
 
 1. **Biblioteca Empacotada (`dist/`)**: compilada com `tsup` em `ESM` e `CJS` com declarações TypeScript (`.d.ts` / `.d.mts`), diretiva `"use client"` injetada automaticamente para compatibilidade nativa com React Server Components (RSC), folha de tokens `lopes-ui/styles.css` e **8 subpaths modulares** que isolam dependências opcionais pesadas (Tiptap, TanStack Table/Virtual, Shiki e MapLibre GL).
 2. **Showcase Interativo & UI Builder (`app/`)**: aplicação Next.js 16 executada na porta **`3002`** com catálogo vivo de **156 entradas auditadas** em `app/components/registry.ts`, vitrines temáticas (`/showcase/*`), templates corporativos (`/templates`) e construtor visual (`/ui-builder`).
@@ -103,7 +103,7 @@ Para evitar que projetos consumidores precisem instalar editores ou motores grá
 ## 5. Executando o Playground Local (`:3002`)
 
 ```bash
-cd c:\Biglar\lopes-ui
+cd lopes-ui
 npm install
 npm run dev
 ```
@@ -342,7 +342,7 @@ import { FormModal, FormSection, TextField, SelectField } from "lopes-ui";
 
 ## 9. Controle de Acesso Declarativo (RBAC)
 
-A biblioteca fornece primitivas nativas de governança de permissões alinhadas ao catálogo de tarefas do `biglar-api`:
+A biblioteca fornece primitivas nativas de governança de permissões alinhadas ao catálogo de tarefas do `lopes-api`:
 
 - **`<AccessControlProvider>` & `useAccessControl()`**: injeta tarefas autorizadas (`tasks`), flag `isAdmin` e helpers `hasTask(task)`, `hasAnyTask(tasks)`, `hasAllTasks(tasks)` e `canAccess(componentIdOrTask)`.
 - **`<Can task="ERP.VENDA.APROVAR">`**: renderiza condicionalmente botões, abas ou ações conforme a tarefa ou `componentId` autorizado.
@@ -360,7 +360,7 @@ Consulte [docs/ACCESS_CONTROL.md](./docs/ACCESS_CONTROL.md) para detalhes comple
 | `useAsyncButton` | Gerencia estados de `loading`, bloqueio contra duplo clique e tratamento de erro em ações assíncronas |
 | `useAsyncAutocomplete` | Busca assíncrona com debounce, cache de opções, cancelamento (`AbortController`) e estado de carregamento |
 | `useMediaQuery` / `useIsMobile` / `useIsCompactViewport` | Media queries reativas SSR-safe via `useSyncExternalStore` (`< 768px` para mobile e `< 640px` para viewport compacta) |
-| `useIsBigLarMobileApp` / `getBigLarMobileBridge` | Detecta execução embarcada na WebView do Super App **BigLar Mobile** (`ios` / `android`) e expõe a ponte nativa (`scanBarcode`, `openFilialPicker`, `openApp`) |
+| `useIsLopesMobileApp` / `getLopesMobileBridge` | Detecta execução embarcada na WebView do Super App **Lopes Mobile** (`ios` / `android`) e expõe a ponte nativa (`scanBarcode`, `openFilialPicker`, `openApp`) |
 | `useModal` | Controle tipado de abertura, fechamento e payload (`ModalState<T>`) para modais e drawers |
 | `useToast` | Hook reativo para disparo de notificações empilhadas |
 | `useGlobalKeyShortcuts` | Registro declarativo de atalhos globais de teclado (ignorando inputs focados quando configurado) |
