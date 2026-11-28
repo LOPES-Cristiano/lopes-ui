@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { twMerge } from "tailwind-merge";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -84,6 +85,8 @@ export default function PasswordStrength({
   componentId,
 }: PasswordStrengthProps) {
   const { level, label, hint } = useMemo(() => scorePassword(password), [password]);
+  const reducedMotion = useReducedMotion();
+  const lastColorRef = useRef<string>("bg-red-500");
 
   // Use 5 segments so "very strong" fills all
   const SEGMENTS = 5;
@@ -94,6 +97,12 @@ export default function PasswordStrength({
       : level
     : 0;
 
+  const computedColor = filledCount >= 5 ? "bg-emerald-500" : SEG_ACTIVE[level as PasswordStrengthLevel];
+  if (computedColor) {
+    lastColorRef.current = computedColor;
+  }
+  const activeColor = computedColor || lastColorRef.current;
+
   return (
     <div
       className={twMerge("w-full space-y-1.5", className)}
@@ -101,39 +110,60 @@ export default function PasswordStrength({
     >
       {/* Segments */}
       <div className="flex gap-1" aria-hidden="true">
-        {Array.from({ length: SEGMENTS }).map((_, i) => (
-          <div
-            key={i}
-            className={twMerge(
-              "h-1.5 flex-1 rounded-full transition-[color,background-color,border-color,box-shadow,opacity] duration-300",
-              i < filledCount
-                ? filledCount >= 5
-                  ? "bg-emerald-500"
-                  : SEG_ACTIVE[level as PasswordStrengthLevel]
-                : "bg-zinc-200 dark:bg-zinc-700"
-            )}
-          />
-        ))}
+        {Array.from({ length: SEGMENTS }).map((_, i) => {
+          const isFilled = i < filledCount;
+          return (
+            <div
+              key={i}
+              className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700"
+            >
+              <motion.div
+                initial={false}
+                animate={{ scaleX: isFilled ? 1 : 0 }}
+                transition={
+                  reducedMotion
+                    ? { duration: 0 }
+                    : {
+                        duration: 0.22,
+                        ease: [0.22, 1, 0.36, 1],
+                        delay: isFilled ? i * 0.02 : 0,
+                      }
+                }
+                className={twMerge(
+                  "absolute inset-0 origin-left rounded-full transition-colors duration-200",
+                  activeColor,
+                )}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {/* Label + hint */}
-      {password && (
-        <div className="flex items-center justify-between">
-          <span
-            className={twMerge(
-              "text-xs font-medium transition-colors",
-              filledCount >= 5 ? "text-emerald-600 dark:text-emerald-400" : LABEL_CLS[level]
-            )}
-          >
-            {filledCount >= 5 ? "Muito forte" : label}
-          </span>
-          {showHint && hint && (
-            <span className="text-xs text-zinc-400 dark:text-zinc-500 text-right max-w-[60%]">
-              {hint}
+      <div
+        className={twMerge(
+          "grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none",
+          password ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="flex items-center justify-between pt-0.5">
+            <span
+              className={twMerge(
+                "text-xs font-medium transition-colors",
+                filledCount >= 5 ? "text-emerald-600 dark:text-emerald-400" : LABEL_CLS[level]
+              )}
+            >
+              {filledCount >= 5 ? "Muito forte" : label}
             </span>
-          )}
+            {showHint && hint && (
+              <span className="text-xs text-zinc-400 dark:text-zinc-500 text-right max-w-[60%]">
+                {hint}
+              </span>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
