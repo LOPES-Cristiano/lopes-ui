@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { cn } from "../utils/cn";
 
 export type ProgressTone = "default" | "primary" | "info" | "success" | "warning" | "danger";
@@ -74,6 +75,7 @@ export default function Progress({
   className,
   ...props
 }: ProgressProps) {
+  const prefersReducedMotion = useReducedMotion();
   const safeMax = max > 0 ? max : 100;
   const clamped = Math.max(0, Math.min(safeMax, value));
   const percentage = Math.round((clamped / safeMax) * 100);
@@ -115,7 +117,7 @@ export default function Progress({
             strokeWidth={stroke}
             className="stroke-zinc-200 dark:stroke-zinc-800"
           />
-          <circle
+          <motion.circle
             cx={px / 2}
             cy={px / 2}
             r={radius}
@@ -123,8 +125,14 @@ export default function Progress({
             strokeWidth={stroke}
             strokeLinecap="round"
             strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            className={cn("transition-[color,background-color,border-color,box-shadow,opacity] duration-300 ease-out", TONE_STROKE_CLS[tone])}
+            initial={false}
+            animate={{ strokeDashoffset: offset }}
+            transition={
+              prefersReducedMotion
+                ? { duration: 0.01 }
+                : { type: "spring", stiffness: 140, damping: 24, mass: 0.7 }
+            }
+            className={cn(TONE_STROKE_CLS[tone])}
           />
         </svg>
         {(showValue || label) && (
@@ -167,16 +175,37 @@ export default function Progress({
           LINEAR_HEIGHT_CLS[size],
         )}
       >
-        <div
-          style={{ width: indeterminate ? "40%" : `${percentage}%` }}
-          className={cn(
-            "h-full rounded-full transition-[width,height,transform,opacity,background-color,border-color,color,box-shadow] duration-300 ease-out",
-            TONE_BAR_CLS[tone],
-            indeterminate && "animate-pulse",
-            striped &&
-              "bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem]",
-          )}
-        />
+        {indeterminate ? (
+          <div
+            className={cn(
+              "lopes-indeterminate-bar h-full w-1/2 rounded-full",
+              TONE_BAR_CLS[tone],
+            )}
+          />
+        ) : (
+          <motion.div
+            initial={false}
+            animate={{ width: `${percentage}%` }}
+            transition={
+              prefersReducedMotion
+                ? { duration: 0.01 }
+                : { type: "spring", stiffness: 170, damping: 25, mass: 0.7 }
+            }
+            className={cn(
+              "relative h-full overflow-hidden rounded-full",
+              TONE_BAR_CLS[tone],
+              striped &&
+                "bg-[linear-gradient(45deg,rgba(255,255,255,0.22)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.22)_50%,rgba(255,255,255,0.22)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem]",
+            )}
+          >
+            {percentage > 0 && percentage < 100 && !prefersReducedMotion && (
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[lopes-shimmer-wave_2s_cubic-bezier(0.4,0,0.2,1)_infinite]"
+              />
+            )}
+          </motion.div>
+        )}
       </div>
     </div>
   );
