@@ -63,7 +63,7 @@ export const EXTENDED_CATALOG_CORE: UICatalogEntry[] = [
     primaryTextProp: "caption",
     defaultProps: {
       ratio: 16 / 9,
-      caption: "Ambiente Sala de Estar — Coleção BigLar RO/AM",
+      caption: "Ambiente Sala de Estar — Coleção Lopes RO/AM",
       badgeText: "16:9",
     },
     inspectorFields: [
@@ -214,8 +214,8 @@ export const EXTENDED_CATALOG_CORE: UICatalogEntry[] = [
     primaryTextProp: "title",
     defaultProps: {
       kind: "browser",
-      url: "https://erp.biglar.com.br/vendas/ro-am",
-      title: "Portal BigLar Móveis & Eletro",
+      url: "https://erp.lopes.app/vendas/ro-am",
+      title: "Portal Lopes ERP",
       body: "Visualização em tempo real do estoque de móveis, colchões e eletrodomésticos nas filiais de Rondônia e Amazonas.",
     },
     inspectorFields: [
@@ -249,7 +249,7 @@ export const EXTENDED_CATALOG_CORE: UICatalogEntry[] = [
     minHeight: 120,
     primaryTextProp: "content",
     defaultProps: {
-      content: "BIGLAR INTERNO · RO/AM",
+      content: "USO INTERNO · RO/AM",
       rotate: -22,
       opacity: 0.14,
       fontSize: 14,
@@ -278,7 +278,7 @@ export const EXTENDED_CATALOG_CORE: UICatalogEntry[] = [
     primaryTextProp: "label",
     defaultProps: {
       shape: "squircle",
-      label: "BigLar RO/AM",
+      label: "Filiais RO/AM",
     },
     inspectorFields: [
       {
@@ -365,7 +365,7 @@ export const EXTENDED_CATALOG_CORE: UICatalogEntry[] = [
     primaryTextProp: "beforeLabel",
     defaultProps: {
       beforeLabel: "Sala Antes",
-      afterLabel: "Sala BigLar",
+      afterLabel: "Sala Renovada",
       defaultPosition: 50,
       orientation: "horizontal",
     },
@@ -841,7 +841,7 @@ export const EXTENDED_CATALOG_CORE: UICatalogEntry[] = [
     minHeight: 64,
     primaryTextProp: "title",
     defaultProps: {
-      title: "Privacidade e Cookies — BigLar",
+      title: "Privacidade e Cookies — Lopes",
       description: "Utilizamos cookies para melhorar sua experiência no catálogo de Móveis & Eletro.",
       allowCustomize: true,
     },
@@ -884,7 +884,7 @@ export const EXTENDED_CATALOG_CORE: UICatalogEntry[] = [
     minHeight: 56,
     primaryTextProp: "brandName",
     defaultProps: {
-      brandName: "BigLar Móveis & Eletro",
+      brandName: "Lopes ERP",
       navItems: [
         { label: "Dashboard", href: "#" },
         { label: "Pedidos RO/AM", href: "#" },
@@ -908,7 +908,7 @@ export const EXTENDED_CATALOG_CORE: UICatalogEntry[] = [
     minHeight: 280,
     primaryTextProp: "brandTitle",
     defaultProps: {
-      brandTitle: "BigLar ERP",
+      brandTitle: "Lopes ERP",
       userName: "Camila Souza",
       userRole: "Gerente — Porto Velho (RO)",
       defaultMode: "expanded",
@@ -933,9 +933,9 @@ export const EXTENDED_CATALOG_CORE: UICatalogEntry[] = [
     minHeight: 110,
     primaryTextProp: "brand",
     defaultProps: {
-      brand: "BigLar Móveis & Eletro",
+      brand: "Lopes ERP",
       tagline: "Conforto e qualidade para o seu lar — Rondônia (69) & Amazonas (92)",
-      copyright: "© 2026 BigLar Móveis e Eletrodomésticos Ltda.",
+      copyright: "© 2026 Lopes Sistemas Corporativos Ltda.",
       variant: "bordered",
     },
     inspectorFields: [
@@ -995,7 +995,7 @@ export const EXTENDED_CATALOG_CORE: UICatalogEntry[] = [
     minHeight: 200,
     primaryTextProp: "title",
     defaultProps: {
-      title: "Módulos BigLar",
+      title: "Módulos Lopes",
       searchable: true,
       columns: 3,
       size: "sm",
