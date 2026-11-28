@@ -3,6 +3,7 @@
 import React, { useId } from "react";
 import { twMerge } from "tailwind-merge";
 import { AlertCircle } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { FieldTooltip } from "./FieldWrapper";
 import { useAccessControl } from "../useAccessControl";
 
@@ -44,9 +45,9 @@ export type SwitchProps = {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const SIZE = {
-  sm: { track: "h-4 w-7",   thumb: "h-3 w-3",   translate: "translate-x-3", text: "text-xs",  gap: "gap-2"   },
-  md: { track: "h-5 w-9",   thumb: "h-3.5 w-3.5", translate: "translate-x-4", text: "text-sm",  gap: "gap-2.5" },
-  lg: { track: "h-6 w-11",  thumb: "h-4.5 w-4.5", translate: "translate-x-5", text: "text-base", gap: "gap-3"  },
+  sm: { track: "h-4 w-7",   thumb: "h-3 w-3",     travelPx: 12, text: "text-xs",   gap: "gap-2"   },
+  md: { track: "h-5 w-9",   thumb: "h-3.5 w-3.5", travelPx: 16, text: "text-sm",   gap: "gap-2.5" },
+  lg: { track: "h-6 w-11",  thumb: "h-4.5 w-4.5", travelPx: 20, text: "text-base", gap: "gap-3"   },
 } as const;
 
 const TRACK_ON: Record<NonNullable<SwitchProps["color"]>, string> = {
@@ -98,6 +99,7 @@ export default function Switch({
   const autoId = useId();
   const id = idProp ?? autoId;
   const s = SIZE[size];
+  const prefersReducedMotion = useReducedMotion();
   const { canAccess } = useAccessControl();
   const hasPermission = !componentId || canAccess(componentId);
   const effectiveDisabled = Boolean(disabled || !hasPermission);
@@ -153,14 +155,24 @@ export default function Switch({
         aria-hidden="true"
       >
         {/* Thumb */}
-        <span
+        <motion.span
+          initial={false}
+          animate={{
+            x: isChecked ? s.travelPx : 0,
+            scale: 1,
+          }}
+          whileTap={effectiveDisabled || prefersReducedMotion ? undefined : { scaleX: 1.22, scaleY: 0.92 }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0.01 }
+              : { type: "spring", stiffness: 520, damping: 30, mass: 0.65 }
+          }
           className={twMerge(
-            "ml-0.5 rounded-full shadow-xs transition-transform duration-200 ease-in-out motion-reduce:transition-none",
+            "ml-0.5 rounded-full shadow-xs",
             isChecked && (color === "indigo" || color === "primary")
               ? "bg-primary-foreground"
               : "bg-white",
             s.thumb,
-            isChecked ? s.translate : "translate-x-0",
           )}
         />
       </span>
