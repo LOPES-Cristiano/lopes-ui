@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Slot } from "@radix-ui/react-slot";
 import { cn } from "../utils/cn";
 import { X, type LucideIcon } from "lucide-react";
@@ -237,6 +238,11 @@ export default function Badge({
   componentId,
 }: BadgeProps) {
   const { canAccess } = useAccessControl();
+  const reducedMotion = useReducedMotion();
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+  }, []);
   const hasPermission = !componentId || canAccess(componentId);
   if (!hasPermission && hideIfDenied) return null;
 
@@ -339,7 +345,19 @@ export default function Badge({
           {dot && !icon && <PulseDot className={s.dot} dotClassName={v.dot} pulse={pulseKind} />}
           {renderIcon()}
           {content !== undefined && content !== null && (
-            <span className="lopes-trim-cap">{content}</span>
+            typeof count === "number" && content === formattedCount && !reducedMotion ? (
+              <motion.span
+                key={formattedCount}
+                initial={mountedRef.current ? { scale: 0.72, y: -3, opacity: 0 } : false}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 520, damping: 24, mass: 0.6 }}
+                className="lopes-trim-cap inline-block"
+              >
+                {content}
+              </motion.span>
+            ) : (
+              <span className="lopes-trim-cap">{content}</span>
+            )
           )}
           {onRemove && (
             <button
@@ -347,7 +365,7 @@ export default function Badge({
               type="button"
               aria-label="Remover"
               onClick={(e) => { e.stopPropagation(); onRemove(); }}
-              className="shrink-0 inline-flex items-center justify-center rounded-full p-0.5 opacity-65 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-opacity ml-0.5 -mr-0.5 cursor-pointer"
+              className="shrink-0 inline-flex items-center justify-center rounded-full p-0.5 opacity-65 hover:opacity-100 hover:scale-110 active:scale-90 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-[opacity,transform] duration-150 ml-0.5 -mr-0.5 cursor-pointer"
             >
               <X size={s.x} strokeWidth={2.5} />
             </button>
