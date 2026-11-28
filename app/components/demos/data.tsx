@@ -1748,7 +1748,7 @@ export function useDataSections(): Record<string, React.ReactNode> {
                 type="area"
                 allowVariantToggle
                 title="Faturamento Mensal vs. Meta (R$ mil)"
-                subtitle="Rede BigLar Móveis & Eletro — RO (69) e AM (92)"
+                subtitle="Rede Lopes ERP — RO (69) e AM (92)"
                 height={250}
                 data={[
                   { label: "Jan", receita: 420, meta: 380 },
@@ -1867,7 +1867,7 @@ export function useDataSections(): Record<string, React.ReactNode> {
                 subtitle="Distribuição percentual dos pedidos aprovados"
                 height={220}
                 data={[
-                  { label: "Crediário Próprio BigLar", value: 48, color: "indigo" },
+                  { label: "Crediário Próprio", value: 48, color: "indigo" },
                   { label: "Cartão de Crédito", value: 29, color: "sky" },
                   { label: "Pix à Vista", value: 16, color: "emerald" },
                   { label: "Boleto / Convênio", value: 7, color: "amber" },
