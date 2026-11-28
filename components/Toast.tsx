@@ -23,6 +23,7 @@ import {
 import { twMerge } from "tailwind-merge";
 
 export type ToastType = "default" | "success" | "error" | "loading" | "warning" | "info";
+export type ToastVariant = "default" | "animated";
 
 export type ToastOptions = Omit<HotToastOptions, "duration" | "icon"> & {
   id?: string;
@@ -32,6 +33,8 @@ export type ToastOptions = Omit<HotToastOptions, "duration" | "icon"> & {
   duration?: number;
   /** Show an explicit × close button on the right */
   closeButton?: boolean;
+  /** Visual and motion preset ("animated" adds spring physics, swipe-to-dismiss, icon halo and glow) */
+  variant?: ToastVariant;
   action?: { label: string; onClick: () => void; componentId?: string };
 };
 
@@ -60,7 +63,10 @@ let toastLimit = 5;
 let activeToastIds: string[] = [];
 const toastTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const interactiveToastIds = new Set<string>();
-const toastMeta = new Map<string, { type: ToastType; duration: number }>();
+const toastMeta = new Map<
+  string,
+  { type: ToastType; duration: number; variant?: ToastVariant; hasCustomIcon?: boolean }
+>();
 
 function clearToastTimer(id?: string) {
   if (id) {
@@ -109,6 +115,158 @@ const toastProgressColors: Record<ToastType, string> = {
   warning: "bg-warning",
   info: "bg-info",
 };
+
+const toastAnimatedProgressColors: Record<ToastType, string> = {
+  default: "bg-zinc-600 dark:bg-zinc-400",
+  success: "bg-emerald-500",
+  error: "bg-red-500",
+  loading: "bg-zinc-800 dark:bg-zinc-200",
+  warning: "bg-amber-500",
+  info: "bg-sky-500",
+};
+
+function AnimatedToastIcon({
+  type,
+  reducedMotion,
+}: {
+  type: ToastType;
+  reducedMotion: boolean;
+}) {
+  if (type === "default") return null;
+
+  if (type === "loading") {
+    return (
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-zinc-800 dark:text-zinc-200">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle
+            cx="12"
+            cy="12"
+            r="9.5"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeOpacity="0.18"
+          />
+          <motion.circle
+            cx="12"
+            cy="12"
+            r="9.5"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeDasharray="20 42"
+            animate={reducedMotion ? undefined : { rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 0.9, ease: "linear" }}
+            style={{ transformOrigin: "12px 12px" }}
+          />
+        </svg>
+      </span>
+    );
+  }
+
+  const circleFill: Record<Exclude<ToastType, "default" | "loading">, string> = {
+    success: "fill-emerald-500",
+    error: "fill-red-500",
+    warning: "fill-amber-500",
+    info: "fill-sky-500",
+  };
+
+  return (
+    <motion.span
+      initial={reducedMotion ? false : { scale: 0.45, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 520, damping: 22 }}
+      className="flex h-5 w-5 shrink-0 items-center justify-center"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="11" className={circleFill[type]} />
+
+        {type === "success" && (
+          <motion.path
+            d="M7.5 12.4L10.6 15.5L16.8 9"
+            stroke="#ffffff"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            initial={reducedMotion ? false : { pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 0.28, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+          />
+        )}
+
+        {type === "error" && (
+          <>
+            <motion.path
+              d="M8.5 8.5L15.5 15.5"
+              stroke="#ffffff"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              initial={reducedMotion ? false : { pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ duration: 0.2, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+            />
+            <motion.path
+              d="M15.5 8.5L8.5 15.5"
+              stroke="#ffffff"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              initial={reducedMotion ? false : { pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ duration: 0.2, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </>
+        )}
+
+        {type === "warning" && (
+          <>
+            <motion.path
+              d="M12 7.2V13.2"
+              stroke="#ffffff"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              initial={reducedMotion ? false : { pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ duration: 0.22, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+            />
+            <motion.circle
+              cx="12"
+              cy="16.6"
+              r="1.35"
+              fill="#ffffff"
+              initial={reducedMotion ? false : { scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 520, damping: 20, delay: 0.18 }}
+              style={{ transformOrigin: "12px 16.6px" }}
+            />
+          </>
+        )}
+
+        {type === "info" && (
+          <>
+            <motion.circle
+              cx="12"
+              cy="7.6"
+              r="1.35"
+              fill="#ffffff"
+              initial={reducedMotion ? false : { scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 520, damping: 20, delay: 0.08 }}
+              style={{ transformOrigin: "12px 7.6px" }}
+            />
+            <motion.path
+              d="M12 11V16.8"
+              stroke="#ffffff"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              initial={reducedMotion ? false : { pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ duration: 0.22, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </>
+        )}
+      </svg>
+    </motion.span>
+  );
+}
 
 function normalizeDuration(duration?: number, fallback = DEFAULT_DURATION) {
   if (duration === 0) return Infinity;
@@ -191,6 +349,7 @@ function toHotOptions(opts: ToastOptions = {}, fallbackDuration?: number): HotTo
   delete hotOptions.action;
   delete hotOptions.description;
   delete hotOptions.closeButton;
+  delete hotOptions.variant;
   delete hotOptions.duration;
   delete hotOptions.icon;
 
@@ -284,7 +443,12 @@ function show(
 
   const resolvedDuration =
     type === "loading" ? Infinity : (hotOptions.duration ?? DEFAULT_DURATION);
-  toastMeta.set(toastId, { type, duration: resolvedDuration });
+  toastMeta.set(toastId, {
+    type,
+    duration: resolvedDuration,
+    variant: toastOptions.variant,
+    hasCustomIcon: opts.icon !== undefined,
+  });
 
   clearToastTimer(toastId);
 
@@ -348,12 +512,15 @@ export type ToasterProps = {
   position?: ToastPosition;
   mobilePosition?: ToastPosition;
   maxToasts?: number;
+  /** Default visual/motion preset for toasts rendered by this Toaster */
+  variant?: ToastVariant;
 };
 
 export function Toaster({
   position = "top-right",
   mobilePosition = "bottom-center",
   maxToasts = 5,
+  variant = "animated",
 }: ToasterProps) {
   const [isMobile, setIsMobile] = React.useState(false);
   const shouldReduceMotion = useReducedMotion();
@@ -381,8 +548,8 @@ export function Toaster({
       gutter={8}
       containerClassName="lopes-ui-toaster"
       containerStyle={{
-        top: isTop ? (isMobile ? 16 : 56) : "auto",
-        bottom: !isTop ? (isMobile ? 24 : 32) : "auto",
+        top: isMobile ? 16 : 56,
+        bottom: isMobile ? 24 : 32,
         zIndex: 99999,
         pointerEvents: "none",
       }}
@@ -410,8 +577,14 @@ export function Toaster({
         const meta = toastMeta.get(t.id);
         const type: ToastType =
           meta?.type ?? (t.type === "success" || t.type === "error" || t.type === "loading" ? t.type : "default");
+        const resolvedVariant: ToastVariant = meta?.variant ?? variant;
+        const isAnimated = resolvedVariant === "animated";
+        const toastPos: ToastPosition = t.position ?? activePosition;
+        const toastIsTop = toastPos.startsWith("top");
         const duration = meta?.duration ?? t.duration ?? DEFAULT_DURATION;
-        const progressColor = toastProgressColors[type];
+        const progressColor = isAnimated
+          ? toastAnimatedProgressColors[type]
+          : toastProgressColors[type];
         const showProgress =
           t.visible &&
           type !== "loading" &&
@@ -431,40 +604,94 @@ export function Toaster({
                     }
                   }
             }
+            drag={isAnimated && !shouldReduceMotion ? "x" : false}
+            dragConstraints={isAnimated ? { left: 0, right: 0 } : undefined}
+            dragElastic={isAnimated ? 0.45 : undefined}
+            onDragEnd={
+              isAnimated
+                ? (_e, info) => {
+                    if (Math.abs(info.offset.x) > 80 || Math.abs(info.velocity.x) > 350) {
+                      dismissToast(t.id);
+                    }
+                  }
+                : undefined
+            }
+            whileHover={
+              isAnimated && t.visible && !shouldReduceMotion
+                ? { y: -2 }
+                : undefined
+            }
+            whileTap={
+              isAnimated && !isInteractive && !shouldReduceMotion
+                ? { scale: 0.985 }
+                : undefined
+            }
             initial={
               shouldReduceMotion
                 ? { opacity: 0 }
-                : {
-                    opacity: 0,
-                    y: isTop ? -16 : 16,
-                  }
+                : isAnimated
+                  ? {
+                      opacity: 0,
+                      y: toastIsTop ? -20 : 20,
+                      scale: 0.94,
+                    }
+                  : {
+                      opacity: 0,
+                      y: toastIsTop ? -16 : 16,
+                    }
             }
             animate={
               shouldReduceMotion
                 ? { opacity: t.visible ? 1 : 0 }
-                : {
-                    opacity: t.visible ? 1 : 0,
-                    y: t.visible ? 0 : isTop ? -12 : 12,
-                  }
+                : isAnimated
+                  ? {
+                      opacity: t.visible ? 1 : 0,
+                      y: t.visible ? 0 : toastIsTop ? -12 : 12,
+                      scale: t.visible ? 1 : 0.95,
+                    }
+                  : {
+                      opacity: t.visible ? 1 : 0,
+                      y: t.visible ? 0 : toastIsTop ? -12 : 12,
+                    }
             }
             transition={
               shouldReduceMotion
                 ? { duration: 0.15 }
-                : {
-                    duration: 0.18,
-                    ease: [0.22, 1, 0.36, 1],
-                  }
+                : isAnimated
+                  ? {
+                      type: "spring",
+                      stiffness: 460,
+                      damping: 28,
+                      mass: 0.75,
+                    }
+                  : {
+                      duration: 0.18,
+                      ease: [0.22, 1, 0.36, 1],
+                    }
             }
-            transformTemplate={({ y }) => {
-              const num = typeof y === "string" ? parseFloat(y) : Number(y ?? 0);
-              if (!num || Math.abs(num) < 0.05) return "none";
-              return `translate3d(0, ${Math.round(num)}px, 0)`;
+            transformTemplate={({ x, y, scale }) => {
+              const nx = typeof x === "string" ? parseFloat(x) : Number(x ?? 0);
+              const ny = typeof y === "string" ? parseFloat(y) : Number(y ?? 0);
+              const ns = typeof scale === "string" ? parseFloat(scale) : Number(scale ?? 1);
+              const xDone = !nx || Math.abs(nx) < 0.05;
+              const yDone = !ny || Math.abs(ny) < 0.05;
+              const sDone = Math.abs(ns - 1) < 0.002;
+              if (xDone && yDone && sDone) return "none";
+              const parts: string[] = [];
+              if (!xDone || !yDone) {
+                parts.push(`translate3d(${Math.round(nx)}px, ${Math.round(ny)}px, 0)`);
+              }
+              if (!sDone) {
+                parts.push(`scale(${ns})`);
+              }
+              return parts.join(" ");
             }}
             role={isInteractive ? undefined : "button"}
             tabIndex={isInteractive ? undefined : 0}
             aria-label={isInteractive ? undefined : "Fechar notificação"}
             className={twMerge(
               "rounded-[var(--radius-control)]",
+              isAnimated && "touch-pan-y select-none",
               !isInteractive &&
                 "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
             )}
@@ -478,31 +705,59 @@ export function Toaster({
                 ...t.style,
                 animation: "none",
                 cursor: isInteractive ? "default" : "pointer",
+                ...(isAnimated
+                  ? {
+                      border: "1px solid var(--border-strong, var(--border))",
+                      borderRadius: "var(--radius-card)",
+                      padding: "12px 15px",
+                      boxShadow: "var(--shadow-floating)",
+                    }
+                  : {}),
               }}
             >
-              {({ icon, message }) => (
-                <>
-                  <div className="flex w-full items-start gap-2.5">
-                    {icon ? <span className="mt-0.5 shrink-0">{icon}</span> : null}
-                    <div className="min-w-0 flex-1 [&>div]:!m-0 [&>div]:!p-0">
-                      {message}
+              {({ icon, message }) => {
+                const useUnifiedAnimatedIcon =
+                  isAnimated && !meta?.hasCustomIcon && type !== "default";
+                return (
+                  <>
+                    <div className="flex w-full items-start gap-3">
+                      {useUnifiedAnimatedIcon ? (
+                        <span className="mt-0.5 shrink-0">
+                          <AnimatedToastIcon
+                            key={`${t.id}-${type}`}
+                            type={type}
+                            reducedMotion={Boolean(shouldReduceMotion)}
+                          />
+                        </span>
+                      ) : icon ? (
+                        <span className="mt-0.5 shrink-0">{icon}</span>
+                      ) : null}
+                      <div className="min-w-0 flex-1 [&>div]:!m-0 [&>div]:!p-0">
+                        {message}
+                      </div>
                     </div>
-                  </div>
-                  {showProgress && !shouldReduceMotion ? (
-                    <motion.div
-                      key={`${t.id}-${type}`}
-                      initial={{ scaleX: 1 }}
-                      animate={{ scaleX: 0 }}
-                      transition={{ duration: duration / 1000, ease: "linear" }}
-                      style={{ transformOrigin: "left" }}
-                      className={twMerge(
-                        "pointer-events-none absolute inset-x-0 bottom-0 h-[2.5px]",
-                        progressColor,
-                      )}
-                    />
-                  ) : null}
-                </>
-              )}
+                    {showProgress && !shouldReduceMotion ? (
+                      <div
+                        className={twMerge(
+                          "pointer-events-none absolute inset-x-0 bottom-0",
+                          isAnimated
+                            ? "h-[3px] bg-zinc-200/70 dark:bg-zinc-800/80"
+                            : "h-[2.5px]",
+                        )}
+                      >
+                        <motion.div
+                          key={`${t.id}-${type}`}
+                          initial={{ scaleX: 1 }}
+                          animate={{ scaleX: 0 }}
+                          transition={{ duration: duration / 1000, ease: "linear" }}
+                          style={{ transformOrigin: "left" }}
+                          className={twMerge("h-full w-full", progressColor)}
+                        />
+                      </div>
+                    ) : null}
+                  </>
+                );
+              }}
             </ToastBar>
           </motion.div>
         );
@@ -513,6 +768,7 @@ export function Toaster({
 
 export type ToastPreviewProps = {
   type?: ToastType;
+  variant?: ToastVariant;
   message: React.ReactNode;
   description?: React.ReactNode;
   icon?: React.ReactNode;
@@ -534,6 +790,7 @@ const previewConfig: Record<ToastType, { icon: React.ReactNode; bar: string }> =
 
 export function ToastPreview({
   type = "default",
+  variant = "animated",
   message,
   description,
   icon,
@@ -543,57 +800,87 @@ export function ToastPreview({
   showBar = true,
   className,
 }: ToastPreviewProps) {
+  const shouldReduceMotion = useReducedMotion();
   const cfg = previewConfig[type];
   const iconNode = icon !== undefined ? icon : cfg.icon;
+  const isAnimated = variant === "animated";
 
-  return (
-    <div className={twMerge("w-full max-w-sm", className)}>
-      <div
-        className={twMerge(
-          "relative flex items-start gap-3 overflow-hidden rounded-[var(--radius-control)] border border-border bg-surface px-4 py-3.5 text-surface-foreground shadow-[var(--shadow-floating)]",
-        )}
-      >
-        {showBar && (
-          <div className={twMerge("absolute inset-x-0 bottom-0 h-[2.5px]", toastProgressColors[type])} />
-        )}
-        {iconNode ? <span className="mt-0.5 shrink-0">{iconNode}</span> : null}
-        <div className="min-w-0 flex-1">
-          <div
-            className={twMerge(
-              "break-words text-sm leading-snug text-pretty",
-              description ? "font-semibold" : "font-medium",
-            )}
-          >
-            {message}
-          </div>
-          {description && (
-            <div className="mt-0.5 break-words text-xs leading-relaxed text-muted-foreground text-pretty">
-              {description}
-            </div>
+  const cardContent = (
+    <div
+      className={twMerge(
+        "relative flex items-start gap-3 overflow-hidden border border-border bg-surface px-4 py-3.5 text-surface-foreground",
+        isAnimated
+          ? "rounded-[var(--radius-card)] shadow-[var(--shadow-overlay)]"
+          : "rounded-[var(--radius-control)] shadow-[var(--shadow-floating)]",
+      )}
+    >
+      {showBar && (
+        <div
+          className={twMerge(
+            "absolute inset-x-0 bottom-0",
+            isAnimated ? "h-[3px]" : "h-[2.5px]",
+            isAnimated ? toastAnimatedProgressColors[type] : toastProgressColors[type],
           )}
+        />
+      )}
+      {isAnimated && icon === undefined && type !== "default" ? (
+        <span className="mt-0.5 shrink-0">
+          <AnimatedToastIcon type={type} reducedMotion={Boolean(shouldReduceMotion)} />
+        </span>
+      ) : iconNode ? (
+        <span className="mt-0.5 shrink-0">{iconNode}</span>
+      ) : null}
+      <div className="relative z-10 min-w-0 flex-1">
+        <div
+          className={twMerge(
+            "break-words text-sm leading-snug text-pretty",
+            description ? "font-semibold" : "font-medium",
+          )}
+        >
+          {message}
         </div>
-        {action ? (
-          <button
-            data-component-id={action.componentId ?? "erp.toast.preview-action"}
-            type="button"
-            onClick={action.onClick}
-            className="mt-0.5 shrink-0 whitespace-nowrap rounded-[var(--radius-control)] border border-border bg-secondary px-2.5 py-1 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
-          >
-            {action.label}
-          </button>
-        ) : null}
-        {closeButton ? (
-          <button
-            data-component-id="erp.toast.preview-close"
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar notificação"
-            className="mt-0.5 shrink-0 rounded-[var(--radius-control)] p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
-          >
-            <X size={14} />
-          </button>
-        ) : null}
+        {description && (
+          <div className="mt-0.5 break-words text-xs leading-relaxed text-muted-foreground text-pretty">
+            {description}
+          </div>
+        )}
       </div>
+      {action ? (
+        <button
+          data-component-id={action.componentId ?? "erp.toast.preview-action"}
+          type="button"
+          onClick={action.onClick}
+          className="relative z-10 mt-0.5 shrink-0 whitespace-nowrap rounded-[var(--radius-control)] border border-border bg-secondary px-2.5 py-1 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
+        >
+          {action.label}
+        </button>
+      ) : null}
+      {closeButton ? (
+        <button
+          data-component-id="erp.toast.preview-close"
+          type="button"
+          onClick={onClose}
+          aria-label="Fechar notificação"
+          className="relative z-10 mt-0.5 shrink-0 rounded-[var(--radius-control)] p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer"
+        >
+          <X size={14} />
+        </button>
+      ) : null}
     </div>
   );
+
+  if (isAnimated && !shouldReduceMotion) {
+    return (
+      <motion.div
+        initial={false}
+        whileHover={{ y: -2 }}
+        transition={{ type: "spring", stiffness: 440, damping: 28 }}
+        className={twMerge("w-full max-w-sm", className)}
+      >
+        {cardContent}
+      </motion.div>
+    );
+  }
+
+  return <div className={twMerge("w-full max-w-sm", className)}>{cardContent}</div>;
 }
