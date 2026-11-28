@@ -50,6 +50,10 @@ export type CardProps = {
   compact?: boolean;
   /** Makes the card interactive (hover lift effect) */
   hoverable?: boolean;
+  /** Subtle radial spotlight glow following the mouse cursor on hover */
+  spotlight?: boolean;
+  /** Custom CSS color for the spotlight radial gradient (default: brand subtle glow) */
+  spotlightColor?: string;
   /** Makes the card clickable */
   onClick?: () => void;
   children?: React.ReactNode;
@@ -326,6 +330,8 @@ export default function Card({
   imageAlt = "",
   compact = false,
   hoverable = false,
+  spotlight = false,
+  spotlightColor,
   onClick,
   children,
   className,
@@ -339,7 +345,7 @@ export default function Card({
   const isHorizontal = layout === "horizontal";
 
   const classes = twMerge(
-    "@container relative overflow-hidden transition-[background-color,border-color,box-shadow,transform] duration-200 text-left",
+    "@container group/card relative overflow-hidden transition-[background-color,border-color,box-shadow,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] text-left",
     isHorizontal ? "flex flex-col sm:flex-row" : "flex flex-col",
     VARIANT_CLASSES[resolvedVariant],
     resolvedVariant === "filled" ? c.filled : "",
@@ -350,6 +356,14 @@ export default function Card({
     isClickable && "cursor-pointer hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 hover:shadow-[var(--shadow-floating)] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
     className,
   );
+
+  const handleMouseMove = spotlight
+    ? (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        e.currentTarget.style.setProperty("--spot-x", `${e.clientX - rect.left}px`);
+        e.currentTarget.style.setProperty("--spot-y", `${e.clientY - rect.top}px`);
+      }
+    : undefined;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (!onClick) return;
@@ -366,10 +380,22 @@ export default function Card({
       {...(componentId ? { "data-component-id": componentId } : {})}
       className={classes}
       onClick={onClick}
+      onMouseMove={handleMouseMove}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? handleKeyDown : undefined}
     >
+      {spotlight && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100 motion-reduce:hidden"
+          style={{
+            background: `radial-gradient(280px circle at var(--spot-x, -200px) var(--spot-y, -200px), ${
+              spotlightColor ?? "color-mix(in srgb, var(--brand, #4f46e5) 13%, transparent)"
+            }, transparent 75%)`,
+          }}
+        />
+      )}
       {isImageFull && imageSrc && (
         <>
           <img
