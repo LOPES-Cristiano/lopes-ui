@@ -105,9 +105,9 @@ const DEMO_NOTIFICATIONS: NotificationItem[] = [
 ];
 
 const DEMO_TENANTS = [
-  { id: "ro-pvh", name: "BigLar Porto Velho — Centro (RO)", subtitle: "DDD (69) · CD Regional", primary: true },
-  { id: "am-mao", name: "BigLar Manaus — Cidade Nova (AM)", subtitle: "DDD (92) · Filial Norte" },
-  { id: "ro-jpr", name: "BigLar Ji-Paraná — Av. Brasil (RO)", subtitle: "DDD (69) · Filial Interior" },
+  { id: "ro-pvh", name: "Filial Porto Velho — Centro (RO)", subtitle: "DDD (69) · CD Regional", primary: true },
+  { id: "am-mao", name: "Filial Manaus — Cidade Nova (AM)", subtitle: "DDD (92) · Filial Norte" },
+  { id: "ro-jpr", name: "Filial Ji-Paraná — Av. Brasil (RO)", subtitle: "DDD (69) · Filial Interior" },
 ];
 
 function useDemoIsoScene() {
@@ -331,7 +331,7 @@ export default function ExtendedRendererFormsEnterprise({
             columns={Math.min(3, Math.max(1, asNum(p.columns, 2))) as 1 | 2 | 3}
             defaultValue={asStr(p.defaultValue, "propria")}
             options={[
-              { value: "propria", label: "Entrega Própria RO/AM", description: "Caminhão baú BigLar" },
+              { value: "propria", label: "Entrega Própria RO/AM", description: "Frota própria" },
               { value: "retira", label: "Retirar na Filial", description: "Pronta-entrega em loja" },
             ]}
             className="w-full"
@@ -537,7 +537,7 @@ export default function ExtendedRendererFormsEnterprise({
         <div className="h-full w-full overflow-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5">
           <RichTextViewer
             componentId={element.componentId}
-            html={asStr(p.html, "<p>BigLar Móveis &amp; Eletro</p>")}
+            html={asStr(p.html, "<p>Lopes ERP</p>")}
           />
         </div>
       );
@@ -546,12 +546,12 @@ export default function ExtendedRendererFormsEnterprise({
       return (
         <div className="h-full w-full overflow-auto">
           <LoginForm
-            title={asStr(p.title, "Acesso BigLar ERP")}
+            title={asStr(p.title, "Acesso Lopes ERP")}
             subtitle={asStr(p.subtitle)}
             submitLabel={asStr(p.submitLabel, "Entrar")}
             showRemember={asBool(p.showRemember, true)}
             onSubmit={async () => {
-              if (interactive) toast.success("Autenticado no BigLar ERP!");
+              if (interactive) toast.success("Autenticado no Lopes ERP!");
             }}
           />
         </div>
@@ -575,7 +575,7 @@ export default function ExtendedRendererFormsEnterprise({
         <div className="h-full w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 flex items-center">
           <PasswordStrength
             componentId={element.componentId}
-            password={asStr(p.password, "BigLar@2026RO")}
+            password={asStr(p.password, "Lopes@2026")}
             showHint={asBool(p.showHint, true)}
             className="w-full"
           />
@@ -638,7 +638,7 @@ export default function ExtendedRendererFormsEnterprise({
       return (
         <div className="h-full w-full flex items-center rounded-xl border border-zinc-200/70 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 p-2.5">
           <ChatMessage
-            senderName={asStr(p.senderName, "Atendimento BigLar")}
+            senderName={asStr(p.senderName, "Atendimento Lopes")}
             content={asStr(p.content, "Olá! Como podemos ajudar com seu pedido?")}
             timestamp={asStr(p.timestamp, "10:24")}
             mine={asBool(p.mine, false)}
@@ -684,8 +684,8 @@ export default function ExtendedRendererFormsEnterprise({
           <EmailComposer
             mode={asStr(p.mode, "inline") as "inline" | "window"}
             title={asStr(p.title, "Nova mensagem")}
-            defaultTo={[{ name: "Raimundo Nonato", email: "cliente@biglar.com.br" }]}
-            defaultSubject={asStr(p.defaultSubject, "Confirmação de Entrega BigLar")}
+            defaultTo={[{ name: "Raimundo Nonato", email: "contato@lopes.app" }]}
+            defaultSubject={asStr(p.defaultSubject, "Confirmação de Entrega")}
             defaultBody="<p>Confirmamos o agendamento da entrega e montagem dos seus móveis e eletrodomésticos.</p>"
             onSend={() => {
               if (interactive) toast.success("E-mail enviado!");
@@ -779,8 +779,8 @@ export default function ExtendedRendererFormsEnterprise({
               subtitle={asStr(p.subtitle)}
               onLookupCnpj={async (cnpj) => ({
                 cnpj,
-                legalName: "BigLar Móveis e Eletrodomésticos Ltda.",
-                tradeName: "BigLar Móveis & Eletro",
+                legalName: "Lopes Sistemas Corporativos Ltda.",
+                tradeName: "Lopes ERP",
                 city: "Porto Velho",
                 state: "RO",
               })}
@@ -933,7 +933,7 @@ export default function ExtendedRendererFormsEnterprise({
         <div className="h-full w-full overflow-auto">
           <CodeBlock
             componentId={element.componentId}
-            filename={asStr(p.filename, "PainelBigLar.tsx")}
+            filename={asStr(p.filename, "PainelLopes.tsx")}
             language={asStr(p.language, "tsx")}
             lineNumbers={asBool(p.lineNumbers, true)}
             showCopy={asBool(p.showCopy, true)}
@@ -1122,7 +1122,7 @@ export default function ExtendedRendererFormsEnterprise({
           <IsometricBench
             scene={isoScene}
             step={Math.min(1, Math.max(0, asNum(p.step, 0)))}
-            label={asStr(p.label, "Bancada Isométrica BigLar")}
+            label={asStr(p.label, "Bancada Isométrica Lopes")}
             showBench={asBool(p.showBench, true)}
             tilt={asBool(p.tilt, true)}
             className="h-full w-full"
