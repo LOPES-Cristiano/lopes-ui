@@ -516,7 +516,7 @@ export const EXTENDED_CATALOG_FORMS_ENTERPRISE: UICatalogEntry[] = [
     defaultProps: {
       placeholder: "Descreva os detalhes do produto ou comunicado...",
       defaultValue:
-        "<p><strong>BigLar Móveis &amp; Eletro</strong> — Conforto e qualidade para o seu lar nas praças de <em>Rondônia (69)</em> e <em>Amazonas (92)</em>.</p>",
+        "<p><strong>Lopes ERP</strong> — Conforto e qualidade para o seu lar nas praças de <em>Rondônia (69)</em> e <em>Amazonas (92)</em>.</p>",
       showCount: true,
     },
     inspectorFields: [
@@ -562,7 +562,7 @@ export const EXTENDED_CATALOG_FORMS_ENTERPRISE: UICatalogEntry[] = [
     minWidth: 240,
     minHeight: 100,
     defaultProps: {
-      html: "<h3>Garantia Estendida BigLar</h3><p>Cobertura completa para <strong>estofados, colchões e eletrodomésticos</strong> com assistência técnica em <em>Porto Velho (RO)</em> e <em>Manaus (AM)</em>.</p>",
+      html: "<h3>Garantia Estendida Lopes</h3><p>Cobertura completa para <strong>estofados, colchões e eletrodomésticos</strong> com assistência técnica em <em>Porto Velho (RO)</em> e <em>Manaus (AM)</em>.</p>",
     },
     inspectorFields: [{ key: "html", label: "Conteúdo HTML", kind: "textarea", rows: 4 }],
   },
@@ -580,7 +580,7 @@ export const EXTENDED_CATALOG_FORMS_ENTERPRISE: UICatalogEntry[] = [
     minHeight: 340,
     primaryTextProp: "title",
     defaultProps: {
-      title: "Acesso BigLar ERP",
+      title: "Acesso Lopes ERP",
       subtitle: "Entre com suas credenciais corporativas (RO & AM)",
       submitLabel: "Entrar no Sistema",
       showRemember: true,
@@ -629,7 +629,7 @@ export const EXTENDED_CATALOG_FORMS_ENTERPRISE: UICatalogEntry[] = [
     minHeight: 54,
     primaryTextProp: "password",
     defaultProps: {
-      password: "BigLar@2026RO",
+      password: "Lopes@2026",
       showHint: true,
     },
     inspectorFields: [
@@ -787,7 +787,7 @@ export const EXTENDED_CATALOG_FORMS_ENTERPRISE: UICatalogEntry[] = [
     defaultProps: {
       mode: "inline",
       title: "Enviar Confirmação de Entrega",
-      defaultSubject: "Sua entrega de Móveis & Eletro BigLar está agendada!",
+      defaultSubject: "Sua entrega de Móveis & Eletro Lopes está agendada!",
     },
     inspectorFields: [
       { key: "title", label: "Título", kind: "text" },
@@ -859,7 +859,7 @@ export const EXTENDED_CATALOG_FORMS_ENTERPRISE: UICatalogEntry[] = [
     primaryTextProp: "title",
     defaultProps: {
       title: "Trocar Filial Ativa",
-      description: "Selecione a unidade BigLar (RO ou AM) para operar",
+      description: "Selecione a unidade Lopes (RO ou AM) para operar",
     },
     inspectorFields: [
       { key: "title", label: "Título do Modal", kind: "text" },
@@ -1085,7 +1085,7 @@ export const EXTENDED_CATALOG_FORMS_ENTERPRISE: UICatalogEntry[] = [
     minHeight: 140,
     primaryTextProp: "filename",
     defaultProps: {
-      filename: "PainelBigLar.tsx",
+      filename: "PainelLopes.tsx",
       language: "tsx",
       lineNumbers: true,
       showCopy: true,
@@ -1350,7 +1350,7 @@ export const EXTENDED_CATALOG_FORMS_ENTERPRISE: UICatalogEntry[] = [
       step: 0,
       showBench: true,
       tilt: true,
-      label: "Terminal PDV & Estoque BigLar",
+      label: "Terminal PDV & Estoque Lopes",
     },
     inspectorFields: [
       { key: "label", label: "Rótulo Acessível", kind: "text" },
