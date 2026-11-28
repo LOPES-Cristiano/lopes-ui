@@ -57,6 +57,7 @@ export type TabsProps = TabsPrimitiveRootProps & {
   tabBarExtraContent?: React.ReactNode;
   listClassName?: string;
   triggerClassName?: string;
+  activeIndicatorClassName?: string;
   contentClassName?: string;
 };
 
@@ -118,6 +119,7 @@ export default function Tabs({
   hideIfDenied = true,
   listClassName,
   triggerClassName,
+  activeIndicatorClassName,
   contentClassName,
   className,
   children,
@@ -287,6 +289,7 @@ export default function Tabs({
                 className={cn(
                   "pointer-events-none absolute inset-0 z-0 rounded-[var(--radius-control)] bg-card shadow-[var(--shadow-control)]",
                   variant === "enclosed" && "border border-border",
+                  activeIndicatorClassName,
                 )}
               />
             )}
@@ -298,6 +301,7 @@ export default function Tabs({
                 className={cn(
                   "pointer-events-none absolute inset-x-0 -bottom-[2px] z-10 h-[2px] rounded-full",
                   variant === "underline" ? "bg-brand" : "bg-primary",
+                  activeIndicatorClassName,
                 )}
               />
             )}
@@ -398,7 +402,18 @@ export default function Tabs({
             value={item.value}
             className={cn(isVertical && "mt-0 flex-1 min-w-0", contentClassName)}
           >
-            {item.content}
+            <motion.div
+              key={`${item.value}-panel`}
+              initial={
+                hasMountedRef.current && !prefersReducedMotion
+                  ? { opacity: 0, y: 6 }
+                  : false
+              }
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {item.content}
+            </motion.div>
           </TabsContent>
         ) : null;
       })}
